@@ -2078,6 +2078,21 @@
                 drawLayer(j, i);
             }
         }
+
+        
+        for (var i = 0; i < globals.boardsY; i++) {
+            for (var j = 0; j < globals.boardsX; j++) {
+                suffix = "_" + j.toString() + "_" + i.toString();
+		var element = document.getElementById("habitat"+suffix);
+                element.disabled = true;
+		var element = document.getElementById("water"+suffix);
+                element.disabled = true;
+		var element = document.getElementById("carbon"+suffix);
+                element.disabled = true;
+		var element = document.getElementById("hunt"+suffix);
+                element.disabled = true;
+        }}
+
     }
 
     function round2() {
@@ -2119,6 +2134,21 @@
                 drawLayer(j, i);
             }
         }
+
+        for (var i = 0; i < globals.boardsY; i++) {
+            for (var j = 0; j < globals.boardsX; j++) {
+                suffix = "_" + j.toString() + "_" + i.toString();
+		var element = document.getElementById("habitat"+suffix);
+                element.disabled = false;
+		var element = document.getElementById("water"+suffix);
+                element.disabled = false;
+		var element = document.getElementById("carbon"+suffix);
+                element.disabled = false;
+		var element = document.getElementById("hunt"+suffix);
+                element.disabled = false;
+        }}
+
+
     }
 
 
