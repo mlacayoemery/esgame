@@ -1482,10 +1482,10 @@
                 //    var maxX = minX + globals.canvas[j][i].width;
                 //    var minY = minY + globals.canvas[j][i].height;
                 rect = globals.canvas[i][j].getBoundingClientRect();
-                var minX = rect.left;
-                var minY = rect.top;
-                var maxX = rect.right;
-                var maxY = rect.bottom;
+                var minX = rect.left + window.scrollX;
+                var minY = rect.top + window.scrollY;
+                var maxX = rect.right + window.scrollX;
+                var maxY = rect.bottom + window.scrollY;
 
                 if (((minX <= event.pageX) && (event.pageX <= maxX)) && ((minY <= event.pageY) && (event.pageY <= maxY))) {
                     //alert("Canvas ("+j+","+i+")");
@@ -1497,10 +1497,10 @@
         }
 
                 rect = globals.canvas[boardX][boardY].getBoundingClientRect();
-                var minX = rect.left;
-                var minY = rect.top;
-                var maxX = rect.right;
-                var maxY = rect.bottom;
+                var minX = rect.left + window.scrollX;
+                var minY = rect.top + window.scrollY;
+                var maxX = rect.right + window.scrollX;
+                var maxY = rect.bottom + window.scrollY;
 
         var x = Math.floor((event.pageX - minX) / defaults.celSize);
         var y = Math.floor((event.pageY - minY) / defaults.celSize);
