@@ -1489,15 +1489,24 @@
 
                 if (((minX <= event.pageX) && (event.pageX <= maxX)) && ((minY <= event.pageY) && (event.pageY <= maxY))) {
                     //alert("Canvas ("+j+","+i+")");
-                    //        boardX=i;
-                    //        boardY=j;
+                            boardX=i;
+                            boardY=j;
+                    //break;
                 }
             }
         }
 
-        var x = Math.floor((event.pageX - globals.canvas[boardX][boardY].offsetLeft - 1 - document.getElementById("board_table").offsetLeft) / defaults.celSize);
-        var y = Math.floor((event.pageY - globals.canvas[boardX][boardY].offsetTop - 1 - document.getElementById("board_table").offsetTop) / defaults.celSize);
+                rect = globals.canvas[boardX][boardY].getBoundingClientRect();
+                var minX = rect.left;
+                var minY = rect.top;
+                var maxX = rect.right;
+                var maxY = rect.bottom;
 
+        var x = Math.floor((event.pageX - minX) / defaults.celSize);
+        var y = Math.floor((event.pageY - minY) / defaults.celSize);
+
+        //alert(minX+", "+minY+", "+maxX+", "+maxY);
+	//alert(x+", "+y+", "+event.pageX+", "+minX+", "+event.pageY+", "+minY);
         //x=x-(board*38);
 
         //alert("("+x+","+y+")");
