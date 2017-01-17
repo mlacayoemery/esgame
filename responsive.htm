@@ -1367,6 +1367,12 @@
             }
         }
 
+        for (var l = 23; l < 29; l++) {
+            for (var m = 28; m < 29; m++) {
+                drawCell(i, j, l, m, "#ffffff");
+            }
+        }
+
         globals.context[i][j].font = Math.floor(defaults.celSize / 1.5).toString() + "px Arial";
         globals.context[i][j].fillStyle = "#000000"
         globals.context[i][j].textAlign = "center";
@@ -1395,6 +1401,11 @@
 
             globals.context[i][j].fillStyle = globals.pallette[375]
             drawCell(i, j, 9, 26, "#000000", -Math.floor(defaults.celSize / 2));
+
+            //Add points
+	    globals.context[i][j].fillStyle = "#20a561";
+	    globals.context[i][j].fillText("+ Points", 25.5 * defaults.celSize, 28.5 * defaults.celSize);
+
         } else if (value == "ranch") {
             globals.context[i][j].fillText(dictionary[lang.options[lang.selectedIndex].value]["ranch_convert"], 5 * defaults.celSize, 28.5 * defaults.celSize);
             globals.context[i][j].fillText("50", 1 * defaults.celSize, 27.5 * defaults.celSize);
@@ -1417,6 +1428,10 @@
 
             globals.context[i][j].fillStyle = globals.pallette[250]
             drawCell(i, j, 9, 26, "#000000", -Math.floor(defaults.celSize / 2));
+
+            //Add points
+	    globals.context[i][j].fillStyle = "#20a561";
+	    globals.context[i][j].fillText("+ Points", 25.5 * defaults.celSize, 28.5 * defaults.celSize);
         } else {
 
             globals.context[i][j].fillText(dictionary[lang.options[lang.selectedIndex].value]["ag_convert"], 5 * defaults.celSize, 24.5 * defaults.celSize);
@@ -1448,6 +1463,10 @@
 
             globals.context[i][j].fillStyle = globals.pallette[125]
             drawCell(i, j, 9, 26, "#000000", -Math.floor(defaults.celSize / 2));
+
+            //Subtract points
+	    globals.context[i][j].fillStyle = "#f14f24";
+	    globals.context[i][j].fillText("- Points", 25.5 * defaults.celSize, 28.5 * defaults.celSize);
         }
 
     }
