@@ -2008,6 +2008,10 @@
         var element = document.getElementById('cols');
         element.value = "1";
         main();
+
+        element = document.getElementById("layer_0_1")
+        element.value = "ranch";
+        drawLayer(0, 1);
     }
 
     function layoutDesktop() {
@@ -2298,6 +2302,9 @@
         score();
         round1();
         toggleInstructions();
+//        var element = document.getElementById('layout');
+//        element.value = "mobile";
+        //layoutChange();
 
 
     }
@@ -2349,7 +2356,7 @@
 <option value="mobile">Mobile</option>
 <option value="desktop">Desktop</option>
 </select>
-                        <button type="button" id="show_layout" onclick="toggleLayout();"><span id="show_layout"></span></button>
+                        <button type="button" id="show_layout" onclick="toggleLayout();" hidden><span id="show_layout"></span></button>
                     </td>
                 </tr>
 
