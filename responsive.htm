@@ -2004,14 +2004,34 @@
         var element = document.getElementById('scrolling');
         element.value = "vertical";
         var element = document.getElementById('rows');
-        element.value = "2";
+        element.value = "6";
         var element = document.getElementById('cols');
         element.value = "1";
         main();
 
+        element = document.getElementById("layer_0_0")
+        element.value = "ag";
+        drawLayer(0, 0);
+
         element = document.getElementById("layer_0_1")
         element.value = "ranch";
         drawLayer(0, 1);
+
+        element = document.getElementById("layer_0_2")
+        element.value = "habitat";
+        drawLayer(0, 2);
+
+        element = document.getElementById("layer_0_3")
+        element.value = "carbon";
+        drawLayer(0, 3);
+
+        element = document.getElementById("layer_0_4")
+        element.value = "water";
+        drawLayer(0, 4);
+
+        element = document.getElementById("layer_0_5")
+        element.value = "hunt";
+        drawLayer(0, 5);
     }
 
     function layoutDesktop() {
