@@ -2029,8 +2029,10 @@
     }
 
     function layoutChange() {
-        var element = document.getElementById('layout');
+        var element = document.getElementById("radio1");
+        element.checked = true;
 
+        var element = document.getElementById('layout');
 
         if (element.value == "default") {
             layoutDefault();
@@ -2176,6 +2178,28 @@
                 element.disabled = true;
         }}
 
+        var element = document.getElementById('layout');
+        if (element.value == "default") {
+        } else if (element.value == "mobile") {
+            for (var i = 2; i < globals.boardsY; i++) {
+                for (var j = 0; j < globals.boardsX; j++) {
+                    suffix = "_" + j.toString() + "_" + i.toString();
+                    var element = document.getElementById('cell'+suffix);
+                    element.style.display = "none";
+                }
+            }
+            //alert("Here!");
+        } else if (element.value == "desktop") {
+            for (var i = 0; i < globals.boardsY; i++) {
+                for (var j = 1; j < globals.boardsX; j++) {
+                    suffix = "_" + j.toString() + "_" + i.toString();
+                    var element = document.getElementById('cell'+suffix);
+                    element.style.visibility = "hidden";
+                }
+            }
+
+        }
+
     }
 
     function round2() {
@@ -2231,6 +2255,28 @@
                 element.disabled = false;
         }}
 
+
+        var element = document.getElementById('layout');
+        if (element.value == "default") {
+        } else if (element.value == "mobile") {
+            for (var i = 2; i < globals.boardsY; i++) {
+                for (var j = 0; j < globals.boardsX; j++) {
+                    suffix = "_" + j.toString() + "_" + i.toString();
+                    var element = document.getElementById('cell'+suffix);
+                    element.style.display = "block";
+                }
+            }
+            //alert("Here!");
+        } else if (element.value == "desktop") {
+            for (var i = 0; i < globals.boardsY; i++) {
+                for (var j = 1; j < globals.boardsX; j++) {
+                    suffix = "_" + j.toString() + "_" + i.toString();
+                    var element = document.getElementById('cell'+suffix);
+                    element.style.visibility = "visible";
+                }
+            }
+
+        }
 
     }
 
@@ -2308,9 +2354,9 @@
         for (var i = 0; i < globals.boardsY; i++) {
             html = html + "<tr>";
             for (var j = 0; j < globals.boardsX; j++) {
-                html = html + "<td>";
                 suffix = "_" + j.toString() + "_" + i.toString();
 
+                html = html + "<td id=\"cell" + suffix + "\">";
                 html = html + "<span id=\"view_label\">View</span>:";
                 html = html + "<select id=\"layer" + suffix + "\" onchange=\"drawLayer(" + j + "," + i + ");\">";
                 html = html + "<option id=\"ag" + suffix + "\" value=\"ag\">Agriculture</option>";
