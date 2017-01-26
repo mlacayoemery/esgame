@@ -1325,6 +1325,10 @@
             images[1].onload = function() {
                 //alert("Image 1 loaded");
                 main();
+        //alert("Here!");
+        var element = document.getElementById('layout');
+        element.value = "desktop";
+        layoutChange();
             }
             images[1].src = defaults.cowImg;
         }
@@ -2419,10 +2423,6 @@
         score();
         round1();
         toggleInstructions();
-//        var element = document.getElementById('layout');
-//        element.value = "mobile";
-        //layoutChange();
-
 
     }
 </script>
@@ -2469,7 +2469,7 @@
                     <td><span id="layout_label">Layout</span></td>
                     <td>
                         <select id="layout" onchange="layoutChange();">
-<option value="default">Default</option>
+<option value="default">Simple</option>
 <option value="mobile">Mobile</option>
 <option value="desktop">Desktop</option>
 </select>
