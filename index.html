@@ -1915,31 +1915,33 @@
             }
         }
 
+	income_color = "<font color=\"#20a561\">value</font>";
+	cost_color = "<font color=\"#f14f24\">value</font>";
         //round1
         pts_pos = pts_ag + pts_ranch;
         pts_neg = pts_hq + pts_c + pts_hunt + pts_wq;
         pts_net = pts_pos - pts_neg;
 
         element = document.getElementById("pts_ag");
-        element.innerHTML = pts_ag;
+        element.innerHTML =  income_color.replace("value", pts_ag);
 
         element = document.getElementById("pts_ranch");
-        element.innerHTML = pts_ranch;
+        element.innerHTML = income_color.replace("value", pts_ranch);
 
         element = document.getElementById("pts_pos");
         element.innerHTML = pts_pos;
 
         element = document.getElementById("pts_hq");
-        element.innerHTML = pts_hq;
+        element.innerHTML = cost_color.replace("value", pts_hq);
 
         element = document.getElementById("pts_c");
-        element.innerHTML = pts_c;
+        element.innerHTML = cost_color.replace("value", pts_c);
 
         element = document.getElementById("pts_hunt");
-        element.innerHTML = pts_hunt;
+        element.innerHTML = cost_color.replace("value", pts_hunt);
 
         element = document.getElementById("pts_wq");
-        element.innerHTML = pts_wq;
+        element.innerHTML = cost_color.replace("value", pts_wq);
 
         element = document.getElementById("pts_neg");
         element.innerHTML = pts_neg;
@@ -1953,25 +1955,25 @@
         pts_net_r2 = pts_pos_r2 - pts_neg_r2;
 
         element = document.getElementById("pts_ag_r2");
-        element.innerHTML = pts_ag_r2;
+        element.innerHTML = income_color.replace("value",pts_ag_r2);
 
         element = document.getElementById("pts_ranch_r2");
-        element.innerHTML = pts_ranch_r2;
+        element.innerHTML = income_color.replace("value",pts_ranch_r2);
 
         element = document.getElementById("pts_pos_r2");
         element.innerHTML = pts_pos_r2;
 
         element = document.getElementById("pts_hq_r2");
-        element.innerHTML = pts_hq_r2;
+        element.innerHTML = cost_color.replace("value", pts_hq_r2);
 
         element = document.getElementById("pts_c_r2");
-        element.innerHTML = pts_c_r2;
+        element.innerHTML = cost_color.replace("value", pts_c_r2);
 
         element = document.getElementById("pts_hunt_r2");
-        element.innerHTML = pts_hunt_r2;
+        element.innerHTML = cost_color.replace("value", pts_hunt_r2);
 
         element = document.getElementById("pts_wq_r2");
-        element.innerHTML = pts_wq_r2;
+        element.innerHTML = cost_color.replace("value", pts_wq_r2);
 
         element = document.getElementById("pts_neg_r2");
         element.innerHTML = pts_neg_r2;
