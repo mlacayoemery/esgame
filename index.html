@@ -2207,6 +2207,16 @@
     }
 
     function round2() {
+        //if first switch to round 2
+        if (defaults.copyPieces){
+            for (var n = 0; n <=globals.squaresX; n++){
+                for (var m = 0; m <= globals.squaresY; m++) {
+                    globals.flag_ag_r2[m][n] = globals.flag_ag[m][n];
+                    globals.flag_ranch_r2[m][n] = globals.flag_ranch[m][n];
+            }}
+            defaults.copyPieces = false;
+            score();
+        }
         //if instructions are being shown change them
         if (defaults.instructions == 1) {
             element = document.getElementById("instructions_text");
@@ -2423,6 +2433,7 @@
         score();
         round1();
         toggleInstructions();
+        defaults.copyPieces = true;
 
     }
 </script>
@@ -2582,15 +2593,15 @@
                     <td></td>
                 </tr>
                 <tr id=r1_tr4 style="display:none;">
-                    <td align=center><span id="pts_hq"></span></td>
+                    <td align=center>-<span id="pts_hq"></span></td>
                     <td>+</td>
-                    <td align=center><span id="pts_c"></span></td>
+                    <td align=center>-<span id="pts_c"></span></td>
                     <td>+</td>
-                    <td align=center><span id="pts_hunt"></span></td>
+                    <td align=center>-<span id="pts_hunt"></span></td>
                     <td>+</td>
-                    <td align=center><span id="pts_wq"></span></td>
+                    <td align=center>-<span id="pts_wq"></span></td>
                     <td>=</td>
-                    <td align=right><span id="pts_neg"></span></td>
+                    <td align=right>-<span id="pts_neg"></span></td>
                 </tr>
                 <tr id=r1_tr5 style="display:none;">
                     <td></td>
@@ -2639,15 +2650,15 @@
                     <td></td>
                 </tr>
                 <tr id=r2_tr4 style="display:none;">
-                    <td align=center><span id="pts_hq_r2"></span></td>
+                    <td align=center>-<span id="pts_hq_r2"></span></td>
                     <td>+</td>
-                    <td align=center><span id="pts_c_r2"></span></td>
+                    <td align=center>-<span id="pts_c_r2"></span></td>
                     <td>+</td>
-                    <td align=center><span id="pts_hunt_r2"></span></td>
+                    <td align=center>-<span id="pts_hunt_r2"></span></td>
                     <td>+</td>
-                    <td align=center><span id="pts_wq_r2"></span></td>
+                    <td align=center>-<span id="pts_wq_r2"></span></td>
                     <td>=</td>
-                    <td align=right><span id="pts_neg_r2"></span></td>
+                    <td align=right>-<span id="pts_neg_r2"></span></td>
                 </tr>
                 <tr id=r2_tr5 style="display:none;">
                     <td></td>
