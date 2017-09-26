@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<!-- saved from url=(0058)https://www.naturalcapitalproject.org/tradeoffag/game.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<script src="./calc_files/game.js">
+
+</script>
+</head>
+
+<body>
+
+<!-- Opening a HTML Form. In here will be placed the user selected values.--> 
+<div id="calculator">
+<table>
+  <tbody><tr>
+    <td>
+      <table>
+	<tbody><tr>
+          <td><center>Farms</center></td>
+          <td><center>Ranching</center></td>
+          <td><center>Set Asides</center></td>
+	</tr>
+	
+	<tr><td valign="top">
+            <table id="farms">
+              <tbody><tr>
+		<td>#</td>
+		<td><center>Col</center></td>
+		<td><center>Row</center></td>
+              </tr>
+              <tr>
+		<td>1</td>
+		<td><input type="text" name="x" value="" size="2"></td>
+		<td><input type="text" name="y" value="" size="2"></td>
+              </tr>
+              <tr>
+		<td>2</td>
+		<td><input type="text" name="x" value="" size="2"></td>
+		<td><input type="text" name="y" value="" size="2"></td>
+              </tr>
+              <tr>
+		<td>3</td>
+		<td><input type="text" name="x" value="" size="2"></td>
+		<td><input type="text" name="y" value="" size="2"></td>
+              </tr>
+              <tr>
+		<td>4</td>
+		<td><input type="text" name="x" value="" size="2"></td>
+		<td><input type="text" name="y" value="" size="2"></td>
+              </tr>
+            </tbody></table>
+	  </td>
+	  <td valign="top">     
+            <table id="ranching">
+              <tbody><tr>
+                <td>#</td>
+                <td><center>Col</center></td>
+                <td><center>Row</center></td>
+              </tr>
+            <tr>
+                <td>1</td>
+                <td><input type="text" name="x" value="" size="2"></td>
+                <td><input type="text" name="y" value="" size="2"></td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td><input type="text" name="x" value="" size="2"></td>
+                <td><input type="text" name="y" value="" size="2"></td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td><input type="text" name="x" value="" size="2"></td>
+                <td><input type="text" name="y" value="" size="2"></td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td><input type="text" name="x" value="" size="2"></td>
+                <td><input type="text" name="y" value="" size="2"></td>
+            </tr>
+        </tbody></table>
+    </td>
+    <td>     
+        <table id="setasides">
+            <tbody><tr>
+                <td>#</td>
+                <td><center>Col</center></td>
+                <td><center>Row</center></td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td><input type="text" name="x" value="" size="2"></td>
+                <td><input type="text" name="y" value="" size="2"></td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td><input type="text" name="x" value="" size="2"></td>
+                <td><input type="text" name="y" value="" size="2"></td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td><input type="text" name="x" value="" size="2"></td>
+                <td><input type="text" name="y" value="" size="2"></td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td><input type="text" name="x" value="" size="2"></td>
+                <td><input type="text" name="y" value="" size="2"></td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td><input type="text" name="x" value="" size="2"></td>
+                <td><input type="text" name="y" value="" size="2"></td>
+            </tr>
+        </tbody></table>
+    </td>
+</tr>
+</tbody></table>
+
+<!--Here begins the second table, containing the calculated scores.-->
+<table>
+    <tbody><tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td><font color="#00FF00">Agriculture</font></td>
+        <td></td>
+        <td><font color="#00FF00">Ranching</font></td>
+        <td></td>
+        <td></td>
+     </tr>
+     <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td><input disabled="" type="text" id="a_total" size="4"></td>
+        <td>+</td>
+        <td><input disabled="" type="txt" id="r_total" size="4"></td>
+        <td>=</td>
+        <td><input disabled="" type="txt" id="pos_total" size="4"></td></tr>
+                                                        
+     <tr>
+        <td><font color="#FF0000">Habitat Qual.</font></td>
+        <td></td>
+        <td><font color="#FF0000">Carbon</font></td>
+        <td></td>
+        <td><font color="#FF0000">Hunt/Forage</font></td>
+        <td></td>
+        <td><font color="#FF0000">Water Qual.</font></td>
+        <td></td>
+        <td></td>
+     </tr>
+     <tr>
+        <td><input disabled="" type="text" id="hq_total" size="4"></td>
+        <td>+</td>
+        <td><input disabled="" type="txt" id="c_total" size="4"></td>
+        <td>+</td>
+        <td><input disabled="" type="txt" id="hf_total" size="4"></td>
+        <td>+</td>
+        <td><input disabled="" type="txt" id="wq_total" size="4"></td>
+        <td>=</td>        
+        <td><input disabled="" type="txt" id="neg_total" size="4"></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td align="right"><b>Net Score<b></b></b></td>
+        <td></td>
+        <td><input disabled="" type="txt" id="score" size="4"></td>
+    </tr>
+</tbody></table>
+
+
+<button onclick="clearText()">Clear</button>
+<button onclick="example()">Example</button>
+<button onclick="calculate()">Calculate</button>
+
+
+
+</td></tr></tbody></table></div></body></html>
