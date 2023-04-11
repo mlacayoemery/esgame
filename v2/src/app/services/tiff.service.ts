@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { fromBlob, fromUrl, writeArrayBuffer } from 'geotiff';
-import { GameBoard } from '../shared/models/game-board';
 
 @Injectable({
   providedIn: 'root'
@@ -25,7 +24,6 @@ export class TiffService {
     const result = new Blob([buffer], { type: 'application/octet-stream' });
     return result;
   }
-
 }
 
 
