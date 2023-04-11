@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import { LevelComponent } from './level/level.component';
 import { GameBoardComponent } from './game-board/game-board.component';
 import { FieldComponent } from './field/field.component';
+import { ProductionTypeButtonComponent } from './product-type-button/production-type-button.component';
 
 @NgModule({
   declarations: [
@@ -13,6 +14,7 @@ import { FieldComponent } from './field/field.component';
     LevelComponent,
     GameBoardComponent,
     FieldComponent,
+    ProductionTypeButtonComponent,
   ],
   imports: [
     BrowserModule,

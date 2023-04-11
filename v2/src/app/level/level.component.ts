@@ -14,10 +14,14 @@ export class LevelComponent {
 	selectedProductionType: ProductionType;
 	focusedGameBoard: GameBoard;
 	levelNumber: number;
+	productionTypes: ProductionType[];
 
 	constructor(private gameService: GameService) {
 		this.gameService.currentLevelObs.subscribe(level => {
 			this.setLevel(level);
+		});
+		this.gameService.productionTypesObs.subscribe(productionTypes => {
+			this.productionTypes = productionTypes;
 		});
 	}
 
