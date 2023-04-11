@@ -2,7 +2,9 @@
 </div>
 <div class="center-panel">
 	<p i18n>Aktuelle Runde: {{ levelNumber }}</p>
-	<tro-production-type-button *ngFor="let type of productionTypes" [productionType]="type"></tro-production-type-button>
+	<div>
+		<tro-production-type-button *ngFor="let type of productionTypes" [productionType]="type"></tro-production-type-button>
+	</div>
 	<tro-game-board [boardData]="focusedGameBoard"></tro-game-board>
 </div>
 <div class="right-panel">

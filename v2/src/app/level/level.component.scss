@@ -1,0 +1,7 @@
+:host {
+	display: flex;
+}
+
+.left-panel, .right-panel {
+	flex: 0 0 33%;
+}
