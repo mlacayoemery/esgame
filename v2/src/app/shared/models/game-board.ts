@@ -3,12 +3,10 @@ import { GameBoardType } from "./game-board-type";
 
 export class GameBoard {
 	fields: Field[];
-	fieldColumns: number;
 	gameBoardType: GameBoardType;
 
-	constructor(gameBoardType: GameBoardType, fields: Field[], fieldColumns: number) {
+	constructor(gameBoardType: GameBoardType, fields: Field[]) {
 		this.fields = fields;
 		this.gameBoardType = gameBoardType;
-		this.fieldColumns = fieldColumns;
 	}
 }

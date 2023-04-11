@@ -8,7 +8,15 @@
       "schematics": {
         "@schematics/angular:component": {
           "style": "scss"
-        }
+        },
+		"i18n": {
+			"sourceLocale": "de-CH",
+			"locales": {
+				"en": {
+					"translation": "src/i18n/messages.en.json"
+				}
+			}
+		}
       },
       "root": "",
       "sourceRoot": "src",
@@ -76,7 +84,9 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "Tradeoff-V2:build"
+            "browserTarget": "Tradeoff-V2:build",
+			"format": "json",
+			"outputPath": "src/i18n"
           }
         },
         "test": {
