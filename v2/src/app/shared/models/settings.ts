@@ -1,6 +1,6 @@
 
 export class Settings {
-	elementSize = 1;
+	elementSize = 2;
 	gameBoardColumns = 28;
-	fieldSize = 10;
+	fieldSize = 12;
 }

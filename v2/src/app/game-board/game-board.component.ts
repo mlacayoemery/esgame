@@ -4,6 +4,7 @@ import { Field } from '../shared/models/field';
 import { GameBoard } from '../shared/models/game-board';
 import { FieldComponent } from '../field/field.component';
 import { Settings } from '../shared/models/settings';
+import { map } from 'rxjs';
 
 @Component({
   selector: 'tro-game-board',
@@ -13,6 +14,7 @@ import { Settings } from '../shared/models/settings';
 export class GameBoardComponent implements AfterViewInit {
 	private _boardData: GameBoard;
 	fields: Field[];
+	fieldSize = this.gameService.settingsObs.pipe(map(o => o.fieldSize));
 	settings: Settings;
 	@ViewChildren(FieldComponent) fieldComponents: QueryList<FieldComponent>;
 

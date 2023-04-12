@@ -5,3 +5,9 @@
 .left-panel, .right-panel {
 	flex: 0 0 33%;
 }
+
+.production-type-buttons {
+	display: flex;
+	gap: 15px;
+	margin-bottom: 15px;
+}

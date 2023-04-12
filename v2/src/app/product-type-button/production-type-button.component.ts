@@ -1,7 +1,6 @@
 import { AfterViewInit, Component, HostBinding, HostListener, Input } from '@angular/core';
 import { ProductionType } from '../shared/models/production-type';
 import { GameService } from '../services/game.service';
-import { filter } from 'rxjs';
 
 @Component({
   selector: 'tro-production-type-button',

@@ -28,6 +28,17 @@ export class GameService {
 	}
 
 	highlightOnOtherFields(id: any) {
+		let elementSize = this.settings.value.elementSize;
+		if (elementSize == 1) {
+			this.highlightFields.next(id);
+			return;
+		}
+
+		let columns = this.settings.value.gameBoardColumns;
+		console.log('id', id, 'columns', columns);
+		if (columns - (id % columns) < elementSize) {
+			id = id - (id % columns) + columns - elementSize;
+		}
 		this.highlightFields.next(id);
 	}
 

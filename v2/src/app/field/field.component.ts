@@ -22,7 +22,8 @@ export class FieldComponent {
 
 	get field() { return this._field; }
 
-	@Input() set size(size: number) {
+	@Input() set size(size: number | null) {
+		size = size ?? 10;
 		this.fieldWidth = size + 'px';
 		this.fieldHeight = size + 'px';
 	}
