@@ -4,7 +4,48 @@
 	
 	&.is-highlighted {
 		border: 1px solid #00E0FF;
-		box-shadow: 0px 0px 4px 3px #00E0FF;
+		// box-shadow: 0px 0px 4px 3px #00E0FF;
 		z-index: 1;
+
+		$left: drop-shadow(-3px 0px 1px #00E0FF);
+		$right: drop-shadow(3px 0px 1px #00E0FF);
+		$top: drop-shadow(0px -3px 1px #00E0FF);
+		$bottom: drop-shadow(0px 3px 1px #00E0FF);
+
+		&.--all-sides {
+			filter: $left $right $top $bottom;
+		}
+
+		&.--left {
+			filter: $left;
+		}
+
+		&.--top-left {
+			filter: $top $left;
+		}
+
+		&.--bottom-left {
+			filter: $bottom $left;
+		}
+
+		&.--right {
+			filter: $right;
+		}
+
+		&.--top-right {
+			filter: $top $right;
+		}
+
+		&.--bottom-right {
+			filter: $bottom $right;
+		}
+
+		&.--top {
+			filter: $top;
+		}
+
+		&.--bottom {
+			filter: $bottom;
+		}
 	}
 }

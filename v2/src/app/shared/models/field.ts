@@ -16,3 +16,33 @@ export class Field {
 		this.score = score;
 	}
 }
+
+export enum HighlightSide { 
+	ALLSIDES = "--all-sides",
+	TOP = "--top",
+	BOTTOM = "--bottom",
+	LEFT = "--left",
+	RIGHT = "--right",
+	TOPLEFT = "--top-left",
+	TOPRIGHT = "--top-right",
+	BOTTOMLEFT = "--bottom-left",
+	BOTTOMRIGHT = "--bottom-right",
+	NONE = ""
+}
+
+export class HighlightField {
+	id: number;
+	side: HighlightSide;
+}
+
+export class SelectedField {
+	ids: number[];
+	productionType: ProductionType;
+	score: number;
+
+	constructor(ids: number[], productionType: ProductionType, score: number) {
+		this.ids = ids;
+		this.productionType = productionType;
+		this.score = score;
+	}
+}

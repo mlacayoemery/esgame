@@ -30,6 +30,7 @@ export class GameBoardComponent implements AfterViewInit {
 	
 	constructor(private gameService: GameService) {
 		this.gameService.settingsObs.subscribe(settings => {
+			this.settings = settings;
 			this.setFieldColumns(settings.gameBoardColumns);
 		});
 	}
@@ -44,12 +45,23 @@ export class GameBoardComponent implements AfterViewInit {
 	}
 
 	ngAfterViewInit() {
-        this.gameService.highlightFieldObs.subscribe(fieldNumber => {
+        this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
 			this.fieldComponents.forEach(o => o.removeHighlight());
             
-			if (fieldNumber != null) {
-                this.fieldComponents.get(fieldNumber)?.highlight();
+			if (fieldNumbers.length > 0) {
+				fieldNumbers.forEach(fieldNumber => {
+					this.fieldComponents.get(fieldNumber.id)?.highlight(fieldNumber.side);
+				});
             }
-        })
+        });
+
+		this.gameService.selectedFieldsObs.subscribe(fields => {
+			this.fields.forEach(field => this.fieldComponents.get(field.id)?.unassign());
+			fields.forEach(field => {
+				field.ids.forEach(id => {
+					this.fieldComponents.get(id)?.assign(field.productionType);
+				});
+			});
+		});
     }
 }
