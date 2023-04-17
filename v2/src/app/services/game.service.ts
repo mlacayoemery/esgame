@@ -7,6 +7,7 @@ import { V1GameBoard } from '../shared/helpers/v1-gameboard';
 import { Settings } from '../shared/models/settings';
 import { ProductionType } from '../shared/models/production-type';
 import { HighlightField, HighlightSide, SelectedField } from '../shared/models/field';
+import { TiffService } from './tiff.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -26,7 +27,7 @@ export class GameService {
 	selectedProductionTypeObs = this.selectedProductionType.asObservable();
 	selectedFieldsObs = this.selectedFields.asObservable();
 
-	constructor() {
+	constructor(private tiffService: TiffService) {
 		this.initialiseGameBoards();
 	}
 
@@ -37,7 +38,7 @@ export class GameService {
 		// 	this.highlightFields.next([{id, side: HighlightSide.ALLSIDES}]);
 		// 	return;
 		// }
-		
+
 		// let ids: HighlightField[] = [];
 
 		// let columns = this.settings.value.gameBoardColumns;
@@ -77,7 +78,7 @@ export class GameService {
 		let fields = this.getAssociatedFields(id).map(o => o.id);
 
 		if (this.selectedProductionType.value != null) {
-			let selectedField = new SelectedField(fields,  this.selectedProductionType.value, this.selectedProductionType.value?.scoreMap.getScore(fields));
+			let selectedField = new SelectedField(fields, this.selectedProductionType.value, this.selectedProductionType.value?.scoreMap.getScore(fields));
 			this.selectedFields.next([...this.selectedFields.value, selectedField]);
 		}
 	}
@@ -89,9 +90,9 @@ export class GameService {
 	private getAssociatedFields(id: number): HighlightField[] {
 		let elementSize = this.settings.value.elementSize;
 		if (elementSize == 1) {
-			return [{id, side: HighlightSide.ALLSIDES}];
+			return [{ id, side: HighlightSide.ALLSIDES }];
 		}
-		
+
 		let ids: HighlightField[] = [];
 
 		let columns = this.settings.value.gameBoardColumns;
@@ -112,7 +113,7 @@ export class GameService {
 				let sidesY = [...sidesX];
 				if (j == 0) sidesY.push(HighlightSide.TOP);
 				if (j == elementSize - 1) sidesY.push(HighlightSide.BOTTOM);
-				ids.push({id: i + (j * columns), side: this.getSide(sidesY)});
+				ids.push({ id: i + (j * columns), side: this.getSide(sidesY) });
 			}
 		}
 
@@ -125,7 +126,7 @@ export class GameService {
 			if (sides.some(o => o == HighlightSide.RIGHT)) return HighlightSide.TOPRIGHT;
 			return HighlightSide.TOP;
 		}
-		
+
 		if (sides.some(o => o == HighlightSide.BOTTOM)) {
 			if (sides.some(o => o == HighlightSide.LEFT)) return HighlightSide.BOTTOMLEFT;
 			if (sides.some(o => o == HighlightSide.RIGHT)) return HighlightSide.BOTTOMRIGHT;
@@ -141,28 +142,18 @@ export class GameService {
 		// This code can be replaced as soon as it is possible to load data from the API
 		let level1 = new Level();
 
-		// let fieldTypeEmpty = new FieldType("#FFF", "EMPTY");
-		// let fieldTypeWater = new FieldType("#00F", "CONFIGURED");
-		// let fields = [
-		// 	...Array(12).fill(new Field(fieldTypeEmpty, 50)),
-		// 	...Array(2).fill(new Field(fieldTypeWater, 50)),
-		// 	...Array(14).fill(new Field(fieldTypeEmpty, 50)),
-		// 	...Array(10).fill(new Field(fieldTypeEmpty, 50)),
-		// 	...Array(4).fill(new Field(fieldTypeWater, 50)),
-		// 	...Array(14).fill(new Field(fieldTypeEmpty, 50)),
-		// 	...Array(8).fill(new Field(fieldTypeEmpty, 50)),
-		// 	...Array(8).fill(new Field(fieldTypeWater, 50)),
-		// 	...Array(12).fill(new Field(fieldTypeEmpty, 50)),
-		// ];
-		let gameBoard = new GameBoard(GameBoardType.DrawingMap, new V1GameBoard().getAgricultureFromTxt());
+		new V1GameBoard(this.tiffService).currentGameBoardObs.subscribe(val => {
+			if (val != null) {
+				let gameBoard = new GameBoard(GameBoardType.DrawingMap, val!);
+				level1.gameBoards.push(gameBoard);
+				level1.levelNumber = 1;
 
-		level1.gameBoards.push(gameBoard);
-		level1.levelNumber = 1;
+				this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Ackerbau", "http://esgame.unige.ch/images/corn.png"));
+				this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
+				this.productionTypes.next(this.productionTypes.value);
 
-		this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Ackerbau", "http://esgame.unige.ch/images/corn.png"));
-		this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
-		this.productionTypes.next(this.productionTypes.value);
-
-		this.currentLevel.next(level1);
+				this.currentLevel.next(level1);
+			}
+		})
 	}
 }
