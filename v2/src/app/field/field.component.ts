@@ -1,4 +1,5 @@
 import { Component, HostBinding, HostListener, Input } from '@angular/core';
+import { map } from 'rxjs';
 import { GameService } from '../services/game.service';
 import { Field, HighlightSide } from '../shared/models/field';
 import { ProductionType } from '../shared/models/production-type';
@@ -10,13 +11,18 @@ import { ProductionType } from '../shared/models/production-type';
 })
 export class FieldComponent {
 	private _field: Field;
-	
+  private _size: number;
+
 	@HostBinding('style.width') private fieldWidth: string;
 	@HostBinding('style.height') private fieldHeight: string;
 	@HostBinding('style.background-color') private backgroundColor: string;
-	@HostBinding('class.is-highlighted') isHighlighted = false;
+	@HostBinding('class.--is-highlighted') isHighlighted = false;
 	@HostBinding('class') highlightSide = HighlightSide.NONE;
-	
+  @HostBinding('class.--has-image') showProductionImage = false;
+
+  imageSize = 0;
+  imageMode = false;
+
 	@Input() set field(field: Field) {
 		this._field = field;
 		this.setColor();
@@ -26,16 +32,20 @@ export class FieldComponent {
 
 	@Input() set size(size: number | null) {
 		size = size ?? 10;
+    this._size = size;
 		this.fieldWidth = size + 'px';
 		this.fieldHeight = size + 'px';
 	}
 
 	constructor(private gameService: GameService) {
+    this.gameService.settingsObs.subscribe(settings => {
+      this.imageMode = settings.imageMode;
+    });
 	}
 
 	@HostListener('mouseenter') // Testen, ob das nicht zu langsam wird, evtl. mit debounce?
 	onEnter() {
-	  	this.gameService.highlightOnOtherFields(this._field.id);
+    this.gameService.highlightOnOtherFields(this._field.id);
 	}
 
 	@HostListener('click')
@@ -67,12 +77,23 @@ export class FieldComponent {
 	assign(productionType: ProductionType) {
 		this.field.assigned = true;
 		this.field.productionType = productionType;
-		this.setColor();
+    if (this.imageMode == false) {
+      this.setColor();
+    }
+    this.gameService.removeHighlight();
 	}
 
 	unassign() {
 		this.field.assigned = false;
 		this.field.productionType = null;
-		this.setColor();
+    this.showProductionImage = false;
+    if (this.imageMode == false) {
+      this.setColor();
+    }
 	}
+
+  showProductionTypeImage(size: number) {
+    this.showProductionImage = true;
+    this.imageSize = size * this._size;
+  }
 }

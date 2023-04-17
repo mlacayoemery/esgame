@@ -17,7 +17,7 @@ export class Field {
 	}
 }
 
-export enum HighlightSide { 
+export enum HighlightSide {
 	ALLSIDES = "--all-sides",
 	TOP = "--top",
 	BOTTOM = "--bottom",

@@ -12,56 +12,57 @@ import { map } from 'rxjs';
   styleUrls: ['./game-board.component.scss']
 })
 export class GameBoardComponent implements AfterViewInit {
-	private _boardData: GameBoard;
-	fields: Field[];
-	fieldSize = this.gameService.settingsObs.pipe(map(o => o.fieldSize));
-	settings: Settings;
-	@ViewChildren(FieldComponent) fieldComponents: QueryList<FieldComponent>;
+  private _boardData: GameBoard;
+  fields: Field[];
+  fieldSize = this.gameService.settingsObs.pipe(map(o => o.fieldSize));
+  settings: Settings;
+  @ViewChildren(FieldComponent) fieldComponents: QueryList<FieldComponent>;
 
-	@HostBinding('style.grid-template-columns') fieldColumns: string;
+  @HostBinding('style.grid-template-columns') fieldColumns: string;
 
-	@Input()
-	set boardData(data: GameBoard) {
-		this._boardData = data;
-		this.fields = data.fields;
-	}
+  @Input()
+  set boardData(data: GameBoard) {
+    this._boardData = data;
+    this.fields = data.fields;
+  }
 
-	get boardData() { return this._boardData; }
-	
-	constructor(private gameService: GameService) {
-		this.gameService.settingsObs.subscribe(settings => {
-			this.settings = settings;
-			this.setFieldColumns(settings.gameBoardColumns);
-		});
-	}
+  get boardData() { return this._boardData; }
 
-	@HostListener('mouseleave')
-	onLeave() {
-	  	this.gameService.removeHighlight();
-	}
+  constructor(private gameService: GameService) {
+    this.gameService.settingsObs.subscribe(settings => {
+      this.settings = settings;
+      this.setFieldColumns(settings.gameBoardColumns);
+    });
+  }
 
-	setFieldColumns(fieldColumns: number) {
-		this.fieldColumns = `repeat(${fieldColumns}, 1fr)`;
-	}
+  @HostListener('mouseleave')
+  onLeave() {
+    this.gameService.removeHighlight();
+  }
 
-	ngAfterViewInit() {
-        this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
-			this.fieldComponents.forEach(o => o.removeHighlight());
-            
-			if (fieldNumbers.length > 0) {
-				fieldNumbers.forEach(fieldNumber => {
-					this.fieldComponents.get(fieldNumber.id)?.highlight(fieldNumber.side);
-				});
-            }
+  setFieldColumns(fieldColumns: number) {
+    this.fieldColumns = `repeat(${fieldColumns}, 1fr)`;
+  }
+
+  ngAfterViewInit() {
+    this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
+      this.fieldComponents.forEach(o => o.removeHighlight());
+
+      if (fieldNumbers.length > 0) {
+        fieldNumbers.forEach(fieldNumber => {
+          this.fieldComponents.get(fieldNumber.id)?.highlight(fieldNumber.side);
         });
+      }
+    });
 
-		this.gameService.selectedFieldsObs.subscribe(fields => {
-			this.fields.forEach(field => this.fieldComponents.get(field.id)?.unassign());
-			fields.forEach(field => {
-				field.ids.forEach(id => {
-					this.fieldComponents.get(id)?.assign(field.productionType);
-				});
-			});
-		});
-    }
+    this.gameService.selectedFieldsObs.subscribe(fields => {
+      this.fields.forEach(field => this.fieldComponents.get(field.id)?.unassign());
+      fields.forEach(field => {
+        field.ids.forEach(id => {
+          this.fieldComponents.get(id)?.assign(field.productionType);
+        });
+        this.fieldComponents.get(field.ids[0])?.showProductionTypeImage(this.settings.elementSize);
+      });
+    });
+  }
 }

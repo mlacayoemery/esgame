@@ -4,4 +4,5 @@ export class Settings {
 	gameBoardColumns = 28;
 	gameBoardRows = 29;
 	fieldSize = 12;
+  imageMode = true;
 }

@@ -31,39 +31,19 @@ export class GameService {
 	}
 
 	highlightOnOtherFields(id: any) {
+    if (this.isIdSelected(id)) {
+      this.removeHighlight();
+      return;
+    }
+
 		let ids = this.getAssociatedFields(id);
-		// let elementSize = this.settings.value.elementSize;
-		// if (elementSize == 1) {
-		// 	this.highlightFields.next([{id, side: HighlightSide.ALLSIDES}]);
-		// 	return;
-		// }
-		
-		// let ids: HighlightField[] = [];
-
-		// let columns = this.settings.value.gameBoardColumns;
-		// if (columns - (id % columns) < elementSize) {
-		// 	id = id - (id % columns) + columns - elementSize;
-		// }
-
-		// let rows = this.settings.value.gameBoardRows;
-		// if (id >= (columns * rows - (elementSize - 1) * columns)) {
-		// 	id = (columns * (rows - elementSize) + (id % columns));
-		// }
-
-		// for (let i = id; i < (id + elementSize); i++) {
-		// 	let sidesX: HighlightSide[] = [];
-		// 	if (i == id) sidesX.push(HighlightSide.LEFT);
-		// 	if (i == id + elementSize - 1) sidesX.push(HighlightSide.RIGHT);
-		// 	for (let j = 0; j < elementSize; j++) {
-		// 		let sidesY = [...sidesX];
-		// 		if (j == 0) sidesY.push(HighlightSide.TOP);
-		// 		if (j == elementSize - 1) sidesY.push(HighlightSide.BOTTOM);
-		// 		ids.push({id: i + (j * columns), side: this.getSide(sidesY)});
-		// 	}
-		// }
 
 		this.highlightFields.next(ids);
 	}
+
+  isIdSelected(id: number) {
+    return this.selectedFields.value.some(o => o.ids.some(p => p == id));
+  }
 
 	removeHighlight() {
 		this.highlightFields.next([]);
@@ -91,7 +71,7 @@ export class GameService {
 		if (elementSize == 1) {
 			return [{id, side: HighlightSide.ALLSIDES}];
 		}
-		
+
 		let ids: HighlightField[] = [];
 
 		let columns = this.settings.value.gameBoardColumns;
@@ -125,7 +105,7 @@ export class GameService {
 			if (sides.some(o => o == HighlightSide.RIGHT)) return HighlightSide.TOPRIGHT;
 			return HighlightSide.TOP;
 		}
-		
+
 		if (sides.some(o => o == HighlightSide.BOTTOM)) {
 			if (sides.some(o => o == HighlightSide.LEFT)) return HighlightSide.BOTTOMLEFT;
 			if (sides.some(o => o == HighlightSide.RIGHT)) return HighlightSide.BOTTOMRIGHT;
