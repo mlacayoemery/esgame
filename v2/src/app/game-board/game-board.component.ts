@@ -3,6 +3,8 @@ import { GameService } from '../services/game.service';
 import { Field } from '../shared/models/field';
 import { GameBoard } from '../shared/models/game-board';
 import { FieldComponent } from '../field/field.component';
+import { Settings } from '../shared/models/settings';
+import { map } from 'rxjs';
 
 @Component({
   selector: 'tro-game-board',
@@ -12,6 +14,8 @@ import { FieldComponent } from '../field/field.component';
 export class GameBoardComponent implements AfterViewInit {
 	private _boardData: GameBoard;
 	fields: Field[];
+	fieldSize = this.gameService.settingsObs.pipe(map(o => o.fieldSize));
+	settings: Settings;
 	@ViewChildren(FieldComponent) fieldComponents: QueryList<FieldComponent>;
 
 	@HostBinding('style.grid-template-columns') fieldColumns: string;
@@ -19,26 +23,45 @@ export class GameBoardComponent implements AfterViewInit {
 	@Input()
 	set boardData(data: GameBoard) {
 		this._boardData = data;
-		this.fieldColumns = `repeat(${data.fieldColumns}, 1fr)`;
 		this.fields = data.fields;
 	}
 
 	get boardData() { return this._boardData; }
 	
-	constructor(private gameService: GameService) {}
+	constructor(private gameService: GameService) {
+		this.gameService.settingsObs.subscribe(settings => {
+			this.settings = settings;
+			this.setFieldColumns(settings.gameBoardColumns);
+		});
+	}
 
 	@HostListener('mouseleave')
 	onLeave() {
 	  	this.gameService.removeHighlight();
 	}
 
+	setFieldColumns(fieldColumns: number) {
+		this.fieldColumns = `repeat(${fieldColumns}, 1fr)`;
+	}
+
 	ngAfterViewInit() {
-        this.gameService.highlightFieldObs.subscribe(fieldNumber => {
+        this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
 			this.fieldComponents.forEach(o => o.removeHighlight());
             
-			if (fieldNumber != null) {
-                this.fieldComponents.get(fieldNumber)?.highlight();
+			if (fieldNumbers.length > 0) {
+				fieldNumbers.forEach(fieldNumber => {
+					this.fieldComponents.get(fieldNumber.id)?.highlight(fieldNumber.side);
+				});
             }
-        })
+        });
+
+		this.gameService.selectedFieldsObs.subscribe(fields => {
+			this.fields.forEach(field => this.fieldComponents.get(field.id)?.unassign());
+			fields.forEach(field => {
+				field.ids.forEach(id => {
+					this.fieldComponents.get(id)?.assign(field.productionType);
+				});
+			});
+		});
     }
 }
