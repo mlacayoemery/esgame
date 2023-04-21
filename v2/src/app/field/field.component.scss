@@ -1,8 +1,8 @@
 :host {
-  position: relative;
+	position: relative;
 	display: inline;
 	border: 1px solid black;
-  box-sizing: border-box;
+	box-sizing: border-box;
 
 	&.--is-highlighted {
 		border: 1px solid #00E0FF;
@@ -51,14 +51,53 @@
 		}
 	}
 
-  &.--has-image {
-    border-color: blue;
-  }
+	&.--is-assigned {
+		$border-color: yellow;
+		&.--all-sides {
+			border-color: $border-color;
+		}
+
+		&.--left {
+			border-left-color: $border-color;
+		}
+
+		&.--top-left {
+			border-left-color: $border-color;
+			border-top-color: $border-color;
+		}
+
+		&.--bottom-left {
+			border-left-color: $border-color;
+			border-bottom-color: $border-color;
+		}
+
+		&.--right {
+			border-right-color: $border-color;
+		}
+
+		&.--top-right {
+			border-right-color: $border-color;
+			border-top-color: $border-color;
+		}
+
+		&.--bottom-right {
+			border-right-color: $border-color;
+			border-bottom-color: $border-color;
+		}
+
+		&.--top {
+			border-top-color: $border-color;
+		}
+
+		&.--bottom {
+			border-bottom-color: $border-color;
+		}
+	}
 }
 
 img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 1;
 }

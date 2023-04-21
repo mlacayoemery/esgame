@@ -31,19 +31,24 @@ export class GameService {
 	}
 
 	highlightOnOtherFields(id: any) {
-    if (this.isIdSelected(id)) {
-      this.removeHighlight();
-      return;
-    }
+		if (!this.canFieldBePlaced(id)) {
+			this.removeHighlight();
+			return;
+		}
+
+		if (this.isIdSelected(id)) {
+			this.removeHighlight();
+			return;
+		}
 
 		let ids = this.getAssociatedFields(id);
 
 		this.highlightFields.next(ids);
 	}
 
-  isIdSelected(id: number) {
-    return this.selectedFields.value.some(o => o.ids.some(p => p == id));
-  }
+	isIdSelected(id: number) {
+		return this.selectedFields.value.some(o => o.fields.some(p => p.id == id));
+	}
 
 	removeHighlight() {
 		this.highlightFields.next([]);
@@ -54,22 +59,33 @@ export class GameService {
 	}
 
 	selectField(id: number) {
-		let fields = this.getAssociatedFields(id).map(o => o.id);
+		let fields = this.getAssociatedFields(id);
+		
+		if (!this.canFieldBePlaced(undefined, fields)) {
+			this.removeHighlight();
+			return;
+		}
 
 		if (this.selectedProductionType.value != null) {
-			let selectedField = new SelectedField(fields,  this.selectedProductionType.value, this.selectedProductionType.value?.scoreMap.getScore(fields));
+			let selectedField = new SelectedField(fields, this.selectedProductionType.value, this.selectedProductionType.value?.scoreMap.getScore(fields.map(o => o.id)));
 			this.selectedFields.next([...this.selectedFields.value, selectedField]);
 		}
 	}
 
 	deselectField(id: number) {
-		this.selectedFields.next(this.selectedFields.value.filter(o => o.ids.some(p => p == id) == false));
+		this.selectedFields.next(this.selectedFields.value.filter(o => o.fields.some(p => p.id == id) == false));
+	}
+
+	private canFieldBePlaced(id: number = -1, associatedFields: HighlightField[] = []) {
+		if (this.selectedProductionType.value?.maxElements == this.selectedFields.value.filter(o => o.productionType == this.selectedProductionType.value).length) return false;
+		if (id > -1) associatedFields = this.getAssociatedFields(id);
+		return !(this.selectedFields.value.some(o => o.fields.some(p => associatedFields.some(q => q.id == p.id))));
 	}
 
 	private getAssociatedFields(id: number): HighlightField[] {
 		let elementSize = this.settings.value.elementSize;
 		if (elementSize == 1) {
-			return [{id, side: HighlightSide.ALLSIDES}];
+			return [{ id, side: HighlightSide.ALLSIDES }];
 		}
 
 		let ids: HighlightField[] = [];
@@ -92,7 +108,7 @@ export class GameService {
 				let sidesY = [...sidesX];
 				if (j == 0) sidesY.push(HighlightSide.TOP);
 				if (j == elementSize - 1) sidesY.push(HighlightSide.BOTTOM);
-				ids.push({id: i + (j * columns), side: this.getSide(sidesY)});
+				ids.push({ id: i + (j * columns), side: this.getSide(sidesY) });
 			}
 		}
 
