@@ -19,8 +19,6 @@ export class FieldComponent {
 
 	get field() { return this._field; }
 
-	private _size: number;
-
 	@HostBinding('style.width') private fieldWidth: string;
 	@HostBinding('style.height') private fieldHeight: string;
 	@HostBinding('style.background-color') private backgroundColor: string;
@@ -31,13 +29,6 @@ export class FieldComponent {
 
 	imageSize = 0;
 	imageMode = false;
-
-	@Input() set size(size: number | null) {
-		size = size ?? 10;
-		this._size = size;
-		this.fieldWidth = size + 'px';
-		this.fieldHeight = size + 'px';
-	}
 
 	constructor(private gameService: GameService) {
 		this.gameService.settingsObs.subscribe(settings => {
@@ -98,6 +89,5 @@ export class FieldComponent {
 
 	showProductionTypeImage(size: number) {
 		this.showProductionImage = true;
-		this.imageSize = size * this._size;
 	}
 }

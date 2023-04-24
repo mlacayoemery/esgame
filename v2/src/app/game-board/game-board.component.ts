@@ -14,7 +14,6 @@ import { map } from 'rxjs';
 export class GameBoardComponent implements AfterViewInit {
 	private _boardData: GameBoard;
 	fields: Field[];
-	fieldSize = this.gameService.settingsObs.pipe(map(o => o.fieldSize));
 	settings: Settings;
 	@ViewChildren(FieldComponent) fieldComponents: QueryList<FieldComponent>;
 
