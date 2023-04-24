@@ -17,7 +17,7 @@ export class Field {
 	}
 }
 
-export enum HighlightSide { 
+export enum HighlightSide {
 	ALLSIDES = "--all-sides",
 	TOP = "--top",
 	BOTTOM = "--bottom",
@@ -36,12 +36,12 @@ export class HighlightField {
 }
 
 export class SelectedField {
-	ids: number[];
+	fields: HighlightField[];
 	productionType: ProductionType;
 	score: number;
 
-	constructor(ids: number[], productionType: ProductionType, score: number) {
-		this.ids = ids;
+	constructor(ids: HighlightField[], productionType: ProductionType, score: number) {
+		this.fields = ids;
 		this.productionType = productionType;
 		this.score = score;
 	}

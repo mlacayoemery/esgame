@@ -7,9 +7,9 @@ import { Settings } from '../shared/models/settings';
 import { map } from 'rxjs';
 
 @Component({
-  selector: 'tro-game-board',
-  templateUrl: './game-board.component.html',
-  styleUrls: ['./game-board.component.scss']
+	selector: 'tro-game-board',
+	templateUrl: './game-board.component.html',
+	styleUrls: ['./game-board.component.scss']
 })
 export class GameBoardComponent implements AfterViewInit {
 	private _boardData: GameBoard;
@@ -27,7 +27,7 @@ export class GameBoardComponent implements AfterViewInit {
 	}
 
 	get boardData() { return this._boardData; }
-	
+
 	constructor(private gameService: GameService) {
 		this.gameService.settingsObs.subscribe(settings => {
 			this.settings = settings;
@@ -37,7 +37,7 @@ export class GameBoardComponent implements AfterViewInit {
 
 	@HostListener('mouseleave')
 	onLeave() {
-	  	this.gameService.removeHighlight();
+		this.gameService.removeHighlight();
 	}
 
 	setFieldColumns(fieldColumns: number) {
@@ -45,23 +45,24 @@ export class GameBoardComponent implements AfterViewInit {
 	}
 
 	ngAfterViewInit() {
-        this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
+		this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
 			this.fieldComponents.forEach(o => o.removeHighlight());
-            
+
 			if (fieldNumbers.length > 0) {
 				fieldNumbers.forEach(fieldNumber => {
 					this.fieldComponents.get(fieldNumber.id)?.highlight(fieldNumber.side);
 				});
-            }
-        });
+			}
+		});
 
 		this.gameService.selectedFieldsObs.subscribe(fields => {
 			this.fields.forEach(field => this.fieldComponents.get(field.id)?.unassign());
 			fields.forEach(field => {
-				field.ids.forEach(id => {
-					this.fieldComponents.get(id)?.assign(field.productionType);
+				field.fields.forEach(highlightField => {
+					this.fieldComponents.get(highlightField.id)?.assign(field.productionType, highlightField.side);
 				});
+				this.fieldComponents.get(field.fields[0].id)?.showProductionTypeImage(this.settings.elementSize);
 			});
 		});
-    }
+	}
 }

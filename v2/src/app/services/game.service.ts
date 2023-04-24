@@ -32,38 +32,23 @@ export class GameService {
 	}
 
 	highlightOnOtherFields(id: any) {
+		if (!this.canFieldBePlaced(id)) {
+			this.removeHighlight();
+			return;
+		}
+
+		if (this.isIdSelected(id)) {
+			this.removeHighlight();
+			return;
+		}
+
 		let ids = this.getAssociatedFields(id);
-		// let elementSize = this.settings.value.elementSize;
-		// if (elementSize == 1) {
-		// 	this.highlightFields.next([{id, side: HighlightSide.ALLSIDES}]);
-		// 	return;
-		// }
-
-		// let ids: HighlightField[] = [];
-
-		// let columns = this.settings.value.gameBoardColumns;
-		// if (columns - (id % columns) < elementSize) {
-		// 	id = id - (id % columns) + columns - elementSize;
-		// }
-
-		// let rows = this.settings.value.gameBoardRows;
-		// if (id >= (columns * rows - (elementSize - 1) * columns)) {
-		// 	id = (columns * (rows - elementSize) + (id % columns));
-		// }
-
-		// for (let i = id; i < (id + elementSize); i++) {
-		// 	let sidesX: HighlightSide[] = [];
-		// 	if (i == id) sidesX.push(HighlightSide.LEFT);
-		// 	if (i == id + elementSize - 1) sidesX.push(HighlightSide.RIGHT);
-		// 	for (let j = 0; j < elementSize; j++) {
-		// 		let sidesY = [...sidesX];
-		// 		if (j == 0) sidesY.push(HighlightSide.TOP);
-		// 		if (j == elementSize - 1) sidesY.push(HighlightSide.BOTTOM);
-		// 		ids.push({id: i + (j * columns), side: this.getSide(sidesY)});
-		// 	}
-		// }
 
 		this.highlightFields.next(ids);
+	}
+
+	isIdSelected(id: number) {
+		return this.selectedFields.value.some(o => o.fields.some(p => p.id == id));
 	}
 
 	removeHighlight() {
@@ -75,16 +60,27 @@ export class GameService {
 	}
 
 	selectField(id: number) {
-		let fields = this.getAssociatedFields(id).map(o => o.id);
+		let fields = this.getAssociatedFields(id);
+		
+		if (!this.canFieldBePlaced(undefined, fields)) {
+			this.removeHighlight();
+			return;
+		}
 
 		if (this.selectedProductionType.value != null) {
-			let selectedField = new SelectedField(fields, this.selectedProductionType.value, this.selectedProductionType.value?.scoreMap.getScore(fields));
+			let selectedField = new SelectedField(fields, this.selectedProductionType.value, this.selectedProductionType.value?.scoreMap.getScore(fields.map(o => o.id)));
 			this.selectedFields.next([...this.selectedFields.value, selectedField]);
 		}
 	}
 
 	deselectField(id: number) {
-		this.selectedFields.next(this.selectedFields.value.filter(o => o.ids.some(p => p == id) == false));
+		this.selectedFields.next(this.selectedFields.value.filter(o => o.fields.some(p => p.id == id) == false));
+	}
+
+	private canFieldBePlaced(id: number = -1, associatedFields: HighlightField[] = []) {
+		if (this.selectedProductionType.value?.maxElements == this.selectedFields.value.filter(o => o.productionType == this.selectedProductionType.value).length) return false;
+		if (id > -1) associatedFields = this.getAssociatedFields(id);
+		return !(this.selectedFields.value.some(o => o.fields.some(p => associatedFields.some(q => q.id == p.id))));
 	}
 
 	private getAssociatedFields(id: number): HighlightField[] {
