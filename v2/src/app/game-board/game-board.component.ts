@@ -60,7 +60,7 @@ export class GameBoardComponent implements AfterViewInit {
 				field.fields.forEach(highlightField => {
 					this.fieldComponents.get(highlightField.id)?.assign(field.productionType, highlightField.side);
 				});
-				this.fieldComponents.get(field.fields[0].id)?.showProductionTypeImage(this.settings.elementSize);
+				this.fieldComponents.get(field.fields[0].id)?.showProductionTypeImage();
 			});
 		});
 	}

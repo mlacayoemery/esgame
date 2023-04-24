@@ -1,1 +1,1 @@
-<img [src]="field.productionType?.image" *ngIf="showProductionImage" [ngStyle]="{ width: 'calc(300% + 4px)', height: 'calc(300% + 4px)'}">
+<img [src]="field.productionType?.image" *ngIf="showProductionImage" [ngStyle]="{ width: 'calc(' + (100 * elementSize) + '%+ 4px)', height: 'calc(' + (100 * elementSize) + '% + 4px)'}">

@@ -11,13 +11,23 @@ import { ProductionType } from '../shared/models/production-type';
 })
 export class FieldComponent {
 	private _field: Field;
+	private _imageMode = false;
 
 	@Input() set field(field: Field) {
 		this._field = field;
 		this.setColor();
 	}
 
+	@Input() set imageMode(mode: any) {
+		if (mode === false) this._imageMode = false;
+		else this._imageMode = true;
+	}
+
+	get imgaeMode() { return this._imageMode; }
+
 	get field() { return this._field; }
+
+	private _size: number = 10;
 
 	@HostBinding('style.width') private fieldWidth: string;
 	@HostBinding('style.height') private fieldHeight: string;
@@ -28,10 +38,11 @@ export class FieldComponent {
 	@HostBinding('class.--is-assigned') isAssigned = false;
 
 	imageSize = 0;
-	imageMode = false;
+	elementSize: number;
 
 	constructor(private gameService: GameService) {
 		this.gameService.settingsObs.subscribe(settings => {
+			this.elementSize = settings.elementSize;
 			this.imageMode = settings.imageMode;
 		});
 	}
@@ -45,6 +56,13 @@ export class FieldComponent {
 	onClick() {
 		if (this.field.assigned) this.gameService.deselectField(this.field.id);
 		else this.gameService.selectField(this.field.id);
+	}
+
+	@Input() set size(size: number | null) {
+		size = size ?? 10;
+		this._size = size;
+		this.fieldWidth = size + 'px';
+		this.fieldHeight = size + 'px';
 	}
 
 	setColor() {
@@ -70,7 +88,6 @@ export class FieldComponent {
 		this.field.assigned = this.isAssigned = true;
 		this.field.productionType = productionType;
 		this.highlightSide = side;
-		console.log(this.field.id, side);
 		if (this.imageMode == false) {
 			this.setColor();
 		}
@@ -87,7 +104,7 @@ export class FieldComponent {
 		}
 	}
 
-	showProductionTypeImage(size: number) {
+	showProductionTypeImage() {
 		this.showProductionImage = true;
 	}
 }
