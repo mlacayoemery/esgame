@@ -1,12 +1,20 @@
-<div class="left-panel">
-</div>
-<div class="center-panel">
-	<p i18n>Aktuelle Runde: {{ levelNumber }}</p>
-	<div class="production-type-buttons">
-		<tro-production-type-button *ngFor="let type of productionTypes" [productionType]="type"></tro-production-type-button>
-	</div>
+<div class="panel left-panel">
+	<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard"></tro-game-board>
 	<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard"></tro-game-board>
 </div>
-<div class="right-panel">
-
+<div class="panel center-panel">
+	<p i18n>Aktuelle Runde: {{ levelNumber }}</p>
+	<div class="production-type-buttons">
+		<tro-production-type-button *ngFor="let type of productionTypes"
+			[productionType]="type"></tro-production-type-button>
+	</div>
+	<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard"></tro-game-board>
+	<div>
+		<tro-point-board></tro-point-board>
+		<div>CURRENT SELECTION POINTS</div>
+	</div>
+</div>
+<div class="panel right-panel">
+	<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard"></tro-game-board>
+	<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard"></tro-game-board>
 </div>

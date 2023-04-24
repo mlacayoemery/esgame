@@ -1,9 +1,23 @@
 :host {
 	display: flex;
+	height: 100vh;
+	width: 100vw;
+	overflow: auto;
 }
 
-.left-panel, .right-panel {
+.panel {
 	flex: 0 0 33%;
+	display: flex;
+    flex-direction: column;
+    justify-content: start;
+    justify-items: center;
+    align-items: center;
+}
+
+.panel.center-panel {
+	flex: 1;
+	position: sticky;
+	top: 0;
 }
 
 .production-type-buttons {
