@@ -2,6 +2,7 @@ import { TiffService } from 'src/app/services/tiff.service';
 import { FieldType } from '../../shared/models/field-type';
 import { Field } from '../models/field';
 import { BehaviorSubject } from 'rxjs';
+import gradiants from './gradiants';
 
 export class V1GameBoard {
 	private currentGameBoard = new BehaviorSubject<Field[] | null>(null);
@@ -10,7 +11,7 @@ export class V1GameBoard {
 
 	constructor(private tiffService: TiffService) {
 		this.tiffService = tiffService;
-		this.getAgricultureFromTxt();
+		this.loadFile();
 	}
 
 	getAE(id: number) {
@@ -37,17 +38,12 @@ export class V1GameBoard {
 		return new Field(id, new FieldType("#0f6d33", "CONFIGURED"), 375);
 	}
 
-	getAgricultureFromTxt() {
+	loadFile() {
 		this.tiffService.getTiffData(null).subscribe(data => {
+			var uniqueValues = Array.from(new Set(data)).sort();
+			var gradiant = gradiants.get('blue')!;
 			this.currentGameBoard.next(data.map((o, i) => {
-				switch (o) {
-					case 75: return this.getA1(i);
-					case 150: return this.getA2(i);
-					case 225: return this.getA3(i);
-					case 300: return this.getA4(i);
-					case 375: return this.getA5(i);
-					default: return this.getAE(i);
-				}
+				return new Field(i, new FieldType(gradiant.colors[(uniqueValues.indexOf(o))] as string, "CONFIGURED"), o);
 			}));
 		});
 	}
