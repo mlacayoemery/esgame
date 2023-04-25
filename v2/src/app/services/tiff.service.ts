@@ -16,7 +16,7 @@ export class TiffService {
   }
 
   private async tiffToArray(blob: Blob | null) : Promise<number[]> {
-    const tiff = await fromUrl("http://localhost:4200/assets/images/esgame_img_ag.tif"); //await fromBlob(blob);
+    const tiff = await fromUrl("http://localhost:4200/assets/images/esgame_img_ag.tif"); //TODO: load blob data --> await fromBlob(blob);
     const image = await tiff.getImage();
     const raster = await image.readRasters({ interleave: true });
     const result = Array.from(raster.map(c => c as number));
