@@ -136,19 +136,19 @@ export class GameService {
 
 	initialiseGameBoards() {
 		// This code can be replaced as soon as it is possible to load data from the API
-		let level1 = new Level();
+		let level2 = new Level();
 
 		new V1GameBoard(this.tiffService).currentGameBoardObs.subscribe(val => {
 			if (val != null) {
 				let gameBoard = new GameBoard(GameBoardType.DrawingMap, val!);
-				level1.gameBoards.push(gameBoard);
-				level1.levelNumber = 1;
+				level2.gameBoards.push(gameBoard);
+				level2.levelNumber = 1;
 
 				this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Ackerbau", "http://esgame.unige.ch/images/corn.png"));
 				this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
 				this.productionTypes.next(this.productionTypes.value);
 
-				this.currentLevel.next(level1);
+				this.currentLevel.next(level2);
 			}
 		})
 	}

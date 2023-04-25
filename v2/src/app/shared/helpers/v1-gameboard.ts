@@ -40,7 +40,7 @@ export class V1GameBoard {
 
 	loadFile() {
 		this.tiffService.getTiffData(null).subscribe(data => {
-			var uniqueValues = Array.from(new Set(data)).sort();
+			var uniqueValues = Array.from(new Set(data)).sort((a, b) => a - b);
 			var gradiant = gradiants.get('blue')!;
 			this.currentGameBoard.next(data.map((o, i) => {
 				return new Field(i, new FieldType(gradiant.colors[(uniqueValues.indexOf(o))] as string, "CONFIGURED"), o);
