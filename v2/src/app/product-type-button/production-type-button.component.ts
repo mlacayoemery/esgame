@@ -12,6 +12,14 @@ export class ProductionTypeButtonComponent implements AfterViewInit {
 
 	@HostBinding('class.--active') isActive = false;
 
+	@HostBinding('class.layout2')
+	private _isLayout2 = false;
+
+	@Input() set layout2(layout2: any) {
+		if (layout2 === false) this._isLayout2 = false;
+		else this._isLayout2 = true;
+	}
+
 	constructor(private gameService: GameService) {
 	}
 

@@ -1,0 +1,11 @@
+<table>
+	<tr>
+		<th i18n class="--left-align">Punkte</th>
+		<th class="--right-align">{{totalScore}}</th>
+	</tr>
+	<tr *ngFor="let s of scores">
+		<td i18n>{{s.name}}</td>
+		<td [ngClass]="s.score > 0 ? '--positive' : '--negative'" class="--right-align">{{s.score}}</td>
+	</tr>
+	
+</table>
