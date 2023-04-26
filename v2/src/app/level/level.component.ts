@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostBinding, Input } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { GameBoard } from '../shared/models/game-board';
 import { GameBoardType } from '../shared/models/game-board-type';
@@ -11,10 +11,20 @@ import { ProductionType } from '../shared/models/production-type';
   styleUrls: ['./level.component.scss']
 })
 export class LevelComponent {
-	selectedProductionType: ProductionType;
+	selectedProductionType = this.gameService.selectedProductionTypeObs;
 	focusedGameBoard: GameBoard;
 	levelNumber: number;
 	productionTypes: ProductionType[];
+
+	@HostBinding('class.layout2')
+	private _layout2 = false;
+
+	@Input() set isLayout2(layout: any) {
+		if (layout === false) this._layout2 = false;
+		else this._layout2 = true;
+	}
+
+	get isLayout2() { return this._layout2; }
 
 	constructor(private gameService: GameService) {
 		this.gameService.currentLevelObs.subscribe(level => {

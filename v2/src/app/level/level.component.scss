@@ -3,7 +3,34 @@
 	width: 100vw;
 	height: 100vh;
 	overflow: auto;
+	
+	&.layout2 {
+		.left-panel {
+			flex: 0 0 20%;
+		}
+
+		.left-panel-2 {
+			flex: 0 0 10%;
+		}
+	
+		.center-panel {
+			flex: 0 0 40%;
+		}
+
+		.right-panel {
+			flex: 0 0 30%;
+		}
+
+		.production-type-buttons {
+			gap: 30px;
+		}
+
+		header {
+			display: flex;
+		}
+	}
 }
+
 
 .panel {
 	flex: 0 0 33%;
