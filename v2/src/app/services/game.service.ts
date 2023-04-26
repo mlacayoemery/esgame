@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, forkJoin } from 'rxjs';
 import { GameBoard } from '../shared/models/game-board';
 import { GameBoardType } from '../shared/models/game-board-type';
 import { Level } from '../shared/models/level';
@@ -61,7 +61,7 @@ export class GameService {
 
 	selectField(id: number) {
 		let fields = this.getAssociatedFields(id);
-		
+
 		if (!this.canFieldBePlaced(undefined, fields)) {
 			this.removeHighlight();
 			return;
@@ -137,10 +137,14 @@ export class GameService {
 	initialiseGameBoards() {
 		// This code can be replaced as soon as it is possible to load data from the API
 		let level2 = new Level();
+		var gameboard = new V1GameBoard(this.tiffService);
+		
 
-		new V1GameBoard(this.tiffService).currentGameBoardObs.subscribe(val => {
-			if (val != null) {
-				let gameBoard = new GameBoard(GameBoardType.DrawingMap, val!);
+		combineLatest([gameboard.currentGameBoardObs, gameboard.legendObs]).subscribe(results => {
+			var data = results[0];
+			var legend = results[1]
+			if (data && legend) {
+				let gameBoard = new GameBoard(GameBoardType.DrawingMap, data!, legend!);
 				level2.gameBoards.push(gameBoard);
 				level2.levelNumber = 1;
 
@@ -150,6 +154,9 @@ export class GameService {
 
 				this.currentLevel.next(level2);
 			}
-		})
+		});
+
+		gameboard.loadFile();
+
 	}
 }

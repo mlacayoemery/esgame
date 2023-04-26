@@ -5,6 +5,7 @@ import { GameBoard } from '../shared/models/game-board';
 import { FieldComponent } from '../field/field.component';
 import { Settings } from '../shared/models/settings';
 import { map } from 'rxjs';
+import { Legend } from '../shared/models/legend';
 
 @Component({
 	selector: 'tro-game-board',
@@ -15,6 +16,7 @@ export class GameBoardComponent implements AfterViewInit {
 	private _boardData: GameBoard;
 	fields: Field[];
 	settings: Settings;
+	legend: Legend;
 	@ViewChildren(FieldComponent) fieldComponents: QueryList<FieldComponent>;
 
 	@HostBinding('style.grid-template-columns') fieldColumns: string;
@@ -23,6 +25,7 @@ export class GameBoardComponent implements AfterViewInit {
 	set boardData(data: GameBoard) {
 		this._boardData = data;
 		this.fields = data.fields;
+		this.legend = data.legend;
 	}
 
 	get boardData() { return this._boardData; }

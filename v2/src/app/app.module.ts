@@ -12,6 +12,7 @@ import { Layout2Component } from './layout/layout2/layout2.component';
 import { Layout1Component } from './layout/layout1/layout1.component';
 import { NavigationComponent } from './layout/navigation/navigation.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
+import { BoardLegendComponent } from './board-legend/board-legend.component';
 
 @NgModule({
   declarations: [
@@ -25,6 +26,7 @@ import { ScoreBoardComponent } from './score-board/score-board.component';
     Layout1Component,
     NavigationComponent,
     ScoreBoardComponent,
+    BoardLegendComponent,
   ],
   imports: [
     BrowserModule,
