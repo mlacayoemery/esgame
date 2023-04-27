@@ -1,9 +1,10 @@
 import { Component, HostBinding, Input } from '@angular/core';
 import { GameService } from '../services/game.service';
-import { GameBoard } from '../shared/models/game-board';
+import { GameBoard, GameBoardClickMode } from '../shared/models/game-board';
 import { GameBoardType } from '../shared/models/game-board-type';
 import { Level } from '../shared/models/level';
 import { ProductionType } from '../shared/models/production-type';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'tro-level',
@@ -12,9 +13,10 @@ import { ProductionType } from '../shared/models/production-type';
 })
 export class LevelComponent {
 	selectedProductionType = this.gameService.selectedProductionTypeObs;
-	focusedGameBoard: GameBoard;
+	focusedGameBoard = this.gameService.focusedGameBoardObs.pipe(filter(o => o != null));
 	levelNumber: number;
 	productionTypes: ProductionType[];
+	clickMode = GameBoardClickMode;
 
 	@HostBinding('class.layout2')
 	private _layout2 = false;
@@ -37,7 +39,7 @@ export class LevelComponent {
 
 	setLevel(level: Level | null) {
 		if (level) {
-			this.focusedGameBoard = level.gameBoards.filter(o => o.gameBoardType == GameBoardType.DrawingMap)[0];
+			// this.focusedGameBoard = level.gameBoards.filter(o => o.gameBoardType == GameBoardType.DrawingMap)[0];
 			this.levelNumber = level.levelNumber;
 		}
 	}

@@ -19,6 +19,7 @@ export class GameService {
 	private settings = new BehaviorSubject<Settings>(new Settings());
 	private productionTypes = new BehaviorSubject<ProductionType[]>([]);
 	private selectedProductionType = new BehaviorSubject<ProductionType | null>(null);
+	private focusedGameBoard = new BehaviorSubject<GameBoard | null>(null);
 
 	highlightFieldObs = this.highlightFields.asObservable();
 	currentLevelObs = this.currentLevel.asObservable();
@@ -26,6 +27,7 @@ export class GameService {
 	productionTypesObs = this.productionTypes.asObservable();
 	selectedProductionTypeObs = this.selectedProductionType.asObservable();
 	selectedFieldsObs = this.selectedFields.asObservable();
+	focusedGameBoardObs = this.focusedGameBoard.asObservable();
 
 	constructor(private tiffService: TiffService) {
 		this.initialiseGameBoards();
@@ -75,6 +77,10 @@ export class GameService {
 
 	deselectField(id: number) {
 		this.selectedFields.next(this.selectedFields.value.filter(o => o.fields.some(p => p.id == id) == false));
+	}
+
+	selectGameBoard(boardData: GameBoard) {
+		this.focusedGameBoard.next(boardData);
 	}
 
 	private canFieldBePlaced(id: number = -1, associatedFields: HighlightField[] = []) {
@@ -137,15 +143,19 @@ export class GameService {
 	initialiseGameBoards() {
 		// This code can be replaced as soon as it is possible to load data from the API
 		let level2 = new Level();
-		var gameboard = new V1GameBoard(this.tiffService);
-		
+		var gameboard = new V1GameBoard(this.tiffService, "/assets/images/esgame_img_ag.tif");
+		var gameboard2 = new V1GameBoard(this.tiffService, "/assets/images/esgame_img_ranch.tif");
 
-		combineLatest([gameboard.currentGameBoardObs, gameboard.legendObs]).subscribe(results => {
+		combineLatest([gameboard.currentGameBoardObs, gameboard.legendObs, gameboard2.currentGameBoardObs, gameboard2.legendObs]).subscribe(results => {
 			var data = results[0];
-			var legend = results[1]
+			var legend = results[1];
+			var data2 = results[2];
+			var legend2 = results[3];
 			if (data && legend) {
-				let gameBoard = new GameBoard(GameBoardType.DrawingMap, data!, legend!);
+				let gameBoard = new GameBoard(GameBoardType.SuitabilityMap, data!, legend!);
+				let gameBoard2 = new GameBoard(GameBoardType.SuitabilityMap, data2!, legend2!);
 				level2.gameBoards.push(gameBoard);
+				level2.gameBoards.push(gameBoard2);
 				level2.levelNumber = 1;
 
 				this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Ackerbau", "http://esgame.unige.ch/images/corn.png"));
@@ -153,6 +163,7 @@ export class GameService {
 				this.productionTypes.next(this.productionTypes.value);
 
 				this.currentLevel.next(level2);
+				this.focusedGameBoard.next(gameBoard);
 			}
 		});
 

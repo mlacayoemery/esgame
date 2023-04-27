@@ -18,3 +18,8 @@ export class GameBoard {
 		return scores.reduce((a, b) => a+b, 0);
 	}
 }
+
+export enum GameBoardClickMode {
+	Field = "FIELD",
+	SelectBoard = "SELECTBOARD"
+}

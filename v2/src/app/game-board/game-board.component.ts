@@ -1,7 +1,7 @@
-import { AfterViewInit, Component, HostBinding, HostListener, Input, QueryList, ViewChildren } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostBinding, HostListener, Input, QueryList, Renderer2, ViewChildren } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { Field } from '../shared/models/field';
-import { GameBoard } from '../shared/models/game-board';
+import { GameBoard, GameBoardClickMode } from '../shared/models/game-board';
 import { FieldComponent } from '../field/field.component';
 import { Settings } from '../shared/models/settings';
 import { map } from 'rxjs';
@@ -14,23 +14,42 @@ import { Legend } from '../shared/models/legend';
 })
 export class GameBoardComponent implements AfterViewInit {
 	private _boardData: GameBoard;
-	fields: Field[];
+	private _hideLegend = false;
+	private _clickMode = GameBoardClickMode.Field;
+	fields: Field[] = [];
 	settings: Settings;
 	legend: Legend;
+	GameBoardClickMode = GameBoardClickMode;
+	@Input() set clickMode(mode: GameBoardClickMode) {
+		this._clickMode = mode;
+		if (mode == GameBoardClickMode.SelectBoard) {
+			this.addClickListener();
+		}
+	}
+	get clickMode() { return this._clickMode; }
 	@ViewChildren(FieldComponent) fieldComponents: QueryList<FieldComponent>;
-
+	
 	@HostBinding('style.grid-template-columns') fieldColumns: string;
-
+	
 	@Input()
-	set boardData(data: GameBoard) {
-		this._boardData = data;
-		this.fields = data.fields;
-		this.legend = data.legend;
+	set boardData(data: GameBoard | null) {
+		if (data) {
+			this._boardData = data;
+			this.fields = data.fields;
+			this.legend = data.legend;
+		}
 	}
 
 	get boardData() { return this._boardData; }
 
-	constructor(private gameService: GameService) {
+	@Input() set hideLegend(value: any) {
+		if (value === false) this._hideLegend = false;
+		else this._hideLegend = true;
+	}
+
+	get hideLegend() { return this._hideLegend; }
+
+	constructor(private gameService: GameService, private renderer: Renderer2, private elementRef: ElementRef) {
 		this.gameService.settingsObs.subscribe(settings => {
 			this.settings = settings;
 			this.setFieldColumns(settings.gameBoardColumns);
@@ -65,6 +84,14 @@ export class GameBoardComponent implements AfterViewInit {
 				});
 				this.fieldComponents.get(field.fields[0].id)?.showProductionTypeImage();
 			});
+		});
+	}
+
+	private addClickListener() {
+		this.renderer.listen(this.elementRef.nativeElement, 'click', () => {
+			if (this.boardData) {
+				this.gameService.selectGameBoard(this.boardData);
+			}
 		});
 	}
 }

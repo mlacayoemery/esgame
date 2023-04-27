@@ -1,5 +1,4 @@
-import { Component, HostBinding, HostListener, Input } from '@angular/core';
-import { map } from 'rxjs';
+import { Component, ElementRef, HostBinding, HostListener, Input, Renderer2 } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { Field, HighlightSide } from '../shared/models/field';
 import { ProductionType } from '../shared/models/production-type';
@@ -23,6 +22,14 @@ export class FieldComponent {
 		else this._imageMode = true;
 	}
 
+	@Input() set clickable(clickable: any) {
+		if (clickable === false) return;
+		else {
+			this.addClickListener();
+			this.addHoverListener();
+		};
+	}
+
 	get imgaeMode() { return this._imageMode; }
 
 	get field() { return this._field; }
@@ -40,22 +47,24 @@ export class FieldComponent {
 	imageSize = 0;
 	elementSize: number;
 
-	constructor(private gameService: GameService) {
+	constructor(private gameService: GameService, private renderer: Renderer2, private elementRef: ElementRef) {
 		this.gameService.settingsObs.subscribe(settings => {
 			this.elementSize = settings.elementSize;
 			this.imageMode = settings.imageMode;
 		});
 	}
 
-	@HostListener('mouseenter') // Testen, ob das nicht zu langsam wird, evtl. mit debounce?
-	onEnter() {
-		this.gameService.highlightOnOtherFields(this._field.id);
+	addClickListener() {
+		this.renderer.listen(this.elementRef.nativeElement, 'click', () => {
+			if (this.field.assigned) this.gameService.deselectField(this.field.id);
+			else this.gameService.selectField(this.field.id);
+		});
 	}
 
-	@HostListener('click')
-	onClick() {
-		if (this.field.assigned) this.gameService.deselectField(this.field.id);
-		else this.gameService.selectField(this.field.id);
+	addHoverListener() {
+		this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', () => {
+			this.gameService.highlightOnOtherFields(this._field.id);
+		});
 	}
 
 	@Input() set size(size: number | null) {

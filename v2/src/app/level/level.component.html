@@ -1,7 +1,7 @@
 <ng-container *ngIf="!isLayout2; else layout2">
 	<div class="panel left-panel">
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard"></tro-game-board>
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard"></tro-game-board>
+		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async"></tro-game-board>
+		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async"></tro-game-board>
 	</div>
 	<div class="panel center-panel">
 		<p i18n>Aktuelle Runde: {{ levelNumber }}</p>
@@ -9,32 +9,36 @@
 			<tro-production-type-button *ngFor="let type of productionTypes"
 				[productionType]="type"></tro-production-type-button>
 		</div>
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard"></tro-game-board>
+		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async"></tro-game-board>
 		<div>
 			<tro-point-board></tro-point-board>
 			<div>CURRENT SELECTION POINTS</div>
 		</div>
 	</div>
 	<div class="panel right-panel">
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard"></tro-game-board>
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard"></tro-game-board>
+		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async"></tro-game-board>
+		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async"></tro-game-board>
 	</div>
 </ng-container>
 <ng-template #layout2 class="layout2">
 	<div class="panel left-panel">
-	</div>
-	<div class="panel left-panel-2">
 		<p i18n>Runde: {{ levelNumber }}</p>
 		<tro-score-board></tro-score-board>
+		<h2>Ackerland</h2>
+		<tro-game-board *ngIf="focusedGameBoard != null" hideLegend [boardData]="focusedGameBoard | async" [clickMode]="clickMode.SelectBoard" style="max-width: 250px"></tro-game-board>
+		<h2>Viehzucht</h2>
+		<tro-game-board *ngIf="focusedGameBoard != null" hideLegend [boardData]="focusedGameBoard | async" [clickMode]="clickMode.SelectBoard" style="max-width: 250px"></tro-game-board>
 	</div>
 	<div class="panel center-panel">
 		<h1 i18n>Tradeoff: Agriculture Edition!</h1>
-		<div class="production-type-buttons">
-			<tro-production-type-button *ngFor="let type of productionTypes"
-				[productionType]="type" layout2></tro-production-type-button>
+		<div>
+			<div class="production-type-buttons">
+				<tro-production-type-button *ngFor="let type of productionTypes"
+					[productionType]="type" layout2></tro-production-type-button>
+			</div>
+			<p i18n>Aktiv: {{ (selectedProductionType | async)?.name }}</p>
 		</div>
-		<p i18n>Aktiv: {{ (selectedProductionType | async)?.name }}</p>
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard"></tro-game-board>
+		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async" style="max-width: 400px"></tro-game-board>
 	</div>
 	<div class="panel right-panel">
 	</div>

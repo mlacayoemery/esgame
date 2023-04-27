@@ -1,9 +1,8 @@
-Legend
 <div>
 	<div *ngFor="let element of legendElements">
 		<div class="color-element" [ngStyle]="{ backgroundColor: element.color}">
 
 		</div>
-		{{element.forValue}}
+		<span [ngClass]="element.forValue > 0 ? '--positive' : '--negative'">{{element.forValue}}</span>
 	</div>
 </div>

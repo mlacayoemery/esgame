@@ -10,14 +10,16 @@ export class V1GameBoard {
 	private legend = new BehaviorSubject<Legend | null>(null);
 	currentGameBoardObs = this.currentGameBoard.asObservable();
 	legendObs = this.legend.asObservable();
+	tiffUrl: string;
 
 
-	constructor(private tiffService: TiffService) {
+	constructor(private tiffService: TiffService, tiffUrl: string) {
 		this.tiffService = tiffService;
+		this.tiffUrl = tiffUrl;
 	}
 
 	loadFile() {
-		this.tiffService.getTiffData(null).subscribe(data => {
+		this.tiffService.getTiffData(this.tiffUrl).subscribe(data => {
 			var uniqueValues = Array.from(new Set(data)).sort((a, b) => a - b);
 			var gradiant = gradiants.get('green')!;
 			var legend : Legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradiant.colors[i]}))] };
