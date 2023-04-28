@@ -6,11 +6,13 @@ export class GameBoard {
 	fields: Field[];
 	gameBoardType: GameBoardType;
 	legend: Legend;
+	name: string;
 
-	constructor(gameBoardType: GameBoardType, fields: Field[], legend: Legend) {
+	constructor(gameBoardType: GameBoardType, fields: Field[], legend: Legend, name: string) {
 		this.fields = fields;
 		this.gameBoardType = gameBoardType;
 		this.legend = legend;
+		this.name = name;
 	}
 
 	getScore(ids: number[]) {

@@ -1,11 +1,35 @@
 import { Injectable } from '@angular/core';
 import { fromBlob, fromUrl, writeArrayBuffer } from 'geotiff';
-import { from } from 'rxjs';
+import { from, merge, mergeMap, of } from 'rxjs';
+import gradients, { DefaultGradients } from '../shared/helpers/gradiants';
+import { GameBoard } from '../shared/models/game-board';
+import { GameBoardType } from '../shared/models/game-board-type';
+import { Legend } from '../shared/models/legend';
+import { FieldType } from '../shared/models/field-type';
+import { Field } from '../shared/models/field';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class TiffService {
+
+	getGameBoard(url: string, defaultGradient: DefaultGradients, gameBoardType: GameBoardType, name: string) {
+		return this.getTiffData(url).pipe(
+			mergeMap(data => {
+				var uniqueValues = Array.from(new Set(data)).sort((a, b) => a - b);
+				var gradient = gradients.get(defaultGradient)!;
+				var legend: Legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient.colors[i]}))] };
+
+				var fields = data.map((o, i) => {
+					return new Field(i, new FieldType(gradient.colors[(uniqueValues.indexOf(o))] as string, "CONFIGURED"), o);
+				});
+
+				var gameBoard = new GameBoard(gameBoardType, fields, legend, name);
+
+				return of(gameBoard);
+			})
+		);
+	}
 
 	public getTiffData(url: string) {
 		return from(this.tiffToArray(url));

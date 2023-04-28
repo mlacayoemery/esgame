@@ -30,7 +30,7 @@ export class FieldComponent {
 		};
 	}
 
-	get imgaeMode() { return this._imageMode; }
+	get imageMode() { return this._imageMode; }
 
 	get field() { return this._field; }
 
@@ -76,7 +76,7 @@ export class FieldComponent {
 
 	setColor() {
 		if (this.field) {
-			if (this.field.productionType) {
+			if (this.field.productionType && !this.imageMode) {
 				this.backgroundColor = this.field.productionType.fieldColor;
 			} else {
 				this.backgroundColor = this.field.type.fieldColor;

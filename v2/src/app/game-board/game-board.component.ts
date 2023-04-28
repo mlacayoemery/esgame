@@ -1,6 +1,6 @@
-import { AfterViewInit, Component, ElementRef, HostBinding, HostListener, Input, QueryList, Renderer2, ViewChildren } from '@angular/core';
+import { AfterContentChecked,  AfterViewInit, Component, ElementRef, HostBinding, HostListener, Input, QueryList, Renderer2, ViewChildren } from '@angular/core';
 import { GameService } from '../services/game.service';
-import { Field } from '../shared/models/field';
+import { Field, SelectedField } from '../shared/models/field';
 import { GameBoard, GameBoardClickMode } from '../shared/models/game-board';
 import { FieldComponent } from '../field/field.component';
 import { Settings } from '../shared/models/settings';
@@ -16,6 +16,8 @@ export class GameBoardComponent implements AfterViewInit {
 	private _boardData: GameBoard;
 	private _hideLegend = false;
 	private _clickMode = GameBoardClickMode.Field;
+	private _selectedFields: SelectedField[] = [];
+	// private _changedData = false;
 	fields: Field[] = [];
 	settings: Settings;
 	legend: Legend;
@@ -34,6 +36,7 @@ export class GameBoardComponent implements AfterViewInit {
 	@Input()
 	set boardData(data: GameBoard | null) {
 		if (data) {
+			// this._changedData = true;
 			this._boardData = data;
 			this.fields = data.fields;
 			this.legend = data.legend;
@@ -77,14 +80,32 @@ export class GameBoardComponent implements AfterViewInit {
 		});
 
 		this.gameService.selectedFieldsObs.subscribe(fields => {
+			this._selectedFields = fields;
+			this.drawSelectedFields();
+		});
+
+		this.fieldComponents.changes.subscribe(r => {
+			setTimeout(() => this.drawSelectedFields());
+		});
+	}
+
+	// ngAfterContentChecked(): void {
+	// 	if (this._changedData) {
+	// 		this.drawSelectedFields();
+	// 		this._changedData = false;
+	// 	}
+	// }
+
+	private drawSelectedFields() {
+		if (this.fields && this._selectedFields && this.fieldComponents) {
 			this.fields.forEach(field => this.fieldComponents.get(field.id)?.unassign());
-			fields.forEach(field => {
+			this._selectedFields.forEach(field => {
 				field.fields.forEach(highlightField => {
 					this.fieldComponents.get(highlightField.id)?.assign(field.productionType, highlightField.side);
 				});
 				this.fieldComponents.get(field.fields[0].id)?.showProductionTypeImage();
 			});
-		});
+		}
 	}
 
 	private addClickListener() {

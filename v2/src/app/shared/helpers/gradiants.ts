@@ -11,6 +11,12 @@ gradiants.set('red', { colors: ['#d2b188', '#fee5d9', '#fcae91', '#fb6a4a', '#de
 
 export default gradiants;
 
-
+export enum DefaultGradients {
+	Blue = 'blue',
+	Green = 'green',
+	Orange = 'orange',
+	Purple = 'purple',
+	Red = 'red'
+}
 
 
