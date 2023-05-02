@@ -4,5 +4,9 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+    "settings": {
+        "editor.detectIndentation": false,
+		"editor.autoIndent": "full",
+		"editor.insertSpaces": false
+    }
 }

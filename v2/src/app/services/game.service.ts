@@ -3,7 +3,6 @@ import { BehaviorSubject, Observable, combineLatest, forkJoin, merge } from 'rxj
 import { GameBoard } from '../shared/models/game-board';
 import { GameBoardType } from '../shared/models/game-board-type';
 import { Level } from '../shared/models/level';
-import { V1GameBoard } from '../shared/helpers/v1-gameboard';
 import { Settings } from '../shared/models/settings';
 import { ProductionType } from '../shared/models/production-type';
 import { HighlightField, HighlightSide, SelectedField } from '../shared/models/field';
@@ -144,8 +143,6 @@ export class GameService {
 	initialiseGameBoards() {
 		// This code can be replaced as soon as it is possible to load data from the API
 		let level2 = new Level();
-		// var gameboard = new V1GameBoard(this.tiffService, "/assets/images/esgame_img_ag.tif", DefaultGradients.Green);
-		// var gameboard2 = new V1GameBoard(this.tiffService, "/assets/images/esgame_img_ranch.tif", DefaultGradients.Orange);
 		
 		combineLatest([
 			this.tiffService.getGameBoard("/assets/images/esgame_img_ag.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Ackerland"), 
@@ -156,36 +153,12 @@ export class GameService {
 				level2.levelNumber = 1;
 
 				this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Ackerbau", "http://esgame.unige.ch/images/corn.png"));
-				this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
+				this.productionTypes.value.push(new ProductionType("#FFF", gameBoard2, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
 				this.productionTypes.next(this.productionTypes.value);
 
 				this.currentLevel.next(level2);
 				this.focusedGameBoard.next(gameBoard);
 		});
 
-		// combineLatest([gameboard.currentGameBoardObs, gameboard.legendObs, gameboard2.currentGameBoardObs, gameboard2.legendObs]).subscribe(results => {
-		// 	var data = results[0];
-		// 	var legend = results[1];
-		// 	var data2 = results[2];
-		// 	var legend2 = results[3];
-		// 	if (data && legend) {
-		// 		let gameBoard = new GameBoard(GameBoardType.SuitabilityMap, data!, legend!);
-		// 		let gameBoard2 = new GameBoard(GameBoardType.SuitabilityMap, data2!, legend2!);
-		// 		level2.gameBoards.push(gameBoard);
-		// 		level2.gameBoards.push(gameBoard2);
-		// 		level2.levelNumber = 1;
-		// 		console.log(data, data2);
-
-		// 		this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Ackerbau", "http://esgame.unige.ch/images/corn.png"));
-		// 		this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
-		// 		this.productionTypes.next(this.productionTypes.value);
-
-		// 		this.currentLevel.next(level2);
-		// 		this.focusedGameBoard.next(gameBoard);
-		// 	}
-		// });
-
-		// gameboard.loadFile();
-		// gameboard2.loadFile();
 	}
 }

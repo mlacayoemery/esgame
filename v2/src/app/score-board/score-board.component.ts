@@ -10,15 +10,23 @@ export class ScoreBoardComponent {
 	totalScore: number = 2170;
 	scores: { name: string, score: number }[] = [];
 
-	constructor(private gameService: GameService)
-	{
-		this.scores.push(
-			{ name: 'Ackerland', score: 1225 },
-			{ name: 'Weideland', score: 2500 },
-			{ name: 'Wasserqualität', score: -300 },
-			{ name: 'Wasserverfügbarkeit', score: -800 },
-			{ name: 'Luftqualität', score: -270 },
-			{ name: 'Lebensraumqualität', score: -150 },
-		)
+	constructor(private gameService: GameService) {
+
+		this.gameService.productionTypesObs.subscribe(productionTypes => {
+			productionTypes.forEach(productionType => {
+				this.scores.push(
+					{ name: productionType.name, score: 0 }
+				);
+			})
+		});
+
+		this.gameService.selectedFieldsObs.subscribe(selectedFields => {
+			this.scores.forEach(score => {
+				score.score = selectedFields.filter(o => o.productionType.name == score.name).reduce((a, b) => {
+					return a + b.score;
+				}, 0);
+			});
+			this.totalScore = this.scores.reduce((a, b) => a + b.score, 0);
+		});
 	}
 }
