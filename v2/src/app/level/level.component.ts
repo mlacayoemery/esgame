@@ -20,7 +20,9 @@ export class LevelComponent {
 	@HostBinding('class.layout2')
 	private _layout2 = false;
 	level? = this.gameService.currentLevelObs;
+	boards = this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards));
 	suitabilityBoards = this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.filter(p => p.gameBoardType == GameBoardType.SuitabilityMap)));
+	consequenceBoards = this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.filter(p => p.gameBoardType == GameBoardType.ConsequenceMap)));
 
 	@Input() set isLayout2(layout: any) {
 		if (layout === false) this._layout2 = false;

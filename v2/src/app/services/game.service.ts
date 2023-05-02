@@ -156,7 +156,7 @@ export class GameService {
 				level2.levelNumber = 1;
 
 				this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Ackerbau", "http://esgame.unige.ch/images/corn.png"));
-				this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
+				this.productionTypes.value.push(new ProductionType("#FFF", gameBoard2, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
 				this.productionTypes.next(this.productionTypes.value);
 
 				this.currentLevel.next(level2);

@@ -9,6 +9,7 @@ import { GameService } from '../services/game.service';
 })
 export class ProductionTypeButtonComponent implements AfterViewInit {
 	@Input() productionType: ProductionType;
+	@Input() changeGameboardOnClick = false;
 
 	@HostBinding('class.--active') isActive = false;
 
@@ -32,5 +33,8 @@ export class ProductionTypeButtonComponent implements AfterViewInit {
 	@HostListener('click')
 	onClick() {
 		this.gameService.setSelectedProductionType(this.productionType);
+		if(this.changeGameboardOnClick) {
+			this.gameService.selectGameBoard(this.productionType.scoreMap);
+		}
 	}
 }

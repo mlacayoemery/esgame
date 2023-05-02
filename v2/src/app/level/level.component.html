@@ -1,13 +1,14 @@
 <ng-container *ngIf="!isLayout2; else layout2">
 	<div class="panel left-panel">
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async" style="width: 80%"></tro-game-board>
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async" style="width: 80%"></tro-game-board>
+		<ng-container *ngFor="let board of (suitabilityBoards | async)">
+			<h2>{{ board.name }}</h2>
+			<tro-game-board [boardData]="board" style="width: 80%"></tro-game-board>
+		</ng-container>
 	</div>
 	<div class="panel center-panel">
 		<p i18n>Aktuelle Runde: {{ (level | async)?.levelNumber }}</p>
 		<div class="production-type-buttons">
-			<tro-production-type-button *ngFor="let type of productionTypes"
-				[productionType]="type"></tro-production-type-button>
+			<tro-production-type-button [changeGameboardOnClick]="true" *ngFor="let type of productionTypes" [productionType]="type"></tro-production-type-button>
 		</div>
 		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async" style="width: 80%"></tro-game-board>
 		<div>
@@ -16,8 +17,6 @@
 		</div>
 	</div>
 	<div class="panel right-panel">
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async" style="width: 80%"></tro-game-board>
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async" style="width: 80%"></tro-game-board>
 	</div>
 </ng-container>
 <ng-template #layout2 class="layout2">
