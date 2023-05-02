@@ -3,13 +3,12 @@ import { ProductionType } from '../shared/models/production-type';
 import { GameService } from '../services/game.service';
 
 @Component({
-  selector: 'tro-production-type-button',
-  templateUrl: './production-type-button.component.html',
-  styleUrls: ['./production-type-button.component.scss']
+	selector: 'tro-production-type-button',
+	templateUrl: './production-type-button.component.html',
+	styleUrls: ['./production-type-button.component.scss']
 })
 export class ProductionTypeButtonComponent implements AfterViewInit {
 	@Input() productionType: ProductionType;
-	@Input() changeGameboardOnClick = false;
 
 	@HostBinding('class.--active') isActive = false;
 
@@ -33,8 +32,5 @@ export class ProductionTypeButtonComponent implements AfterViewInit {
 	@HostListener('click')
 	onClick() {
 		this.gameService.setSelectedProductionType(this.productionType);
-		if(this.changeGameboardOnClick) {
-			this.gameService.selectGameBoard(this.productionType.scoreMap);
-		}
 	}
 }
