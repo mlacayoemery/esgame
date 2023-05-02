@@ -5,7 +5,7 @@
 	</tr>
 	<tr *ngFor="let s of scores">
 		<td i18n>{{s.name}}</td>
-		<td [ngClass]="s.score > 0 ? '--positive' : '--negative'" class="--right-align">{{s.score}}</td>
+		<td [ngClass]="s.score > 0 ? '--positive' : s.score < 0 ? '--negative' : ''" class="--right-align">{{s.score}}</td>
 	</tr>
 	
 </table>
