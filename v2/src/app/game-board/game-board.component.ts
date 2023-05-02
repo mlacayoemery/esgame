@@ -1,23 +1,26 @@
-import { AfterContentChecked,  AfterViewInit, Component, ElementRef, HostBinding, HostListener, Input, QueryList, Renderer2, ViewChildren } from '@angular/core';
+import { AfterContentChecked,  AfterViewInit, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, QueryList, Renderer2, ViewChildren } from '@angular/core';
 import { GameService } from '../services/game.service';
-import { Field, SelectedField } from '../shared/models/field';
+import { Field, HighlightField, SelectedField } from '../shared/models/field';
 import { GameBoard, GameBoardClickMode } from '../shared/models/game-board';
 import { FieldComponent } from '../field/field.component';
 import { Settings } from '../shared/models/settings';
-import { map } from 'rxjs';
 import { Legend } from '../shared/models/legend';
+import { SubSink } from 'subsink';
 
 @Component({
 	selector: 'tro-game-board',
 	templateUrl: './game-board.component.html',
-	styleUrls: ['./game-board.component.scss']
+	styleUrls: ['./game-board.component.scss'],
 })
-export class GameBoardComponent implements AfterViewInit {
+export class GameBoardComponent implements AfterViewInit, OnDestroy {
 	private _boardData: GameBoard;
 	private _hideLegend = false;
 	private _clickMode = GameBoardClickMode.Field;
 	private _selectedFields: SelectedField[] = [];
-	// private _changedData = false;
+	private _highlightedFields: HighlightField[] = [];
+	private _sink = new SubSink();
+	private _listeners: (() => void)[] = [];
+
 	fields: Field[] = [];
 	settings: Settings;
 	legend: Legend;
@@ -28,6 +31,7 @@ export class GameBoardComponent implements AfterViewInit {
 			this.addClickListener();
 		}
 	}
+
 	get clickMode() { return this._clickMode; }
 	@ViewChildren(FieldComponent) fieldComponents: QueryList<FieldComponent>;
 	
@@ -36,7 +40,6 @@ export class GameBoardComponent implements AfterViewInit {
 	@Input()
 	set boardData(data: GameBoard | null) {
 		if (data) {
-			// this._changedData = true;
 			this._boardData = data;
 			this.fields = data.fields;
 			this.legend = data.legend;
@@ -53,7 +56,7 @@ export class GameBoardComponent implements AfterViewInit {
 	get hideLegend() { return this._hideLegend; }
 
 	constructor(private gameService: GameService, private renderer: Renderer2, private elementRef: ElementRef) {
-		this.gameService.settingsObs.subscribe(settings => {
+		this._sink.sink = this.gameService.settingsObs.subscribe(settings => {
 			this.settings = settings;
 			this.setFieldColumns(settings.gameBoardColumns);
 		});
@@ -69,8 +72,9 @@ export class GameBoardComponent implements AfterViewInit {
 	}
 
 	ngAfterViewInit() {
-		this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
-			this.fieldComponents.forEach(o => o.removeHighlight());
+		this._sink.sink = this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
+			this._highlightedFields.forEach(o => this.fieldComponents?.get(o.id)?.removeHighlight());
+			this._highlightedFields = fieldNumbers;
 
 			if (fieldNumbers.length > 0) {
 				fieldNumbers.forEach(fieldNumber => {
@@ -79,12 +83,12 @@ export class GameBoardComponent implements AfterViewInit {
 			}
 		});
 
-		this.gameService.selectedFieldsObs.subscribe(fields => {
+		this._sink.sink = this.gameService.selectedFieldsObs.subscribe(fields => {
 			this._selectedFields = fields;
 			this.drawSelectedFields();
 		});
 
-		this.fieldComponents.changes.subscribe(r => {
+		this._sink.sink = this.fieldComponents.changes.subscribe(r => {
 			setTimeout(() => this.drawSelectedFields());
 		});
 	}
@@ -109,10 +113,15 @@ export class GameBoardComponent implements AfterViewInit {
 	}
 
 	private addClickListener() {
-		this.renderer.listen(this.elementRef.nativeElement, 'click', () => {
+		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'click', () => {
 			if (this.boardData) {
 				this.gameService.selectGameBoard(this.boardData);
 			}
-		});
+		}));
+	}
+
+	ngOnDestroy(): void {
+		this._sink.unsubscribe();
+		this._listeners.forEach(fn => fn());
 	}
 }

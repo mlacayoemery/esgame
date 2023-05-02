@@ -20,9 +20,11 @@ export class LevelComponent {
 	@HostBinding('class.layout2')
 	private _layout2 = false;
 	level? = this.gameService.currentLevelObs;
-	boards = this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards));
-	suitabilityBoards = this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.filter(p => p.gameBoardType == GameBoardType.SuitabilityMap)));
-	consequenceBoards = this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.filter(p => p.gameBoardType == GameBoardType.ConsequenceMap)));
+	suitabilityBoards = this.gameService.currentLevelObs.pipe(
+		map(o => o?.gameBoards), 
+		map(o => o?.filter(p => p.gameBoardType == GameBoardType.SuitabilityMap))
+	);
+	consequenceBoards = this.selectedProductionType.pipe(map(o => o?.consequenceMaps)); //this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.filter(p => p.gameBoardType == GameBoardType.ConsequenceMap)));
 
 	@Input() set isLayout2(layout: any) {
 		if (layout === false) this._layout2 = false;
@@ -38,6 +40,10 @@ export class LevelComponent {
 		this.gameService.productionTypesObs.subscribe(productionTypes => {
 			this.productionTypes = productionTypes;
 		});
+		
+		this.gameService.selectedProductionTypeObs.subscribe(productionType => {
+			if (productionType) this.gameService.selectGameBoard(productionType.suitabilityMap);
+		})
 	}
 
 	// setLevel(level: Level | null) {
@@ -47,7 +53,13 @@ export class LevelComponent {
 	// 	}
 	// }
 
-	nextLevel() {}
+	nextLevel() {
+		this.level?.subscribe(level => {
+			if (level?.levelNumber == 1) {
+				this.gameService.prepareRound2();
+			}
+		});
+	}
 
 	changeGameboard() {}
 }

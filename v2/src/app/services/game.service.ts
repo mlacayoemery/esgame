@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, combineLatest, forkJoin, merge } from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, debounce, forkJoin, interval, merge } from 'rxjs';
 import { GameBoard } from '../shared/models/game-board';
 import { GameBoardType } from '../shared/models/game-board-type';
 import { Level } from '../shared/models/level';
@@ -34,7 +34,9 @@ export class GameService {
 	}
 
 	highlightOnOtherFields(id: any) {
-		if (!this.canFieldBePlaced(id)) {
+		let ids = this.getAssociatedFields(id);
+		
+		if (!this.canFieldBePlaced(ids)) {
 			this.removeHighlight();
 			return;
 		}
@@ -43,8 +45,6 @@ export class GameService {
 			this.removeHighlight();
 			return;
 		}
-
-		let ids = this.getAssociatedFields(id);
 
 		this.highlightFields.next(ids);
 	}
@@ -64,13 +64,13 @@ export class GameService {
 	selectField(id: number) {
 		let fields = this.getAssociatedFields(id);
 
-		if (!this.canFieldBePlaced(undefined, fields)) {
+		if (!this.canFieldBePlaced(fields)) {
 			this.removeHighlight();
 			return;
 		}
 
 		if (this.selectedProductionType.value != null) {
-			let selectedField = new SelectedField(fields, this.selectedProductionType.value, this.selectedProductionType.value?.scoreMap.getScore(fields.map(o => o.id)));
+			let selectedField = new SelectedField(fields, this.selectedProductionType.value, this.selectedProductionType.value?.suitabilityMap.getScore(fields.map(o => o.id)));
 			this.selectedFields.next([...this.selectedFields.value, selectedField]);
 		}
 	}
@@ -83,9 +83,32 @@ export class GameService {
 		this.focusedGameBoard.next(boardData);
 	}
 
-	private canFieldBePlaced(id: number = -1, associatedFields: HighlightField[] = []) {
+	prepareRound2() {
+		var level2 = new Level();
+
+		combineLatest([
+			this.tiffService.getGameBoard("/assets/images/esgame_img_ag_carbon.tif", DefaultGradients.Yellow, GameBoardType.ConsequenceMap, "Kohlenstoff"),
+			this.tiffService.getGameBoard("/assets/images/esgame_img_ag_habitat.tif", DefaultGradients.Purple, GameBoardType.ConsequenceMap, "Lebensraum"),
+			this.tiffService.getGameBoard("/assets/images/esgame_img_ag_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap, "Wasser"),
+			this.tiffService.getGameBoard("/assets/images/esgame_img_ag_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap, "Jagd"),
+			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch_carbon.tif", DefaultGradients.Yellow, GameBoardType.ConsequenceMap, "Kohlenstoff"),
+			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch_habitat.tif", DefaultGradients.Purple, GameBoardType.ConsequenceMap, "Lebensraum"),
+			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap, "Wasser"),
+			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap, "Jagd"),
+		]).subscribe((gameBoards) => {
+			level2.gameBoards.push(...this.currentLevel.value!.gameBoards);
+			level2.gameBoards.push(...gameBoards);
+			level2.levelNumber = 2;
+
+			this.productionTypes.value[0].consequenceMaps.push(...gameBoards.slice(0, 4));
+			this.productionTypes.value[1].consequenceMaps.push(...gameBoards.slice(4, 8));
+
+			this.currentLevel.next(level2);
+		});
+	}
+
+	private canFieldBePlaced(associatedFields: HighlightField[] = []) {
 		if (this.selectedProductionType.value?.maxElements == this.selectedFields.value.filter(o => o.productionType == this.selectedProductionType.value).length) return false;
-		if (id > -1) associatedFields = this.getAssociatedFields(id);
 		return !(this.selectedFields.value.some(o => o.fields.some(p => associatedFields.some(q => q.id == p.id))));
 	}
 

@@ -45,15 +45,19 @@
 
 		.panel {
 			gap: 0;
-			padding: 1rem 0rem;
+			padding: 0 15px;
+		}
+		
+		.left-panel {
+			flex: 0 1 25%;
+		}
 
 			&.left-panel {
 				flex: 0 0 25%;
 			}
 
-			&.center-panel {
-				flex: 0 0 50%;
-			}
+		.right-panel {
+			flex: 0 1 25%;
 		}
 
 		.production-type-buttons {
@@ -62,6 +66,19 @@
 
 		header {
 			display: flex;
+		}
+
+		.btn-next {
+			margin-top: 40px;
+			justify-self: end;
+		}
+
+		.game-board-wrapper {
+			width: 100%;
+			display: flex;
+			flex-direction: column;
+			align-items: end;
+			max-width: 400px;
 		}
 	}
 }
