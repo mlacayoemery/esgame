@@ -60,6 +60,17 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 			this.settings = settings;
 			this.setFieldColumns(settings.gameBoardColumns);
 		});
+
+		this._sink.sink = this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
+			this._highlightedFields.forEach(o => this.fieldComponents?.get(o.id)?.removeHighlight());
+			this._highlightedFields = fieldNumbers;
+
+			if (fieldNumbers.length > 0) {
+				fieldNumbers.forEach(fieldNumber => {
+					this.fieldComponents.get(fieldNumber.id)?.highlight(fieldNumber.side);
+				});
+			}
+		});
 	}
 
 	@HostListener('mouseleave')
@@ -72,17 +83,6 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 	}
 
 	ngAfterViewInit() {
-		this._sink.sink = this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
-			this._highlightedFields.forEach(o => this.fieldComponents?.get(o.id)?.removeHighlight());
-			this._highlightedFields = fieldNumbers;
-
-			if (fieldNumbers.length > 0) {
-				fieldNumbers.forEach(fieldNumber => {
-					this.fieldComponents.get(fieldNumber.id)?.highlight(fieldNumber.side);
-				});
-			}
-		});
-
 		this._sink.sink = this.gameService.selectedFieldsObs.subscribe(fields => {
 			this._selectedFields = fields;
 			this.drawSelectedFields();
