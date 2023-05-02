@@ -1,16 +1,19 @@
-import { Component, ElementRef, HostBinding, HostListener, Input, Renderer2 } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, Renderer2 } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { Field, HighlightSide } from '../shared/models/field';
 import { ProductionType } from '../shared/models/production-type';
+import { SubSink } from 'subsink';
 
 @Component({
 	selector: 'tro-field',
 	templateUrl: './field.component.html',
-	styleUrls: ['./field.component.scss']
+	styleUrls: ['./field.component.scss'],
 })
-export class FieldComponent {
+export class FieldComponent implements OnDestroy {
 	private _field: Field;
 	private _imageMode = false;
+	private _sink = new SubSink();
+	private _listeners: (() => void)[] = [];
 
 	@Input() set field(field: Field) {
 		this._field = field;
@@ -48,23 +51,23 @@ export class FieldComponent {
 	elementSize: number;
 
 	constructor(private gameService: GameService, private renderer: Renderer2, private elementRef: ElementRef) {
-		this.gameService.settingsObs.subscribe(settings => {
+		this._sink.sink = this.gameService.settingsObs.subscribe(settings => {
 			this.elementSize = settings.elementSize;
 			this.imageMode = settings.imageMode;
 		});
 	}
 
 	addClickListener() {
-		this.renderer.listen(this.elementRef.nativeElement, 'click', () => {
+		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'click', () => {
 			if (this.field.assigned) this.gameService.deselectField(this.field.id);
 			else this.gameService.selectField(this.field.id);
-		});
+		}));
 	}
 
 	addHoverListener() {
-		this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', () => {
+		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', () => {
 			this.gameService.highlightOnOtherFields(this._field.id);
-		});
+		}));
 	}
 
 	@Input() set size(size: number | null) {
@@ -115,5 +118,10 @@ export class FieldComponent {
 
 	showProductionTypeImage() {
 		this.showProductionImage = true;
+	}
+
+	ngOnDestroy(): void {
+		this._sink.unsubscribe();
+		this._listeners.forEach(fn => fn());
 	}
 }

@@ -13,6 +13,7 @@ import { Layout1Component } from './layout/layout1/layout1.component';
 import { NavigationComponent } from './layout/navigation/navigation.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
 import { BoardLegendComponent } from './board-legend/board-legend.component';
+import { ButtonDirective } from './shared/button.directive';
 
 @NgModule({
   declarations: [
@@ -27,6 +28,7 @@ import { BoardLegendComponent } from './board-legend/board-legend.component';
     NavigationComponent,
     ScoreBoardComponent,
     BoardLegendComponent,
+    ButtonDirective,
   ],
   imports: [
     BrowserModule,
