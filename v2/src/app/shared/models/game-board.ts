@@ -7,12 +7,18 @@ export class GameBoard {
 	gameBoardType: GameBoardType;
 	legend: Legend;
 	name: string;
+	isSvg: boolean;
+	width: number;
+	height: number;
 
-	constructor(gameBoardType: GameBoardType, fields: Field[], legend: Legend, name: string) {
+	constructor(gameBoardType: GameBoardType, fields: Field[], legend: Legend, name: string, isSvg = false, width = 0, height = 0) {
 		this.fields = fields;
 		this.gameBoardType = gameBoardType;
 		this.legend = legend;
 		this.name = name;
+		this.isSvg = isSvg;
+		this.width = width;
+		this.height = height;
 	}
 
 	getScore(ids: number[]) {

@@ -1,2 +1,13 @@
-<tro-field *ngFor="let field of fields" [field]="field" imageMode [clickable]="clickMode == GameBoardClickMode.Field"></tro-field>
+<ng-container *ngIf="!isSvg">
+    <tro-field *ngFor="let field of fields" [field]="field" imageMode
+        [clickable]="clickMode == GameBoardClickMode.Field"></tro-field>
+</ng-container>
+
+
+<ng-container *ngIf="isSvg">
+    <svg attr.viewBox="0 0 {{board?.width ?? 0}} {{board?.height ?? 0}}">
+        <path troSvgField [field]="field" *ngFor="let field of fields" [attr.d]="field.path"></path>
+    </svg>
+</ng-container>
+
 <tro-board-legend [legendData]="legend" *ngIf="!hideLegend"></tro-board-legend>

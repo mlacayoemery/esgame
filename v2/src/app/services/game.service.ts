@@ -95,6 +95,7 @@ export class GameService {
 			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch_habitat.tif", DefaultGradients.Purple, GameBoardType.ConsequenceMap, "Lebensraum"),
 			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap, "Wasser"),
 			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap, "Jagd"),
+			this.tiffService.getGameBoard("/assets/images/zonal_raster.tif", DefaultGradients.Blue, GameBoardType.DrawingMap, "Zonen", true)
 		]).subscribe((gameBoards) => {
 			level2.gameBoards.push(...this.currentLevel.value!.gameBoards);
 			level2.gameBoards.push(...gameBoards);

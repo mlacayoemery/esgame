@@ -13,6 +13,7 @@ import { NavigationComponent } from './layout/navigation/navigation.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
 import { BoardLegendComponent } from './board-legend/board-legend.component';
 import { ButtonDirective } from './shared/button.directive';
+import { SvgFieldComponent } from './svg-field/svg-field.component';
 
 @NgModule({
   declarations: [
@@ -27,6 +28,7 @@ import { ButtonDirective } from './shared/button.directive';
     ScoreBoardComponent,
     BoardLegendComponent,
     ButtonDirective,
+    SvgFieldComponent,
   ],
   imports: [
     BrowserModule,

@@ -1,4 +1,4 @@
-import { AfterContentChecked,  AfterViewInit, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, QueryList, Renderer2, ViewChildren } from '@angular/core';
+import { AfterContentChecked, AfterViewInit, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, QueryList, Renderer2, ViewChildren } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { Field, HighlightField, SelectedField } from '../shared/models/field';
 import { GameBoard, GameBoardClickMode } from '../shared/models/game-board';
@@ -6,6 +6,7 @@ import { FieldComponent } from '../field/field.component';
 import { Settings } from '../shared/models/settings';
 import { Legend } from '../shared/models/legend';
 import { SubSink } from 'subsink';
+import { SvgFieldComponent } from '../svg-field/svg-field.component';
 
 @Component({
 	selector: 'tro-game-board',
@@ -23,7 +24,9 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 
 	fields: Field[] = [];
 	settings: Settings;
+	board: GameBoard | undefined;
 	legend: Legend;
+	isSvg: boolean = true;
 	GameBoardClickMode = GameBoardClickMode;
 	@Input() set clickMode(mode: GameBoardClickMode) {
 		this._clickMode = mode;
@@ -34,16 +37,20 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 
 	get clickMode() { return this._clickMode; }
 	@ViewChildren(FieldComponent) fieldComponents: QueryList<FieldComponent>;
-	
+	@ViewChildren(SvgFieldComponent) svgFieldComponents: QueryList<SvgFieldComponent>;
+
 	@HostBinding('style.grid-template-columns') fieldColumns: string;
-	
+
 	@Input()
 	set boardData(data: GameBoard | null) {
 		if (data) {
 			this._boardData = data;
 			this.fields = data.fields;
 			this.legend = data.legend;
+			this.isSvg = data.isSvg;
+			this.board = data;
 		}
+		this.setFieldColumns(this.settings.gameBoardColumns);
 	}
 
 	get boardData() { return this._boardData; }
@@ -58,7 +65,6 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 	constructor(private gameService: GameService, private renderer: Renderer2, private elementRef: ElementRef) {
 		this._sink.sink = this.gameService.settingsObs.subscribe(settings => {
 			this.settings = settings;
-			this.setFieldColumns(settings.gameBoardColumns);
 		});
 	}
 
@@ -68,17 +74,21 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 	}
 
 	setFieldColumns(fieldColumns: number) {
-		this.fieldColumns = `repeat(${fieldColumns}, 1fr)`;
+		if (!this.isSvg) {
+			this.fieldColumns = `repeat(${fieldColumns}, 1fr)`;
+		}
 	}
 
 	ngAfterViewInit() {
 		this._sink.sink = this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
 			this._highlightedFields.forEach(o => this.fieldComponents?.get(o.id)?.removeHighlight());
+			this._highlightedFields.forEach(o => this.svgFieldComponents?.get(o.id)?.removeHighlight());
 			this._highlightedFields = fieldNumbers;
 
 			if (fieldNumbers.length > 0) {
 				fieldNumbers.forEach(fieldNumber => {
 					this.fieldComponents.get(fieldNumber.id)?.highlight(fieldNumber.side);
+					this.svgFieldComponents.get(fieldNumber.id)?.highlight(fieldNumber.side);
 				});
 			}
 		});
