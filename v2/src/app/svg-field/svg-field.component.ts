@@ -10,19 +10,28 @@ import { ProductionType } from '../shared/models/production-type';
 })
 export class SvgFieldComponent {
 	private _field: Field;
+	_isOverlay: boolean = false;
 
 	@HostBinding('class.--is-highlighted') isHighlighted = false;
 	@HostBinding('class.--is-assigned') isAssigned = false;
 	@HostBinding('style.fill') private fillColor: string;
+	@HostBinding('style.stroke') private stroke: string;
 
 	constructor(private gameService: GameService, private renderer: Renderer2, private elementRef: ElementRef) {
-		this.addClickListener();
-		this.addHoverListener();
+		
 	}
 
 	@Input() set field(field: Field) {
 		this._field = field;
 		this.setColor();
+	}
+
+	@Input() set isOverlay(isOverlay: boolean) {
+		this._isOverlay = isOverlay;
+		if(isOverlay) {
+			this.addClickListener();
+			this.addHoverListener()
+		}
 	}
 
 	addClickListener() {
@@ -39,14 +48,18 @@ export class SvgFieldComponent {
 	}
 
 	setColor() {
-		console.log(this._field);
 		if (this._field) {
-			this.fillColor = `rgba(${this._field.score}, ${this._field.score}, ${this._field.score}, 1)`;
+			if (!this._isOverlay)
+				this.fillColor = `rgba(255, 204, 203,  ${this._field.score})`;
+			if (this._isOverlay)
+				this.stroke = "rgba(0,0,0,0.0)";
 		}
 	}
 
+
+
 	highlight(side: HighlightSide) {
-		console.log('highlight', side);
+		console.log("highlight");
 		this.isHighlighted = true;
 	}
 

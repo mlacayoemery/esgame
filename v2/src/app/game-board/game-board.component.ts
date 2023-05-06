@@ -23,6 +23,7 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 	private _listeners: (() => void)[] = [];
 
 	fields: Field[] = [];
+	overlayFields: Field[] = [];
 	settings: Settings;
 	board: GameBoard | undefined;
 	legend: Legend;
@@ -51,6 +52,11 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 			this.board = data;
 		}
 		this.setFieldColumns(this.settings.gameBoardColumns);
+	}
+
+	@Input() 
+	set overlay(overlay: GameBoard | null) {
+		this.overlayFields = overlay?.fields ?? [];
 	}
 
 	get boardData() { return this._boardData; }
@@ -82,13 +88,13 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 	ngAfterViewInit() {
 		this._sink.sink = this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
 			this._highlightedFields.forEach(o => this.fieldComponents?.get(o.id)?.removeHighlight());
-			this._highlightedFields.forEach(o => this.svgFieldComponents?.get(o.id)?.removeHighlight());
+			this._highlightedFields.forEach(o => this.svgFieldComponents.filter(c => c._isOverlay)?.at(o.id)?.removeHighlight());
 			this._highlightedFields = fieldNumbers;
 
 			if (fieldNumbers.length > 0) {
 				fieldNumbers.forEach(fieldNumber => {
 					this.fieldComponents.get(fieldNumber.id)?.highlight(fieldNumber.side);
-					this.svgFieldComponents.get(fieldNumber.id)?.highlight(fieldNumber.side);
+					this.svgFieldComponents.filter(c => c._isOverlay)?.at(fieldNumber.id)?.highlight(fieldNumber.side);
 				});
 			}
 		});

@@ -59,8 +59,6 @@ export default function tiffToSvgPaths(data, options = {}) {
         valueGroups.set(uniqueValue, { set: new Set(), edges: new Set() });
     }
 
-    console.log(edgeCount * uniqueValues.size);
-
     function EdgeXIndex(x, y) {
         return y * width + x;
     }

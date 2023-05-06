@@ -40,9 +40,10 @@ export class TiffService {
 					uniqueValues = Array.from(data.paths.keys()).sort((a, b) => a - b);
 					gradient = gradients.get(defaultGradient)!;
 					legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))] };
-
+					const maxValue = Math.max(...uniqueValues);
+					
 					fields = Array.from(data.paths).map(([key, value], i) => {
-						return new Field(i, new FieldType(key + "", "CONFIGURED"), key, null, undefined, undefined, value);
+						return new Field(i, new FieldType(key + "", "CONFIGURED"), 0.7 / maxValue * key + 0.3, null, undefined, undefined, value);
 					});
 
 					const gameBoard = new GameBoard(gameBoardType, fields, legend, name, true, data.width, data.height);
@@ -73,6 +74,8 @@ export class TiffService {
 
 
 		const paths = tiffToSvgPaths(array, { width: image.getWidth(), height: undefined, scale: 1 });
+
+		paths.delete(255);
 
 		const result = { width: image.getWidth(), height: image.getHeight(), paths };
 
