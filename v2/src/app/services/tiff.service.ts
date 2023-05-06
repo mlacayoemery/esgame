@@ -43,7 +43,7 @@ export class TiffService {
 					const maxValue = Math.max(...uniqueValues);
 					
 					fields = Array.from(data.paths).map(([key, value], i) => {
-						return new Field(i, new FieldType(key + "", "CONFIGURED"), 0.7 / maxValue * key + 0.3, null, undefined, undefined, value);
+						return new Field(i, new FieldType(gradient?.calculateColor(1 / maxValue * key) ?? "", "CONFIGURED"), key, null, undefined, undefined, value);
 					});
 
 					const gameBoard = new GameBoard(gameBoardType, fields, legend, name, true, data.width, data.height);

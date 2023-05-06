@@ -50,7 +50,7 @@ export class SvgFieldComponent {
 	setColor() {
 		if (this._field) {
 			if (!this._isOverlay)
-				this.fillColor = `rgba(255, 204, 203,  ${this._field.score})`;
+				this.fillColor = `#${this._field.type?.fieldColor}`;
 			if (this._isOverlay)
 				this.stroke = "rgba(0,0,0,0.0)";
 		}
