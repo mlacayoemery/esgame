@@ -16,6 +16,7 @@ export class GameService {
 	private currentLevel = new BehaviorSubject<Level | null>(null);
 	private highlightFields = new BehaviorSubject<HighlightField[]>([]);
 	private selectedFields = new BehaviorSubject<SelectedField[]>([]);
+	private currentlySelectedField = new BehaviorSubject<SelectedField | null>(null);
 	private settings = new BehaviorSubject<Settings>(new Settings());
 	private productionTypes = new BehaviorSubject<ProductionType[]>([]);
 	private selectedProductionType = new BehaviorSubject<ProductionType | null>(null);
@@ -29,6 +30,7 @@ export class GameService {
 	selectedProductionTypeObs = this.selectedProductionType.asObservable();
 	selectedFieldsObs = this.selectedFields.asObservable();
 	focusedGameBoardObs = this.focusedGameBoard.asObservable();
+	currentlySelectedFieldObs = this.currentlySelectedField.asObservable();
 
 	constructor(private tiffService: TiffService) {
 		this.initialiseGameBoards();
@@ -36,6 +38,7 @@ export class GameService {
 
 	highlightOnOtherFields(id: any) {
 		let ids = this.getAssociatedFields(id);
+		this.currentlySelectedField.next(new SelectedField(ids, this.selectedProductionType.value!));
 		
 		if (!this.canFieldBePlaced(ids)) {
 			this.removeHighlight();
@@ -56,6 +59,7 @@ export class GameService {
 
 	removeHighlight() {
 		this.highlightFields.next([]);
+		this.currentlySelectedField.next(null);
 	}
 
 	setSelectedProductionType(productionType: ProductionType) {

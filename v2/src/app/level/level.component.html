@@ -48,6 +48,7 @@
 		</div>
 		<div class="game-board-wrapper">
 			<tro-game-board isMainBoard *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async"></tro-game-board>
+			<tro-score-indicator></tro-score-indicator>
 			<button troButton class="btn-next" (click)="nextLevel()">Nächste Runde</button>
 		</div>
 	</div>
