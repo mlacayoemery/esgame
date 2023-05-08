@@ -1,13 +1,15 @@
 .icon-help-circle {
 	cursor: pointer;
+	font-size: 30px;
 }
 
 .backdrop {
 	display: none;
+	text-align: left;
 
 	&.--open {
 		display: block;
-		position: absolute;
+		position: fixed;
 		top: 0;
 		left: 0;
 		width: 100%;
