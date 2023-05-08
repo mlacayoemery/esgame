@@ -20,6 +20,7 @@ export class GameService {
 	private productionTypes = new BehaviorSubject<ProductionType[]>([]);
 	private selectedProductionType = new BehaviorSubject<ProductionType | null>(null);
 	private focusedGameBoard = new BehaviorSubject<GameBoard | null>(null);
+	private levels: Level[] = [];
 
 	highlightFieldObs = this.highlightFields.asObservable();
 	currentLevelObs = this.currentLevel.asObservable();
@@ -70,7 +71,7 @@ export class GameService {
 		}
 
 		if (this.selectedProductionType.value != null) {
-			let selectedField = new SelectedField(fields, this.selectedProductionType.value, this.selectedProductionType.value?.suitabilityMap.getScore(fields.map(o => o.id)));
+			let selectedField = new SelectedField(fields, this.selectedProductionType.value);
 			this.selectedFields.next([...this.selectedFields.value, selectedField]);
 		}
 	}
@@ -85,6 +86,7 @@ export class GameService {
 
 	prepareRound2() {
 		var level2 = new Level();
+		this.levels.push(level2);
 
 		combineLatest([
 			this.tiffService.getGameBoard("/assets/images/esgame_img_ag_carbon.tif", DefaultGradients.Yellow, GameBoardType.ConsequenceMap, "Kohlenstoff"),
@@ -100,10 +102,14 @@ export class GameService {
 			level2.gameBoards.push(...gameBoards);
 			level2.levelNumber = 2;
 
+			// TODO: Nicht über Array
 			this.productionTypes.value[0].consequenceMaps.push(...gameBoards.slice(0, 4));
 			this.productionTypes.value[1].consequenceMaps.push(...gameBoards.slice(4, 8));
 
+			this.selectedFields.value.forEach(o => o.updateScore());
+
 			this.currentLevel.next(level2);
+			this.selectedFields.next(this.selectedFields.value);
 		});
 	}
 
@@ -166,6 +172,7 @@ export class GameService {
 	initialiseGameBoards() {
 		// This code can be replaced as soon as it is possible to load data from the API
 		let level2 = new Level();
+		this.levels.push(level2);
 		
 		combineLatest([
 			this.tiffService.getGameBoard("/assets/images/esgame_img_ag.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Ackerland"), 

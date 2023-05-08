@@ -1,0 +1,24 @@
+{
+	"imageMode": false,
+	"elementSize": 2,
+	"gameBoardColumns": 28,
+	"gameBoardRows": 29,
+	"productionTypes": [
+		{
+			"name": "",
+			"fieldColor": "",
+			"suitabilityMap": "",
+			"consequenceMaps": [],
+			"image": null,
+			"maxElements": 0
+		}
+	],
+	"maps": [
+		{
+			"name": "",
+			"linkToData": "",
+			"gradient": "",
+			"gameBoardtype": ""
+		}
+	]
+}

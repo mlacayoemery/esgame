@@ -9,45 +9,45 @@
 		// box-shadow: 0px 0px 4px 3px #00E0FF;
 		z-index: 1;
 
-		$left: drop-shadow(-3px 0px 1px #00E0FF);
-		$right: drop-shadow(3px 0px 1px #00E0FF);
-		$top: drop-shadow(0px -3px 1px #00E0FF);
-		$bottom: drop-shadow(0px 3px 1px #00E0FF);
+		$left: -3px 0px 0px 0px #00E0FF; //drop-shadow(-3px 0px 1px #00E0FF);
+		$right: 3px 0px 0px 0px #00E0FF; //drop-shadow(3px 0px 1px #00E0FF);
+		$top: 0px -3px 0px 0px #00E0FF; //drop-shadow(0px -3px 1px #00E0FF);
+		$bottom: 0px 3px 0px 0px #00E0FF; // drop-shadow(0px 3px 1px #00E0FF);
 
 		&.--all-sides {
-			filter: $left $right $top $bottom;
+			box-shadow: $left, $right, $top, $bottom;
 		}
 
 		&.--left {
-			filter: $left;
+			box-shadow: $left;
 		}
 
 		&.--top-left {
-			filter: $top $left;
+			box-shadow: $top, $left;
 		}
 
 		&.--bottom-left {
-			filter: $bottom $left;
+			box-shadow: $bottom, $left;
 		}
 
 		&.--right {
-			filter: $right;
+			box-shadow: $right;
 		}
 
 		&.--top-right {
-			filter: $top $right;
+			box-shadow: $top, $right;
 		}
 
 		&.--bottom-right {
-			filter: $bottom $right;
+			box-shadow: $bottom, $right;
 		}
 
 		&.--top {
-			filter: $top;
+			box-shadow: $top;
 		}
 
 		&.--bottom {
-			filter: $bottom;
+			box-shadow: $bottom;
 		}
 	}
 

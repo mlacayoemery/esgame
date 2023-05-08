@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, Renderer2 } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, Renderer2 } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { Field, HighlightSide } from '../shared/models/field';
 import { ProductionType } from '../shared/models/production-type';
@@ -8,6 +8,7 @@ import { SubSink } from 'subsink';
 	selector: 'tro-field',
 	templateUrl: './field.component.html',
 	styleUrls: ['./field.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FieldComponent implements OnDestroy {
 	private _field: Field;
@@ -50,7 +51,12 @@ export class FieldComponent implements OnDestroy {
 	imageSize = 0;
 	elementSize: number;
 
-	constructor(private gameService: GameService, private renderer: Renderer2, private elementRef: ElementRef) {
+	constructor(
+		private gameService: GameService,
+		private renderer: Renderer2,
+		private elementRef: ElementRef,
+		private cdRef: ChangeDetectorRef
+	) {
 		this._sink.sink = this.gameService.settingsObs.subscribe(settings => {
 			this.elementSize = settings.elementSize;
 			this.imageMode = settings.imageMode;
@@ -104,6 +110,7 @@ export class FieldComponent implements OnDestroy {
 			this.setColor();
 		}
 		this.gameService.removeHighlight();
+		this.cdRef.markForCheck();
 	}
 
 	unassign() {
@@ -114,6 +121,7 @@ export class FieldComponent implements OnDestroy {
 		if (this.imageMode == false) {
 			this.setColor();
 		}
+		this.cdRef.markForCheck();
 	}
 
 	showProductionTypeImage() {
