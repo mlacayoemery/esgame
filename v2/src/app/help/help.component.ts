@@ -1,18 +1,23 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { GameService } from '../services/game.service';
 
 @Component({
   selector: 'tro-help',
   templateUrl: './help.component.html',
-  styleUrls: ['./help.component.scss']
+  styleUrls: ['./help.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HelpComponent {
 	isOpen = false;
 
-	onOpen() {
-		this.isOpen = true;
+	constructor(private gameService: GameService, private cdRef: ChangeDetectorRef) {
+		this.gameService.helpWindowObs.subscribe(o => {
+			this.isOpen = o;
+			this.cdRef.markForCheck();
+		});
 	}
 
 	onClose() {
-		this.isOpen = false;
+		this.gameService.openHelp(true);
 	}
 }

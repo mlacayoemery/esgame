@@ -51,4 +51,8 @@ export class LevelComponent {
 			}
 		});
 	}
+
+	openHelp() {
+		this.gameService.openHelp();
+	}
 }

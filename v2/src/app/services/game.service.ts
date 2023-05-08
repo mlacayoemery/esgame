@@ -21,6 +21,7 @@ export class GameService {
 	private productionTypes = new BehaviorSubject<ProductionType[]>([]);
 	private selectedProductionType = new BehaviorSubject<ProductionType | null>(null);
 	private focusedGameBoard = new BehaviorSubject<GameBoard | null>(null);
+	private helpWindow = new BehaviorSubject<boolean>(false);
 	private levels: Level[] = [];
 
 	highlightFieldObs = this.highlightFields.asObservable();
@@ -31,6 +32,7 @@ export class GameService {
 	selectedFieldsObs = this.selectedFields.asObservable();
 	focusedGameBoardObs = this.focusedGameBoard.asObservable();
 	currentlySelectedFieldObs = this.currentlySelectedField.asObservable();
+	helpWindowObs = this.helpWindow.asObservable();
 
 	constructor(private tiffService: TiffService) {
 		this.initialiseGameBoards();
@@ -116,6 +118,8 @@ export class GameService {
 			this.selectedFields.next(this.selectedFields.value);
 		});
 	}
+
+	openHelp(close = false) { this.helpWindow.next(!close); }
 
 	private canFieldBePlaced(associatedFields: HighlightField[] = []) {
 		if (this.selectedProductionType.value?.maxElements == this.selectedFields.value.filter(o => o.productionType == this.selectedProductionType.value).length) return false;
