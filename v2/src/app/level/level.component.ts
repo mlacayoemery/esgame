@@ -1,4 +1,4 @@
-import { Component, HostBinding, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostBinding, Input } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { GameBoardClickMode } from '../shared/models/game-board';
 import { Level } from '../shared/models/level';
@@ -9,7 +9,8 @@ import { GameBoardType } from '../shared/models/game-board-type';
 @Component({
   selector: 'tro-level',
   templateUrl: './level.component.html',
-  styleUrls: ['./level.component.scss']
+  styleUrls: ['./level.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LevelComponent {
 	selectedProductionType = this.gameService.selectedProductionTypeObs;
@@ -34,9 +35,6 @@ export class LevelComponent {
 	get isLayout2() { return this._layout2; }
 
 	constructor(private gameService: GameService) {
-		// this.gameService.currentLevelObs.subscribe(level => {
-		// 	this.setLevel(level);
-		// });
 		this.gameService.productionTypesObs.subscribe(productionTypes => {
 			this.productionTypes = productionTypes;
 		});
@@ -46,13 +44,6 @@ export class LevelComponent {
 		})
 	}
 
-	// setLevel(level: Level | null) {
-	// 	if (level) {
-	// 		// this.focusedGameBoard = level.gameBoards.filter(o => o.gameBoardType == GameBoardType.DrawingMap)[0];
-	// 		this.level = level;
-	// 	}
-	// }
-
 	nextLevel() {
 		this.level?.subscribe(level => {
 			if (level?.levelNumber == 1) {
@@ -60,6 +51,4 @@ export class LevelComponent {
 			}
 		});
 	}
-
-	changeGameboard() {}
 }

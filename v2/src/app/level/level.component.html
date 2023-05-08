@@ -23,6 +23,7 @@
 <ng-template #layout2 class="layout2">
 	<div class="panel left-panel">
 		<p i18n>Runde: {{ (level | async)?.levelNumber }}</p>
+		<tro-help></tro-help>
 		<tro-score-board></tro-score-board>
 		<ng-container *ngFor="let board of (suitabilityBoards | async)">
 			<h2>{{ board.name }}</h2>

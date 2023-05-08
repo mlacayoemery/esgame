@@ -1,17 +1,20 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { GameService } from '../services/game.service';
-import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'tro-score-board',
   templateUrl: './score-board.component.html',
-  styleUrls: ['./score-board.component.scss']
+  styleUrls: ['./score-board.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ScoreBoardComponent {
 	totalScore: number = 0;
 	scores: { name: string, score: number }[] = [];
 
-	constructor(private gameService: GameService) {
+	constructor(
+		private gameService: GameService,
+		private cdRef: ChangeDetectorRef
+	) {
 		this.gameService.currentLevelObs.subscribe(level => {
 			this.scores = [];
 			level?.gameBoards.forEach(gameBoard => {
@@ -21,6 +24,7 @@ export class ScoreBoardComponent {
 					);
 				}
 			});
+			this.cdRef.markForCheck();
 		});
 
 		this.gameService.selectedFieldsObs.subscribe(fields => {
@@ -28,6 +32,7 @@ export class ScoreBoardComponent {
 				score.score = fields.reduce((a, b) => a + (b.scores.find(o => o.name == score.name)?.score ?? 0), 0)
 			});
 			this.totalScore = this.scores.reduce((a, b) => a + b.score, 0);
-		})
+			this.cdRef.markForCheck();
+		});
 	}
 }

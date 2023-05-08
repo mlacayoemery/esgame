@@ -1,11 +1,12 @@
-import { AfterViewInit, Component, HostBinding, HostListener, Input } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, HostBinding, HostListener, Input } from '@angular/core';
 import { ProductionType } from '../shared/models/production-type';
 import { GameService } from '../services/game.service';
 
 @Component({
   selector: 'tro-production-type-button',
   templateUrl: './production-type-button.component.html',
-  styleUrls: ['./production-type-button.component.scss']
+  styleUrls: ['./production-type-button.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProductionTypeButtonComponent implements AfterViewInit {
 	@Input() productionType: ProductionType;

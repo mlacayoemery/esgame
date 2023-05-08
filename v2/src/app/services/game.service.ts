@@ -171,23 +171,24 @@ export class GameService {
 
 	initialiseGameBoards() {
 		// This code can be replaced as soon as it is possible to load data from the API
-		let level2 = new Level();
-		this.levels.push(level2);
+		let level = new Level();
+		this.levels.push(level);
 		
 		combineLatest([
 			this.tiffService.getGameBoard("/assets/images/esgame_img_ag.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Ackerland"), 
 			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch.tif", DefaultGradients.Orange, GameBoardType.SuitabilityMap, "Viehzucht")
 		]).subscribe(([gameBoard, gameBoard2]) => {
-			level2.gameBoards.push(gameBoard);
-				level2.gameBoards.push(gameBoard2);
-				level2.levelNumber = 1;
+			level.gameBoards.push(gameBoard);
+			level.gameBoards.push(gameBoard2);
+			level.levelNumber = 1;
 
-				this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Ackerbau", "http://esgame.unige.ch/images/corn.png"));
-				this.productionTypes.value.push(new ProductionType("#FFF", gameBoard2, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
-				this.productionTypes.next(this.productionTypes.value);
+			this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Ackerbau", "http://esgame.unige.ch/images/corn.png"));
+			this.productionTypes.value.push(new ProductionType("#FFF", gameBoard2, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
+			this.productionTypes.next(this.productionTypes.value);
+			this.selectedProductionType.next(this.productionTypes.value[0]);
 
-				this.currentLevel.next(level2);
-				this.focusedGameBoard.next(gameBoard);
+			this.currentLevel.next(level);
+			this.focusedGameBoard.next(gameBoard);
 		});
 
 	}

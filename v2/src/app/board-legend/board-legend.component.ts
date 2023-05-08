@@ -1,10 +1,11 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { LegendElement, Legend } from '../shared/models/legend';
 
 @Component({
 	selector: 'tro-board-legend',
 	templateUrl: './board-legend.component.html',
-	styleUrls: ['./board-legend.component.scss']
+	styleUrls: ['./board-legend.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BoardLegendComponent {
 	private _legendData: Legend;

@@ -14,6 +14,7 @@ import { NavigationComponent } from './layout/navigation/navigation.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
 import { BoardLegendComponent } from './board-legend/board-legend.component';
 import { ButtonDirective } from './shared/button.directive';
+import { HelpComponent } from './help/help.component';
 
 @NgModule({
   declarations: [
@@ -29,6 +30,7 @@ import { ButtonDirective } from './shared/button.directive';
     ScoreBoardComponent,
     BoardLegendComponent,
     ButtonDirective,
+    HelpComponent,
   ],
   imports: [
     BrowserModule,
