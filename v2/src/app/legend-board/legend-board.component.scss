@@ -30,12 +30,12 @@
             }
             &>span {
                 //background-color: white;
-                font-size: 0.9vw;
+                font-size: min(0.9vw, 18px);
                 font-weight: 600;
             }
             &>span.is-small {
                 font-weight: 600;
-                font-size: .5vw;
+                font-size: min(.5vw, 15px);
             }
         }
         
