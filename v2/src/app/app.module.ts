@@ -16,29 +16,49 @@ import { BoardLegendComponent } from './board-legend/board-legend.component';
 import { ButtonDirective } from './shared/button.directive';
 import { HelpComponent } from './help/help.component';
 import { ScoreIndicatorComponent } from './score-indicator/score-indicator.component';
+import { MatSelectModule } from '@angular/material/select';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import {TranslateHttpLoader} from '@ngx-translate/http-loader';
+import { HttpClientModule, HttpClient } from '@angular/common/http';
+
+export function HttpLoaderFactory(http: HttpClient) {
+    return new TranslateHttpLoader(http);
+}
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    LevelComponent,
-    GameBoardComponent,
-    FieldComponent,
-    ProductionTypeButtonComponent,
-    PointBoardComponent,
-    Layout2Component,
-    Layout1Component,
-    NavigationComponent,
-    ScoreBoardComponent,
-    BoardLegendComponent,
-    ButtonDirective,
-    HelpComponent,
-    ScoreIndicatorComponent,
-  ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
+	declarations: [
+		AppComponent,
+		LevelComponent,
+		GameBoardComponent,
+		FieldComponent,
+		ProductionTypeButtonComponent,
+		PointBoardComponent,
+		Layout2Component,
+		Layout1Component,
+		NavigationComponent,
+		ScoreBoardComponent,
+		BoardLegendComponent,
+		ButtonDirective,
+		HelpComponent,
+		ScoreIndicatorComponent,
+	],
+	imports: [
+		BrowserModule,
+		BrowserAnimationsModule,
+		AppRoutingModule,
+		HttpClientModule,
+		MatSelectModule,
+		TranslateModule.forRoot({
+			defaultLanguage: 'de',
+			loader: {
+				provide: TranslateLoader,
+				useFactory: HttpLoaderFactory,
+				deps: [HttpClient]
+			}
+		})
+	],
+	providers: [],
+	bootstrap: [AppComponent]
 })
 export class AppModule { }

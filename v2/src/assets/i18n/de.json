@@ -1,0 +1,10 @@
+{
+	"Anleitung": "Anleitung",
+	"Anleitung-Text": "In Runde 1 ist es Ihr Ziel, so viel Einkommen wie möglich zu erwirtschaften, indem Sie 4 Maisfelder und 4 Viehhöfe anlegen. Jedes Maisfeld und jeder Viehhof umfasst 4 Felder. Dunklere Farben stehen für höhere Erträge, aber beachten Sie, dass die Skala für jede Aktivität unterschiedlich ist. Klicken Sie erneut auf ein beliebiges Element, um es wieder zu entfernen. Wenn Sie mit Ihrem Ergebnis zufrieden sind (Sie sollten eine Punktzahl von 9725 erreichen, aber 9775 ist noch besser), klicken Sie auf  “Nächste Runde”.",
+	"Steuerung": "Steuerung",
+	"Steuerung-Text": "Klicke in das Spielfeld, um ein Element zu platzieren. Das zurzeit platzierbare Element ist dasjenige, das auf der linken Seite gelb leuchtet. Um das Element zu wechseln, kann auf der linken Seite das gewünschte Element angeklickt oder die Taste, die sich neben dem gewünschten Element befindet, auf der Tastatur gedrückt werden. Die aktuell gewählte Ansicht der Karte wird oberhalb des Spielfelds angezeigt. Es ist diejenige Ansicht gewählt, die gelb leuchtet. Um die Ansicht zu wechseln, kann auf die gewünschte Ansicht geklickt oder die Taste, die sich oberhalb der gewünschten Ansicht befindet, auf der Tastatur gedrückt werden.",
+	"Tradeoff: Agriculture Edition!": "Tradeoff: Agriculture Edition!",
+	"Runde": "Runde {{ value }}",
+	"Aktiv:": "Aktiv:",
+	"Punkte": "Punkte"
+}
