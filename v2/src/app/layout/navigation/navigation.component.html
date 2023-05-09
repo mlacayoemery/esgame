@@ -1,2 +1,16 @@
 <a [routerLink]="'layout1'">Layout 1 (Nico)</a> <br/>
 <a [routerLink]="'layout2'">Layout 2 (Vangelis)</a>
+<br/>
+<br/>
+<br/>
+<mat-form-field appearance="fill">
+	<mat-label>Sprache</mat-label>
+	<mat-select [value]="'de'" (selectionChange)="changeLanguage($event)">
+	  	<mat-option [value]="'de'">
+			Deutsch
+	  	</mat-option>
+	  	<mat-option [value]="'en'">
+			English
+		</mat-option>
+	</mat-select>
+</mat-form-field>

@@ -9,45 +9,45 @@
 		// box-shadow: 0px 0px 4px 3px #00E0FF;
 		z-index: 1;
 
-		$left: -3px 0px 0px 0px #00E0FF; //drop-shadow(-3px 0px 1px #00E0FF);
-		$right: 3px 0px 0px 0px #00E0FF; //drop-shadow(3px 0px 1px #00E0FF);
-		$top: 0px -3px 0px 0px #00E0FF; //drop-shadow(0px -3px 1px #00E0FF);
-		$bottom: 0px 3px 0px 0px #00E0FF; // drop-shadow(0px 3px 1px #00E0FF);
+		$left: drop-shadow(-2px 0px 1px #00E0FF);
+		$right: drop-shadow(2px 0px 1px #00E0FF);
+		$top: drop-shadow(0px -2px 1px #00E0FF);
+		$bottom: drop-shadow(0px 2px 1px #00E0FF);
 
 		&.--all-sides {
-			box-shadow: $left, $right, $top, $bottom;
+			filter: $left $right $top $bottom;
 		}
 
 		&.--left {
-			box-shadow: $left;
+			filter: $left;
 		}
 
 		&.--top-left {
-			box-shadow: $top, $left;
+			filter: $top $left;
 		}
 
 		&.--bottom-left {
-			box-shadow: $bottom, $left;
+			filter: $bottom $left;
 		}
 
 		&.--right {
-			box-shadow: $right;
+			filter: $right;
 		}
 
 		&.--top-right {
-			box-shadow: $top, $right;
+			filter: $top $right;
 		}
 
 		&.--bottom-right {
-			box-shadow: $bottom, $right;
+			filter: $bottom $right;
 		}
 
 		&.--top {
-			box-shadow: $top;
+			filter: $top;
 		}
 
 		&.--bottom {
-			box-shadow: $bottom;
+			filter: $bottom;
 		}
 	}
 

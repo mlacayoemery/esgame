@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { GameService } from './services/game.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
 	selector: 'app-root',
@@ -9,7 +9,9 @@ import { GameService } from './services/game.service';
 export class AppComponent {
 	title = 'Tradeoff-V2';
 	
-	constructor(private gameService: GameService) {
-
+	constructor(private translate: TranslateService) {
+		this.translate.addLangs(['de', 'en']);
+		this.translate.setDefaultLang('de');
+		this.translate.use('de');
 	}
 }

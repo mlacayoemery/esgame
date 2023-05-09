@@ -8,6 +8,7 @@ import { ProductionType } from '../shared/models/production-type';
 import { HighlightField, HighlightSide, SelectedField } from '../shared/models/field';
 import { TiffService } from './tiff.service';
 import { DefaultGradients } from '../shared/helpers/gradiants';
+import { ScoreEntry, ScoreService } from './score.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -34,7 +35,10 @@ export class GameService {
 	currentlySelectedFieldObs = this.currentlySelectedField.asObservable();
 	helpWindowObs = this.helpWindow.asObservable();
 
-	constructor(private tiffService: TiffService) {
+	constructor(
+		private tiffService: TiffService,
+		private scoreService: ScoreService
+	) {
 		this.initialiseGameBoards();
 	}
 
@@ -93,6 +97,10 @@ export class GameService {
 	prepareRound2() {
 		var level2 = new Level();
 		this.levels.push(level2);
+
+		var level1Score = this.scoreService.createEmptyScoreEntry(this.currentLevel.value);
+		this.scoreService.calculateScore(level1Score, this.selectedFields.value);
+		level2.previousRoundScore = level1Score;
 
 		combineLatest([
 			this.tiffService.getGameBoard("/assets/images/esgame_img_ag_carbon.tif", DefaultGradients.Yellow, GameBoardType.ConsequenceMap, "Kohlenstoff"),
@@ -190,7 +198,7 @@ export class GameService {
 			level.gameBoards.push(gameBoard2);
 			level.levelNumber = 1;
 
-			this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Ackerbau", "http://esgame.unige.ch/images/corn.png"));
+			this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Ackerland", "http://esgame.unige.ch/images/corn.png"));
 			this.productionTypes.value.push(new ProductionType("#FFF", gameBoard2, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
 			this.productionTypes.next(this.productionTypes.value);
 			this.selectedProductionType.next(this.productionTypes.value[0]);

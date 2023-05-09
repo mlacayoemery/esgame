@@ -1,60 +1,37 @@
-<ng-container *ngIf="!isLayout2; else layout2">
-	<div class="panel left-panel">
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async" style="width: 80%"></tro-game-board>
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async" style="width: 80%"></tro-game-board>
-	</div>
-	<div class="panel center-panel">
-		<p i18n>Aktuelle Runde: {{ (level | async)?.levelNumber }}</p>
+<div class="panel left-panel">
+	<ng-container *ngFor="let board of (suitabilityBoards | async)">
+		<h2 translate>{{ board.name }}</h2>
+		<tro-game-board [boardData]="board" hideLegend style="max-width: 250px" [clickMode]="clickMode.SelectBoard"></tro-game-board>
+	</ng-container>
+	<!-- <tro-score-board isStatic *ngIf="(level | async)?.previousRoundScore" [scores]="(level | async)?.previousRoundScore"></tro-score-board> -->
+</div>
+<div class="panel center-panel">
+	<header>
+		<i></i>
+		<h1 translate>Tradeoff: Agriculture Edition!</h1>
+		<span class="icon-help-circle" (click)="openHelp()"></span>
+	</header>
+	<p translate [translateParams]="{value: (level | async)?.levelNumber}">Runde</p>
+	<div>
 		<div class="production-type-buttons">
 			<tro-production-type-button *ngFor="let type of productionTypes"
-				[productionType]="type"></tro-production-type-button>
+				[productionType]="type" layout2></tro-production-type-button>
 		</div>
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async" style="width: 80%"></tro-game-board>
-		<div>
-		</div>
+		<p>{{ 'Aktiv:' | translate }} {{ (selectedProductionType | async)?.name ?? '' | translate }}</p>
 	</div>
-	<div class="panel right-panel">
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async" style="width: 80%"></tro-game-board>
-		<tro-game-board *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async" style="width: 80%"></tro-game-board>
-	</div>
-</ng-container>
-<ng-template #layout2 class="layout2">
-	<div class="panel left-panel">
-		<p i18n>Runde: {{ (level | async)?.levelNumber }}</p>
-		<tro-score-board></tro-score-board>
-		<ng-container *ngFor="let board of (suitabilityBoards | async)">
-			<h2>{{ board.name }}</h2>
-			<tro-game-board [boardData]="board" hideLegend style="max-width: 250px" [clickMode]="clickMode.SelectBoard"></tro-game-board>
-		</ng-container>
-		<!-- <h2>Ackerland</h2>
-		<tro-game-board *ngIf="focusedGameBoard != null" hideLegend [boardData]="focusedGameBoard | async" [clickMode]="clickMode.SelectBoard" style="max-width: 250px"></tro-game-board>
-		<h2>Viehzucht</h2>
-		<tro-game-board *ngIf="focusedGameBoard != null" hideLegend [boardData]="focusedGameBoard | async" [clickMode]="clickMode.SelectBoard" style="max-width: 250px"></tro-game-board> -->
-	</div>
-	<div class="panel center-panel">
-		<header>
-			<i></i>
-			<h1 i18n>Tradeoff: Agriculture Edition! </h1>
-			<span class="icon-help-circle" (click)="openHelp()"></span>
-		</header>
-		<div>
-			<div class="production-type-buttons">
-				<tro-production-type-button *ngFor="let type of productionTypes"
-					[productionType]="type" layout2></tro-production-type-button>
-			</div>
-			<p i18n>Aktiv: {{ (selectedProductionType | async)?.name }}</p>
-		</div>
-		<div class="game-board-wrapper">
-			<tro-game-board isMainBoard *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async"></tro-game-board>
-			<tro-score-indicator></tro-score-indicator>
-			<button troButton class="btn-next" (click)="nextLevel()">Nächste Runde</button>
+	<div class="game-board-wrapper">
+		<tro-game-board isMainBoard *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async"></tro-game-board>
+		<tro-score-indicator></tro-score-indicator>
+		<div class="score-board-wrapper">
+			<tro-score-board></tro-score-board>
+			<button troButton class="btn-next" (click)="nextLevel()" *ngIf="(level | async)?.levelNumber == 1" translate>Nächste Runde</button>
 		</div>
 	</div>
-	<div class="panel right-panel">
-		<ng-container *ngFor="let board of (consequenceBoards | async)">
-			<h2>{{ board.name }}</h2>
-			<tro-game-board [boardData]="board" hideLegend style="max-width: 250px" [clickMode]="clickMode.SelectBoard"></tro-game-board>
-		</ng-container>
-	</div>
-</ng-template>
+</div>
+<div class="panel right-panel">
+	<ng-container *ngFor="let board of (consequenceBoards | async)">
+		<h2 translate>{{ board.name }}</h2>
+		<tro-game-board [boardData]="board" hideLegend style="max-width: 250px" [clickMode]="clickMode.SelectBoard"></tro-game-board>
+	</ng-container>
+</div>
 <tro-help></tro-help>
