@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostBinding, Input } from '@angular/core';
 import { LegendElement, Legend } from '../shared/models/legend';
 
 @Component({
@@ -11,6 +11,8 @@ export class LegendBoardComponent {
 	private _legendData: Legend;
 	legendElements: LegendElement[];
 	isNegative = false;
+
+	@HostBinding('class.is-small') @Input() isSmall: boolean = false;
 
 	@Input()
 	set legendData(data: Legend) {
