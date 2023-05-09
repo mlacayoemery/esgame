@@ -13,5 +13,8 @@
 	"Kohlenstoff": "Carbon",
 	"Lebensraum": "Habitat Quality",
 	"Wasser": "Water Quality",
-	"Jagd": "Hunting & Foraging"
+	"Jagd": "Hunting & Foraging",
+	"Sprache": "Language",
+	"Deutsch": "German",
+	"Englisch": "English"
 }
