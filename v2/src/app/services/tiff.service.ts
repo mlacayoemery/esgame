@@ -18,7 +18,7 @@ export class TiffService {
 			mergeMap(data => {
 				var uniqueValues = Array.from(new Set(data)).sort((a, b) => a - b);
 				var gradient = gradients.get(defaultGradient)!;
-				var legend: Legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient.colors[i]}))] };
+				var legend: Legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient.colors[i]}))], isNegative: gameBoardType == GameBoardType.ConsequenceMap };
 
 				var fields = data.map((o, i) => {
 					return new Field(i, new FieldType(gradient.colors[(uniqueValues.indexOf(o))] as string, "CONFIGURED"), o);

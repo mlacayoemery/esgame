@@ -38,11 +38,25 @@ export class HighlightField {
 export class SelectedField {
 	fields: HighlightField[];
 	productionType: ProductionType;
-	score: number;
+	scores: {score: number, name: string}[] = [];
 
-	constructor(ids: HighlightField[], productionType: ProductionType, score: number) {
+	constructor(ids: HighlightField[], productionType: ProductionType) {
 		this.fields = ids;
 		this.productionType = productionType;
-		this.score = score;
+		this.updateScore();
+	}
+
+	updateScore() {
+		var idsOnly = this.fields.map(o => o.id);
+		this.scores.push({
+			name: this.productionType.suitabilityMap.name,
+			score: this.productionType.suitabilityMap.getScore(idsOnly)
+		});
+		this.productionType.consequenceMaps.forEach(o => {
+			this.scores.push({
+				name: o.name,
+				score: o.getScore(idsOnly) * -1
+			});
+		});
 	}
 }

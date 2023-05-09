@@ -5,10 +5,22 @@
 	overflow: auto;
 	
 	&.layout2 {
-		
-		h1 {
+
+		header {
+			margin-top: 15px;
+			display: flex;
+			align-items: center;
 			margin-bottom: 90px;
+			justify-content: space-between;
+			width: 100%;
+			text-align: center;
+
+			.icon-help-circle {
+				font-size: 30px;
+				cursor: pointer;
+			}
 		}
+		
 		.panel {
 			gap: 0;
 			padding: 0 15px;
@@ -28,10 +40,6 @@
 
 		.production-type-buttons {
 			gap: 30px;
-		}
-
-		header {
-			display: flex;
 		}
 
 		.btn-next {

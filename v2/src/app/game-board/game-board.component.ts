@@ -1,4 +1,4 @@
-import { AfterContentChecked,  AfterViewInit, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, QueryList, Renderer2, ViewChildren } from '@angular/core';
+import { AfterContentChecked,  AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, QueryList, Renderer2, ViewChildren } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { Field, HighlightField, SelectedField } from '../shared/models/field';
 import { GameBoard, GameBoardClickMode } from '../shared/models/game-board';
@@ -11,6 +11,7 @@ import { SubSink } from 'subsink';
 	selector: 'tro-game-board',
 	templateUrl: './game-board.component.html',
 	styleUrls: ['./game-board.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GameBoardComponent implements AfterViewInit, OnDestroy {
 	private _boardData: GameBoard;
@@ -55,7 +56,12 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 
 	get hideLegend() { return this._hideLegend; }
 
-	constructor(private gameService: GameService, private renderer: Renderer2, private elementRef: ElementRef) {
+	constructor(
+		private gameService: GameService,
+		private renderer: Renderer2,
+		private elementRef: ElementRef,
+		private cdRef: ChangeDetectorRef
+	) {
 		this._sink.sink = this.gameService.settingsObs.subscribe(settings => {
 			this.settings = settings;
 			this.setFieldColumns(settings.gameBoardColumns);
@@ -70,6 +76,7 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 					this.fieldComponents.get(fieldNumber.id)?.highlight(fieldNumber.side);
 				});
 			}
+			this.cdRef.markForCheck();
 		});
 	}
 
@@ -85,7 +92,7 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 	ngAfterViewInit() {
 		this._sink.sink = this.gameService.selectedFieldsObs.subscribe(fields => {
 			this._selectedFields = fields;
-			this.drawSelectedFields();
+			setTimeout(() => this.drawSelectedFields());
 		});
 
 		this._sink.sink = this.fieldComponents.changes.subscribe(r => {
@@ -109,6 +116,7 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 				});
 				this.fieldComponents.get(field.fields[0].id)?.showProductionTypeImage();
 			});
+			this.cdRef.markForCheck();
 		}
 	}
 

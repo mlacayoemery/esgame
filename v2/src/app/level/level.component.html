@@ -34,7 +34,11 @@
 		<tro-game-board *ngIf="focusedGameBoard != null" hideLegend [boardData]="focusedGameBoard | async" [clickMode]="clickMode.SelectBoard" style="max-width: 250px"></tro-game-board> -->
 	</div>
 	<div class="panel center-panel">
-		<h1 i18n>Tradeoff: Agriculture Edition!</h1>
+		<header>
+			<i></i>
+			<h1 i18n>Tradeoff: Agriculture Edition! </h1>
+			<span class="icon-help-circle" (click)="openHelp()"></span>
+		</header>
 		<div>
 			<div class="production-type-buttons">
 				<tro-production-type-button *ngFor="let type of productionTypes"
@@ -44,6 +48,7 @@
 		</div>
 		<div class="game-board-wrapper">
 			<tro-game-board isMainBoard *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async"></tro-game-board>
+			<tro-score-indicator></tro-score-indicator>
 			<button troButton class="btn-next" (click)="nextLevel()">Nächste Runde</button>
 		</div>
 	</div>
@@ -54,3 +59,4 @@
 		</ng-container>
 	</div>
 </ng-template>
+<tro-help></tro-help>
