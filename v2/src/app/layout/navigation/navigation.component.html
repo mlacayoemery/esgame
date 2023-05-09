@@ -1,16 +1,15 @@
-<a [routerLink]="'layout1'">Layout 1 (Nico)</a> <br/>
-<a [routerLink]="'layout2'">Layout 2 (Vangelis)</a>
+<a [routerLink]="'layout2'">Zum Spiel</a>
 <br/>
 <br/>
 <br/>
 <mat-form-field appearance="fill">
-	<mat-label>Sprache</mat-label>
+	<mat-label translate>Sprache</mat-label>
 	<mat-select [value]="'de'" (selectionChange)="changeLanguage($event)">
 	  	<mat-option [value]="'de'">
-			Deutsch
+			{{'Deutsch' | translate}}
 	  	</mat-option>
 	  	<mat-option [value]="'en'">
-			English
+			{{'Englisch' | translate}}
 		</mat-option>
 	</mat-select>
 </mat-form-field>
