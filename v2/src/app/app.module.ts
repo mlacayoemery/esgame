@@ -11,7 +11,7 @@ import { Layout2Component } from './layout/layout2/layout2.component';
 import { Layout1Component } from './layout/layout1/layout1.component';
 import { NavigationComponent } from './layout/navigation/navigation.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
-import { BoardLegendComponent } from './board-legend/board-legend.component';
+import { LegendBoardComponent } from './legend-board/legend-board.component';
 import { ButtonDirective } from './shared/button.directive';
 import { HelpComponent } from './help/help.component';
 import { ScoreIndicatorComponent } from './score-indicator/score-indicator.component';
@@ -27,7 +27,7 @@ import { ScoreIndicatorComponent } from './score-indicator/score-indicator.compo
     Layout1Component,
     NavigationComponent,
     ScoreBoardComponent,
-    BoardLegendComponent,
+    LegendBoardComponent,
     ButtonDirective,
     HelpComponent,
     ScoreIndicatorComponent,
