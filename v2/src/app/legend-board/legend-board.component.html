@@ -3,6 +3,6 @@
 		<div class="color-element" [ngStyle]="{ backgroundColor: element.color}">
 
 		</div>
-		<span [ngClass]="!isNegative ? '--positive' : '--negative'">{{element.forValue}}</span>
+		<span [ngClass]="{'--positive': !isNegative, '--negative': isNegative, 'is-small': isSmall}">{{element.forValue}}</span>
 	</div>
 </div>

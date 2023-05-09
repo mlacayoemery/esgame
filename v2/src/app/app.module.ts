@@ -7,12 +7,11 @@ import { LevelComponent } from './level/level.component';
 import { GameBoardComponent } from './game-board/game-board.component';
 import { FieldComponent } from './field/field.component';
 import { ProductionTypeButtonComponent } from './product-type-button/production-type-button.component';
-import { PointBoardComponent } from './point-board/point-board.component';
 import { Layout2Component } from './layout/layout2/layout2.component';
 import { Layout1Component } from './layout/layout1/layout1.component';
 import { NavigationComponent } from './layout/navigation/navigation.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
-import { BoardLegendComponent } from './board-legend/board-legend.component';
+import { LegendBoardComponent } from './legend-board/legend-board.component';
 import { ButtonDirective } from './shared/button.directive';
 import { HelpComponent } from './help/help.component';
 import { ScoreIndicatorComponent } from './score-indicator/score-indicator.component';
@@ -33,12 +32,11 @@ export function HttpLoaderFactory(http: HttpClient) {
 		GameBoardComponent,
 		FieldComponent,
 		ProductionTypeButtonComponent,
-		PointBoardComponent,
 		Layout2Component,
 		Layout1Component,
 		NavigationComponent,
 		ScoreBoardComponent,
-		BoardLegendComponent,
+		LegendBoardComponent,
 		ButtonDirective,
 		HelpComponent,
 		ScoreIndicatorComponent,
