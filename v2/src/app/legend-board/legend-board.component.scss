@@ -16,7 +16,7 @@
         display: flex;
         margin: 4% 2%;
 
-        &>div {
+        & div {
             display: flex;
             flex: 1 1 0px;
             justify-content: space-between;
@@ -30,10 +30,10 @@
             }
             &>span {
                 //background-color: white;
-                font-size: min(0.9vw, 18px);
+                font-size: min(0.9vw, 14px);
                 font-weight: 600;
             }
-            &>span.is-small {
+            & span.is-small {
                 font-weight: 600;
                 font-size: min(.5vw, 15px);
             }
