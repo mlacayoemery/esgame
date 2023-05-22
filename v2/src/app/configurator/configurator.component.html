@@ -1,0 +1,26 @@
+<h1>{{ 'configurator' | translate }}</h1>
+<form>
+
+    <h2>{{ 'general' | translate}}</h2>
+    <mat-form-field class="example-full-width">
+        <mat-label>{{ 'maps-width' | translate}}</mat-label>
+        <input type="number" matInput placeholder="0" value="">
+    </mat-form-field>
+    <mat-form-field class="example-full-width">
+        <mat-label>{{ 'maps-length' | translate}}</mat-label>
+        <input type="number" matInput placeholder="0" value="">
+    </mat-form-field>
+    <mat-form-field class="example-full-width">
+        <mat-label>{{ 'selection-size' | translate}}</mat-label>
+        <input type="number" matInput placeholder="0" value="">
+    </mat-form-field>
+    <h2>{{ 'agriculture-types' | translate }}</h2>
+    <ng-container *ngFor="let type of agircultureTypes" >
+
+    </ng-container>
+
+    <h2>{{ 'maps' | translate}}</h2>
+    <ng-container *ngFor="let map of maps">
+
+    </ng-container>
+</form>

@@ -16,47 +16,53 @@ import { ButtonDirective } from './shared/button.directive';
 import { HelpComponent } from './help/help.component';
 import { ScoreIndicatorComponent } from './score-indicator/score-indicator.component';
 import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
-import {TranslateHttpLoader} from '@ngx-translate/http-loader';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { ConfiguratorComponent } from './configurator/configurator.component';
 
 export function HttpLoaderFactory(http: HttpClient) {
-    return new TranslateHttpLoader(http);
+  return new TranslateHttpLoader(http);
 }
 
 @NgModule({
-	declarations: [
-		AppComponent,
-		LevelComponent,
-		GameBoardComponent,
-		FieldComponent,
-		ProductionTypeButtonComponent,
-		Layout2Component,
-		Layout1Component,
-		NavigationComponent,
-		ScoreBoardComponent,
-		LegendBoardComponent,
-		ButtonDirective,
-		HelpComponent,
-		ScoreIndicatorComponent,
-	],
-	imports: [
-		BrowserModule,
-		BrowserAnimationsModule,
-		AppRoutingModule,
-		HttpClientModule,
-		MatSelectModule,
-		TranslateModule.forRoot({
-			defaultLanguage: 'de',
-			loader: {
-				provide: TranslateLoader,
-				useFactory: HttpLoaderFactory,
-				deps: [HttpClient]
-			}
-		})
-	],
-	providers: [],
-	bootstrap: [AppComponent]
+  declarations: [
+    AppComponent,
+    LevelComponent,
+    GameBoardComponent,
+    FieldComponent,
+    ProductionTypeButtonComponent,
+    Layout2Component,
+    Layout1Component,
+    NavigationComponent,
+    ScoreBoardComponent,
+    LegendBoardComponent,
+    ButtonDirective,
+    HelpComponent,
+    ScoreIndicatorComponent,
+    ConfiguratorComponent,
+  ],
+  imports: [
+    BrowserModule,
+    BrowserAnimationsModule,
+    AppRoutingModule,
+    HttpClientModule,
+    MatSelectModule,
+    MatInputModule,
+    MatFormFieldModule,
+    TranslateModule.forRoot({
+      defaultLanguage: 'de',
+      loader: {
+        provide: TranslateLoader,
+        useFactory: HttpLoaderFactory,
+        deps: [HttpClient]
+      }
+    })
+  ],
+  providers: [],
+  bootstrap: [AppComponent]
 })
 export class AppModule { }
