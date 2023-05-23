@@ -27,16 +27,20 @@ export class SvgFieldComponent extends FieldBaseComponent {
 		}
 	}
 
-	setColor() {
-		if (this._field) {
-			if (!this._isOverlay)
-				this.fillColor = `#${this._field.type?.fieldColor}`;
+	setColor(productionType: ProductionType | null = null) {
+		if (!this._field || this._isOverlay) return;
+
+		if (productionType) {
+			console.log(productionType.fieldColor);
+			this.fillColor = `${productionType.fieldColor}`;
+		} else {
+			this.fillColor = `#${this._field.type?.fieldColor}`;
 		}
 	}
 
 	assign(productionType: ProductionType, side: HighlightSide) {
 		this._field.assigned = this.isAssigned = true;
-		this.setColor();
+		this.setColor(productionType);
 		this.gameService.removeHighlight();
 	}
 

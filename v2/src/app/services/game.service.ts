@@ -133,12 +133,39 @@ export class GameService {
 			this.tiffService.getSvgGameBoard("/assets/images/consequence_test.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Zonen_Konsequenz")
 		]).subscribe((gameBoards) => {
 
+			this.productionTypes.value.push(new ProductionType("#fbe5d6", gameBoards[0], "Ackerland"));
+			this.productionTypes.value.push(new ProductionType("#f8cbad", gameBoards[0], "Viehzucht"));
+			this.selectedProductionType.next(this.productionTypes.value[0]);
 
 			level.gameBoards.push(...gameBoards);
 			level.levelNumber = 1;
 
 			this.currentLevel.next(level);
 			this.focusedGameBoard.next(gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!);
+		});
+
+	}
+
+	initialiseGridMode() {
+		//TODO: This code can be replaced as soon as it is possible to load data from the API
+		let level = new Level();
+		this.levels.push(level);
+		
+		combineLatest([
+			this.tiffService.getGridGameBoard("./assets/images/esgame_img_ag.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Ackerland"), 
+			this.tiffService.getGridGameBoard("./assets/images/esgame_img_ranch.tif", DefaultGradients.Orange, GameBoardType.SuitabilityMap, "Viehzucht")
+		]).subscribe(([gameBoard, gameBoard2]) => {
+			level.gameBoards.push(gameBoard);
+			level.gameBoards.push(gameBoard2);
+			level.levelNumber = 1;
+
+			this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Ackerland", "http://esgame.unige.ch/images/corn.png"));
+			this.productionTypes.value.push(new ProductionType("#FFF", gameBoard2, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
+			this.productionTypes.next(this.productionTypes.value);
+			this.selectedProductionType.next(this.productionTypes.value[0]);
+
+			this.currentLevel.next(level);
+			this.focusedGameBoard.next(gameBoard);
 		});
 
 	}
@@ -199,29 +226,5 @@ export class GameService {
 		if (sides.length == 0) return HighlightSide.NONE;
 
 		return sides[0];
-	}
-
-	initialiseGridMode() {
-		//TODO: This code can be replaced as soon as it is possible to load data from the API
-		let level = new Level();
-		this.levels.push(level);
-		
-		combineLatest([
-			this.tiffService.getGridGameBoard("./assets/images/esgame_img_ag.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Ackerland"), 
-			this.tiffService.getGridGameBoard("./assets/images/esgame_img_ranch.tif", DefaultGradients.Orange, GameBoardType.SuitabilityMap, "Viehzucht")
-		]).subscribe(([gameBoard, gameBoard2]) => {
-			level.gameBoards.push(gameBoard);
-			level.gameBoards.push(gameBoard2);
-			level.levelNumber = 1;
-
-			this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Ackerland", "http://esgame.unige.ch/images/corn.png"));
-			this.productionTypes.value.push(new ProductionType("#FFF", gameBoard2, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
-			this.productionTypes.next(this.productionTypes.value);
-			this.selectedProductionType.next(this.productionTypes.value[0]);
-
-			this.currentLevel.next(level);
-			this.focusedGameBoard.next(gameBoard);
-		});
-
 	}
 }

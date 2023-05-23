@@ -53,7 +53,7 @@ export class GridGameBoardComponent extends GameBoardBaseComponent implements Af
 		});
 	}
 
-	private drawSelectedFields() {
+	protected drawSelectedFields() {
 		if (this.fields && this._selectedFields && this.fieldComponents) {
 			this.fields.forEach(field => this.fieldComponents.get(field.id)?.unassign());
 			this._selectedFields.forEach(field => {

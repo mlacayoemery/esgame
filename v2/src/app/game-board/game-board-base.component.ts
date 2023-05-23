@@ -78,6 +78,8 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 		}));
 	}
 
+	protected abstract drawSelectedFields(): void;
+
 	ngOnDestroy(): void {
 		this._sink.unsubscribe();
 		this._listeners.forEach(fn => fn());

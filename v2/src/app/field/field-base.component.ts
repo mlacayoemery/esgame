@@ -4,26 +4,26 @@ import { ProductionType } from "../shared/models/production-type";
 import { Component, ElementRef, HostBinding, Input, OnDestroy, OnInit, Renderer2 } from '@angular/core';
 
 @Component({
-  template: '',
+	template: '',
 })
 export abstract class FieldBaseComponent implements OnDestroy {
-  @HostBinding('class.--is-highlighted') public isHighlighted = false;
-  @HostBinding('class.--is-assigned') public isAssigned = false;
-  protected _field: Field;
-  private _listeners : (() => void)[] = [];
+	@HostBinding('class.--is-highlighted') public isHighlighted = false;
+	@HostBinding('class.--is-assigned') public isAssigned = false;
+	protected _field: Field;
+	private _listeners: (() => void)[] = [];
 
-  constructor(protected gameService: GameService, protected renderer: Renderer2, protected elementRef: ElementRef) { }
+	constructor(protected gameService: GameService, protected renderer: Renderer2, protected elementRef: ElementRef) { }
 
-  @Input() set field(field: Field) {
-    this._field = field;
-    this.setColor();
-  }
+	@Input() set field(field: Field) {
+		this._field = field;
+		this.setColor();
+	}
 
-  get field(): Field {
-    return this._field;
-  }
+	get field(): Field {
+		return this._field;
+	}
 
-  addClickListener() {
+	addClickListener() {
 		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'click', () => {
 			if (this.field.assigned) this.gameService.deselectField(this.field.id);
 			else this.gameService.selectField(this.field.id);
@@ -36,9 +36,9 @@ export abstract class FieldBaseComponent implements OnDestroy {
 		}));
 	}
 
-  abstract setColor(): void;
+	abstract setColor(): void;
 
-  highlight(side: HighlightSide) {
+	highlight(side: HighlightSide) {
 		this.isHighlighted = true;
 	}
 
@@ -46,11 +46,11 @@ export abstract class FieldBaseComponent implements OnDestroy {
 		this.isHighlighted = false;
 	}
 
-  abstract assign(productionType: ProductionType, side: HighlightSide): void;
+	abstract assign(productionType: ProductionType, side: HighlightSide): void;
 
-  abstract unassign(): void;
+	abstract unassign(): void;
 
-  ngOnDestroy(): void {
-    this._listeners.forEach(fn => fn());
-  }
+	ngOnDestroy(): void {
+		this._listeners.forEach(fn => fn());
+	}
 }
