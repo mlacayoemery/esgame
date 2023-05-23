@@ -2,11 +2,11 @@ import { AfterContentChecked,  AfterViewInit, ChangeDetectionStrategy, ChangeDet
 import { GameService } from '../services/game.service';
 import { Field, HighlightField, SelectedField } from '../shared/models/field';
 import { GameBoard, GameBoardClickMode } from '../shared/models/game-board';
-import { FieldComponent } from '../field/field.component';
+import { FieldComponent } from '../field/grid-field/field.component';
 import { Settings } from '../shared/models/settings';
 import { Legend } from '../shared/models/legend';
 import { SubSink } from 'subsink';
-import { SvgFieldComponent } from '../svg-field/svg-field.component';
+import { SvgFieldComponent } from '../field/svg-field/svg-field.component';
 
 @Component({
 	selector: 'tro-game-board',
