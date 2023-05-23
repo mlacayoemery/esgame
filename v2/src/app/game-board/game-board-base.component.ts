@@ -1,20 +1,16 @@
-import { AfterContentChecked,  AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, QueryList, Renderer2, ViewChildren } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, QueryList, Renderer2, ViewChildren } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { Field, HighlightField, SelectedField } from '../shared/models/field';
 import { GameBoard, GameBoardClickMode } from '../shared/models/game-board';
-import { FieldComponent } from '../field/field.component';
 import { Settings } from '../shared/models/settings';
 import { Legend } from '../shared/models/legend';
 import { SubSink } from 'subsink';
-import { SvgFieldComponent } from '../svg-field/svg-field.component';
 
 @Component({
-	selector: 'tro-game-board',
-	templateUrl: './game-board.component.html',
-	styleUrls: ['./game-board.component.scss'],
+	template: '',
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class GameBoardComponent implements OnDestroy {
+export class GameBoardBaseComponent implements OnDestroy {
 	protected _boardData: GameBoard;
 	protected _hideLegend = false;
 	protected _clickMode = GameBoardClickMode.Field;

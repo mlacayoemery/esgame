@@ -16,11 +16,17 @@
     </mat-form-field>
     <h2>{{ 'agriculture-types' | translate }}</h2>
     <ng-container *ngFor="let type of agircultureTypes" >
-
+        <mat-form-field class="example-full-width">
+            <mat-label>{{ 'selection-size' | translate}}</mat-label>
+            <input type="number" matInput placeholder="0" value="">
+        </mat-form-field>
     </ng-container>
 
     <h2>{{ 'maps' | translate}}</h2>
     <ng-container *ngFor="let map of maps">
-
+        <mat-form-field class="example-full-width">
+            <mat-label>{{ 'selection-size' | translate}}</mat-label>
+            <input type="number" matInput placeholder="0" value="">
+        </mat-form-field>
     </ng-container>
 </form>

@@ -1,22 +1,22 @@
 import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, Input, QueryList, Renderer2, ViewChildren } from '@angular/core';
-import { GameBoardComponent } from '../game-board.component';
+import { GameBoardBaseComponent } from '../game-board-base.component';
 import { GameService } from 'src/app/services/game.service';
-import { FieldComponent } from 'src/app/field/field.component';
 import { GameBoard } from 'src/app/shared/models/game-board';
+import { GridFieldComponent } from 'src/app/field/grid-field/grid-field.component';
 
 @Component({
   selector: 'tro-grid-game-board',
   templateUrl: './grid-game-board.component.html',
   styleUrls: ['./grid-game-board.component.scss']
 })
-export class GridGameBoardComponent extends GameBoardComponent implements AfterViewInit {
+export class GridGameBoardComponent extends GameBoardBaseComponent implements AfterViewInit {
 
 	override set boardData(data: GameBoard | null) {
 		super.boardData = data;
 		this.setFieldColumns(this.settings.gameBoardColumns);
 	} 
 
-	@ViewChildren(FieldComponent) fieldComponents: QueryList<FieldComponent>;
+	@ViewChildren(GridFieldComponent) fieldComponents: QueryList<GridFieldComponent>;
 
 	constructor(
 		gameService: GameService,
