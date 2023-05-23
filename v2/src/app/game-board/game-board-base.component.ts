@@ -10,7 +10,7 @@ import { SubSink } from 'subsink';
 	template: '',
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class GameBoardBaseComponent implements OnDestroy {
+export abstract class GameBoardBaseComponent implements OnDestroy {
 	protected _boardData: GameBoard;
 	protected _hideLegend = false;
 	protected _clickMode = GameBoardClickMode.Field;
