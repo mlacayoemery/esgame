@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { LevelBaseComponent } from '../level-base.component';
+import { GameService } from 'src/app/services/game.service';
 
 @Component({
   selector: 'tro-svg-level',
@@ -8,4 +9,8 @@ import { LevelBaseComponent } from '../level-base.component';
 })
 export class SvgLevelComponent extends LevelBaseComponent {
 
+  constructor(gameService: GameService) {
+    super(gameService);
+    gameService.prepareRoundSVG();
+  }
 }

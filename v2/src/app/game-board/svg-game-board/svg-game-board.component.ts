@@ -13,10 +13,8 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent {
 	@ViewChildren(SvgFieldComponent) svgFieldComponents: QueryList<SvgFieldComponent>;
 
   @Input() 
-	set overlay(overlay: GameBoard | null) {
+	set overlay(overlay: GameBoard | null | undefined) {
 		this.overlayFields = overlay?.fields ?? [];
 	}
-
-
   overlayFields: Field[] = [];
 }

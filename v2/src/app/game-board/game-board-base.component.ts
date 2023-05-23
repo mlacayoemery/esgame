@@ -36,7 +36,7 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 	@HostBinding('style.grid-template-columns') fieldColumns: string;
 
 	@Input()
-	set boardData(data: GameBoard | null) {
+	set boardData(data: GameBoard | undefined | null) {
 		if (data) {
 			this._boardData = data;
 			this.fields = data.fields;

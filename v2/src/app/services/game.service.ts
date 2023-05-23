@@ -112,8 +112,6 @@ export class GameService {
 			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch_habitat.tif", DefaultGradients.Purple, GameBoardType.ConsequenceMap, "Lebensraum"),
 			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap, "Wasser"),
 			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap, "Jagd"),
-			this.tiffService.getGameBoard("/assets/images/zonal_raster.tif", DefaultGradients.Blue, GameBoardType.DrawingMap, "Zonen", true),
-			this.tiffService.getGameBoard("/assets/images/consequence_test.tif", DefaultGradients.Green, GameBoardType.DrawingMap, "Zonen", true)
 		]).subscribe((gameBoards) => {
 			level2.gameBoards.push(...this.currentLevel.value!.gameBoards);
 			level2.gameBoards.push(...gameBoards);
@@ -128,6 +126,24 @@ export class GameService {
 			this.currentLevel.next(level2);
 			this.selectedFields.next(this.selectedFields.value);
 		});
+	}
+
+	prepareRoundSVG() {
+		var level = new Level();
+
+		combineLatest([
+			this.tiffService.getGameBoard("/assets/images/zonal_raster.tif", DefaultGradients.Blue, GameBoardType.DrawingMap, "Zonen", true),
+			this.tiffService.getGameBoard("/assets/images/consequence_test.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Zonen_Konsequenz", true)
+		]).subscribe((gameBoards) => {
+
+
+			level.gameBoards.push(...gameBoards);
+			level.levelNumber = 1;
+
+			this.currentLevel.next(level);
+			this.focusedGameBoard.next(gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!);
+		});
+
 	}
 
 	openHelp(close = false) { this.helpWindow.next(!close); }
@@ -189,7 +205,7 @@ export class GameService {
 	}
 
 	initialiseGameBoards() {
-		// This code can be replaced as soon as it is possible to load data from the API
+		//TODO: This code can be replaced as soon as it is possible to load data from the API
 		let level = new Level();
 		this.levels.push(level);
 		

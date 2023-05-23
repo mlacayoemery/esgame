@@ -84,7 +84,7 @@ export class TiffService {
 
 
 	private async tiffToArray(url: string): Promise<number[]> {
-		const tiff = await fromUrl(url); //TODO: load blob data --> await fromBlob(blob);
+		const tiff = await fromUrl(url);
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
 		const result = Array.from(raster.map(c => c as number));
