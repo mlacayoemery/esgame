@@ -3,8 +3,12 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+<<<<<<< HEAD
 import { LevelBaseComponent } from './level/level-base.component';
 import { GameBoardBaseComponent } from './game-board/game-board-base.component';
+=======
+import { LevelComponent } from './level/level.component';
+>>>>>>> develop
 import { GridFieldComponent } from './field/grid-field/grid-field.component';
 import { ProductionTypeButtonComponent } from './product-type-button/production-type-button.component';
 import { NavigationComponent } from './layout/navigation/navigation.component';
@@ -36,7 +40,6 @@ export function createTranslateLoader(http: HttpClient) {
 @NgModule({
 	declarations: [
 		AppComponent,
-		GameBoardBaseComponent,
 		GridFieldComponent,
 		ProductionTypeButtonComponent,
 		NavigationComponent,
