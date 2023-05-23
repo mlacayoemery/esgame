@@ -1,5 +1,5 @@
-import { Inject, Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, combineLatest, debounce, forkJoin, interval, merge } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, combineLatest } from 'rxjs';
 import { GameBoard } from '../shared/models/game-board';
 import { GameBoardType } from '../shared/models/game-board-type';
 import { Level } from '../shared/models/level';
@@ -8,8 +8,7 @@ import { ProductionType } from '../shared/models/production-type';
 import { HighlightField, HighlightSide, SelectedField } from '../shared/models/field';
 import { TiffService } from './tiff.service';
 import { DefaultGradients } from '../shared/helpers/gradiants';
-import { ScoreEntry, ScoreService } from './score.service';
-import { APP_BASE_HREF } from '@angular/common';
+import { ScoreService } from './score.service';
 
 @Injectable({
 	providedIn: 'root'
@@ -40,7 +39,6 @@ export class GameService {
 		private tiffService: TiffService,
 		private scoreService: ScoreService
 	) {
-		this.initialiseGameBoards();
 	}
 
 	highlightOnOtherFields(id: any) {
@@ -127,7 +125,7 @@ export class GameService {
 		});
 	}
 
-	prepareRoundSVG() {
+	initialiseSVGMode() {
 		var level = new Level();
 
 		combineLatest([
@@ -203,7 +201,7 @@ export class GameService {
 		return sides[0];
 	}
 
-	initialiseGameBoards() {
+	initialiseGridMode() {
 		//TODO: This code can be replaced as soon as it is possible to load data from the API
 		let level = new Level();
 		this.levels.push(level);
