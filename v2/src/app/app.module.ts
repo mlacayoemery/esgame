@@ -7,7 +7,6 @@ import { LevelComponent } from './level/level.component';
 import { GameBoardBaseComponent } from './game-board/game-board-base.component';
 import { GridFieldComponent } from './field/grid-field/grid-field.component';
 import { ProductionTypeButtonComponent } from './product-type-button/production-type-button.component';
-import { Layout1Component } from './layout/layout1/layout1.component';
 import { NavigationComponent } from './layout/navigation/navigation.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
 import { LegendBoardComponent } from './legend-board/legend-board.component';
@@ -39,7 +38,6 @@ export function createTranslateLoader(http: HttpClient) {
 		GameBoardBaseComponent,
 		GridFieldComponent,
 		ProductionTypeButtonComponent,
-		Layout1Component,
 		NavigationComponent,
 		ScoreBoardComponent,
 		LegendBoardComponent,
