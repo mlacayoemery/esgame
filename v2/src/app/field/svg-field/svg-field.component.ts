@@ -1,6 +1,6 @@
 import { Component, ElementRef, HostBinding, Input, Renderer2 } from '@angular/core';
 import { GameService } from '../../services/game.service';
-import { Field, HighlightSide } from '../../shared/models/field';
+import { HighlightSide } from '../../shared/models/field';
 import { ProductionType } from '../../shared/models/production-type';
 import { FieldBaseComponent } from '../field-base.component';
 
@@ -27,19 +27,6 @@ export class SvgFieldComponent extends FieldBaseComponent {
 		}
 	}
 
-	addClickListener() {
-		this.renderer.listen(this.elementRef.nativeElement, 'click', () => {
-			if (this._field.assigned) this.gameService.deselectField(this._field.id);
-			else this.gameService.selectField(this._field.id);
-		});
-	}
-
-	addHoverListener() {
-		this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', () => {
-			this.gameService.highlightOnOtherFields(this._field.id);
-		});
-	}
-
 	setColor() {
 		if (this._field) {
 			if (!this._isOverlay)
@@ -47,14 +34,6 @@ export class SvgFieldComponent extends FieldBaseComponent {
 			if (this._isOverlay)
 				this.stroke = "rgba(0,0,0,0.0)";
 		}
-	}
-
-	highlight(side: HighlightSide) {
-		this.isHighlighted = true;
-	}
-
-	removeHighlight() {
-		this.isHighlighted = false;
 	}
 
 	assign(productionType: ProductionType, side: HighlightSide) {

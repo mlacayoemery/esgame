@@ -11,10 +11,9 @@ import { ProductionType } from 'src/app/shared/models/production-type';
 	styleUrls: ['./field.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FieldComponent extends FieldBaseComponent implements OnDestroy {
+export class FieldComponent extends FieldBaseComponent {
 	private _imageMode = false;
 	private _sink = new SubSink();
-	private _listeners: (() => void)[] = [];
 
 	@Input() set imageMode(mode: any) {
 		if (mode === false) this._imageMode = false;
@@ -55,19 +54,6 @@ export class FieldComponent extends FieldBaseComponent implements OnDestroy {
 		});
 	}
 
-	addClickListener() {
-		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'click', () => {
-			if (this.field.assigned) this.gameService.deselectField(this.field.id);
-			else this.gameService.selectField(this.field.id);
-		}));
-	}
-
-	addHoverListener() {
-		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', () => {
-			this.gameService.highlightOnOtherFields(this._field.id);
-		}));
-	}
-
 	@Input() set size(size: number | null) {
 		size = size ?? 10;
 		this._size = size;
@@ -85,13 +71,9 @@ export class FieldComponent extends FieldBaseComponent implements OnDestroy {
 		}
 	}
 
-	highlight(side: HighlightSide) {
+	override highlight(side: HighlightSide) {
 		this.isHighlighted = true;
 		this.highlightSide = side;
-	}
-
-	removeHighlight() {
-		this.isHighlighted = false;
 	}
 
 	assign(productionType: ProductionType, side: HighlightSide) {
@@ -120,8 +102,8 @@ export class FieldComponent extends FieldBaseComponent implements OnDestroy {
 		this.showProductionImage = true;
 	}
 
-	ngOnDestroy(): void {
+	override ngOnDestroy(): void {
+		super.ngOnDestroy();
 		this._sink.unsubscribe();
-		this._listeners.forEach(fn => fn());
 	}
 }
