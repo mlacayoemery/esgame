@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, combineLatest, debounce, forkJoin, interval, merge } from 'rxjs';
 import { GameBoard } from '../shared/models/game-board';
 import { GameBoardType } from '../shared/models/game-board-type';
@@ -9,6 +9,7 @@ import { HighlightField, HighlightSide, SelectedField } from '../shared/models/f
 import { TiffService } from './tiff.service';
 import { DefaultGradients } from '../shared/helpers/gradiants';
 import { ScoreEntry, ScoreService } from './score.service';
+import { APP_BASE_HREF } from '@angular/common';
 
 @Injectable({
 	providedIn: 'root'
@@ -117,7 +118,7 @@ export class GameService {
 			level2.gameBoards.push(...this.currentLevel.value!.gameBoards);
 			level2.gameBoards.push(...gameBoards);
 			level2.levelNumber = 2;
-
+			
 			// TODO: Nicht über Array
 			this.productionTypes.value[0].consequenceMaps.push(...gameBoards.slice(0, 4));
 			this.productionTypes.value[1].consequenceMaps.push(...gameBoards.slice(4, 8));
@@ -193,8 +194,8 @@ export class GameService {
 		this.levels.push(level);
 		
 		combineLatest([
-			this.tiffService.getGameBoard("/assets/images/esgame_img_ag.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Ackerland"), 
-			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch.tif", DefaultGradients.Orange, GameBoardType.SuitabilityMap, "Viehzucht")
+			this.tiffService.getGameBoard("./assets/images/esgame_img_ag.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Ackerland"), 
+			this.tiffService.getGameBoard("./assets/images/esgame_img_ranch.tif", DefaultGradients.Orange, GameBoardType.SuitabilityMap, "Viehzucht")
 		]).subscribe(([gameBoard, gameBoard2]) => {
 			level.gameBoards.push(gameBoard);
 			level.gameBoards.push(gameBoard2);
