@@ -16,8 +16,6 @@ import { ButtonDirective } from './shared/button.directive';
 import { HelpComponent } from './help/help.component';
 import { ScoreIndicatorComponent } from './score-indicator/score-indicator.component';
 import { MatSelectModule } from '@angular/material/select';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -29,43 +27,45 @@ export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http);
 }
 
+export function createTranslateLoader(http: HttpClient) {
+  return new TranslateHttpLoader(http, './assets/i18n/', '.json');
+}
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    LevelComponent,
-    GameBoardComponent,
-    FieldComponent,
-    ProductionTypeButtonComponent,
-    Layout2Component,
-    Layout1Component,
-    NavigationComponent,
-    ScoreBoardComponent,
-    LegendBoardComponent,
-    ButtonDirective,
-    HelpComponent,
-    ScoreIndicatorComponent,
-    ConfiguratorComponent,
-    SvgFieldComponent,
-  ],
-  imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    AppRoutingModule,
-    HttpClientModule,
-    MatSelectModule,
-    MatInputModule,
-    MatFormFieldModule,
-    TranslateModule.forRoot({
-      defaultLanguage: 'de',
-      loader: {
-        provide: TranslateLoader,
-        useFactory: HttpLoaderFactory,
-        deps: [HttpClient]
-      }
-    })
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
+	declarations: [
+		AppComponent,
+		LevelComponent,
+		GameBoardComponent,
+		FieldComponent,
+		ProductionTypeButtonComponent,
+		Layout2Component,
+		Layout1Component,
+		NavigationComponent,
+		ScoreBoardComponent,
+		LegendBoardComponent,
+		ButtonDirective,
+		HelpComponent,
+		ScoreIndicatorComponent,
+		ConfiguratorComponent,
+		SvgFieldComponent,
+	],
+	imports: [
+		BrowserModule,
+		BrowserAnimationsModule,
+		AppRoutingModule,
+		HttpClientModule,
+		MatSelectModule,
+		TranslateModule.forRoot({
+			defaultLanguage: 'de',
+			loader: {
+				provide: TranslateLoader,
+				useFactory: createTranslateLoader,
+				deps: [HttpClient]
+			}
+		})
+	],
+	providers: [],
+	bootstrap: [AppComponent]
 })
 export class AppModule { }
+
