@@ -1,7 +1,7 @@
 <div class="panel left-panel">
 	<ng-container *ngFor="let board of (suitabilityBoards | async)">
 		<h2 translate>{{ board.name }}</h2>
-		<tro-game-board [boardData]="board" hideLegend style="max-width: 250px" [clickMode]="clickMode.SelectBoard"></tro-game-board>
+		<tro-grid-game-board [boardData]="board" hideLegend style="max-width: 250px" [clickMode]="clickMode.SelectBoard"></tro-grid-game-board>
 	</ng-container>
 	<!-- <tro-score-board isStatic *ngIf="(level | async)?.previousRoundScore" [scores]="(level | async)?.previousRoundScore"></tro-score-board> -->
 </div>
@@ -20,7 +20,7 @@
 		<p>{{ 'Aktiv:' | translate }} {{ (selectedProductionType | async)?.name ?? '' | translate }}</p>
 	</div>
 	<div class="game-board-wrapper">
-		<tro-game-board isMainBoard *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async"></tro-game-board>
+		<tro-grid-game-board isMainBoard *ngIf="focusedGameBoard != null" [boardData]="focusedGameBoard | async"></tro-grid-game-board>
 		<tro-score-indicator></tro-score-indicator>
 		<div class="score-board-wrapper">
 			<tro-score-board></tro-score-board>
@@ -31,7 +31,7 @@
 <div class="panel right-panel">
 	<ng-container *ngFor="let board of (consequenceBoards | async)">
 		<h2 translate>{{ board.name }}</h2>
-		<tro-game-board [boardData]="board" hideLegend style="max-width: 250px" [clickMode]="clickMode.SelectBoard"></tro-game-board>
+		<tro-grid-game-board [boardData]="board" hideLegend style="max-width: 250px" [clickMode]="clickMode.SelectBoard"></tro-grid-game-board>
 	</ng-container>
 </div>
 <tro-help></tro-help>

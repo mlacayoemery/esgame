@@ -7,7 +7,6 @@ import { LevelComponent } from './level/level.component';
 import { GameBoardComponent } from './game-board/game-board.component';
 import { FieldComponent } from './field/field.component';
 import { ProductionTypeButtonComponent } from './product-type-button/production-type-button.component';
-import { Layout2Component } from './layout/layout2/layout2.component';
 import { Layout1Component } from './layout/layout1/layout1.component';
 import { NavigationComponent } from './layout/navigation/navigation.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
@@ -22,6 +21,8 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { ConfiguratorComponent } from './configurator/configurator.component';
 import { SvgFieldComponent } from './svg-field/svg-field.component';
+import { SvgGameBoardComponent } from './game-board/svg-game-board/svg-game-board.component';
+import { GridGameBoardComponent } from './game-board/grid-game-board/grid-game-board.component';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http);
@@ -38,7 +39,6 @@ export function createTranslateLoader(http: HttpClient) {
 		GameBoardComponent,
 		FieldComponent,
 		ProductionTypeButtonComponent,
-		Layout2Component,
 		Layout1Component,
 		NavigationComponent,
 		ScoreBoardComponent,
@@ -48,6 +48,8 @@ export function createTranslateLoader(http: HttpClient) {
 		ScoreIndicatorComponent,
 		ConfiguratorComponent,
 		SvgFieldComponent,
+  SvgGameBoardComponent,
+  GridGameBoardComponent,
 	],
 	imports: [
 		BrowserModule,

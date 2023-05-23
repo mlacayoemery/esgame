@@ -18,8 +18,6 @@ export class LevelComponent {
 	productionTypes: ProductionType[];
 	clickMode = GameBoardClickMode;
 
-	@HostBinding('class.layout2')
-	private _layout2 = false;
 	level? = this.gameService.currentLevelObs;
 	drawingBoard = this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.filter(p => p.gameBoardType == GameBoardType.DrawingMap)));
 	suitabilityBoards = this.gameService.currentLevelObs.pipe(
@@ -27,13 +25,6 @@ export class LevelComponent {
 		map(o => o?.filter(p => p.gameBoardType == GameBoardType.SuitabilityMap))
 	);
 	consequenceBoards = this.selectedProductionType.pipe(map(o => o?.consequenceMaps)); //this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.filter(p => p.gameBoardType == GameBoardType.ConsequenceMap)));
-
-	@Input() set isLayout2(layout: any) {
-		if (layout === false) this._layout2 = false;
-		else this._layout2 = true;
-	}
-
-	get isLayout2() { return this._layout2; }
 
 	constructor(private gameService: GameService) {
 		this.gameService.productionTypesObs.subscribe(productionTypes => {
