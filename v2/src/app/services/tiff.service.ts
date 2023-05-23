@@ -14,44 +14,44 @@ import tiffToSvgPaths from '../shared/helpers/svg/tiffToSvgPaths';
 })
 export class TiffService {
 
-	getGameBoard(url: string, defaultGradient: DefaultGradients, gameBoardType: GameBoardType, name: string, isSvg: boolean = false) {
-		if (!isSvg) {
-			return this.getTiffData(url).pipe(
-				mergeMap(data => {
-					let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
+	getGridGameBoard(url: string, defaultGradient: DefaultGradients, gameBoardType: GameBoardType, name: string) {
+		return this.getTiffData(url).pipe(
+			mergeMap(data => {
+				let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
 
-					uniqueValues = Array.from(new Set(data)).sort((a, b) => a - b);
-					gradient = gradients.get(defaultGradient)!;
-					legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap };
+				uniqueValues = Array.from(new Set(data)).sort((a, b) => a - b);
+				gradient = gradients.get(defaultGradient)!;
+				legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap };
 
-					fields = data.map((o, i) => {
-						return new Field(i, new FieldType(gradient!.colors[(uniqueValues.indexOf(o))] as string, "CONFIGURED"), o);
-					});
-					const gameBoard = new GameBoard(gameBoardType, fields, legend, name);
+				fields = data.map((o, i) => {
+					return new Field(i, new FieldType(gradient!.colors[(uniqueValues.indexOf(o))] as string, "CONFIGURED"), o);
+				});
+				const gameBoard = new GameBoard(gameBoardType, fields, legend, name);
 
-					return of(gameBoard);
-				})
-			);
-		} else {
-			return this.getTiffSvgData(url).pipe(
-				mergeMap(data => {
-					let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
+				return of(gameBoard);
+			})
+		);
+	}
 
-					uniqueValues = Array.from(data.paths.keys()).sort((a, b) => a - b);
-					gradient = gradients.get(defaultGradient)!;
-					legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap };
-					const maxValue = Math.max(...uniqueValues);
-					
-					fields = Array.from(data.paths).map(([key, value], i) => {
-						return new Field(i, new FieldType(gradient?.calculateColor(1 / maxValue * key) ?? "", "CONFIGURED"), key, null, undefined, undefined, value);
-					});
+	getSvgGameBoard(url: string, defaultGradient: DefaultGradients, gameBoardType: GameBoardType, name: string) {
+		return this.getTiffSvgData(url).pipe(
+			mergeMap(data => {
+				let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
 
-					const gameBoard = new GameBoard(gameBoardType, fields, legend, name, true, data.width, data.height);
+				uniqueValues = Array.from(data.paths.keys()).sort((a, b) => a - b);
+				gradient = gradients.get(defaultGradient)!;
+				legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap };
+				const maxValue = Math.max(...uniqueValues);
+				
+				fields = Array.from(data.paths).map(([key, value], i) => {
+					return new Field(i, new FieldType(gradient?.calculateColor(1 / maxValue * key) ?? "", "CONFIGURED"), key, null, undefined, undefined, value);
+				});
 
-					return of(gameBoard);
-				})
-			);
-		}
+				const gameBoard = new GameBoard(gameBoardType, fields, legend, name, true, data.width, data.height);
+
+				return of(gameBoard);
+			})
+		);
 	}
 
 	public getTiffData(url: string) {

@@ -5,7 +5,7 @@ import { GameService } from 'src/app/services/game.service';
 @Component({
   selector: 'tro-svg-level',
   templateUrl: './svg-level.component.html',
-  styleUrls: ['./svg-level.component.scss']
+  styleUrls: ['./svg-level.component.scss', '../level-base.component.scss']
 })
 export class SvgLevelComponent extends LevelBaseComponent {
 
