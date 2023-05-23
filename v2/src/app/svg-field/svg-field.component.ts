@@ -2,13 +2,14 @@ import { Component, ElementRef, HostBinding, Input, Renderer2 } from '@angular/c
 import { GameService } from '../services/game.service';
 import { Field, HighlightSide } from '../shared/models/field';
 import { ProductionType } from '../shared/models/production-type';
+import { FieldBaseComponent } from '../shared/models/field-base';
 
 @Component({
 	selector: '[troSvgField]',
 	templateUrl: './svg-field.component.html',
 	styleUrls: ['./svg-field.component.scss']
 })
-export class SvgFieldComponent {
+export class SvgFieldComponent extends FieldBaseComponent {
 	private _field: Field;
 	_isOverlay: boolean = false;
 
@@ -17,8 +18,8 @@ export class SvgFieldComponent {
 	@HostBinding('style.fill') private fillColor: string;
 	@HostBinding('style.stroke') private stroke: string;
 
-	constructor(private gameService: GameService, private renderer: Renderer2, private elementRef: ElementRef) {
-		
+	constructor(gameService: GameService, renderer: Renderer2, elementRef: ElementRef) {
+		super(gameService, renderer, elementRef);
 	}
 
 	@Input() set field(field: Field) {
@@ -59,7 +60,6 @@ export class SvgFieldComponent {
 
 
 	highlight(side: HighlightSide) {
-		console.log("highlight");
 		this.isHighlighted = true;
 	}
 
