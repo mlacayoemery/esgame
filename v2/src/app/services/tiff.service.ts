@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { fromBlob, fromUrl, writeArrayBuffer } from 'geotiff';
-import { from, merge, mergeMap, of } from 'rxjs';
+import { fromUrl, writeArrayBuffer } from 'geotiff';
+import { from, mergeMap, of } from 'rxjs';
 import gradients, { DefaultGradients, Gradient } from '../shared/helpers/gradiants';
 import { GameBoard } from '../shared/models/game-board';
 import { GameBoardType } from '../shared/models/game-board-type';
