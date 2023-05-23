@@ -133,7 +133,7 @@ export class GameService {
 
 		combineLatest([
 			this.tiffService.getSvgGameBoard("/assets/images/zonal_raster.tif", DefaultGradients.Blue, GameBoardType.DrawingMap, "Zonen"),
-			this.tiffService.getSvgGameBoard("/assets/images/consequence_test.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Zonen_Konsequenz")
+			this.tiffService.getSvgGameBoard("/assets/images/consequence_test.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Zonen_Konsequenz")
 		]).subscribe((gameBoards) => {
 
 
