@@ -60,3 +60,26 @@
 		margin-top: 15px;
 	}
 }
+
+
+.panel {
+	flex: 0 0 33%;
+	padding: 1rem 0rem;
+	display: flex;
+	gap: 1rem;
+	flex-direction: column;
+	align-items: center;
+	align-self: start;
+}
+
+.panel.center-panel {
+	flex: 1;
+	position: sticky;
+	top: 0;
+}
+
+.production-type-buttons {
+	display: flex;
+	gap: 15px;
+	margin-bottom: 15px;
+}
