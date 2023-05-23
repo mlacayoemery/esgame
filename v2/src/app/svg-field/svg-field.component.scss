@@ -1,0 +1,9 @@
+:host{
+    fill: transparent;
+    //stroke: black;
+
+    &.--is-highlighted{
+        stroke:rgba(0,0,0,0.4) !important;
+        stroke-width: 4px;
+    }
+}

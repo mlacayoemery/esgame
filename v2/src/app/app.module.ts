@@ -23,10 +23,12 @@ import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { ConfiguratorComponent } from './configurator/configurator.component';
+import { SvgFieldComponent } from './svg-field/svg-field.component';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http);
 }
+
 
 @NgModule({
   declarations: [
@@ -44,6 +46,7 @@ export function HttpLoaderFactory(http: HttpClient) {
     HelpComponent,
     ScoreIndicatorComponent,
     ConfiguratorComponent,
+    SvgFieldComponent,
   ],
   imports: [
     BrowserModule,

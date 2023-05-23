@@ -6,6 +6,7 @@ import { FieldComponent } from '../field/field.component';
 import { Settings } from '../shared/models/settings';
 import { Legend } from '../shared/models/legend';
 import { SubSink } from 'subsink';
+import { SvgFieldComponent } from '../svg-field/svg-field.component';
 
 @Component({
 	selector: 'tro-game-board',
@@ -23,8 +24,11 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 	private _listeners: (() => void)[] = [];
 
 	fields: Field[] = [];
+	overlayFields: Field[] = [];
 	settings: Settings;
+	board: GameBoard | undefined;
 	legend: Legend;
+	isSvg: boolean = true;
 	GameBoardClickMode = GameBoardClickMode;
 	@Input() set clickMode(mode: GameBoardClickMode) {
 		this._clickMode = mode;
@@ -35,16 +39,25 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 
 	get clickMode() { return this._clickMode; }
 	@ViewChildren(FieldComponent) fieldComponents: QueryList<FieldComponent>;
-	
+	@ViewChildren(SvgFieldComponent) svgFieldComponents: QueryList<SvgFieldComponent>;
+
 	@HostBinding('style.grid-template-columns') fieldColumns: string;
-	
+
 	@Input()
 	set boardData(data: GameBoard | null) {
 		if (data) {
 			this._boardData = data;
 			this.fields = data.fields;
 			this.legend = data.legend;
+			this.isSvg = data.isSvg;
+			this.board = data;
 		}
+		this.setFieldColumns(this.settings.gameBoardColumns);
+	}
+
+	@Input() 
+	set overlay(overlay: GameBoard | null) {
+		this.overlayFields = overlay?.fields ?? [];
 	}
 
 	get boardData() { return this._boardData; }
@@ -64,7 +77,6 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 	) {
 		this._sink.sink = this.gameService.settingsObs.subscribe(settings => {
 			this.settings = settings;
-			this.setFieldColumns(settings.gameBoardColumns);
 		});
 
 		this._sink.sink = this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
@@ -86,7 +98,9 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 	}
 
 	setFieldColumns(fieldColumns: number) {
-		this.fieldColumns = `repeat(${fieldColumns}, 1fr)`;
+		if (!this.isSvg) {
+			this.fieldColumns = `repeat(${fieldColumns}, 1fr)`;
+		}
 	}
 
 	ngAfterViewInit() {

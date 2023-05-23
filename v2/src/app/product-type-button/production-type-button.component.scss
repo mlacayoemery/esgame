@@ -1,22 +1,34 @@
 :host {
 	display: inline-flex;
-	border: 1px solid black;
+	border: #51624F 1px solid;
 	align-items: center;
 	flex-direction: column;
-	width: 100px;
-	height: 100px;
+	width: auto;
+	height: auto;
 	border-radius: 7px;
 	color: #51624F;
 	cursor: pointer;
 
+	
 	&.--active {
 		background-color: #51624F;
 		color: #FFFFFF;
 	}
 
+	img {
+		margin: 5px 5px 0px 5px;
+		height: 35px;
+	}
+
+	p {
+		margin: 5px 10px 10px 10px;
+	}
+	
+
 	&.layout2 {
 		width: 50px;
 		height: 50px;
+		border-color: black;
 
 		p {
 			display: none;
@@ -26,11 +38,14 @@
 			box-shadow: 0px 0px 10px #FAFF00;
 			background-color: transparent;
 		}
+		
+		img {
+			margin: 0px;
+			width: 50px;
+			height: 50px;
+		}
+		
 	}
 }
 
-img {
-	max-width: 50px;
-	max-height: 50px;
-}
 
