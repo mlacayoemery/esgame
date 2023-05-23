@@ -16,7 +16,7 @@ export abstract class LevelBaseComponent {
 	clickMode = GameBoardClickMode;
 
 	level? = this.gameService.currentLevelObs;
-	drawingBoard = this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.filter(p => p.gameBoardType == GameBoardType.DrawingMap)));
+	drawingBoard = this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.find(p => p.gameBoardType == GameBoardType.DrawingMap)));
 	suitabilityBoards = this.gameService.currentLevelObs.pipe(
 		map(o => o?.gameBoards), 
 		map(o => o?.filter(p => p.gameBoardType == GameBoardType.SuitabilityMap))
