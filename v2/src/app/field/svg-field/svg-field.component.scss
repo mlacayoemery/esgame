@@ -3,7 +3,10 @@
     //stroke: black;
 
     &.--is-highlighted{
-        stroke:rgba(0,0,0,0.4) !important;
-        stroke-width: 4px;
+        stroke:rgba(255, 0, 144, 0.782) !important;
+        stroke-width: 2px;
+    }
+    &.is-overlay {
+        stroke: rgba(0,0,0,0.8)
     }
 }

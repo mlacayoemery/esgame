@@ -10,7 +10,7 @@ import { FieldBaseComponent } from '../field-base.component';
 	styleUrls: ['./svg-field.component.scss']
 })
 export class SvgFieldComponent extends FieldBaseComponent {
-	_isOverlay: boolean = false;
+	@HostBinding('class.is-overlay') _isOverlay: boolean = false;
 
 	@HostBinding('style.fill') private fillColor: string;
 	@HostBinding('style.stroke') private stroke: string;
@@ -31,8 +31,6 @@ export class SvgFieldComponent extends FieldBaseComponent {
 		if (this._field) {
 			if (!this._isOverlay)
 				this.fillColor = `#${this._field.type?.fieldColor}`;
-			if (this._isOverlay)
-				this.stroke = "rgba(0,0,255,0.5)";
 		}
 	}
 
