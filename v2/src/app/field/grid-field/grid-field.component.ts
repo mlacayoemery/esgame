@@ -7,11 +7,11 @@ import { ProductionType } from 'src/app/shared/models/production-type';
 
 @Component({
 	selector: 'tro-field',
-	templateUrl: './field.component.html',
-	styleUrls: ['./field.component.scss'],
+	templateUrl: './grid-field.component.html',
+	styleUrls: ['./grid-field.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FieldComponent extends FieldBaseComponent {
+export class GridFieldComponent extends FieldBaseComponent {
 	private _imageMode = false;
 	private _sink = new SubSink();
 

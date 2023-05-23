@@ -2,7 +2,7 @@ import { AfterContentChecked,  AfterViewInit, ChangeDetectionStrategy, ChangeDet
 import { GameService } from '../services/game.service';
 import { Field, HighlightField, SelectedField } from '../shared/models/field';
 import { GameBoard, GameBoardClickMode } from '../shared/models/game-board';
-import { FieldComponent } from '../field/grid-field/field.component';
+import { GridFieldComponent } from '../field/grid-field/grid-field.component';
 import { Settings } from '../shared/models/settings';
 import { Legend } from '../shared/models/legend';
 import { SubSink } from 'subsink';
@@ -38,7 +38,7 @@ export class GameBoardComponent implements AfterViewInit, OnDestroy {
 	}
 
 	get clickMode() { return this._clickMode; }
-	@ViewChildren(FieldComponent) fieldComponents: QueryList<FieldComponent>;
+	@ViewChildren(GridFieldComponent) fieldComponents: QueryList<GridFieldComponent>;
 	@ViewChildren(SvgFieldComponent) svgFieldComponents: QueryList<SvgFieldComponent>;
 
 	@HostBinding('style.grid-template-columns') fieldColumns: string;

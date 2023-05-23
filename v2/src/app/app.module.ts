@@ -5,7 +5,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LevelComponent } from './level/level.component';
 import { GameBoardComponent } from './game-board/game-board.component';
-import { FieldComponent } from './field/grid-field/field.component';
+import { GridFieldComponent } from './field/grid-field/grid-field.component';
 import { ProductionTypeButtonComponent } from './product-type-button/production-type-button.component';
 import { Layout2Component } from './layout/layout2/layout2.component';
 import { Layout1Component } from './layout/layout1/layout1.component';
@@ -36,7 +36,7 @@ export function createTranslateLoader(http: HttpClient) {
 		AppComponent,
 		LevelComponent,
 		GameBoardComponent,
-		FieldComponent,
+		GridFieldComponent,
 		ProductionTypeButtonComponent,
 		Layout2Component,
 		Layout1Component,
