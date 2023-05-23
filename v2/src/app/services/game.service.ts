@@ -46,7 +46,6 @@ export class GameService {
 	highlightOnOtherFields(id: any) {
 		let ids = this.getAssociatedFields(id);
 		this.currentlySelectedField.next(new SelectedField(ids, this.selectedProductionType.value!));
-		
 		if (!this.canFieldBePlaced(ids)) {
 			this.removeHighlight();
 			return;

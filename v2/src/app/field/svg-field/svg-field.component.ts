@@ -32,7 +32,7 @@ export class SvgFieldComponent extends FieldBaseComponent {
 			if (!this._isOverlay)
 				this.fillColor = `#${this._field.type?.fieldColor}`;
 			if (this._isOverlay)
-				this.stroke = "rgba(0,0,0,0.0)";
+				this.stroke = "rgba(0,0,255,0.5)";
 		}
 	}
 
