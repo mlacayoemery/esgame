@@ -38,8 +38,7 @@ export class GameService {
 	constructor(
 		private tiffService: TiffService,
 		private scoreService: ScoreService
-	) {
-	}
+	) {}
 
 	highlightOnOtherFields(id: any) {
 		let ids = this.getAssociatedFields(id);
@@ -177,7 +176,6 @@ export class GameService {
 	openHelp(close = false) { this.helpWindow.next(!close); }
 
 	private reset() {
-
 		this.currentLevel.next(null);
 		this.highlightFields.next([]);
 		this.selectedFields.next([]);
