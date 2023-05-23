@@ -1,18 +1,15 @@
 import { ChangeDetectionStrategy, Component, HostBinding, Input } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { GameBoardClickMode } from '../shared/models/game-board';
-import { Level } from '../shared/models/level';
 import { ProductionType } from '../shared/models/production-type';
 import { filter, map } from 'rxjs';
 import { GameBoardType } from '../shared/models/game-board-type';
 
 @Component({
-  selector: 'tro-level',
-  templateUrl: './level.component.html',
-  styleUrls: ['./level.component.scss'],
+  template: '',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LevelComponent {
+export abstract class LevelBaseComponent {
 	selectedProductionType = this.gameService.selectedProductionTypeObs;
 	focusedGameBoard = this.gameService.focusedGameBoardObs.pipe(filter(o => o != null));
 	productionTypes: ProductionType[];

@@ -3,7 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { LevelComponent } from './level/level.component';
+import { LevelBaseComponent } from './level/level-base.component';
 import { GameBoardBaseComponent } from './game-board/game-board-base.component';
 import { GridFieldComponent } from './field/grid-field/grid-field.component';
 import { ProductionTypeButtonComponent } from './product-type-button/production-type-button.component';
@@ -22,6 +22,8 @@ import { ConfiguratorComponent } from './configurator/configurator.component';
 import { SvgGameBoardComponent } from './game-board/svg-game-board/svg-game-board.component';
 import { GridGameBoardComponent } from './game-board/grid-game-board/grid-game-board.component';
 import { SvgFieldComponent } from './field/svg-field/svg-field.component';
+import { GridLevelComponent } from './level/grid-level/grid-level.component';
+import { SvgLevelComponent } from './level/svg-level/svg-level.component';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http);
@@ -34,7 +36,6 @@ export function createTranslateLoader(http: HttpClient) {
 @NgModule({
 	declarations: [
 		AppComponent,
-		LevelComponent,
 		GameBoardBaseComponent,
 		GridFieldComponent,
 		ProductionTypeButtonComponent,
@@ -48,6 +49,8 @@ export function createTranslateLoader(http: HttpClient) {
 		SvgFieldComponent,
 		SvgGameBoardComponent,
 		GridGameBoardComponent,
+		GridLevelComponent,
+		SvgLevelComponent,
 	],
 	imports: [
 		BrowserModule,

@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { NavigationComponent } from './layout/navigation/navigation.component';
 import { ConfiguratorComponent } from './configurator/configurator.component';
-import { LevelComponent } from './level/level.component';
+import { GridLevelComponent } from './level/grid-level/grid-level.component';
 
 const routes: Routes = [
 	{
@@ -11,7 +11,7 @@ const routes: Routes = [
 	},
 	{
 		path: 'game',
-		component: LevelComponent
+		component: GridLevelComponent
 	}, {
 		path: 'configurator',
 		component: ConfiguratorComponent
