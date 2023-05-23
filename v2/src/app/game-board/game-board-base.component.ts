@@ -20,7 +20,6 @@ export class GameBoardBaseComponent implements OnDestroy {
 	protected _listeners: (() => void)[] = [];
 
 	fields: Field[] = [];
-	overlayFields: Field[] = [];
 	settings: Settings;
 	board: GameBoard | undefined;
 	legend: Legend;
@@ -44,11 +43,6 @@ export class GameBoardBaseComponent implements OnDestroy {
 			this.legend = data.legend;
 			this.board = data;
 		}
-	}
-
-	@Input() 
-	set overlay(overlay: GameBoard | null) {
-		this.overlayFields = overlay?.fields ?? [];
 	}
 
 	get boardData() { return this._boardData; }

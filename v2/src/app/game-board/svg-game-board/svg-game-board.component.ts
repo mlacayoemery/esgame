@@ -1,6 +1,8 @@
-import { Component, QueryList, ViewChildren } from '@angular/core';
+import { Component, Input, QueryList, ViewChildren } from '@angular/core';
 import { GameBoardBaseComponent } from '../game-board-base.component';
 import { SvgFieldComponent } from 'src/app/field/svg-field/svg-field.component';
+import { Field } from 'src/app/shared/models/field';
+import { GameBoard } from 'src/app/shared/models/game-board';
 
 @Component({
   selector: 'tro-svg-game-board',
@@ -9,4 +11,12 @@ import { SvgFieldComponent } from 'src/app/field/svg-field/svg-field.component';
 })
 export class SvgGameBoardComponent extends GameBoardBaseComponent {
 	@ViewChildren(SvgFieldComponent) svgFieldComponents: QueryList<SvgFieldComponent>;
+
+  @Input() 
+	set overlay(overlay: GameBoard | null) {
+		this.overlayFields = overlay?.fields ?? [];
+	}
+
+
+  overlayFields: Field[] = [];
 }
