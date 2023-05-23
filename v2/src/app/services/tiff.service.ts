@@ -22,7 +22,7 @@ export class TiffService {
 
 					uniqueValues = Array.from(new Set(data)).sort((a, b) => a - b);
 					gradient = gradients.get(defaultGradient)!;
-					legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: false };
+					legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap };
 
 					fields = data.map((o, i) => {
 						return new Field(i, new FieldType(gradient!.colors[(uniqueValues.indexOf(o))] as string, "CONFIGURED"), o);
@@ -39,7 +39,7 @@ export class TiffService {
 
 					uniqueValues = Array.from(data.paths.keys()).sort((a, b) => a - b);
 					gradient = gradients.get(defaultGradient)!;
-					legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: false };
+					legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap };
 					const maxValue = Math.max(...uniqueValues);
 					
 					fields = Array.from(data.paths).map(([key, value], i) => {
