@@ -104,16 +104,16 @@ export class GameService {
 		level2.previousRoundScore = level1Score;
 
 		combineLatest([
-			this.tiffService.getGameBoard("/assets/images/esgame_img_ag_carbon.tif", DefaultGradients.Yellow, GameBoardType.ConsequenceMap, "Kohlenstoff"),
-			this.tiffService.getGameBoard("/assets/images/esgame_img_ag_habitat.tif", DefaultGradients.Purple, GameBoardType.ConsequenceMap, "Lebensraum"),
-			this.tiffService.getGameBoard("/assets/images/esgame_img_ag_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap, "Wasser"),
-			this.tiffService.getGameBoard("/assets/images/esgame_img_ag_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap, "Jagd"),
-			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch_carbon.tif", DefaultGradients.Yellow, GameBoardType.ConsequenceMap, "Kohlenstoff"),
-			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch_habitat.tif", DefaultGradients.Purple, GameBoardType.ConsequenceMap, "Lebensraum"),
-			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap, "Wasser"),
-			this.tiffService.getGameBoard("/assets/images/esgame_img_ranch_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap, "Jagd"),
-			this.tiffService.getGameBoard("/assets/images/zonal_raster.tif", DefaultGradients.Blue, GameBoardType.DrawingMap, "Zonen", true),
-			this.tiffService.getGameBoard("/assets/images/consequence_test.tif", DefaultGradients.Green, GameBoardType.DrawingMap, "Zonen", true)
+			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ag_carbon.tif", DefaultGradients.Yellow, GameBoardType.ConsequenceMap, "Kohlenstoff"),
+			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ag_habitat.tif", DefaultGradients.Purple, GameBoardType.ConsequenceMap, "Lebensraum"),
+			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ag_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap, "Wasser"),
+			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ag_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap, "Jagd"),
+			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ranch_carbon.tif", DefaultGradients.Yellow, GameBoardType.ConsequenceMap, "Kohlenstoff"),
+			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ranch_habitat.tif", DefaultGradients.Purple, GameBoardType.ConsequenceMap, "Lebensraum"),
+			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ranch_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap, "Wasser"),
+			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ranch_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap, "Jagd"),
+			this.tiffService.getGridGameBoard("/assets/images/zonal_raster.tif", DefaultGradients.Blue, GameBoardType.DrawingMap, "Zonen"),
+			this.tiffService.getGridGameBoard("/assets/images/consequence_test.tif", DefaultGradients.Green, GameBoardType.DrawingMap, "Zonen")
 		]).subscribe((gameBoards) => {
 			level2.gameBoards.push(...this.currentLevel.value!.gameBoards);
 			level2.gameBoards.push(...gameBoards);
@@ -194,8 +194,8 @@ export class GameService {
 		this.levels.push(level);
 		
 		combineLatest([
-			this.tiffService.getGameBoard("./assets/images/esgame_img_ag.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Ackerland"), 
-			this.tiffService.getGameBoard("./assets/images/esgame_img_ranch.tif", DefaultGradients.Orange, GameBoardType.SuitabilityMap, "Viehzucht")
+			this.tiffService.getGridGameBoard("./assets/images/esgame_img_ag.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Ackerland"), 
+			this.tiffService.getGridGameBoard("./assets/images/esgame_img_ranch.tif", DefaultGradients.Orange, GameBoardType.SuitabilityMap, "Viehzucht")
 		]).subscribe(([gameBoard, gameBoard2]) => {
 			level.gameBoards.push(gameBoard);
 			level.gameBoards.push(gameBoard2);
