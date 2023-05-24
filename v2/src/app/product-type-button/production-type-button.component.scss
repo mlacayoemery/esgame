@@ -1,36 +1,42 @@
+@import 'variables';
+
 :host {
 	display: inline-flex;
-	border: 1px solid black;
+	border: $color-black 1px solid;
 	align-items: center;
-	flex-direction: column;
-	width: 100px;
-	height: 100px;
+	justify-content: center;
+	text-align: center;
+	width: auto;
+	height: auto;
 	border-radius: 7px;
-	color: #51624F;
 	cursor: pointer;
-
+	border-color: black;
+	width: 100px;
+	
+	p {
+		margin: 10px;
+		white-space: break-spaces;
+	}
+	
 	&.--active {
-		background-color: #51624F;
-		color: #FFFFFF;
+		box-shadow: 0px 0px 10px #FAFF00;
+		background-color: transparent;
 	}
 
-	&.layout2 {
+	img {
+		margin: 0px;
 		width: 50px;
 		height: 50px;
+	}
 
+	&.--image-mode {
+		width: 50px;
+		height: 50px;
+		
 		p {
 			display: none;
 		}
-
-		&.--active {
-			box-shadow: 0px 0px 10px #FAFF00;
-			background-color: transparent;
-		}
 	}
 }
 
-img {
-	max-width: 50px;
-	max-height: 50px;
-}
 

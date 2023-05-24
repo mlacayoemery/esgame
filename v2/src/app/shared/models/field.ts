@@ -8,12 +8,15 @@ export class Field {
 	productionType: ProductionType | null;
 	score: number;
 	id: number;
+	path: string;
 
-	constructor(id: number, type: FieldType, score: number, productionType: ProductionType | null = null, editable = false, assigned = false) {
+	constructor(id: number, type: FieldType, score: number, productionType: ProductionType | null = null, editable = false, assigned = false, path : string = "") {
 		this.id = id;
 		this.type = type;
 		this.productionType = productionType;
 		this.score = score;
+		this.path = path;
+		 
 	}
 }
 

@@ -5,7 +5,8 @@
 	"gameBoardRows": 29,
 	"productionTypes": [
 		{
-			"name": "",
+			"id": "",
+			"name": { "en": "", "de": ""},
 			"fieldColor": "",
 			"suitabilityMap": "",
 			"consequenceMaps": [],
@@ -15,10 +16,11 @@
 	],
 	"maps": [
 		{
-			"name": "",
+			"name": { "en": "", "de": "" },
 			"linkToData": "",
 			"gradient": "",
-			"gameBoardtype": ""
+			"gameBoardtype": "",
+			"linkedToProductionTypes": []
 		}
 	]
 }

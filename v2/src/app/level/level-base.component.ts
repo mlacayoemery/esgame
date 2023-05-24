@@ -1,40 +1,28 @@
 import { ChangeDetectionStrategy, Component, HostBinding, Input } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { GameBoardClickMode } from '../shared/models/game-board';
-import { Level } from '../shared/models/level';
 import { ProductionType } from '../shared/models/production-type';
 import { filter, map } from 'rxjs';
 import { GameBoardType } from '../shared/models/game-board-type';
 
 @Component({
-  selector: 'tro-level',
-  templateUrl: './level.component.html',
-  styleUrls: ['./level.component.scss'],
+  template: '',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LevelComponent {
+export abstract class LevelBaseComponent {
 	selectedProductionType = this.gameService.selectedProductionTypeObs;
 	focusedGameBoard = this.gameService.focusedGameBoardObs.pipe(filter(o => o != null));
-	productionTypes: ProductionType[];
-	clickMode = GameBoardClickMode;
-
-	@HostBinding('class.layout2')
-	private _layout2 = false;
-	level? = this.gameService.currentLevelObs;
-	suitabilityBoards = this.gameService.currentLevelObs.pipe(
+	leftGameBoards = this.gameService.currentLevelObs.pipe(
 		map(o => o?.gameBoards), 
 		map(o => o?.filter(p => p.gameBoardType == GameBoardType.SuitabilityMap))
 	);
-	consequenceBoards = this.selectedProductionType.pipe(map(o => o?.consequenceMaps)); //this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.filter(p => p.gameBoardType == GameBoardType.ConsequenceMap)));
+	rightGameBoards = this.selectedProductionType.pipe(map(o => o?.consequenceMaps)); //this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.filter(p => p.gameBoardType == GameBoardType.ConsequenceMap)));
+	productionTypes: ProductionType[];
+	clickMode = GameBoardClickMode;
 
-	@Input() set isLayout2(layout: any) {
-		if (layout === false) this._layout2 = false;
-		else this._layout2 = true;
-	}
+	level? = this.gameService.currentLevelObs;
 
-	get isLayout2() { return this._layout2; }
-
-	constructor(private gameService: GameService) {
+	constructor(protected gameService: GameService) {
 		this.gameService.productionTypesObs.subscribe(productionTypes => {
 			this.productionTypes = productionTypes;
 		});

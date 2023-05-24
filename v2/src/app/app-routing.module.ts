@@ -1,8 +1,9 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { Layout2Component } from './layout/layout2/layout2.component';
-import { Layout1Component } from './layout/layout1/layout1.component';
 import { NavigationComponent } from './layout/navigation/navigation.component';
+import { ConfiguratorComponent } from './configurator/configurator.component';
+import { GridLevelComponent } from './level/grid-level/grid-level.component';
+import { SvgLevelComponent } from './level/svg-level/svg-level.component';
 
 const routes: Routes = [
 	{
@@ -10,17 +11,21 @@ const routes: Routes = [
 		component: NavigationComponent
 	},
 	{
-		path: 'layout2',
-		component: Layout2Component
-	},
+		path: 'game',
+		component: GridLevelComponent
+	}, 
 	{
-		path: 'layout1',
-		component: Layout1Component
+		path: 'game-svg',
+		component: SvgLevelComponent
+	}, 
+	{
+		path: 'configurator',
+		component: ConfiguratorComponent
 	}
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule]
+	imports: [RouterModule.forRoot(routes)],
+	exports: [RouterModule]
 })
 export class AppRoutingModule { }

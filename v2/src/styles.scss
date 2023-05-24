@@ -22,3 +22,5 @@ body {
 @import 'styles/utils';
 @import 'styles/headings';
 @import 'styles/button';
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

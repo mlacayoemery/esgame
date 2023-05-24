@@ -2,7 +2,7 @@ import { TiffService } from 'src/app/services/tiff.service';
 import { FieldType } from '../../shared/models/field-type';
 import { Field } from '../models/field';
 import { BehaviorSubject } from 'rxjs';
-import gradiants, { DefaultGradients } from './gradiants';
+import gradients, { DefaultGradients } from './gradiants';
 import { Legend } from '../models/legend';
 
 export class V1GameBoard {
@@ -23,7 +23,7 @@ export class V1GameBoard {
 	loadFile() {
 		this.tiffService.getTiffData(this.tiffUrl).subscribe(data => {
 			var uniqueValues = Array.from(new Set(data)).sort((a, b) => a - b);
-			var gradiant = gradiants.get(this.defaultGradient)!;
+			var gradiant = gradients.get(this.defaultGradient)!;
 			var legend : Legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradiant.colors[i]}))] };
 			this.legend.next(legend)
 

@@ -1,7 +1,7 @@
 
 export class Settings {
-	elementSize = 2;
+	elementSize = 1;
 	gameBoardColumns = 28;
 	gameBoardRows = 29;
-	imageMode = true;
+	imageMode = false;
 }

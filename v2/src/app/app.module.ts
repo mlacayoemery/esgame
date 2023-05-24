@@ -3,12 +3,8 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { LevelComponent } from './level/level.component';
-import { GameBoardComponent } from './game-board/game-board.component';
-import { FieldComponent } from './field/field.component';
+import { GridFieldComponent } from './field/grid-field/grid-field.component';
 import { ProductionTypeButtonComponent } from './product-type-button/production-type-button.component';
-import { Layout2Component } from './layout/layout2/layout2.component';
-import { Layout1Component } from './layout/layout1/layout1.component';
 import { NavigationComponent } from './layout/navigation/navigation.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
 import { LegendBoardComponent } from './legend-board/legend-board.component';
@@ -18,12 +14,17 @@ import { ScoreIndicatorComponent } from './score-indicator/score-indicator.compo
 import { MatSelectModule } from '@angular/material/select';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
-import {TranslateHttpLoader} from '@ngx-translate/http-loader';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
-import { APP_BASE_HREF, PlatformLocation } from '@angular/common';
+import { ConfiguratorComponent } from './configurator/configurator.component';
+import { SvgGameBoardComponent } from './game-board/svg-game-board/svg-game-board.component';
+import { GridGameBoardComponent } from './game-board/grid-game-board/grid-game-board.component';
+import { SvgFieldComponent } from './field/svg-field/svg-field.component';
+import { GridLevelComponent } from './level/grid-level/grid-level.component';
+import { SvgLevelComponent } from './level/svg-level/svg-level.component';
 
 export function HttpLoaderFactory(http: HttpClient) {
-    return new TranslateHttpLoader(http);
+  return new TranslateHttpLoader(http);
 }
 
 export function createTranslateLoader(http: HttpClient) {
@@ -33,18 +34,20 @@ export function createTranslateLoader(http: HttpClient) {
 @NgModule({
 	declarations: [
 		AppComponent,
-		LevelComponent,
-		GameBoardComponent,
-		FieldComponent,
+		GridFieldComponent,
 		ProductionTypeButtonComponent,
-		Layout2Component,
-		Layout1Component,
 		NavigationComponent,
 		ScoreBoardComponent,
 		LegendBoardComponent,
 		ButtonDirective,
 		HelpComponent,
 		ScoreIndicatorComponent,
+		ConfiguratorComponent,
+		SvgFieldComponent,
+		SvgGameBoardComponent,
+		GridGameBoardComponent,
+		GridLevelComponent,
+		SvgLevelComponent,
 	],
 	imports: [
 		BrowserModule,

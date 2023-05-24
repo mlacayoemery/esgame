@@ -1,25 +1,19 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, Renderer2 } from '@angular/core';
-import { GameService } from '../services/game.service';
-import { Field, HighlightSide } from '../shared/models/field';
-import { ProductionType } from '../shared/models/production-type';
 import { SubSink } from 'subsink';
+import { FieldBaseComponent } from '../field-base.component';
+import { HighlightSide } from 'src/app/shared/models/field';
+import { GameService } from 'src/app/services/game.service';
+import { ProductionType } from 'src/app/shared/models/production-type';
 
 @Component({
 	selector: 'tro-field',
-	templateUrl: './field.component.html',
-	styleUrls: ['./field.component.scss'],
+	templateUrl: './grid-field.component.html',
+	styleUrls: ['./grid-field.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class FieldComponent implements OnDestroy {
-	private _field: Field;
+export class GridFieldComponent extends FieldBaseComponent {
 	private _imageMode = false;
 	private _sink = new SubSink();
-	private _listeners: (() => void)[] = [];
-
-	@Input() set field(field: Field) {
-		this._field = field;
-		this.setColor();
-	}
 
 	@Input() set imageMode(mode: any) {
 		if (mode === false) this._imageMode = false;
@@ -36,44 +30,28 @@ export class FieldComponent implements OnDestroy {
 
 	get imageMode() { return this._imageMode; }
 
-	get field() { return this._field; }
-
 	private _size: number = 10;
 
 	@HostBinding('style.width') private fieldWidth: string;
 	@HostBinding('style.height') private fieldHeight: string;
 	@HostBinding('style.background-color') private backgroundColor: string;
-	@HostBinding('class.--is-highlighted') isHighlighted = false;
 	@HostBinding('class') highlightSide = HighlightSide.NONE;
 	@HostBinding('class.--has-image') showProductionImage = false;
-	@HostBinding('class.--is-assigned') isAssigned = false;
 
 	imageSize = 0;
 	elementSize: number;
 
 	constructor(
-		private gameService: GameService,
-		private renderer: Renderer2,
-		private elementRef: ElementRef,
+		gameService: GameService,
+		renderer: Renderer2,
+		elementRef: ElementRef,
 		private cdRef: ChangeDetectorRef
 	) {
+		super(gameService, renderer, elementRef);
 		this._sink.sink = this.gameService.settingsObs.subscribe(settings => {
 			this.elementSize = settings.elementSize;
 			this.imageMode = settings.imageMode;
 		});
-	}
-
-	addClickListener() {
-		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'click', () => {
-			if (this.field.assigned) this.gameService.deselectField(this.field.id);
-			else this.gameService.selectField(this.field.id);
-		}));
-	}
-
-	addHoverListener() {
-		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', () => {
-			this.gameService.highlightOnOtherFields(this._field.id);
-		}));
 	}
 
 	@Input() set size(size: number | null) {
@@ -93,13 +71,9 @@ export class FieldComponent implements OnDestroy {
 		}
 	}
 
-	highlight(side: HighlightSide) {
+	override highlight(side: HighlightSide) {
 		this.isHighlighted = true;
 		this.highlightSide = side;
-	}
-
-	removeHighlight() {
-		this.isHighlighted = false;
 	}
 
 	assign(productionType: ProductionType, side: HighlightSide) {
@@ -114,8 +88,8 @@ export class FieldComponent implements OnDestroy {
 	}
 
 	unassign() {
-		this.field.assigned = this.isAssigned = false;
-		this.field.productionType = null;
+		this._field.assigned = this.isAssigned = false;
+		this._field.productionType = null;
 		this.showProductionImage = false;
 		this.highlightSide = HighlightSide.NONE;
 		if (this.imageMode == false) {
@@ -128,8 +102,8 @@ export class FieldComponent implements OnDestroy {
 		this.showProductionImage = true;
 	}
 
-	ngOnDestroy(): void {
+	override ngOnDestroy(): void {
+		super.ngOnDestroy();
 		this._sink.unsubscribe();
-		this._listeners.forEach(fn => fn());
 	}
 }
