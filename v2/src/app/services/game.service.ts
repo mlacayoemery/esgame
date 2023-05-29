@@ -130,7 +130,14 @@ export class GameService {
 
 		combineLatest([
 			this.tiffService.getSvgGameBoard("/assets/images/zonal_raster.tif", DefaultGradients.Blue, GameBoardType.DrawingMap, "Zonen"),
-			this.tiffService.getSvgGameBoard("/assets/images/consequence_test.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Zonen_Konsequenz")
+			//this.tiffService.getSvgGameBoard("/assets/images/Consequence_1_air_quality.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Air Quality"),
+			//this.tiffService.getSvgGameBoard("/assets/images/Consequence_2_water_quality.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Water Quality"),
+			//this.tiffService.getSvgGameBoard("/assets/images/Consequence_3_water_availability.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Water Availability"),
+			//this.tiffService.getSvgGameBoard("/assets/images/Consequence_4_habitat_fragmentation.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Habitat Fragmentation"),
+			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_ext_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Extensive Arable Land"),
+			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_int_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Intensive Arable Land"),
+			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_ext_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Extensive Livestock Land"),
+			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Intensive Livestock Land"),
 		]).subscribe((gameBoards) => {
 
 			this.productionTypes.value.push(new ProductionType("#fbe5d6", gameBoards[0], "Ackerland"));
