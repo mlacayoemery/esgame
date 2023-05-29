@@ -1,32 +1,73 @@
 <h1>{{ 'configurator' | translate }}</h1>
 <form>
-
+    <mat-form-field>
+        <mat-label>Map types</mat-label>
+        <mat-select [(value)]="selected">
+            <mat-option value="svg">
+                Zones
+            </mat-option>
+            <mat-option value="grid">
+                Fields
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
     <h2>{{ 'general' | translate}}</h2>
     <mat-form-field class="example-full-width">
         <mat-label>{{ 'maps-width' | translate}}</mat-label>
-        <input type="number" matInput placeholder="0" value="">
+        <input type="number" matInput placeholder="0" value="0" required="">
     </mat-form-field>
     <mat-form-field class="example-full-width">
         <mat-label>{{ 'maps-length' | translate}}</mat-label>
-        <input type="number" matInput placeholder="0" value="">
+        <input type="number" matInput placeholder="0" value="0" required>
     </mat-form-field>
     <mat-form-field class="example-full-width">
         <mat-label>{{ 'selection-size' | translate}}</mat-label>
-        <input type="number" matInput placeholder="0" value="">
+        <input type="number" matInput placeholder="0" value="0" required>
     </mat-form-field>
     <h2>{{ 'agriculture-types' | translate }}</h2>
-    <ng-container *ngFor="let type of agircultureTypes" >
+    <ng-container *ngFor="let type of agircultureTypes">
         <mat-form-field class="example-full-width">
             <mat-label>{{ 'selection-size' | translate}}</mat-label>
-            <input type="number" matInput placeholder="0" value="">
+            <input type="number" matInput placeholder="0" value="0" required>
         </mat-form-field>
     </ng-container>
 
     <h2>{{ 'maps' | translate}}</h2>
     <ng-container *ngFor="let map of maps">
         <mat-form-field class="example-full-width">
-            <mat-label>{{ 'selection-size' | translate}}</mat-label>
-            <input type="number" matInput placeholder="0" value="">
+            <mat-label>{{ 'map-url' | translate}}</mat-label>
+            <input type="url" matInput placeholder="https://..." value="" required />
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>{{ 'map-Color' | translate}}</mat-label>
+            <mat-select>
+                <mat-option value="green">
+                    Green
+                </mat-option>
+                <mat-option value="red">
+                    Red
+                </mat-option>
+                <mat-option value="blue">
+                    Blue
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+            <mat-label>{{ 'game-board-type' | translate}}</mat-label>
+            <mat-select>
+                <mat-option value="green">
+                    Suitablity
+                </mat-option>
+                <mat-option value="red">
+                    Drawing
+                </mat-option>
+                <mat-option value="blue">
+                    Consequence
+                </mat-option>
+            </mat-select>
         </mat-form-field>
     </ng-container>
+    <button type="button" mat-raised-button (click)="addMap()" color="primary" aria-label="Add map">
+        <mat-icon>add</mat-icon> {{ 'new-map' | translate}}
+    </button>
 </form>

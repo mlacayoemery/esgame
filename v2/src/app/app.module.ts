@@ -12,6 +12,11 @@ import { ButtonDirective } from './shared/button.directive';
 import { HelpComponent } from './help/help.component';
 import { ScoreIndicatorComponent } from './score-indicator/score-indicator.component';
 import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule} from '@angular/material/icon';
+import {MatDividerModule} from '@angular/material/divider';
+import {MatButtonModule} from '@angular/material/button';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -55,6 +60,11 @@ export function createTranslateLoader(http: HttpClient) {
 		AppRoutingModule,
 		HttpClientModule,
 		MatSelectModule,
+		MatInputModule,
+		MatIconModule,
+		MatDividerModule,
+		MatButtonModule,
+		MatFormFieldModule,
 		TranslateModule.forRoot({
 			defaultLanguage: 'de',
 			loader: {
