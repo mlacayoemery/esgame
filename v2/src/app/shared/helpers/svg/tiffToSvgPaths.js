@@ -2,7 +2,7 @@ export function toIndex(x, y, width) {
     return y * width + x;
 }
 export default function tiffToSvgPaths(data, options = {}) {
-    const UNDEFINED_VALUE = 255;
+    const UNDEFINED_VALUE = 0;
     var _a, _b, _c, _d, _e, _f;
     let bitmask, width, height, scale = 1, offsetX = 0, offsetY = 0;
     if (options.width) {
