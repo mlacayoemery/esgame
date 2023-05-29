@@ -1,4 +1,4 @@
 <ng-container *ngIf="productionType">
-	<img [src]="productionType.image" />
+	<img [src]="productionType.image" *ngIf="isImageMode" />
 	<p>{{ productionType.name }}</p>
 </ng-container>

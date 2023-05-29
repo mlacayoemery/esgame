@@ -1,50 +1,41 @@
+@import 'variables';
+
 :host {
 	display: inline-flex;
-	border: #51624F 1px solid;
+	border: $color-black 1px solid;
 	align-items: center;
-	flex-direction: column;
+	justify-content: center;
+	text-align: center;
 	width: auto;
 	height: auto;
 	border-radius: 7px;
-	color: #51624F;
 	cursor: pointer;
-
+	border-color: black;
+	width: 100px;
+	
+	p {
+		margin: 10px;
+		white-space: break-spaces;
+	}
 	
 	&.--active {
-		background-color: #51624F;
-		color: #FFFFFF;
+		box-shadow: 0px 0px 10px #FAFF00;
+		background-color: transparent;
 	}
 
 	img {
-		margin: 5px 5px 0px 5px;
-		height: 35px;
-	}
-
-	p {
-		margin: 5px 10px 10px 10px;
-	}
-	
-
-	&.layout2 {
+		margin: 0px;
 		width: 50px;
 		height: 50px;
-		border-color: black;
+	}
 
+	&.--image-mode {
+		width: 50px;
+		height: 50px;
+		
 		p {
 			display: none;
 		}
-
-		&.--active {
-			box-shadow: 0px 0px 10px #FAFF00;
-			background-color: transparent;
-		}
-		
-		img {
-			margin: 0px;
-			width: 50px;
-			height: 50px;
-		}
-		
 	}
 }
 

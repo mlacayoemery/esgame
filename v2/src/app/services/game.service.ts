@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, combineLatest } from 'rxjs';
+import { BehaviorSubject, combineLatest, timeout } from 'rxjs';
 import { GameBoard } from '../shared/models/game-board';
 import { GameBoardType } from '../shared/models/game-board-type';
 import { Level } from '../shared/models/level';
@@ -38,8 +38,7 @@ export class GameService {
 	constructor(
 		private tiffService: TiffService,
 		private scoreService: ScoreService
-	) {
-	}
+	) {}
 
 	highlightOnOtherFields(id: any) {
 		let ids = this.getAssociatedFields(id);
@@ -127,6 +126,7 @@ export class GameService {
 
 	initialiseSVGMode() {
 		var level = new Level();
+		this.settings.value.imageMode = false;
 
 		combineLatest([
 			this.tiffService.getSvgGameBoard("/assets/images/zonal_raster.tif", DefaultGradients.Blue, GameBoardType.DrawingMap, "Zonen"),
@@ -142,7 +142,9 @@ export class GameService {
 
 			this.productionTypes.value.push(new ProductionType("#fbe5d6", gameBoards[0], "Ackerland"));
 			this.productionTypes.value.push(new ProductionType("#f8cbad", gameBoards[0], "Viehzucht"));
-			this.selectedProductionType.next(this.productionTypes.value[0]);
+			setTimeout(() => {
+				this.selectedProductionType.next(this.productionTypes.value[0]);
+			});
 
 			level.gameBoards.push(...gameBoards);
 			level.levelNumber = 1;
@@ -157,6 +159,7 @@ export class GameService {
 		//TODO: This code can be replaced as soon as it is possible to load data from the API
 		let level = new Level();
 		this.levels.push(level);
+		this.settings.value.imageMode = true;
 		
 		combineLatest([
 			this.tiffService.getGridGameBoard("./assets/images/esgame_img_ag.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Ackerland"), 
@@ -178,6 +181,17 @@ export class GameService {
 	}
 
 	openHelp(close = false) { this.helpWindow.next(!close); }
+
+	private reset() {
+		this.currentLevel.next(null);
+		this.highlightFields.next([]);
+		this.selectedFields.next([]);
+		this.currentlySelectedField.next(null);
+		this.productionTypes.next([]);
+		this.selectedProductionType.next(null);
+		this.focusedGameBoard.next(null);
+		this.levels = [];
+	}
 
 	private canFieldBePlaced(associatedFields: HighlightField[] = []) {
 		if (this.selectedProductionType.value?.maxElements == this.selectedFields.value.filter(o => o.productionType == this.selectedProductionType.value).length) return false;

@@ -45,8 +45,6 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 			this.fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.id)?.unassign());
 			this._selectedFields.forEach(field => {
 				field.fields.forEach(highlightField => {
-					console.log(highlightField);
-					console.log(this.svgFieldComponents.find(o => o.field.id == highlightField.id));
 					this.svgFieldComponents.find(o => o.field.id == highlightField.id)?.assign(field.productionType, highlightField.side);
 				});
 			});
