@@ -35,6 +35,8 @@ export class SvgFieldComponent extends FieldBaseComponent {
 			this.fillColor = `${productionType.fieldColor}`;
 		} else if(!this._isOverlay) {
 			this.fillColor = `#${this._field.type?.fieldColor}`;
+		} else if(this._isOverlay) {
+			this.fillColor = `transparent`;
 		}
 	}
 
