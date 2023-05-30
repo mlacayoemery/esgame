@@ -30,7 +30,7 @@
 <div class="panel right-panel">
 	<ng-container *ngFor="let board of (rightGameBoards | async)">
 		<h2 translate>{{ board.name }}</h2>
-		<tro-svg-game-board [boardData]="board" hideLegend [overlay]="overlayBoard | async"  ></tro-svg-game-board>
+		<tro-svg-game-board [boardData]="board" [clickMode]="clickMode.SelectBoard" hideLegend [overlay]="overlayBoard | async"  ></tro-svg-game-board>
 	</ng-container>
 </div>
 <tro-help></tro-help>

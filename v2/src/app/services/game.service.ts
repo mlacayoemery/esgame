@@ -99,29 +99,53 @@ export class GameService {
 		this.scoreService.calculateScore(level1Score, this.selectedFields.value);
 		level2.previousRoundScore = level1Score;
 
-		combineLatest([
-			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ag_carbon.tif", DefaultGradients.Yellow, GameBoardType.ConsequenceMap, "Kohlenstoff"),
-			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ag_habitat.tif", DefaultGradients.Purple, GameBoardType.ConsequenceMap, "Lebensraum"),
-			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ag_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap, "Wasser"),
-			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ag_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap, "Jagd"),
-			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ranch_carbon.tif", DefaultGradients.Yellow, GameBoardType.ConsequenceMap, "Kohlenstoff"),
-			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ranch_habitat.tif", DefaultGradients.Purple, GameBoardType.ConsequenceMap, "Lebensraum"),
-			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ranch_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap, "Wasser"),
-			this.tiffService.getGridGameBoard("/assets/images/esgame_img_ranch_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap, "Jagd"),
-		]).subscribe((gameBoards) => {
-			level2.gameBoards.push(...this.currentLevel.value!.gameBoards);
-			level2.gameBoards.push(...gameBoards);
-			level2.levelNumber = 2;
-			
-			// TODO: Nicht über Array
-			this.productionTypes.value[0].consequenceMaps.push(...gameBoards.slice(0, 4));
-			this.productionTypes.value[1].consequenceMaps.push(...gameBoards.slice(4, 8));
+		if (this.settings.value.mode == 'GRID') {
+			combineLatest([
+				this.tiffService.getGridGameBoard("/assets/images/esgame_img_ag_carbon.tif", DefaultGradients.Yellow, GameBoardType.ConsequenceMap, "Kohlenstoff"),
+				this.tiffService.getGridGameBoard("/assets/images/esgame_img_ag_habitat.tif", DefaultGradients.Purple, GameBoardType.ConsequenceMap, "Lebensraum"),
+				this.tiffService.getGridGameBoard("/assets/images/esgame_img_ag_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap, "Wasser"),
+				this.tiffService.getGridGameBoard("/assets/images/esgame_img_ag_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap, "Jagd"),
+				this.tiffService.getGridGameBoard("/assets/images/esgame_img_ranch_carbon.tif", DefaultGradients.Yellow, GameBoardType.ConsequenceMap, "Kohlenstoff"),
+				this.tiffService.getGridGameBoard("/assets/images/esgame_img_ranch_habitat.tif", DefaultGradients.Purple, GameBoardType.ConsequenceMap, "Lebensraum"),
+				this.tiffService.getGridGameBoard("/assets/images/esgame_img_ranch_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap, "Wasser"),
+				this.tiffService.getGridGameBoard("/assets/images/esgame_img_ranch_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap, "Jagd"),
+			]).subscribe((gameBoards) => {
+				level2.gameBoards.push(...this.currentLevel.value!.gameBoards);
+				level2.gameBoards.push(...gameBoards);
+				level2.levelNumber = 2;
+				
+				// TODO: Nicht über Array
+				this.productionTypes.value[0].consequenceMaps.push(...gameBoards.slice(0, 4));
+				this.productionTypes.value[1].consequenceMaps.push(...gameBoards.slice(4, 8));
+	
+				this.selectedFields.value.forEach(o => o.updateScore());
+	
+				this.currentLevel.next(level2);
+				this.selectedFields.next(this.selectedFields.value);
+			});
+		} else if (this.settings.value.mode == 'SVG') {
+			combineLatest([
+				this.tiffService.getSvgGameBoard("/assets/images/Consequence_1_air_quality.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Air Quality"),
+				this.tiffService.getSvgGameBoard("/assets/images/Consequence_2_water_quality.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Water Quality"),
+				this.tiffService.getSvgGameBoard("/assets/images/Consequence_3_water_availability.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Water Availability"),
+				this.tiffService.getSvgGameBoard("/assets/images/Consequence_4_habitat_fragmentation.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Habitat Fragmentation"),
+				this.tiffService.getSvgGameBoard("/assets/images/Consequence_4_habitat_fragmentation.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Habitat Fragmentation"),
+				this.tiffService.getSvgGameBoard("/assets/images/Consequence_4_habitat_fragmentation.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Habitat Fragmentation"),
+			]).subscribe((gameBoards) => {
+				level2.gameBoards.push(...this.currentLevel.value!.gameBoards);
+				level2.gameBoards.push(...gameBoards);
+				level2.levelNumber = 2;
+				
+				this.productionTypes.value[0].consequenceMaps.push(...gameBoards);
+				this.productionTypes.value[1].consequenceMaps.push(...gameBoards);
+				
+				this.selectedFields.value.forEach(o => o.updateScore());
 
-			this.selectedFields.value.forEach(o => o.updateScore());
+				this.currentLevel.next(level2);
+				this.selectedFields.next(this.selectedFields.value);
+			});
+		}
 
-			this.currentLevel.next(level2);
-			this.selectedFields.next(this.selectedFields.value);
-		});
 	}
 
 	initialiseSVGMode() {
@@ -130,18 +154,18 @@ export class GameService {
 
 		combineLatest([
 			this.tiffService.getSvgGameBoard("/assets/images/zonal_raster.tif", DefaultGradients.Blue, GameBoardType.DrawingMap, "Zonen"),
-			this.tiffService.getSvgGameBoard("/assets/images/Consequence_1_air_quality.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Air Quality"),
-			this.tiffService.getSvgGameBoard("/assets/images/Consequence_2_water_quality.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Water Quality"),
-			this.tiffService.getSvgGameBoard("/assets/images/Consequence_3_water_availability.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Water Availability"),
-			this.tiffService.getSvgGameBoard("/assets/images/Consequence_4_habitat_fragmentation.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Habitat Fragmentation"),
 			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_ext_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Extensive Arable Land"),
 			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_int_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Intensive Arable Land"),
 			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_ext_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Extensive Livestock Land"),
 			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Intensive Livestock Land"),
+			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Intensive Livestock Land"),
+			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Intensive Livestock Land"),
 		]).subscribe((gameBoards) => {
 
-			this.productionTypes.value.push(new ProductionType("#fbe5d6", gameBoards[0], "Ackerland"));
-			this.productionTypes.value.push(new ProductionType("#f8cbad", gameBoards[0], "Viehzucht"));
+			this.productionTypes.value.push(new ProductionType("#843c0c", gameBoards[0], "Intensives Ackerland"));
+			this.productionTypes.value.push(new ProductionType("#f8cbad", gameBoards[0], "Extensives Ackerland"));
+			this.productionTypes.value.push(new ProductionType("#c55a11", gameBoards[0], "Intensive Viehzucht"));
+			this.productionTypes.value.push(new ProductionType("#fbe5d6", gameBoards[0], "Extensive Viehzucht"));
 			setTimeout(() => {
 				this.selectedProductionType.next(this.productionTypes.value[0]);
 			});
