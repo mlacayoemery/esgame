@@ -2,8 +2,8 @@
     fill: transparent;
     //stroke: black;
 
-    &.--is-highlighted{
-        stroke:rgba(255, 0, 144, 0.782) !important;
+    &.is-overlay.--is-highlighted{
+        stroke:rgb(255, 0, 144);
         stroke-width: 2px;
     }
     &.is-overlay {
