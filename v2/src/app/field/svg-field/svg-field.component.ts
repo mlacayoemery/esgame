@@ -34,6 +34,7 @@ export class SvgFieldComponent extends FieldBaseComponent {
 	}
 
 	assign(productionType: ProductionType, side: HighlightSide) {
+		if (this.field.editable == false) return;
 		this._field.assigned = this.isAssigned = true;
 		this.setColor(productionType);
 		this.gameService.removeHighlight();

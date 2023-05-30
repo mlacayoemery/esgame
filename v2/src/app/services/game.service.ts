@@ -150,17 +150,15 @@ export class GameService {
 		combineLatest([
 			this.tiffService.getSvgGameBoard("/assets/images/zonal_raster.tif", DefaultGradients.Blue, GameBoardType.DrawingMap, "Zonen"),
 			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_ext_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Extensive Arable Land"),
-			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_int_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Intensive Arable Land"),
-			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_ext_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Extensive Livestock Land"),
-			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Intensive Livestock Land"),
-			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Intensive Livestock Land"),
-			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Intensive Livestock Land"),
+			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_int_zone.tif", DefaultGradients.Orange, GameBoardType.SuitabilityMap, "Intensive Arable Land"),
+			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_ext_zone.tif", DefaultGradients.Purple, GameBoardType.SuitabilityMap, "Extensive Livestock Land"),
+			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zone.tif", DefaultGradients.Red, GameBoardType.SuitabilityMap, "Intensive Livestock Land"),
 		]).subscribe((gameBoards) => {
 
-			this.productionTypes.value.push(new ProductionType("#843c0c", gameBoards[0], "Intensives Ackerland"));
-			this.productionTypes.value.push(new ProductionType("#f8cbad", gameBoards[0], "Extensives Ackerland"));
-			this.productionTypes.value.push(new ProductionType("#c55a11", gameBoards[0], "Intensive Viehzucht"));
-			this.productionTypes.value.push(new ProductionType("#fbe5d6", gameBoards[0], "Extensive Viehzucht"));
+			this.productionTypes.value.push(new ProductionType("#f8cbad", gameBoards[1], "Extensives Ackerland"));
+			this.productionTypes.value.push(new ProductionType("#843c0c", gameBoards[2], "Intensives Ackerland"));
+			this.productionTypes.value.push(new ProductionType("#fbe5d6", gameBoards[3], "Extensive Viehzucht"));
+			this.productionTypes.value.push(new ProductionType("#c55a11", gameBoards[4], "Intensive Viehzucht"));
 			setTimeout(() => {
 				this.selectedProductionType.next(this.productionTypes.value[0]);
 			});
