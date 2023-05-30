@@ -28,11 +28,12 @@ export class SvgFieldComponent extends FieldBaseComponent {
 	}
 
 	setColor(productionType: ProductionType | null = null) {
-		if (!this._field || this._isOverlay) return;
+		if (!this._field) return;
 
-		if (productionType) {
+
+		if (productionType && this._isOverlay) {
 			this.fillColor = `${productionType.fieldColor}`;
-		} else {
+		} else if(!this._isOverlay) {
 			this.fillColor = `#${this._field.type?.fieldColor}`;
 		}
 	}

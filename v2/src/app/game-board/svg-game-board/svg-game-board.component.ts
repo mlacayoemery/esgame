@@ -42,10 +42,10 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 
 	protected drawSelectedFields() {
 		if (this.fields && this._selectedFields && this.svgFieldComponents) {
-			this.fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.id)?.unassign());
+			this.fields.forEach(field => this.svgFieldComponents.filter(s => s._isOverlay).find(o => o.field.id == field.id)?.unassign());
 			this._selectedFields.forEach(field => {
 				field.fields.forEach(highlightField => {
-					this.svgFieldComponents.find(o => o.field.id == highlightField.id)?.assign(field.productionType, highlightField.side);
+					this.svgFieldComponents.filter(s => s._isOverlay).find(o => o.field.id == highlightField.id)?.assign(field.productionType, highlightField.side);
 				});
 			});
 			this.cdRef.markForCheck();
