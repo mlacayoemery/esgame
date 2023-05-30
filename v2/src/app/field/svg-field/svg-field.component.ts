@@ -18,6 +18,7 @@ export class SvgFieldComponent extends FieldBaseComponent {
 
 	@Input() set isOverlay(isOverlay: boolean) {
 		this._isOverlay = isOverlay;
+		this.addHoverListener();
 	}
 
 	setColor(productionType: ProductionType | null = null) {

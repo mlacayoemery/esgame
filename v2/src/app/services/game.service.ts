@@ -150,7 +150,7 @@ export class GameService {
 		combineLatest([
 			this.tiffService.getSvgGameBoard("/assets/images/zonal_raster.tif", DefaultGradients.Blue, GameBoardType.DrawingMap, "Zonen"),
 			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_ext_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Extensive Arable Land"),
-			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_int_zone.tif", DefaultGradients.Orange, GameBoardType.SuitabilityMap, "Intensive Arable Land"),
+			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_int_zone.tif", DefaultGradients.Blue, GameBoardType.SuitabilityMap, "Intensive Arable Land"),
 			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_ext_zone.tif", DefaultGradients.Purple, GameBoardType.SuitabilityMap, "Extensive Livestock Land"),
 			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zone.tif", DefaultGradients.Red, GameBoardType.SuitabilityMap, "Intensive Livestock Land"),
 		]).subscribe((gameBoards) => {

@@ -1,4 +1,4 @@
 <svg attr.viewBox="0 0 {{board?.width ?? 0}} {{board?.height ?? 0}}">
 	<path troSvgField [field]="field" *ngFor="let field of fields" [attr.d]="field.path"></path>
-	<path [isOverlay]="true" troSvgField [field]="field" [clickable]="clickMode == GameBoardClickMode.Field" *ngFor="let field of overlayFields" [attr.d]="field.path"></path>
+	<path [isOverlay]="true" troSvgField [field]="field" [clickable]="clickMode == GameBoardClickMode.Field && field.editable" *ngFor="let field of overlayFields" [attr.d]="field.path"></path>
 </svg>
