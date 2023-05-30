@@ -19,6 +19,14 @@ export abstract class FieldBaseComponent implements OnDestroy {
 		this.setColor();
 	}
 
+	@Input() set clickable(clickable: any) {
+		if (clickable === false) return;
+		else {
+			this.addClickListener();
+			this.addHoverListener();
+		};
+	}
+
 	get field(): Field {
 		return this._field;
 	}

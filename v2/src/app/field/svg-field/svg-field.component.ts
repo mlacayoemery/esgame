@@ -22,8 +22,8 @@ export class SvgFieldComponent extends FieldBaseComponent {
 	@Input() set isOverlay(isOverlay: boolean) {
 		this._isOverlay = isOverlay;
 		if(isOverlay) {
-			this.addClickListener();
-			this.addHoverListener()
+			//this.addClickListener();
+			//this.addHoverListener()
 		}
 	}
 

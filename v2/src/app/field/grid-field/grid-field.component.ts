@@ -20,14 +20,6 @@ export class GridFieldComponent extends FieldBaseComponent {
 		else this._imageMode = true;
 	}
 
-	@Input() set clickable(clickable: any) {
-		if (clickable === false) return;
-		else {
-			this.addClickListener();
-			this.addHoverListener();
-		};
-	}
-
 	get imageMode() { return this._imageMode; }
 
 	private _size: number = 10;
