@@ -1,7 +1,7 @@
 import { GameService } from "src/app/services/game.service";
 import { Field, HighlightSide } from "../shared/models/field";
 import { ProductionType } from "../shared/models/production-type";
-import { Component, ElementRef, HostBinding, Input, OnDestroy, OnInit, Renderer2 } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostBinding, Input, OnDestroy, OnInit, Renderer2 } from '@angular/core';
 
 @Component({
 	template: '',
@@ -12,7 +12,7 @@ export abstract class FieldBaseComponent implements OnDestroy {
 	protected _field: Field;
 	private _listeners: (() => void)[] = [];
 
-	constructor(protected gameService: GameService, protected renderer: Renderer2, protected elementRef: ElementRef) { }
+	constructor(protected gameService: GameService, protected renderer: Renderer2, protected elementRef: ElementRef, protected cdRef: ChangeDetectorRef) { }
 
 	@Input() set field(field: Field) {
 		this._field = field;
@@ -47,11 +47,15 @@ export abstract class FieldBaseComponent implements OnDestroy {
 	abstract setColor(): void;
 
 	highlight(side: HighlightSide) {
-		this.isHighlighted = true;
+		if (this.field.editable) {
+			this.isHighlighted = true;
+			this.cdRef.markForCheck();
+		}
 	}
 
 	removeHighlight() {
 		this.isHighlighted = false;
+		this.cdRef.markForCheck();
 	}
 
 	abstract assign(productionType: ProductionType, side: HighlightSide): void;

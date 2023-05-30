@@ -16,7 +16,8 @@ export class Field {
 		this.productionType = productionType;
 		this.score = score;
 		this.path = path;
-		 
+		this.editable = editable;
+		this.assigned = assigned;
 	}
 }
 
