@@ -10,59 +10,64 @@ import { GridFieldComponent } from 'src/app/field/grid-field/grid-field.componen
   styleUrls: ['./grid-game-board.component.scss']
 })
 export class GridGameBoardComponent extends GameBoardBaseComponent implements AfterViewInit {
-
+	
 	override set boardData(data: GameBoard | null) {
 		super.boardData = data;
 		this.setFieldColumns(this.settings.gameBoardColumns);
 	} 
-
+	
 	@ViewChildren(GridFieldComponent) fieldComponents: QueryList<GridFieldComponent>;
-
+	
 	constructor(
 		gameService: GameService,
 		renderer: Renderer2,
 		elementRef: ElementRef,
 		cdRef: ChangeDetectorRef
-	) {
-		super(gameService, renderer, elementRef, cdRef);
-		this._sink.sink = this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
-			this._highlightedFields.forEach(o => this.fieldComponents?.get(o.id)?.removeHighlight());
-			this._highlightedFields = fieldNumbers;
-
-			if (fieldNumbers.length > 0) {
-				fieldNumbers.forEach(fieldNumber => {
-					this.fieldComponents.get(fieldNumber.id)?.highlight(fieldNumber.side);
-				});
-			}
-			this.cdRef.markForCheck();
-		});
-	}
-
-	setFieldColumns(fieldColumns: number) {
-		this.fieldColumns = `repeat(${fieldColumns}, 1fr)`;
-	}
-
-	ngAfterViewInit() {
-		this._sink.sink = this.gameService.selectedFieldsObs.subscribe(fields => {
-			this._selectedFields = fields;
-			setTimeout(() => this.drawSelectedFields());
-		});
-
-		this._sink.sink = this.fieldComponents.changes.subscribe(r => {
-			setTimeout(() => this.drawSelectedFields());
-		});
-	}
-
-	protected drawSelectedFields() {
-		if (this.fields && this._selectedFields && this.fieldComponents) {
-			this.fields.forEach(field => this.fieldComponents.get(field.id)?.unassign());
-			this._selectedFields.forEach(field => {
-				field.fields.forEach(highlightField => {
-					this.fieldComponents.get(highlightField.id)?.assign(field.productionType, highlightField.side);
-				});
-				this.fieldComponents.get(field.fields[0].id)?.showProductionTypeImage();
+		) {
+			super(gameService, renderer, elementRef, cdRef);
+			this._sink.sink = this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
+				this._highlightedFields.forEach(o => this.fieldComponents?.get(o.id)?.removeHighlight());
+				this._highlightedFields = fieldNumbers;
+				
+				if (fieldNumbers.length > 0) {
+					fieldNumbers.forEach(fieldNumber => {
+						this.fieldComponents.get(fieldNumber.id)?.highlight(fieldNumber.side);
+					});
+				}
+				this.cdRef.markForCheck();
 			});
-			this.cdRef.markForCheck();
+		}
+		
+		setFieldColumns(fieldColumns: number) {
+			this.fieldColumns = `repeat(${fieldColumns}, 1fr)`;
+		}
+		
+		ngAfterViewInit() {
+			this._sink.sink = this.gameService.selectedFieldsObs.subscribe(fields => {
+				this._selectedFields = fields;
+				setTimeout(() => this.drawSelectedFields());
+			});
+			
+			this._sink.sink = this.fieldComponents.changes.subscribe(r => {
+				setTimeout(() => this.drawSelectedFields());
+			});
+		}
+		
+		protected drawSelectedFields() {
+			if (this.fields && this._selectedFields && this.fieldComponents) {
+				this.fields.forEach(field => this.fieldComponents.get(field.id)?.unassign());
+				this._selectedFields.forEach(field => {
+					field.fields.forEach(highlightField => {
+						this.fieldComponents.get(highlightField.id)?.assign(field.productionType, highlightField.side);
+					});
+					this.fieldComponents.get(field.fields[0].id)?.showProductionTypeImage();
+				});
+				this.cdRef.markForCheck();
+			}
+		}
+
+		override afterBoardDataSet(): void {
+
 		}
 	}
-}
+	

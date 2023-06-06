@@ -12,7 +12,6 @@ export class ConfiguratorComponent {
   }
   set selected(selected: "grid" | "svg") {
     this._selected = selected;
-    console.log(this._selected)
   }
 
   maps = [{}];
