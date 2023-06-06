@@ -29,5 +29,5 @@ export class GameBoard {
 
 export enum GameBoardClickMode {
 	Field = "FIELD",
-	SelectBoard = "SELECTBOARD"
+	SelectBoard = "SELECTBOARD",
 }

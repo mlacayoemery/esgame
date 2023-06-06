@@ -20,10 +20,10 @@ export abstract class FieldBaseComponent implements OnDestroy {
 	}
 
 	@Input() set clickable(clickable: any) {
-		if (clickable === false) return;
-		else {
-			this.addClickListener();
-			this.addHoverListener();
+		if (clickable === false) {
+			this.removeListeners();
+		} else {
+			this.addListeners();
 		};
 	}
 
@@ -42,6 +42,16 @@ export abstract class FieldBaseComponent implements OnDestroy {
 		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', () => {
 			this.gameService.highlightOnOtherFields(this._field.id);
 		}));
+	}
+
+	addListeners() {
+		this.addClickListener();
+		this.addHoverListener();
+	}
+
+	removeListeners() {
+		this._listeners.forEach(fn => fn());
+		this._listeners = [];
 	}
 
 	abstract setColor(): void;

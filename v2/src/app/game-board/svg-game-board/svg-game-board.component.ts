@@ -33,11 +33,15 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	ngAfterViewInit() {
 		this._sink.sink = this.gameService.selectedFieldsObs.subscribe(fields => {
 			this._selectedFields = fields;
-			setTimeout(() => this.drawSelectedFields());
+			setTimeout(() => {
+				this.drawSelectedFields();
+			});
 		});
 
 		this._sink.sink = this.svgFieldComponents.changes.subscribe(r => {
-			setTimeout(() => this.drawSelectedFields());
+			setTimeout(() => {
+				this.drawSelectedFields();
+			});
 		});
 	}
 

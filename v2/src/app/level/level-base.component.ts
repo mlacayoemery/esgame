@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, HostBinding, Input } from '@angular
 import { GameService } from '../services/game.service';
 import { GameBoardClickMode } from '../shared/models/game-board';
 import { ProductionType } from '../shared/models/production-type';
-import { filter, map } from 'rxjs';
+import { combineLatest, filter, map, merge, mergeMap, tap } from 'rxjs';
 import { GameBoardType } from '../shared/models/game-board-type';
 
 @Component({
@@ -10,17 +10,21 @@ import { GameBoardType } from '../shared/models/game-board-type';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export abstract class LevelBaseComponent {
+	readOnly = false;
+	level = this.gameService.currentLevelObs.pipe(tap(o => this.readOnly = o?.isReadOnly ?? false));
 	selectedProductionType = this.gameService.selectedProductionTypeObs;
 	focusedGameBoard = this.gameService.focusedGameBoardObs.pipe(filter(o => o != null));
 	leftGameBoards = this.gameService.currentLevelObs.pipe(
 		map(o => o?.gameBoards), 
 		map(o => o?.filter(p => p.gameBoardType == GameBoardType.SuitabilityMap))
 	);
-	rightGameBoards = this.selectedProductionType.pipe(map(o => o?.consequenceMaps)); //this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.filter(p => p.gameBoardType == GameBoardType.ConsequenceMap)));
+	rightGameBoards = combineLatest([this.level, this.selectedProductionType]).pipe(
+		map(([o, p]) => {
+			if (o?.showConsequenceMaps) return p?.consequenceMaps;
+			else return [];
+		}));
 	productionTypes: ProductionType[];
 	clickMode = GameBoardClickMode;
-
-	level? = this.gameService.currentLevelObs;
 
 	constructor(protected gameService: GameService) {
 		this.gameService.productionTypesObs.subscribe(productionTypes => {
@@ -33,11 +37,11 @@ export abstract class LevelBaseComponent {
 	}
 
 	nextLevel() {
-		this.level?.subscribe(level => {
-			if (level?.levelNumber == 1) {
-				this.gameService.prepareRound2();
-			}
-		});
+		this.gameService.goToNextLevel();
+	}
+
+	prevLevel() {
+		this.gameService.goToPreviousLevel();
 	}
 
 	openHelp() {

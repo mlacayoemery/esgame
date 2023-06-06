@@ -13,7 +13,7 @@ export class LoadingIndicatorComponent {
 
 	constructor(private gameService: GameService) {
 		this.gameService.loadingIndicatorObs.subscribe(show => {
-			this.show = show;
+			this.show = show.length > 0;
 		});
 	}
 }

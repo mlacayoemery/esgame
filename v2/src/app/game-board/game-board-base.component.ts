@@ -18,6 +18,7 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 	protected _highlightedFields: HighlightField[] = [];
 	protected _sink = new SubSink();
 	protected _listeners: (() => void)[] = [];
+	protected _readOnly = false;
 
 	fields: Field[] = [];
 	settings: Settings;
@@ -54,6 +55,13 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 
 	get hideLegend() { return this._hideLegend; }
 
+	@Input() set readOnly(value: any) {
+		if (value === false) this._readOnly = false;
+		else this._readOnly = true;
+	}
+
+	get readOnly() { return this._readOnly; }
+
 	constructor(
 		protected gameService: GameService,
 		protected renderer: Renderer2,
@@ -71,6 +79,7 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 	}
 
 	private addClickListener() {
+		if (this.readOnly) return;
 		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'click', () => {
 			if (this.boardData) {
 				this.gameService.selectGameBoard(this.boardData);
