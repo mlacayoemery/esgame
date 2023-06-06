@@ -3,24 +3,21 @@
 		<h2 translate>{{ board.name }}</h2>
         <tro-svg-game-board [boardData]="board" hideLegend [clickMode]="clickMode.SelectBoard"  ></tro-svg-game-board>
 	</ng-container>
-	<!-- <tro-score-board isStatic *ngIf="(level | async)?.previousRoundScore" [scores]="(level | async)?.previousRoundScore"></tro-score-board> -->
 </div>
 <div class="panel center-panel">
 	<header>
-		<i></i>
+		<p translate [translateParams]="{value: (level | async)?.levelNumber}" troLevelIndicator>Runde</p>
 		<h1 translate>Tradeoff: Agriculture Edition!</h1>
 		<span class="icon-help-circle" (click)="openHelp()"></span>
 	</header>
-	<p translate [translateParams]="{value: (level | async)?.levelNumber}">Runde</p>
 	<div>
 		<div class="production-type-buttons">
 			<tro-production-type-button *ngFor="let type of productionTypes"
 				[productionType]="type" layout2></tro-production-type-button>
 		</div>
-		<p>{{ 'Aktiv:' | translate }} {{ (selectedProductionType | async)?.name ?? '' | translate }}</p>
 	</div>
 	<div class="game-board-wrapper">
-		<tro-svg-game-board [boardData]="focusedGameBoard | async" hideLegend  ></tro-svg-game-board>
+		<tro-svg-game-board [boardData]="focusedGameBoard | async" hideLegend class="main-board"></tro-svg-game-board>
 		<div class="score-board-wrapper">
 			<tro-score-board></tro-score-board>
 			<button troButton class="btn-next" (click)="nextLevel()" *ngIf="(level | async)?.levelNumber == 1" translate>Nächste Runde</button>

@@ -23,6 +23,7 @@ export class GameService {
 	private selectedProductionType = new BehaviorSubject<ProductionType | null>(null);
 	private focusedGameBoard = new BehaviorSubject<GameBoard | null>(null);
 	private helpWindow = new BehaviorSubject<boolean>(false);
+	private loadingIndicator = new BehaviorSubject<boolean>(false);
 	private levels: Level[] = [];
 
 	highlightFieldObs = this.highlightFields.asObservable();
@@ -34,6 +35,7 @@ export class GameService {
 	focusedGameBoardObs = this.focusedGameBoard.asObservable();
 	currentlySelectedFieldObs = this.currentlySelectedField.asObservable();
 	helpWindowObs = this.helpWindow.asObservable();
+	loadingIndicatorObs = this.loadingIndicator.asObservable();
 
 	constructor(
 		private tiffService: TiffService,
@@ -87,6 +89,7 @@ export class GameService {
 	}
 
 	prepareRound2() {
+		this.loading();
 		var level2 = new Level();
 		this.levels.push(level2);
 
@@ -117,6 +120,7 @@ export class GameService {
 	
 				this.currentLevel.next(level2);
 				this.selectedFields.next(this.selectedFields.value);
+				this.loading(false);
 			});
 		} else if (this.settings.value.mode == 'SVG') {
 			combineLatest([
@@ -141,14 +145,15 @@ export class GameService {
 
 				this.currentLevel.next(level2);
 				this.selectedFields.next(this.selectedFields.value);
+				this.loading(false);
 			});
 		}
-
 	}
 
 	initialiseSVGMode() {
 		var level = new Level();
 		this.settings.value.imageMode = false;
+		this.loading();
 
 		combineLatest([
 			this.tiffService.getSvgGameBoard("/assets/images/zonal_raster.tif", DefaultGradients.Blue, GameBoardType.DrawingMap, "Zonen"),
@@ -173,12 +178,13 @@ export class GameService {
 
 			this.currentLevel.next(level);
 			this.focusedGameBoard.next(gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!);
+			this.loading(false);
 		});
 
 	}
 
 	initialiseGridMode() {
-		//TODO: This code can be replaced as soon as it is possible to load data from the API
+		this.loading();
 		let level = new Level();
 		this.levels.push(level);
 		this.settings.value.imageMode = true;
@@ -198,11 +204,14 @@ export class GameService {
 
 			this.currentLevel.next(level);
 			this.focusedGameBoard.next(gameBoard);
+			this.loading(false);
 		});
 
 	}
 
 	openHelp(close = false) { this.helpWindow.next(!close); }
+
+	loading(show = true) { this.loadingIndicator.next(show); }
 
 	resetGame() {
 		this.currentLevel.next(null);
