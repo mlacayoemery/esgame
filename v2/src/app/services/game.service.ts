@@ -163,8 +163,6 @@ export class GameService {
 				this.tiffService.getSvgGameBoard("/assets/images/Consequence_2_water_quality.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Water Quality"),
 				this.tiffService.getSvgGameBoard("/assets/images/Consequence_3_water_availability.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Water Availability"),
 				this.tiffService.getSvgGameBoard("/assets/images/Consequence_4_habitat_fragmentation.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Habitat Fragmentation"),
-				this.tiffService.getSvgGameBoard("/assets/images/Consequence_4_habitat_fragmentation.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Habitat Fragmentation"),
-				this.tiffService.getSvgGameBoard("/assets/images/Consequence_4_habitat_fragmentation.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Habitat Fragmentation"),
 			]).subscribe((gameBoards) => {
 				const overlay = this.currentLevel.value!.gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
 				gameBoards.forEach(o => o.fields = overlay.fields);
@@ -186,6 +184,7 @@ export class GameService {
 	}
 
 	initialiseSVGMode() {
+		this.settings.value.mode = 'SVG';
 		var level = new Level();
 		this.levels.push(level);
 		this.settings.value.imageMode = false;
@@ -221,6 +220,7 @@ export class GameService {
 	}
 
 	initialiseGridMode() {
+		this.settings.value.mode = 'GRID';
 		this.loading();
 		let level = new Level();
 		this.levels.push(level);

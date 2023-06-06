@@ -19,12 +19,12 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	constructor(gameService: GameService, renderer: Renderer2, elementRef: ElementRef, cdRef: ChangeDetectorRef) {
     super(gameService, renderer, elementRef, cdRef);
 		this._sink.sink = this.gameService.highlightFieldObs.pipe(debounce(i => interval(50))).subscribe(fieldNumbers => {
-      this._highlightedFields.forEach(o => this.svgFieldComponents?.filter(s => s._isOverlay)?.find(s => s.field.id == o.id)?.removeHighlight());
+      this._highlightedFields.forEach(o => this.svgFieldComponents?.find(s => s.field.id == o.id)?.removeHighlight());
 			this._highlightedFields = fieldNumbers;
       
 			if (fieldNumbers.length > 0) {
         fieldNumbers.forEach(fieldNumber => {
-          this.svgFieldComponents.filter(s => s._isOverlay)?.find(s => s.field.id == fieldNumber.id)?.highlight(fieldNumber.side);
+          this.svgFieldComponents.find(s => s.field.id == fieldNumber.id)?.highlight(fieldNumber.side);
 				});
 			}
 			this.cdRef.markForCheck();
@@ -44,10 +44,10 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
   
 	protected drawSelectedFields() {
     if (this.fields && this._selectedFields && this.svgFieldComponents) {
-      this.fields.forEach(field => this.svgFieldComponents.filter(s => s._isOverlay).find(o => o.field.id == field.id)?.unassign());
+      this.fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.id)?.unassign());
 			this._selectedFields.forEach(field => {
         field.fields.forEach(highlightField => {
-          this.svgFieldComponents.filter(s => s._isOverlay).find(o => o.field.id == highlightField.id)?.assign(field.productionType, highlightField.side);
+          this.svgFieldComponents.find(o => o.field.id == highlightField.id)?.assign(field.productionType, highlightField.side);
 				});
 			});
 			this.cdRef.markForCheck();
