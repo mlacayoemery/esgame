@@ -7,6 +7,7 @@
         stroke-width: 2px;
     }
     &.is-overlay {
-        stroke: rgba(0,0,0,0.8)
+        stroke: black;
+        stroke-width: .2px;
     }
 }
