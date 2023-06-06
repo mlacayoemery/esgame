@@ -5,6 +5,7 @@ import { GameBoard, GameBoardClickMode } from '../shared/models/game-board';
 import { Settings } from '../shared/models/settings';
 import { Legend } from '../shared/models/legend';
 import { SubSink } from 'subsink';
+import { ProductionType } from '../shared/models/production-type';
 
 @Component({
 	template: '',
@@ -24,6 +25,7 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 	board: GameBoard | undefined;
 	legend: Legend;
 	GameBoardClickMode = GameBoardClickMode;
+	productionTypes: ProductionType[] = [];
 	@Input() set clickMode(mode: GameBoardClickMode) {
 		this._clickMode = mode;
 		if (mode == GameBoardClickMode.SelectBoard) {
@@ -42,8 +44,11 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 			this.fields = data.fields;
 			this.legend = data.legend;
 			this.board = data;
+			this.afterBoardDataSet();
 		}
 	}
+
+	abstract afterBoardDataSet(): void;
 
 	get boardData() { return this._boardData; }
 
@@ -62,6 +67,9 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 	) {
 		this._sink.sink = this.gameService.settingsObs.subscribe(settings => {
 			this.settings = settings;
+		});
+		gameService.productionTypesObs.subscribe(prodTypes => {
+			this.productionTypes = prodTypes;
 		});
 	}
 

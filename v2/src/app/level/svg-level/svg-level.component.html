@@ -1,7 +1,7 @@
 <div class="panel left-panel">
 	<ng-container *ngFor="let board of (leftGameBoards | async)">
 		<h2 translate>{{ board.name }}</h2>
-        <tro-svg-game-board [boardData]="board" hideLegend [clickMode]="clickMode.SelectBoard" [overlay]="overlayBoard | async"  ></tro-svg-game-board>
+        <tro-svg-game-board [boardData]="board" hideLegend [clickMode]="clickMode.SelectBoard"  ></tro-svg-game-board>
 	</ng-container>
 	<!-- <tro-score-board isStatic *ngIf="(level | async)?.previousRoundScore" [scores]="(level | async)?.previousRoundScore"></tro-score-board> -->
 </div>
@@ -20,7 +20,7 @@
 		<p>{{ 'Aktiv:' | translate }} {{ (selectedProductionType | async)?.name ?? '' | translate }}</p>
 	</div>
 	<div class="game-board-wrapper">
-		<tro-svg-game-board [boardData]="focusedGameBoard | async" hideLegend [overlay]="overlayBoard | async"  ></tro-svg-game-board>
+		<tro-svg-game-board [boardData]="focusedGameBoard | async" hideLegend  ></tro-svg-game-board>
 		<div class="score-board-wrapper">
 			<tro-score-board></tro-score-board>
 			<button troButton class="btn-next" (click)="nextLevel()" *ngIf="(level | async)?.levelNumber == 1" translate>Nächste Runde</button>
@@ -30,7 +30,7 @@
 <div class="panel right-panel">
 	<ng-container *ngFor="let board of (rightGameBoards | async)">
 		<h2 translate>{{ board.name }}</h2>
-		<tro-svg-game-board [boardData]="board" [clickMode]="clickMode.SelectBoard" hideLegend [overlay]="overlayBoard | async"  ></tro-svg-game-board>
+		<tro-svg-game-board [boardData]="board" [clickMode]="clickMode.SelectBoard" hideLegend  ></tro-svg-game-board>
 	</ng-container>
 </div>
 <tro-help></tro-help>

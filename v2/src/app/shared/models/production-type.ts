@@ -8,7 +8,7 @@ export class ProductionType {
 	image: string;
 	maxElements: number;
 
-	constructor(fieldColor: string, scoreMap: GameBoard, name: string, image = "", maxElements = 4) {
+	constructor(fieldColor: string, scoreMap: GameBoard, name: string, image = "", maxElements = 99) {
 		this.fieldColor = fieldColor;
 		this.suitabilityMap = scoreMap;
 		this.name = name;

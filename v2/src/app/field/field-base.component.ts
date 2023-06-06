@@ -39,9 +39,20 @@ export abstract class FieldBaseComponent implements OnDestroy {
 	}
 
 	addHoverListener() {
-		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', () => {
-			this.gameService.highlightOnOtherFields(this._field.id);
-		}));
+		//if (this._field.editable)
+			this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', (e) => {
+				let ev = e as MouseEvent
+				if(ev.buttons == 1)
+					this.gameService.selectField(this._field.id)
+				else if(ev.shiftKey)
+					this.gameService.deselectField(this._field.id);
+				else 
+					this.gameService.highlightOnOtherFields(this._field.id);
+			}));
+		//else
+			// this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', () => {
+			// 	this.gameService.removeHighlight();
+			// }));
 	}
 
 	abstract setColor(): void;

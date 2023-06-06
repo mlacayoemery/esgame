@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, QueryList, Renderer2, ViewChildren, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, Input, QueryList, Renderer2, ViewChildren, ViewEncapsulation } from '@angular/core';
 import { GameBoardBaseComponent } from '../game-board-base.component';
 import { SvgFieldComponent } from 'src/app/field/svg-field/svg-field.component';
 import { Field } from 'src/app/shared/models/field';
@@ -13,49 +13,49 @@ import { debounce, interval } from 'rxjs';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SvgGameBoardComponent extends GameBoardBaseComponent implements AfterViewInit {
-	@ViewChildren(SvgFieldComponent) svgFieldComponents: QueryList<SvgFieldComponent>;
-
+  @ViewChildren(SvgFieldComponent) svgFieldComponents: QueryList<SvgFieldComponent>;
+  background: string = "";
+  
 	constructor(gameService: GameService, renderer: Renderer2, elementRef: ElementRef, cdRef: ChangeDetectorRef) {
-		super(gameService, renderer, elementRef, cdRef);
+    super(gameService, renderer, elementRef, cdRef);
 		this._sink.sink = this.gameService.highlightFieldObs.pipe(debounce(i => interval(50))).subscribe(fieldNumbers => {
-			this._highlightedFields.forEach(o => this.svgFieldComponents?.filter(s => s._isOverlay)?.find(s => s.field.id == o.id)?.removeHighlight());
+      this._highlightedFields.forEach(o => this.svgFieldComponents?.filter(s => s._isOverlay)?.find(s => s.field.id == o.id)?.removeHighlight());
 			this._highlightedFields = fieldNumbers;
-
+      
 			if (fieldNumbers.length > 0) {
-				fieldNumbers.forEach(fieldNumber => {
-					this.svgFieldComponents.filter(s => s._isOverlay)?.find(s => s.field.id == fieldNumber.id)?.highlight(fieldNumber.side);
+        fieldNumbers.forEach(fieldNumber => {
+          this.svgFieldComponents.filter(s => s._isOverlay)?.find(s => s.field.id == fieldNumber.id)?.highlight(fieldNumber.side);
 				});
 			}
 			this.cdRef.markForCheck();
 		});
 	}
-
+  
 	ngAfterViewInit() {
-		this._sink.sink = this.gameService.selectedFieldsObs.subscribe(fields => {
-			this._selectedFields = fields;
+    this._sink.sink = this.gameService.selectedFieldsObs.subscribe(fields => {
+      this._selectedFields = fields;
 			setTimeout(() => this.drawSelectedFields());
 		});
-
+    
 		this._sink.sink = this.svgFieldComponents.changes.subscribe(r => {
-			setTimeout(() => this.drawSelectedFields());
+      setTimeout(() => this.drawSelectedFields());
 		});
 	}
-
+  
 	protected drawSelectedFields() {
-		if (this.fields && this._selectedFields && this.svgFieldComponents) {
-			this.fields.forEach(field => this.svgFieldComponents.filter(s => s._isOverlay).find(o => o.field.id == field.id)?.unassign());
+    if (this.fields && this._selectedFields && this.svgFieldComponents) {
+      this.fields.forEach(field => this.svgFieldComponents.filter(s => s._isOverlay).find(o => o.field.id == field.id)?.unassign());
 			this._selectedFields.forEach(field => {
-				field.fields.forEach(highlightField => {
-					this.svgFieldComponents.filter(s => s._isOverlay).find(o => o.field.id == highlightField.id)?.assign(field.productionType, highlightField.side);
+        field.fields.forEach(highlightField => {
+          this.svgFieldComponents.filter(s => s._isOverlay).find(o => o.field.id == highlightField.id)?.assign(field.productionType, highlightField.side);
 				});
 			});
 			this.cdRef.markForCheck();
 		}
 	}
 
-	@Input()
-	set overlay(overlay: GameBoard | null | undefined) {
-		this.overlayFields = overlay?.fields ?? [];
-	}
-	overlayFields: Field[] = [];
+  override afterBoardDataSet(): void {
+    console.log(this._boardData.background);
+    this.background = `url("${this._boardData.background}")`;
+  }
 }

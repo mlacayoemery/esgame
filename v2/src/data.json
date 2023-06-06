@@ -1,9 +1,11 @@
 {
 	"imageMode": false,
 	"elementSize": 2,
+	"infiniteLeves": false,
 	"gameBoardColumns": 28,
 	"gameBoardRows": 29,
 	"productionTypes": [
+
 		{
 			"id": "",
 			"name": { "en": "", "de": ""},
@@ -16,11 +18,24 @@
 	],
 	"maps": [
 		{
+			"id": "",
 			"name": { "en": "", "de": "" },
 			"linkToData": "",
 			"gradient": "",
 			"gameBoardtype": "",
 			"linkedToProductionTypes": []
+		}
+	],
+	"levels": [
+		{
+			"maps": [0,1],
+			"name": { "en": "", "de": ""},
+			"instructions": { "en": "", "de": ""}
+		},
+		{
+			"maps": [0,1,2,3,4,5,6,7,8,9,10,11,12],
+			"name": { "en": "", "de": ""},
+			"instruction": { "en": "", "de": ""}
 		}
 	]
 }
