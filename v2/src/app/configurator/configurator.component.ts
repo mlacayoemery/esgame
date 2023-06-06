@@ -23,6 +23,16 @@ export class ConfiguratorComponent {
   addMap() {
     this.maps.push({});
   }
+  removeMap(index: number) {
+    this.maps.splice(index, 1);
+  }
+
+  addAgricultureType() {
+    this.agircultureTypes.push({});
+  }
+  removeAgricultureType(index: number) {
+    this.agircultureTypes.splice(index, 1);
+  }
 
 
 }
