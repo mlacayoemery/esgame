@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, combineLatest, timeout } from 'rxjs';
+import { BehaviorSubject, combineLatest, tap, timeout } from 'rxjs';
 import { GameBoard } from '../shared/models/game-board';
 import { GameBoardType } from '../shared/models/game-board-type';
 import { Level } from '../shared/models/level';
@@ -23,7 +23,7 @@ export class GameService {
 	private selectedProductionType = new BehaviorSubject<ProductionType | null>(null);
 	private focusedGameBoard = new BehaviorSubject<GameBoard | null>(null);
 	private helpWindow = new BehaviorSubject<boolean>(false);
-	private loadingIndicator = new BehaviorSubject<boolean>(false);
+	private loadingIndicator = new BehaviorSubject<boolean[]>([]);
 	private levels: Level[] = [];
 
 	highlightFieldObs = this.highlightFields.asObservable();
@@ -31,7 +31,14 @@ export class GameService {
 	settingsObs = this.settings.asObservable();
 	productionTypesObs = this.productionTypes.asObservable();
 	selectedProductionTypeObs = this.selectedProductionType.asObservable();
-	selectedFieldsObs = this.selectedFields.asObservable();
+	selectedFieldsObs = this.selectedFields.asObservable().pipe(
+		tap(o => {
+			if (this.currentLevel.value) {
+				this.currentLevel.value.selectedFields = o;
+			}
+			return o;
+		})
+	);
 	focusedGameBoardObs = this.focusedGameBoard.asObservable();
 	currentlySelectedFieldObs = this.currentlySelectedField.asObservable();
 	helpWindowObs = this.helpWindow.asObservable();
@@ -88,14 +95,42 @@ export class GameService {
 		this.focusedGameBoard.next(boardData);
 	}
 
-	prepareRound2() {
+	goToNextLevel() {
+		var currentHighest = this.levels[this.levels.length - 1];
+
+		if (currentHighest == this.currentLevel.value) {
+			this.prepareLevel2();
+		} else {
+			var lvl = this.levels.find(o => o.levelNumber == (this.currentLevel.value!.levelNumber + 1))!;
+			this.currentLevel.next(lvl);
+			this.selectedFields.next(lvl.selectedFields);
+		}
+	}
+
+	goToPreviousLevel() {
+		this.loading();
+		var currentLowest = this.levels[0];
+
+		if (currentLowest != this.currentLevel.value) {
+			var lvl = this.levels.find(o => o.levelNumber == this.currentLevel.value!.levelNumber - 1)!;
+			this.currentLevel.next(lvl);
+			this.selectedFields.next(lvl.selectedFields);
+			this.loading(false);
+		}
+	}
+
+	prepareLevel2() {
 		this.loading();
 		var level2 = new Level();
+		level2.showConsequenceMaps = true;
 		this.levels.push(level2);
 
-		var level1Score = this.scoreService.createEmptyScoreEntry(this.currentLevel.value);
-		this.scoreService.calculateScore(level1Score, this.selectedFields.value);
-		level2.previousRoundScore = level1Score;
+		// var level1Score = this.scoreService.createEmptyScoreEntry(this.currentLevel.value);
+		// this.scoreService.calculateScore(level1Score, this.selectedFields.value);
+		this.currentLevel.value!.isReadOnly = true;
+		this.currentLevel.value!.selectedFields = this.selectedFields.value.map(o => {
+			return Object.assign({}, o);
+		});
 
 		if (this.settings.value.mode == 'GRID') {
 			combineLatest([
@@ -152,6 +187,7 @@ export class GameService {
 
 	initialiseSVGMode() {
 		var level = new Level();
+		this.levels.push(level);
 		this.settings.value.imageMode = false;
 		this.loading();
 
@@ -212,7 +248,15 @@ export class GameService {
 
 	openHelp(close = false) { this.helpWindow.next(!close); }
 
-	loading(show = true) { this.loadingIndicator.next(show); }
+	loading(show = true) { 
+		if (show) {
+			this.loadingIndicator.value.push(true);
+		} else {
+			this.loadingIndicator.value.pop();
+		}
+		this.loadingIndicator.next(this.loadingIndicator.value);
+	}
+
 
 	resetGame() {
 		this.currentLevel.next(null);

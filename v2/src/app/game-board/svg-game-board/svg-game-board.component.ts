@@ -38,7 +38,7 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 		});
     
 		this._sink.sink = this.svgFieldComponents.changes.subscribe(r => {
-      setTimeout(() => this.drawSelectedFields());
+			setTimeout(() => this.drawSelectedFields());
 		});
 	}
   
@@ -55,7 +55,6 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	}
 
   override afterBoardDataSet(): void {
-    console.log(this._boardData.background);
     this.background = `url("${this._boardData.background}")`;
   }
 }
