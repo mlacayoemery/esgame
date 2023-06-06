@@ -27,6 +27,8 @@ import { GridGameBoardComponent } from './game-board/grid-game-board/grid-game-b
 import { SvgFieldComponent } from './field/svg-field/svg-field.component';
 import { GridLevelComponent } from './level/grid-level/grid-level.component';
 import { SvgLevelComponent } from './level/svg-level/svg-level.component';
+import { LoadingIndicatorComponent } from './loading-indicator/loading-indicator.component';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner'; 
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http);
@@ -53,6 +55,7 @@ export function createTranslateLoader(http: HttpClient) {
 		GridGameBoardComponent,
 		GridLevelComponent,
 		SvgLevelComponent,
+		LoadingIndicatorComponent,
 	],
 	imports: [
 		BrowserModule,
@@ -65,6 +68,7 @@ export function createTranslateLoader(http: HttpClient) {
 		MatDividerModule,
 		MatButtonModule,
 		MatFormFieldModule,
+		MatProgressSpinnerModule,
 		TranslateModule.forRoot({
 			defaultLanguage: 'de',
 			loader: {
