@@ -11,24 +11,17 @@ import { FieldBaseComponent } from '../field-base.component';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SvgFieldComponent extends FieldBaseComponent {
-	@HostBinding('class.is-overlay') _isOverlay: boolean = false;
-
 	@HostBinding('style.fill') private fillColor: string;
 	@HostBinding('style.stroke') private stroke: string;
-
-	@Input() set isOverlay(isOverlay: boolean) {
-		this._isOverlay = isOverlay;
-	}
 
 	setColor(productionType: ProductionType | null = null) {
 		if (!this._field) return;
 
-
-		if (productionType && this._isOverlay) {
+		if (productionType && this.clickable) {
+			this.fillColor = `${productionType.fieldColor}`;
+		} else if(productionType) {
 			this.fillColor = `url(#pattern_${productionType.name.replace(' ', '')})`;
-		} else if(!this._isOverlay) {
-			this.fillColor = `#${this._field.type?.fieldColor}`;
-		} else if(this._isOverlay) {
+		} else {
 			this.fillColor = `transparent`;
 		}
 	}

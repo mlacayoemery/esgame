@@ -86,6 +86,11 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 		this.gameService.removeHighlight();
 	}
 
+	@HostListener('contextmenu', ['$event'])
+	preventContextMenu(event: Event) {
+		event.preventDefault();
+	}
+
 	private addClickListener() {
 		if (this.readOnly) return;
 		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'click', () => {

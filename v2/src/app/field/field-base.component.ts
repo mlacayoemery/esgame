@@ -11,6 +11,7 @@ export abstract class FieldBaseComponent implements OnDestroy {
 	@HostBinding('class.--is-assigned') public isAssigned = false;
 	protected _field: Field;
 	private _listeners: (() => void)[] = [];
+	private _clickable = false;
 
 	constructor(protected gameService: GameService, protected renderer: Renderer2, protected elementRef: ElementRef, protected cdRef: ChangeDetectorRef) { }
 
@@ -21,18 +22,22 @@ export abstract class FieldBaseComponent implements OnDestroy {
 
 	@Input() set clickable(clickable: any) {
 		if (clickable === false) {
+			this._clickable = false;
 			this.removeListeners();
 		} else {
+			this._clickable = true;
 			this.addListeners();
 		};
 	}
+
+	get clickable() { return this._clickable; }
 
 	get field(): Field {
 		return this._field;
 	}
 
 	addClickListener() {
-		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'click', () => {
+		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mousedown', () => {
 			if (this.field.assigned) this.gameService.deselectField(this.field.id);
 			else this.gameService.selectField(this.field.id);
 		}));
@@ -40,11 +45,10 @@ export abstract class FieldBaseComponent implements OnDestroy {
 
 	addHoverListener() {
 		//if (this._field.editable)
-			this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', (e) => {
-				let ev = e as MouseEvent
-				if(ev.buttons == 1)
+			this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', (e: MouseEvent) => {
+				if(e.buttons == 1)
 					this.gameService.selectField(this._field.id)
-				else if(ev.shiftKey)
+				else if(e.buttons == 2)
 					this.gameService.deselectField(this._field.id);
 				else 
 					this.gameService.highlightOnOtherFields(this._field.id);

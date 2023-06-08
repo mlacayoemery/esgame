@@ -3,6 +3,7 @@
 	display: inline;
 	outline: 1px solid black;
 	box-sizing: border-box;
+	user-select: none;
 
 	&.--is-highlighted {
 		outline: 1px solid #00E0FF;
