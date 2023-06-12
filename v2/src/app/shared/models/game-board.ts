@@ -10,8 +10,9 @@ export class GameBoard {
 	isSvg: boolean;
 	width: number;
 	height: number;
+	background: string;
 
-	constructor(gameBoardType: GameBoardType, fields: Field[], legend: Legend, name: string, isSvg = false, width = 0, height = 0) {
+	constructor(gameBoardType: GameBoardType, fields: Field[], legend: Legend, name: string, isSvg = false, width = 0, height = 0, background = "") {
 		this.fields = fields;
 		this.gameBoardType = gameBoardType;
 		this.legend = legend;
@@ -19,6 +20,7 @@ export class GameBoard {
 		this.isSvg = isSvg;
 		this.width = width;
 		this.height = height;
+		this.background = background;
 	}
 
 	getScore(ids: number[]) {
@@ -29,5 +31,5 @@ export class GameBoard {
 
 export enum GameBoardClickMode {
 	Field = "FIELD",
-	SelectBoard = "SELECTBOARD"
+	SelectBoard = "SELECTBOARD",
 }

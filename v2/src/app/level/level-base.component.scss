@@ -5,7 +5,7 @@
 	overflow: auto;
 
 	header {
-		margin-top: 15px;
+		margin: 15px 0px;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -40,6 +40,10 @@
 		gap: 30px;
 	}
 
+	.btn-prev {
+		justify-self: start;
+	}
+
 	.btn-next {
 		justify-self: end;
 	}
@@ -53,8 +57,8 @@
 	}
 
 	.score-board-wrapper {
-		display: flex;
-		justify-content: space-between;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
 		width: 100%;
 		align-items: start;
 		margin-top: 15px;

@@ -5,6 +5,7 @@ import { GameBoard, GameBoardClickMode } from '../shared/models/game-board';
 import { Settings } from '../shared/models/settings';
 import { Legend } from '../shared/models/legend';
 import { SubSink } from 'subsink';
+import { ProductionType } from '../shared/models/production-type';
 
 @Component({
 	template: '',
@@ -18,12 +19,14 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 	protected _highlightedFields: HighlightField[] = [];
 	protected _sink = new SubSink();
 	protected _listeners: (() => void)[] = [];
+	protected _readOnly = false;
 
 	fields: Field[] = [];
 	settings: Settings;
 	board: GameBoard | undefined;
 	legend: Legend;
 	GameBoardClickMode = GameBoardClickMode;
+	productionTypes: ProductionType[] = [];
 	@Input() set clickMode(mode: GameBoardClickMode) {
 		this._clickMode = mode;
 		if (mode == GameBoardClickMode.SelectBoard) {
@@ -42,8 +45,11 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 			this.fields = data.fields;
 			this.legend = data.legend;
 			this.board = data;
+			this.afterBoardDataSet();
 		}
 	}
+
+	abstract afterBoardDataSet(): void;
 
 	get boardData() { return this._boardData; }
 
@@ -54,6 +60,13 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 
 	get hideLegend() { return this._hideLegend; }
 
+	@Input() set readOnly(value: any) {
+		if (value === false) this._readOnly = false;
+		else this._readOnly = true;
+	}
+
+	get readOnly() { return this._readOnly; }
+
 	constructor(
 		protected gameService: GameService,
 		protected renderer: Renderer2,
@@ -63,6 +76,9 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 		this._sink.sink = this.gameService.settingsObs.subscribe(settings => {
 			this.settings = settings;
 		});
+		gameService.productionTypesObs.subscribe(prodTypes => {
+			this.productionTypes = prodTypes;
+		});
 	}
 
 	@HostListener('mouseleave')
@@ -70,7 +86,13 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 		this.gameService.removeHighlight();
 	}
 
+	@HostListener('contextmenu', ['$event'])
+	preventContextMenu(event: Event) {
+		event.preventDefault();
+	}
+
 	private addClickListener() {
+		if (this.readOnly) return;
 		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'click', () => {
 			if (this.boardData) {
 				this.gameService.selectGameBoard(this.boardData);

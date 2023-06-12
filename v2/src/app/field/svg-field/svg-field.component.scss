@@ -1,12 +1,10 @@
 :host{
     fill: transparent;
-    //stroke: black;
+	stroke: black;
+	stroke-width: .2px;
 
     &.--is-highlighted{
-        stroke:rgba(255, 0, 144, 0.782) !important;
-        stroke-width: 2px;
-    }
-    &.is-overlay {
-        stroke: rgba(0,0,0,0.8)
+        stroke:rgb(255, 0, 144);
+        stroke-width: 1px;
     }
 }

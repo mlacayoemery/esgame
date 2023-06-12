@@ -1,4 +1,8 @@
-<svg attr.viewBox="0 0 {{board?.width ?? 0}} {{board?.height ?? 0}}">
-	<path troSvgField [field]="field" *ngFor="let field of fields" [attr.d]="field.path"></path>
-	<path [isOverlay]="true" troSvgField [field]="field" *ngFor="let field of overlayFields" [attr.d]="field.path"></path>
+<svg [style.background-image]="background" attr.viewBox="0 0 {{board?.width ?? 0}} {{board?.height ?? 0}}">
+	<defs>
+		<pattern *ngFor="let productionType of productionTypes" [attr.id]="'pattern_' + productionType.name.replace(' ', '')" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">
+			<line x1="0" y="0" x2="0" y2="10" [attr.stroke]="productionType.fieldColor" stroke-width="10" />
+		</pattern>
+	</defs>
+	<path troSvgField [field]="field" [clickable]="clickMode == GameBoardClickMode.Field && field.editable  && !readOnly" *ngFor="let field of fields" [attr.d]="field.path"></path>
 </svg>

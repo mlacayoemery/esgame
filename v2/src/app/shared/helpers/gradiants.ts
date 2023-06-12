@@ -21,6 +21,14 @@ export class Gradient {
 
 		return hex(r) + hex(g) + hex(b);
 	}
+
+	calculateColorRGB(ratio: number) : number[] {
+		var r = Math.ceil(parseInt(this.startingColor.substring(0, 2), 16) * ratio + parseInt(this.endingColor.substring(0, 2), 16) * (1 - ratio));
+		var g = Math.ceil(parseInt(this.startingColor.substring(2, 4), 16) * ratio + parseInt(this.endingColor.substring(2, 4), 16) * (1 - ratio));
+		var b = Math.ceil(parseInt(this.startingColor.substring(4, 6), 16) * ratio + parseInt(this.endingColor.substring(4, 6), 16) * (1 - ratio));
+
+		return [r, g, b];
+	}
 }
 
 let gradients: Map<string, Gradient> = new Map<string, Gradient>();

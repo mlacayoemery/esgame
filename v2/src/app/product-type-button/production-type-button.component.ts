@@ -8,7 +8,7 @@ import { GameService } from '../services/game.service';
   styleUrls: ['./production-type-button.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ProductionTypeButtonComponent implements OnInit, AfterViewInit {
+export class ProductionTypeButtonComponent implements OnInit {
 	@Input() productionType: ProductionType;
 
 	@HostBinding('class.--active') isActive = false;
@@ -25,9 +25,6 @@ export class ProductionTypeButtonComponent implements OnInit, AfterViewInit {
 				this.backgroundColor = this.productionType.fieldColor;
 			}
 		});
-	}
-
-	ngAfterViewInit() {
 		this.gameService.selectedProductionTypeObs.subscribe(o => {
 			this.isActive = o == this.productionType;
 		});

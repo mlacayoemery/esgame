@@ -1,7 +1,12 @@
 svg {
-    width: 100%;
+    width: auto;
+    background-size: contain;
+	max-height: 100%;
+	background-position: center;
+	background-repeat: no-repeat;
 }
 
 :host {
     width: 100%;
+	display: flex;
 }

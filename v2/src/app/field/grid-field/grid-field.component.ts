@@ -20,14 +20,6 @@ export class GridFieldComponent extends FieldBaseComponent {
 		else this._imageMode = true;
 	}
 
-	@Input() set clickable(clickable: any) {
-		if (clickable === false) return;
-		else {
-			this.addClickListener();
-			this.addHoverListener();
-		};
-	}
-
 	get imageMode() { return this._imageMode; }
 
 	private _size: number = 10;
@@ -45,9 +37,9 @@ export class GridFieldComponent extends FieldBaseComponent {
 		gameService: GameService,
 		renderer: Renderer2,
 		elementRef: ElementRef,
-		private cdRef: ChangeDetectorRef
+		cdRef: ChangeDetectorRef
 	) {
-		super(gameService, renderer, elementRef);
+		super(gameService, renderer, elementRef, cdRef);
 		this._sink.sink = this.gameService.settingsObs.subscribe(settings => {
 			this.elementSize = settings.elementSize;
 			this.imageMode = settings.imageMode;
