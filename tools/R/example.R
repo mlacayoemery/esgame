@@ -1,4 +1,9 @@
 #* @get /hello
 hello <- function() {
-  print("hello")
+  print("Hello")
+}
+
+#* @post /hello
+hellothere <- function(req, text ="World!") {
+  print(paste("Hello ", text, sep = ""))
 }
