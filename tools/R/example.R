@@ -11,7 +11,7 @@ hellothere <- function(req, text ="World!") {
 }
 
 #* @post /hellojson
-hellojson <- function(req, jsontext ="[{\"who\" : \"World\"}]") {
+hellojson <- function(req, jsontext ="[{\"who\" : \"World!\"},{\"who\" : \"me!\"}]") {
   jsontext = fromJSON(jsontext, simplifyVector= TRUE)
   print(paste("Hello ", jsontext$who, sep = ""))
 }
