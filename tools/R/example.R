@@ -1,4 +1,5 @@
 library(jsonlite)
+#see https://cran.r-project.org/web/packages/jsonlite/vignettes/json-aaquickstart.html
 
 #* @get /hello
 hello <- function() {
