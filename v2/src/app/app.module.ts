@@ -18,7 +18,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { FormsModule, FormControl } from '@angular/forms';
+import { FormsModule, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -32,6 +32,7 @@ import { SvgLevelComponent } from './level/svg-level/svg-level.component';
 import { LoadingIndicatorComponent } from './loading-indicator/loading-indicator.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LevelIndicatorComponent } from './level-indicator/level-indicator.component';
+import { ImportConfigComponent } from './import-config/import-config.component';
 
 export function HttpLoaderFactory(http: HttpClient) {
 	return new TranslateHttpLoader(http);
@@ -60,6 +61,7 @@ export function createTranslateLoader(http: HttpClient) {
 		SvgLevelComponent,
 		LoadingIndicatorComponent,
 		LevelIndicatorComponent,
+		ImportConfigComponent,
 	],
 	imports: [
 		BrowserModule,
@@ -75,6 +77,7 @@ export function createTranslateLoader(http: HttpClient) {
 		MatProgressSpinnerModule,
 		MatCheckboxModule,
 		FormsModule,
+		ReactiveFormsModule,
 		//FormControl,
 		TranslateModule.forRoot({
 			defaultLanguage: 'de',

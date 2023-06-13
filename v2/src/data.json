@@ -1,11 +1,10 @@
 {
 	"imageMode": false,
 	"elementSize": 2,
-	"infiniteLeves": false,
+	"infiniteLevels": false,
 	"gameBoardColumns": 28,
 	"gameBoardRows": 29,
 	"productionTypes": [
-
 		{
 			"id": "",
 			"name": { "en": "", "de": ""},

@@ -1,8 +1,8 @@
 <h1>{{ 'configurator' | translate }}</h1>
-<form>
+<form [formGroup]="formGroup">
     <mat-form-field>
         <mat-label>Map types</mat-label>
-        <mat-select [(value)]="mapMode">
+        <mat-select formControlName="mapMode">
             <mat-option value="svg">
                 Zones
             </mat-option>
@@ -14,124 +14,132 @@
     <h2>{{ 'general' | translate}}</h2>
     <mat-form-field>
         <mat-label>{{ 'maps-width' | translate}}</mat-label>
-        <input type="number" matInput placeholder="0" name="maps-width" [(ngModel)]="mapWidth" required>
+        <input type="number" matInput placeholder="0" name="maps-width" formControlName="gameBoardColumns" required>
     </mat-form-field>
     <mat-form-field>
         <mat-label>{{ 'maps-length' | translate}}</mat-label>
-        <input type="number" matInput placeholder="0" name="maps-height" [(ngModel)]="mapHeight" required>
+        <input type="number" matInput placeholder="0" name="maps-height" formControlName="gameBoardRows" required>
     </mat-form-field>
     <mat-form-field>
         <mat-label>{{ 'selection-size' | translate}}</mat-label>
-        <input type="number" matInput placeholder="0" name="slection-size" [(ngModel)]="selectionSize"
-            [disabled]="mapMode == 'svg'" required>
+        <input type="number" matInput placeholder="0" name="slection-size" formControlName="elementSize"
+            [disabled]="formGroup.get('mapMode')!.value == 'svg'" required>
     </mat-form-field>
-    <mat-checkbox [(ngModel)]="infiniteLevels">{{ 'infinite-levels' | translate}}</mat-checkbox>
+    <mat-checkbox formControlName="infiniteLevels">{{ 'infinite-levels' | translate}}</mat-checkbox>
     <h2>{{ 'agriculture-types' | translate }}</h2>
-    <ng-container *ngFor="let type of agircultureTypes; let i = index">
-        <div>
-            <mat-form-field *ngFor="let lang of languages">
-                <mat-label>{{ 'name' | translate}} ({{lang}})</mat-label>
-                <input type="text" matInput name="agTypes-name-{{i+lang}}" [(ngModel)]="type.name[lang]" required>
-            </mat-form-field>
+    <div formArrayName="productionTypes">
+        <div *ngFor="let type of productionTypes.controls; let i = index" [formGroupName]="i">
+			<ng-container formGroupName="name">
+				<mat-form-field *ngFor="let lang of languages">
+					<mat-label>{{ 'name' | translate}} ({{lang}})</mat-label>
+					<input type="text" matInput name="agTypes-name-{{i+lang}}" [formControlName]="lang" required>
+				</mat-form-field>
+			</ng-container>
             <mat-form-field>
                 <mat-label>{{ 'highlight-color' | translate}}</mat-label>
-                <input type="text" matInput name="highlight-color-{i}" [(ngModel)]="type.fieldColor" required>
+                <input type="text" matInput name="highlight-color-{i}" formControlName="fieldColor" required>
             </mat-form-field>
             <mat-form-field>
                 <mat-label>{{ 'icon-url' | translate}}</mat-label>
-                <input type="url" matInput name="icon-url-{i}" placeholder="https://..." [(ngModel)]="type.urlToIcon" required>
+                <input type="url" matInput name="icon-url-{i}" placeholder="https://..." formControlName="urlToIcon" required>
             </mat-form-field>
             <mat-form-field>
                 <mat-label>{{ 'max-elements' | translate}}</mat-label>
-                <input type="number" matInput name="max-elements-{i}" [(ngModel)]="type.maxElements" required>
+                <input type="number" matInput name="max-elements-{i}" formControlName="maxElements" required>
             </mat-form-field>
             <button type="button" mat-raised-button (click)="removeAgricultureType(i)" color="primary"
                 aria-label="Add map">
                 <mat-icon>delete</mat-icon> {{ 'remove-agriculture-type' | translate}}
             </button>
         </div>
-    </ng-container>
+    </div>
     <button type="button" mat-raised-button (click)="addAgricultureType()" color="primary" aria-label="Add map">
         <mat-icon>add</mat-icon> {{ 'new-agriculture-type' | translate}}
     </button>
     <h2>{{ 'maps' | translate}}</h2>
-    <ng-container *ngFor="let map of maps; let i = index">
-        <div>
-            <mat-form-field *ngFor="let lang of languages">
-                <mat-label>{{ 'name' | translate}} ({{lang}})</mat-label>
-                <input type="text" matInput placeholder="0" name="maps-name-{{i + lang}}" [(ngModel)]="map.name[lang]" required>
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>{{ 'map-url' | translate}}</mat-label>
-                <input type="url" matInput placeholder="https://..." name="map-{{i}}-url" [(ngModel)]="map.urlToData"
-                    required />
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>{{ 'map-Color' | translate}}</mat-label>
-                <mat-select [(value)]="map.gradient">
-                    <mat-option value="green">
-                        Green
-                    </mat-option>
-                    <mat-option value="red">
-                        Red
-                    </mat-option>
-                    <mat-option value="blue">
-                        Blue
-                    </mat-option>
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>{{ 'game-board-type' | translate}}</mat-label>
-                <mat-select [(value)]="map.gameBoardType">
-                    <mat-option value="Suitablity">
-                        Suitablity
-                    </mat-option>
-                    <mat-option *ngIf="mapMode == 'svg'" value="Drawing">
-                        Drawing
-                    </mat-option>
-                    <mat-option value="Consequence">
-                        Consequence
-                    </mat-option>
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>{{ 'agriculture-types' | translate}}</mat-label>
-                <mat-select [(value)]="map.agricultueTypes" multiple>
-                    <mat-option [disabled]="maps.length == 0" *ngFor="let type of agircultureTypes" [value]="type.id">{{type.name['en']}}</mat-option>
-                </mat-select>
-                <mat-hint *ngIf="maps.length == 0">
-                    {{'no-agriculture-types' | translate}}
-                </mat-hint>
-            </mat-form-field>
-            <button type="button" mat-raised-button (click)="removeMap(i)" color="primary" aria-label="Remove map">
-                <mat-icon>delete</mat-icon> {{ 'remove-map' | translate}}
-            </button>
-        </div>
-    </ng-container>
+	<ng-container formArrayName="maps">
+			<div  *ngFor="let map of maps.controls; let i = index" [formGroupName]="i">
+				<ng-container formGroupName="name">
+					<mat-form-field *ngFor="let lang of languages">
+						<mat-label>{{ 'name' | translate}} ({{lang}})</mat-label>
+						<input type="text" matInput placeholder="0" name="maps-name-{{i + lang}}" [formControlName]="lang" required>
+					</mat-form-field>
+				</ng-container>
+				<mat-form-field>
+					<mat-label>{{ 'map-url' | translate}}</mat-label>
+					<input type="url" matInput placeholder="https://..." name="map-{{i}}-url" formControlName="urlToData"
+						required />
+				</mat-form-field>
+				<mat-form-field>
+					<mat-label>{{ 'map-Color' | translate}}</mat-label>
+					<mat-select formControlName="gradient">
+						<mat-option value="green">
+							Green
+						</mat-option>
+						<mat-option value="red">
+							Red
+						</mat-option>
+						<mat-option value="blue">
+							Blue
+						</mat-option>
+					</mat-select>
+				</mat-form-field>
+				<mat-form-field>
+					<mat-label>{{ 'game-board-type' | translate}}</mat-label>
+					<mat-select formControlName="gameBoardType">
+						<mat-option value="Suitablity">
+							Suitablity
+						</mat-option>
+						<mat-option *ngIf="mapMode == 'svg'" value="Drawing">
+							Drawing
+						</mat-option>
+						<mat-option value="Consequence">
+							Consequence
+						</mat-option>
+					</mat-select>
+				</mat-form-field>
+				<mat-form-field>
+					<mat-label>{{ 'agriculture-types' | translate}}</mat-label>
+					 <mat-select formControlName="productionTypes" multiple>
+						<mat-option *ngFor="let type of productionTypes.controls" [value]="type.get('id')!.value">{{type.get('name')!.get('en')!.value}}</mat-option>
+					</mat-select>
+					<mat-hint *ngIf="maps.length == 0">
+						{{'no-agriculture-types' | translate}}
+					</mat-hint>
+				</mat-form-field>
+				<button type="button" mat-raised-button (click)="removeMap(i)" color="primary" aria-label="Remove map">
+					<mat-icon>delete</mat-icon> {{ 'remove-map' | translate}}
+				</button>
+			</div>
+	</ng-container>
     <button type="button" mat-raised-button (click)="addMap()" color="primary" aria-label="Add map">
         <mat-icon>add</mat-icon> {{ 'new-map' | translate}}
     </button>
     <h2>{{ 'levels' | translate}}</h2>
-    <ng-container *ngFor="let level of levels; let i = index">
-        <div>
-            <mat-form-field *ngFor="let lang of languages">
-                <mat-label>{{ 'name' | translate}} ({{lang}})</mat-label>
-                <input type="text" matInput placeholder="0" name="levels-name-{{i+lang}}" [(ngModel)]="level.name[lang]" required>
-            </mat-form-field>
+    <ng-container *ngFor="let level of levels.controls; let i = index" formArrayName="levels">
+        <div [formGroupName]="i">
+			<ng-container formGroupName="name">
+				<mat-form-field *ngFor="let lang of languages">
+					<mat-label>{{ 'name' | translate}} ({{lang}})</mat-label>
+					<input type="text" matInput placeholder="0" name="levels-name-{{i+lang}}" [formControlName]="lang" required>
+				</mat-form-field>
+			</ng-container>
             <mat-form-field>
                 <mat-label>{{ 'maps' | translate}}</mat-label>
-                <mat-select [(value)]="level.maps" multiple>
-                    <mat-option [disabled]="maps.length == 0" *ngFor="let map of maps"
-                        [value]="map.id">{{map.name['en']}}</mat-option>
+                <mat-select formControlName="maps" multiple>
+                    <mat-option [disabled]="maps.length == 0" *ngFor="let map of maps.controls"
+                        [value]="map.get('id')!.value">{{map.get('name')!.get('en')!.value}}</mat-option>
                 </mat-select>
-                <mat-hint *ngIf="maps.length == 0">
+                <mat-hint *ngIf="maps.controls.length == 0">
                     {{'no-maps' | translate}}
                 </mat-hint>
             </mat-form-field>
-            <mat-form-field *ngFor="let lang of languages">
-                <mat-label>{{ 'instructions' | translate}} ({{lang}})</mat-label>
-                <textarea matInput placeholder="0" name="levels-instructions-{{i+lang}}" [(ngModel)]="level.instructions[lang]" required></textarea>
-            </mat-form-field>
+			<ng-container formGroupName="instructions">
+				<mat-form-field *ngFor="let lang of languages">
+					<mat-label>{{ 'instructions' | translate}} ({{lang}})</mat-label>
+					<textarea matInput placeholder="0" name="levels-instructions-{{i+lang}}" [formControlName]="lang" required></textarea>
+				</mat-form-field>
+			</ng-container>
             <button type="button" mat-raised-button (click)="removeLevel(i)" color="primary" aria-label="Remove level">
                 <mat-icon>delete</mat-icon> {{ 'remove-level' | translate}}
             </button>
