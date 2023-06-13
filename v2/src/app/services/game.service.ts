@@ -165,7 +165,11 @@ export class GameService {
 				this.tiffService.getSvgGameBoard("/assets/images/Consequence_4_habitat_fragmentation.tif", GameBoardType.ConsequenceMap, "Habitat Fragmentation", DefaultGradients.Green),
 			]).subscribe((gameBoards) => {
 				const overlay = this.currentLevel.value!.gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
-				gameBoards.forEach(o => o.fields = overlay.fields);
+				gameBoards.forEach(o => {
+					o.fields = overlay.fields
+					o.width = overlay.width;
+					o.height = overlay.height;
+				});
 
 				level2.gameBoards.push(...this.currentLevel.value!.gameBoards);
 				level2.gameBoards.push(...gameBoards);
@@ -208,7 +212,10 @@ export class GameService {
 			this.tiffService.getSvgGameBoard("/assets/images/land_use_only_raster.tif", GameBoardType.SuitabilityMap, "Intensive Livestock Land", undefined, customColors),
 		]).subscribe((gameBoards) => {
 			const overlay = gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
-			gameBoards.forEach(o => o.fields = overlay.fields);
+			gameBoards.forEach(o => {
+				o.fields = overlay.fields;
+				o.width = overlay.width;
+				o.height = overlay.height;});
 
 
 			this.productionTypes.value.push(new ProductionType("#f8cbad", gameBoards[1], "Extensives Ackerland"));
