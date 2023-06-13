@@ -7,7 +7,7 @@ import { Settings } from '../shared/models/settings';
 import { ProductionType } from '../shared/models/production-type';
 import { HighlightField, HighlightSide, SelectedField } from '../shared/models/field';
 import { TiffService } from './tiff.service';
-import { DefaultGradients } from '../shared/helpers/gradiants';
+import { CustomColors, DefaultGradients } from '../shared/helpers/gradients';
 import { ScoreService } from './score.service';
 
 @Injectable({
@@ -159,10 +159,10 @@ export class GameService {
 			});
 		} else if (this.settings.value.mode == 'SVG') {
 			combineLatest([
-				this.tiffService.getSvgGameBoard("/assets/images/Consequence_1_air_quality.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Air Quality"),
-				this.tiffService.getSvgGameBoard("/assets/images/Consequence_2_water_quality.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Water Quality"),
-				this.tiffService.getSvgGameBoard("/assets/images/Consequence_3_water_availability.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Water Availability"),
-				this.tiffService.getSvgGameBoard("/assets/images/Consequence_4_habitat_fragmentation.tif", DefaultGradients.Green, GameBoardType.ConsequenceMap, "Habitat Fragmentation"),
+				this.tiffService.getSvgGameBoard("/assets/images/Consequence_1_air_quality.tif", GameBoardType.ConsequenceMap, "Air Quality", DefaultGradients.Green),
+				this.tiffService.getSvgGameBoard("/assets/images/Consequence_2_water_quality.tif", GameBoardType.ConsequenceMap, "Water Quality", DefaultGradients.Green),
+				this.tiffService.getSvgGameBoard("/assets/images/Consequence_3_water_availability.tif", GameBoardType.ConsequenceMap, "Water Availability", DefaultGradients.Green),
+				this.tiffService.getSvgGameBoard("/assets/images/Consequence_4_habitat_fragmentation.tif", GameBoardType.ConsequenceMap, "Habitat Fragmentation", DefaultGradients.Green),
 			]).subscribe((gameBoards) => {
 				const overlay = this.currentLevel.value!.gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
 				gameBoards.forEach(o => o.fields = overlay.fields);
@@ -189,13 +189,23 @@ export class GameService {
 		this.levels.push(level);
 		this.settings.value.imageMode = false;
 		this.loading();
+		var customColors = new CustomColors();
+		customColors.set(2, "a8a800");
+		customColors.set(3, "73b2ff");
+		customColors.set(4, "70a800");
+		customColors.set(5, "CCCCCC");
+		customColors.set(6, "00734c");
+		customColors.set(7, "828282");
+		customColors.set(8, "98e600");
+		customColors.set(15, "e69800");
 
 		combineLatest([
-			this.tiffService.getSvgGameBoard("/assets/images/zonal_raster.tif", DefaultGradients.Blue, GameBoardType.DrawingMap, "Zonen"),
-			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_ext_zone.tif", DefaultGradients.Green, GameBoardType.SuitabilityMap, "Extensive Arable Land"),
-			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_int_zone.tif", DefaultGradients.Blue, GameBoardType.SuitabilityMap, "Intensive Arable Land"),
-			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_ext_zone.tif", DefaultGradients.Purple, GameBoardType.SuitabilityMap, "Extensive Livestock Land"),
-			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zone.tif", DefaultGradients.Red, GameBoardType.SuitabilityMap, "Intensive Livestock Land"),
+			this.tiffService.getSvgGameBoard("/assets/images/hexagon_raster.tif", GameBoardType.DrawingMap, "Zonen", DefaultGradients.Blue),
+			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_ext_zone.tif", GameBoardType.SuitabilityMap, "Extensive Arable Land", DefaultGradients.Green),
+			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_int_zone.tif", GameBoardType.SuitabilityMap, "Intensive Arable Land", DefaultGradients.Blue),
+			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_ext_zone.tif", GameBoardType.SuitabilityMap, "Extensive Livestock Land", DefaultGradients.Purple),
+			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zone.tif", GameBoardType.SuitabilityMap, "Intensive Livestock Land", DefaultGradients.Red),
+			this.tiffService.getSvgGameBoard("/assets/images/land_use_only_raster.tif", GameBoardType.SuitabilityMap, "Intensive Livestock Land", undefined, customColors),
 		]).subscribe((gameBoards) => {
 			const overlay = gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
 			gameBoards.forEach(o => o.fields = overlay.fields);

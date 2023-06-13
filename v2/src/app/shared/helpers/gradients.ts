@@ -50,4 +50,29 @@ export enum DefaultGradients {
 	Yellow = 'yellow'
 }
 
+export class CustomColors {
+	private colors = new Map<number, string>();
 
+	get(i: number) {
+		const returnVal = this.colors.get(i);
+		if (!returnVal) return "FFFFFF";
+		return returnVal;
+	}
+
+	set(key: number, value: string) {
+		this.colors.set(key, value);
+	}
+
+	getRgb(i: number) {
+		return this.colorToRgb(this.colors.get(i));
+	}
+
+	colorToRgb(hex: string | undefined) {
+		if (!hex) return [255, 255, 255];
+		const r = hex.slice(0, 2);
+		const g = hex.slice(2, 4);
+		const b = hex.slice(4, 6);
+
+		return [parseInt(r, 16), parseInt(g, 16), parseInt(b, 16)];
+	}
+}

@@ -2,7 +2,7 @@ import { TiffService } from 'src/app/services/tiff.service';
 import { FieldType } from '../../shared/models/field-type';
 import { Field } from '../models/field';
 import { BehaviorSubject } from 'rxjs';
-import gradients, { DefaultGradients } from './gradiants';
+import gradients, { DefaultGradients } from './gradients';
 import { Legend } from '../models/legend';
 
 export class V1GameBoard {
