@@ -48,6 +48,7 @@ export class TiffService {
 					const minValue = Math.min(...uniqueValues);
 					
 					fields = Array.from(data.paths).map(([key, value], i) => {
+						console.log(key, data.nodata, key == data.nodata);
 						return new Field(key, new FieldType(gradient?.calculateColor(1 / (maxValue - minValue) * (key - minValue)) ?? "", "CONFIGURED"), key, null, key != data.nodata, undefined, value);
 					});
 	
@@ -104,13 +105,13 @@ export class TiffService {
 		const tiff = await fromUrl(url);
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
-		const array = Array.from(raster.map(c => c as number));
+		const array = Array.from(raster.map(c => Number.parseFloat(c.toString())));
 
 		//TODO: Only if it is drawing map
 		const paths = tiffToSvgPaths(array, { width: image.getWidth(), height: undefined, scale: 1 });
 		const newArray = array.map(c => c < 0 ? 255 : c)
 		const dataUrl = await this.arrayToImage(newArray, image.getWidth(), gradient, colors);
-		const result = { width: image.getWidth(), height: image.getHeight(), paths, dataUrl, nodata: Number.parseInt(image.fileDirectory.GDAL_NODATA) };
+		const result = { width: image.getWidth(), height: image.getHeight(), paths, dataUrl, nodata: Number.parseFloat(image.fileDirectory.GDAL_NODATA) };
 
 		return result;
 	}
@@ -120,7 +121,7 @@ export class TiffService {
 		const tiff = await fromUrl(url);
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
-		const result = Array.from(raster.map(c => c as number));
+		const result = Array.from(raster.map(c => Number.parseFloat(c.toString())));
 
 		return result;
 	}
