@@ -38,7 +38,7 @@ export class TiffService {
 			mergeMap(data => {
 				let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
 				
-				uniqueValues = data.numRaster.filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a - b);
+				uniqueValues = Array.from(new Set(data.numRaster)).sort((a, b) => a - b);
 				gradient = gradients.get(defaultGradient!);
 				legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap };
 				
@@ -57,7 +57,7 @@ export class TiffService {
 	}
 
 	getOverlayGameBoard(url: string, gameBoardType: GameBoardType, name: string) {
-		return this.getTiffSvgData(url).pipe(
+		return this.getTiffSvgData2(url).pipe(
 			mergeMap(data => {
 				let fields: Field[];
 
@@ -90,7 +90,24 @@ export class TiffService {
 		return from(this.tiffToPaths(url, gradient, colors));
 	}
 
+	public getTiffSvgData2(url: string) {
+		return from(this.tiffToPaths2(url));
+	}
+
 	private async tiffToPaths(url: string, gradient?: Gradient, colors?: CustomColors) {
+		const tiff = await fromUrl(url);
+		const image = await tiff.getImage();
+		const raster = await image.readRasters({ interleave: true });
+		const numRaster = Array.from(raster.map(c => c as number));
+		const width = image.getWidth();
+		const height = image.getHeight();
+		const nodata = image.getGDALNoData()!;
+
+		const dataUrl = await this.arrayToImage(numRaster, width, nodata, gradient, colors);
+		return { width, height, dataUrl, nodata, numRaster };
+	}
+
+	private async tiffToPaths2(url: string) {
 		const tiff = await fromUrl(url);
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
@@ -106,9 +123,7 @@ export class TiffService {
 				startPos: numRaster.indexOf(key)
 			});
 		});
-		console.log(url, image.getGDALNoData());
-		const dataUrl = await this.arrayToImage(numRaster, image.getWidth(), image.getGDALNoData()!, gradient, colors);
-		return { width: image.getWidth(), height: image.getHeight(), pathArray, dataUrl, nodata: image.getGDALNoData(), numRaster };
+		return { width: image.getWidth(), height: image.getHeight(), pathArray, nodata: image.getGDALNoData() };
 	}
 
 	private async tiffToArray(url: string): Promise<number[]> {
@@ -130,7 +145,7 @@ export class TiffService {
 	private async arrayToImage(data: number[], columns: number, noData: number, gradient?: Gradient, colors?: CustomColors): Promise<string> {
 		const height = data.length / columns;
 		const tmpArray = []
-		const uniqueValues = data.filter((v, i, a) => a.indexOf(v) === i).filter(c => {
+		const uniqueValues = Array.from(new Set(data)).filter(c => {
 			return Number.parseInt(c.toString()) != Number.parseInt(noData.toString())}).sort((a, b) => a - b);
 		if (gradient) {
 			const maxValue = Math.max(...uniqueValues);
@@ -150,8 +165,7 @@ export class TiffService {
 		}
 
 		//const buffer = writeArrayBuffer(tmpArray, { width: columns, height: height, GDAL_NODATA: "-1" }) as ArrayBufferLike;
-		const dataUrl = this.arrayToDataUrl(tmpArray, columns, height);
-		return dataUrl;
+		return this.arrayToDataUrl(tmpArray, columns, height);
 	}
 
 	// Source: https://stackoverflow.com/questions/22823752/creating-image-from-array-in-javascript-and-html5
