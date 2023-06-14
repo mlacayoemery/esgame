@@ -24,7 +24,7 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 	fields: Field[] = [];
 	settings: Settings;
 	board: GameBoard | undefined;
-	legend: Legend;
+	legend: Legend | undefined;
 	GameBoardClickMode = GameBoardClickMode;
 	productionTypes: ProductionType[] = [];
 	@Input() set clickMode(mode: GameBoardClickMode) {

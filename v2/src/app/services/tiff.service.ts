@@ -26,59 +26,48 @@ export class TiffService {
 				fields = data.map((o, i) => {
 					return new Field(i, new FieldType(gradient!.colors[(uniqueValues.indexOf(o))] as string, "CONFIGURED"), o);
 				});
-				const gameBoard = new GameBoard(gameBoardType, fields, legend, name);
+				const gameBoard = new GameBoard(gameBoardType, fields, name, legend);
 
 				return of(gameBoard);
 			})
 		);
 	}
 
-	getSvgGameBoard(url: string, gameBoardType: GameBoardType, name: string, defaultGradient?: DefaultGradients, customColors?: CustomColors) {
-		if (!defaultGradient && !customColors) defaultGradient = DefaultGradients.Orange;
-		if (defaultGradient) {
-			return this.getTiffSvgData(url, gradients.get(defaultGradient)!).pipe(
-				mergeMap(data => {
-					let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
-					
-					uniqueValues = Array.from(data.paths.keys()).sort((a, b) => a - b).filter(a => a > 0);
-					console.log(uniqueValues.length);
-					gradient = gradients.get(defaultGradient!);
-					legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap };
-					const maxValue = Math.max(...uniqueValues);
-					const minValue = Math.min(...uniqueValues);
-					
-					fields = Array.from(data.paths).map(([key, value], i) => {
-						console.log(key, data.nodata, key == data.nodata);
-						return new Field(key, new FieldType(gradient?.calculateColor(1 / (maxValue - minValue) * (key - minValue)) ?? "", "CONFIGURED"), key, null, key != data.nodata, undefined, value);
-					});
-	
-					const gameBoard = new GameBoard(gameBoardType, fields, legend, name, true, data.width, data.height, data.dataUrl);
-	
-					return of(gameBoard);
-				})
-			);
-		} else {
-			return this.getTiffSvgData(url, undefined, customColors).pipe(
-				mergeMap(data => {
-					console.log('custom colors');
-					let uniqueValues: number[], legend: Legend, fields: Field[];
-	
-					uniqueValues = Array.from(data.paths.keys()).sort((a, b) => a - b).filter(a => a > 0);
-					legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: customColors!.get(i) }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap };
-					const maxValue = Math.max(...uniqueValues);
-					const minValue = Math.min(...uniqueValues);
-	
-					fields = Array.from(data.paths).map(([key, value], i) => {
-						return new Field(key, new FieldType(customColors!.get(key), "CONFIGURED"), key, null, key != data.nodata, undefined, value);
-					});
-	
-	
-					const gameBoard = new GameBoard(gameBoardType, fields, legend, name, true, data.width, data.height, data.dataUrl);
-	
-					return of(gameBoard);
-				})
-			);
-		}
+	getSvgGameBoard(url: string, gameBoardType: GameBoardType, name: string, defaultGradient: DefaultGradients, overlay: GameBoard) {
+		return this.getTiffSvgData(url, gradients.get(defaultGradient)!).pipe(
+			mergeMap(data => {
+				let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
+				
+				uniqueValues = data.numRaster.filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => a - b);
+				gradient = gradients.get(defaultGradient!);
+				legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap };
+				
+				fields = overlay.fields.map((field) => {
+					return {
+						...field,
+						score: data.numRaster[field.id],
+					}
+				});
+
+				const gameBoard = new GameBoard(gameBoardType, fields, name, legend, true, data.width, data.height, data.dataUrl);
+
+				return of(gameBoard);
+			})
+		);
+	}
+
+	getOverlayGameBoard(url: string, gameBoardType: GameBoardType, name: string) {
+		return this.getTiffSvgData(url).pipe(
+			mergeMap(data => {
+				let fields: Field[];
+
+				fields = data.pathArray.map(path => {
+					return new Field(path.startPos, new FieldType("", "CONFIGURED"), 0, null, Number.parseInt(path.id.toString()) != Number.parseInt(data.nodata!.toString()), undefined, path.path);
+				});
+
+				return of(new GameBoard(gameBoardType, fields, name, undefined, true, data.width, data.height));
+			})
+		);
 	}
 
 	getSvgBackground(url: string, customColors: CustomColors): Observable<string> {
@@ -105,17 +94,22 @@ export class TiffService {
 		const tiff = await fromUrl(url);
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
-		const array = Array.from(raster.map(c => Number.parseFloat(c.toString())));
+		const numRaster = Array.from(raster.map(c => Number.parseFloat(c.toString())));
 
 		//TODO: Only if it is drawing map
-		const paths = tiffToSvgPaths(array, { width: image.getWidth(), height: undefined, scale: 1 });
-		const newArray = array.map(c => c < 0 ? 255 : c)
-		const dataUrl = await this.arrayToImage(newArray, image.getWidth(), gradient, colors);
-		const result = { width: image.getWidth(), height: image.getHeight(), paths, dataUrl, nodata: Number.parseFloat(image.fileDirectory.GDAL_NODATA) };
-
-		return result;
+		const paths = tiffToSvgPaths(numRaster, { width: image.getWidth(), height: undefined, scale: 1 });
+		let pathArray: { id: number, path: string, startPos: number }[] = [];
+		paths.forEach((val, key) => {
+			pathArray.push({
+				id: key,
+				path: val,
+				startPos: numRaster.indexOf(key)
+			});
+		});
+		console.log(url, image.getGDALNoData());
+		const dataUrl = await this.arrayToImage(numRaster, image.getWidth(), image.getGDALNoData()!, gradient, colors);
+		return { width: image.getWidth(), height: image.getHeight(), pathArray, dataUrl, nodata: image.getGDALNoData(), numRaster };
 	}
-
 
 	private async tiffToArray(url: string): Promise<number[]> {
 		const tiff = await fromUrl(url);
@@ -133,22 +127,23 @@ export class TiffService {
 		return result;
 	}
 
-	private async arrayToImage(data: number[], columns: number, gradient?: Gradient, colors?: CustomColors): Promise<string> {
+	private async arrayToImage(data: number[], columns: number, noData: number, gradient?: Gradient, colors?: CustomColors): Promise<string> {
 		const height = data.length / columns;
 		const tmpArray = []
-		const uniqueValues = Array.from(new Set(data)).filter(c => c > 0 && c != 255).sort((a, b) => a - b);
+		const uniqueValues = data.filter((v, i, a) => a.indexOf(v) === i).filter(c => {
+			return Number.parseInt(c.toString()) != Number.parseInt(noData.toString())}).sort((a, b) => a - b);
 		if (gradient) {
 			const maxValue = Math.max(...uniqueValues);
 			const minValue = Math.min(...uniqueValues);
 			for (var i = 0; i < data.length; i++) {
-				if (data[i] == 255 || data[i] < 0) {
+				if (Number.parseInt(data[i].toString()) == Number.parseInt(noData.toString())) {
 					tmpArray.push(255, 255, 255, 0);
 				} else {
 					var toAdd = gradient.calculateColorRGB(1 / (maxValue - minValue) * (data[i] - minValue))
 					tmpArray.push(...toAdd, 255);
 				}
 			}
-		} else {
+		} else if (colors) {
 			data.forEach(value => {
 				tmpArray.push(...colors!.getRgb(value)!);
 			});

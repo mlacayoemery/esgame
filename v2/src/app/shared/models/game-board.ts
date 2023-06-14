@@ -5,7 +5,7 @@ import { GameBoardType } from "./game-board-type";
 export class GameBoard {
 	fields: Field[];
 	gameBoardType: GameBoardType;
-	legend: Legend;
+	legend: Legend | undefined;
 	name: string;
 	isSvg: boolean;
 	width: number;
@@ -13,7 +13,7 @@ export class GameBoard {
 	background: string;
 	background2: string;
 
-	constructor(gameBoardType: GameBoardType, fields: Field[], legend: Legend, name: string, isSvg = false, width = 0, height = 0, background = "", background2 = "") {
+	constructor(gameBoardType: GameBoardType, fields: Field[], name: string, legend?: Legend, isSvg = false, width = 0, height = 0, background = "", background2 = "") {
 		this.fields = fields;
 		this.gameBoardType = gameBoardType;
 		this.legend = legend;

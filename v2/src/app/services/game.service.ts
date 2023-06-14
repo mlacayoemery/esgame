@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, combineLatest, tap, timeout } from 'rxjs';
+import { BehaviorSubject, combineLatest, combineLatestAll, map, switchMap, tap, timeout } from 'rxjs';
 import { GameBoard } from '../shared/models/game-board';
 import { GameBoardType } from '../shared/models/game-board-type';
 import { Level } from '../shared/models/level';
 import { Settings } from '../shared/models/settings';
 import { ProductionType } from '../shared/models/production-type';
-import { HighlightField, HighlightSide, SelectedField } from '../shared/models/field';
+import { Field, HighlightField, HighlightSide, SelectedField } from '../shared/models/field';
 import { TiffService } from './tiff.service';
 import { CustomColors, DefaultGradients } from '../shared/helpers/gradients';
 import { ScoreService } from './score.service';
@@ -159,13 +159,14 @@ export class GameService {
 				this.loading(false);
 			});
 		} else if (this.settings.value.mode == 'SVG') {
+			const overlay = this.currentLevel.value!.gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
+
 			combineLatest([
-				this.tiffService.getSvgGameBoard("/assets/images/Consequence_1_air_quality.tif", GameBoardType.ConsequenceMap, "Air Quality", DefaultGradients.Green),
-				this.tiffService.getSvgGameBoard("/assets/images/Consequence_2_water_quality.tif", GameBoardType.ConsequenceMap, "Water Quality", DefaultGradients.Green),
-				this.tiffService.getSvgGameBoard("/assets/images/Consequence_3_water_availability.tif", GameBoardType.ConsequenceMap, "Water Availability", DefaultGradients.Green),
-				this.tiffService.getSvgGameBoard("/assets/images/Consequence_4_habitat_fragmentation.tif", GameBoardType.ConsequenceMap, "Habitat Fragmentation", DefaultGradients.Green),
+				this.tiffService.getSvgGameBoard("/assets/images/Consequence_1_Clip.tif", GameBoardType.ConsequenceMap, "Air Quality", DefaultGradients.Green, overlay),
+				this.tiffService.getSvgGameBoard("/assets/images/Consequence_2_Clip.tif", GameBoardType.ConsequenceMap, "Water Quality", DefaultGradients.Green, overlay),
+				this.tiffService.getSvgGameBoard("/assets/images/Consequence_3_Clip.tif", GameBoardType.ConsequenceMap, "Water Availability", DefaultGradients.Green, overlay),
+				this.tiffService.getSvgGameBoard("/assets/images/Consequence_4_Clip.tif", GameBoardType.ConsequenceMap, "Habitat Fragmentation", DefaultGradients.Green, overlay),
 			]).subscribe((gameBoards) => {
-				const overlay = this.currentLevel.value!.gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
 				gameBoards.forEach(o => {
 					o.fields = overlay.fields
 					o.width = overlay.width;
@@ -204,20 +205,31 @@ export class GameService {
 		customColors.set(8, "98e600");
 		customColors.set(15, "00000000");
 
-		combineLatest([
-			this.tiffService.getSvgGameBoard("/assets/images/hexagon_raster.tif", GameBoardType.DrawingMap, "Zonen", DefaultGradients.Blue),
-			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_ext_zone.tif", GameBoardType.SuitabilityMap, "Extensive Arable Land", DefaultGradients.Green),
-			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_int_zone.tif", GameBoardType.SuitabilityMap, "Intensive Arable Land", DefaultGradients.Blue),
-			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_ext_zone.tif", GameBoardType.SuitabilityMap, "Extensive Livestock Land", DefaultGradients.Purple),
-			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zone.tif", GameBoardType.SuitabilityMap, "Intensive Livestock Land", DefaultGradients.Red),
-			this.tiffService.getSvgBackground("/assets/images/land_use_only_raster.tif", customColors),
-		]).subscribe(([overlay, gameboard2, gameboard3, gameboard4, gameboard5, background]) => {
+		this.tiffService.getOverlayGameBoard("/assets/images/hexagon_raster.tif", GameBoardType.DrawingMap, "Zonen").pipe(
+			switchMap(overlay => {
+				level.gameBoards.push(overlay);
+				return combineLatest([
+					this.tiffService.getSvgGameBoard("/assets/images/suit_arable_ext_zoneNEW.tif", GameBoardType.SuitabilityMap, "Extensive Arable Land", DefaultGradients.Green, overlay),
+					this.tiffService.getSvgGameBoard("/assets/images/suit_arable_int_zoneNEW.tif", GameBoardType.SuitabilityMap, "Intensive Arable Land", DefaultGradients.Blue, overlay),
+					this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_ext_zoneNEW.tif", GameBoardType.SuitabilityMap, "Extensive Livestock Land", DefaultGradients.Purple, overlay),
+					this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zoneNEW.tif", GameBoardType.SuitabilityMap, "Intensive Livestock Land", DefaultGradients.Red, overlay),
+					this.tiffService.getSvgBackground("/assets/images/land_use_only_raster.tif", customColors),
+				]);
+			})
+		).subscribe(([gameboard2, gameboard3, gameboard4, gameboard5, background]) => {
 			
 			var gameBoards = [gameboard2, gameboard3, gameboard4, gameboard5];
 			gameBoards.forEach(o => {
-				o.fields = overlay.fields;
-				o.width = overlay.width;
-				o.height = overlay.height;
+				// let cpy = overlay.fields.map(p => {
+				// 	return {
+				// 		...p,
+				// 		score: o.fields[p.id]?.score
+				// 	};
+				// });
+				// o.fields = cpy;
+				
+				// o.width = overlay.width;
+				// o.height = overlay.height;
 				o.background2 = background;
 			});
 
@@ -229,7 +241,7 @@ export class GameService {
 				this.selectedProductionType.next(this.productionTypes.value[0]);
 			});
 
-			level.gameBoards.push(...gameBoards, overlay);
+			level.gameBoards.push(...gameBoards);
 			level.levelNumber = 1;
 
 			this.currentLevel.next(level);
