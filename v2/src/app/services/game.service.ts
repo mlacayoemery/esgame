@@ -209,19 +209,21 @@ export class GameService {
 			this.tiffService.getSvgGameBoard("/assets/images/suit_arable_int_zone.tif", GameBoardType.SuitabilityMap, "Intensive Arable Land", DefaultGradients.Blue),
 			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_ext_zone.tif", GameBoardType.SuitabilityMap, "Extensive Livestock Land", DefaultGradients.Purple),
 			this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zone.tif", GameBoardType.SuitabilityMap, "Intensive Livestock Land", DefaultGradients.Red),
-			this.tiffService.getSvgGameBoard("/assets/images/land_use_only_raster.tif", GameBoardType.SuitabilityMap, "Intensive Livestock Land", undefined, customColors),
-		]).subscribe((gameBoards) => {
-			const overlay = gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
+			this.tiffService.getSvgBackground("/assets/images/land_use_only_raster.tif", customColors),
+		]).subscribe(([overlay, gameboard2, gameboard3, gameboard4, gameboard5, background]) => {
+			
+			var gameBoards = [gameboard2, gameboard3, gameboard4, gameboard5];
 			gameBoards.forEach(o => {
 				o.fields = overlay.fields;
 				o.width = overlay.width;
-				o.height = overlay.height;});
+				o.height = overlay.height;
+				o.background2 = background;
+			});
 
-
-			this.productionTypes.value.push(new ProductionType("#f8cbad", gameBoards[1], "Extensives Ackerland"));
-			this.productionTypes.value.push(new ProductionType("#843c0c", gameBoards[2], "Intensives Ackerland"));
-			this.productionTypes.value.push(new ProductionType("#fbe5d6", gameBoards[3], "Extensive Viehzucht"));
-			this.productionTypes.value.push(new ProductionType("#c55a11", gameBoards[4], "Intensive Viehzucht"));
+			this.productionTypes.value.push(new ProductionType(10, "#f8cbad", gameBoards[1], "Extensives Ackerland"));
+			this.productionTypes.value.push(new ProductionType(20, "#843c0c", gameBoards[2], "Intensives Ackerland"));
+			this.productionTypes.value.push(new ProductionType(30, "#fbe5d6", gameBoards[3], "Extensive Viehzucht"));
+			this.productionTypes.value.push(new ProductionType(40, "#c55a11", gameBoards[4], "Intensive Viehzucht"));
 			setTimeout(() => {
 				this.selectedProductionType.next(this.productionTypes.value[0]);
 			});
@@ -251,8 +253,8 @@ export class GameService {
 			level.gameBoards.push(gameBoard2);
 			level.levelNumber = 1;
 
-			this.productionTypes.value.push(new ProductionType("#FFF", gameBoard, "Ackerland", "http://esgame.unige.ch/images/corn.png"));
-			this.productionTypes.value.push(new ProductionType("#FFF", gameBoard2, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
+			this.productionTypes.value.push(new ProductionType(10, "#FFF", gameBoard, "Ackerland", "http://esgame.unige.ch/images/corn.png"));
+			this.productionTypes.value.push(new ProductionType(20, "#FFF", gameBoard2, "Viehzucht", "http://esgame.unige.ch/images/cow.png"));
 			this.productionTypes.next(this.productionTypes.value);
 			this.selectedProductionType.next(this.productionTypes.value[0]);
 

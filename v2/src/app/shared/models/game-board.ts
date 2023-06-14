@@ -11,8 +11,9 @@ export class GameBoard {
 	width: number;
 	height: number;
 	background: string;
+	background2: string;
 
-	constructor(gameBoardType: GameBoardType, fields: Field[], legend: Legend, name: string, isSvg = false, width = 0, height = 0, background = "") {
+	constructor(gameBoardType: GameBoardType, fields: Field[], legend: Legend, name: string, isSvg = false, width = 0, height = 0, background = "", background2 = "") {
 		this.fields = fields;
 		this.gameBoardType = gameBoardType;
 		this.legend = legend;
@@ -21,6 +22,7 @@ export class GameBoard {
 		this.width = width;
 		this.height = height;
 		this.background = background;
+		this.background2 = background2;
 	}
 
 	getScore(ids: number[]) {

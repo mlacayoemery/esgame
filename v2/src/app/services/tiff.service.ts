@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { fromUrl, writeArrayBuffer } from 'geotiff';
-import { from, mergeMap, of } from 'rxjs';
+import { Observable, from, mergeMap, of } from 'rxjs';
 import gradients, { CustomColors, DefaultGradients, Gradient } from '../shared/helpers/gradients';
 import { GameBoard } from '../shared/models/game-board';
 import { GameBoardType } from '../shared/models/game-board-type';
@@ -79,6 +79,14 @@ export class TiffService {
 				})
 			);
 		}
+	}
+
+	getSvgBackground(url: string, customColors: CustomColors): Observable<string> {
+		return this.getTiffSvgData(url, undefined, customColors).pipe(
+			mergeMap(data => {
+				return of(data.dataUrl);
+			})
+		);
 	}
 
 	public getTiffData(url: string) {
