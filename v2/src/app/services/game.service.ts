@@ -237,7 +237,7 @@ export class GameService {
 			for(let i = 0; i < settings.productionTypes.length; i++) {
 				const current = settings.productionTypes[i];
 				const gameBoard = gameBoards.find(g => g.id == otherMaps.find(m => m.linkedToProductionTypes.includes(current.id))!.id)!;
-				const productionType = new ProductionType(i * 10 + 10, settings.productionTypes[i].fieldColor, gameBoard, settings.productionTypes[i].name[this.translateService.currentLang]);
+				const productionType = new ProductionType(i * 10 + 10, current.fieldColor, gameBoard, current.name[this.translateService.currentLang], current.image, current.maxElements);
 				this.productionTypes.value.push(productionType);
 			}
 
