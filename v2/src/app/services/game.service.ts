@@ -220,10 +220,10 @@ export class GameService {
 				o.background2 = background;
 			});
 
-			this.productionTypes.value.push(new ProductionType(10, "#f8cbad", gameBoards[1], "Extensives Ackerland"));
-			this.productionTypes.value.push(new ProductionType(20, "#843c0c", gameBoards[2], "Intensives Ackerland"));
-			this.productionTypes.value.push(new ProductionType(30, "#fbe5d6", gameBoards[3], "Extensive Viehzucht"));
-			this.productionTypes.value.push(new ProductionType(40, "#c55a11", gameBoards[4], "Intensive Viehzucht"));
+			this.productionTypes.value.push(new ProductionType(10, "#f8cbad", gameBoards[0], "Extensives Ackerland"));
+			this.productionTypes.value.push(new ProductionType(20, "#843c0c", gameBoards[1], "Intensives Ackerland"));
+			this.productionTypes.value.push(new ProductionType(30, "#fbe5d6", gameBoards[2], "Extensive Viehzucht"));
+			this.productionTypes.value.push(new ProductionType(40, "#c55a11", gameBoards[3], "Intensive Viehzucht"));
 			setTimeout(() => {
 				this.selectedProductionType.next(this.productionTypes.value[0]);
 			});

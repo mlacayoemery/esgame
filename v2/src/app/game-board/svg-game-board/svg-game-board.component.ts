@@ -13,48 +13,50 @@ import { debounce, interval } from 'rxjs';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SvgGameBoardComponent extends GameBoardBaseComponent implements AfterViewInit {
-  @ViewChildren(SvgFieldComponent) svgFieldComponents: QueryList<SvgFieldComponent>;
-  background: string = "";
-  
+	@ViewChildren(SvgFieldComponent) svgFieldComponents: QueryList<SvgFieldComponent>;
+	background: string = "";
+	background2: string = "";
+
 	constructor(gameService: GameService, renderer: Renderer2, elementRef: ElementRef, cdRef: ChangeDetectorRef) {
-    super(gameService, renderer, elementRef, cdRef);
+		super(gameService, renderer, elementRef, cdRef);
 		this._sink.sink = this.gameService.highlightFieldObs.pipe(debounce(i => interval(50))).subscribe(fieldNumbers => {
-      this._highlightedFields.forEach(o => this.svgFieldComponents?.find(s => s.field.id == o.id)?.removeHighlight());
+			this._highlightedFields.forEach(o => this.svgFieldComponents?.find(s => s.field.id == o.id)?.removeHighlight());
 			this._highlightedFields = fieldNumbers;
-      
+
 			if (fieldNumbers.length > 0) {
-        fieldNumbers.forEach(fieldNumber => {
-          this.svgFieldComponents.find(s => s.field.id == fieldNumber.id)?.highlight(fieldNumber.side);
+				fieldNumbers.forEach(fieldNumber => {
+					this.svgFieldComponents.find(s => s.field.id == fieldNumber.id)?.highlight(fieldNumber.side);
 				});
 			}
 			this.cdRef.markForCheck();
 		});
 	}
-  
+
 	ngAfterViewInit() {
-    this._sink.sink = this.gameService.selectedFieldsObs.subscribe(fields => {
-      this._selectedFields = fields;
+		this._sink.sink = this.gameService.selectedFieldsObs.subscribe(fields => {
+			this._selectedFields = fields;
 			setTimeout(() => this.drawSelectedFields());
 		});
-    
+
 		this._sink.sink = this.svgFieldComponents.changes.subscribe(r => {
 			setTimeout(() => this.drawSelectedFields());
 		});
 	}
-  
+
 	protected drawSelectedFields() {
-    if (this.fields && this._selectedFields && this.svgFieldComponents) {
-      this.fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.id)?.unassign());
+		if (this.fields && this._selectedFields && this.svgFieldComponents) {
+			this.fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.id)?.unassign());
 			this._selectedFields.forEach(field => {
-        field.fields.forEach(highlightField => {
-          this.svgFieldComponents.find(o => o.field.id == highlightField.id)?.assign(field.productionType, highlightField.side);
+				field.fields.forEach(highlightField => {
+					this.svgFieldComponents.find(o => o.field.id == highlightField.id)?.assign(field.productionType, highlightField.side);
 				});
 			});
 			this.cdRef.markForCheck();
 		}
 	}
 
-  override afterBoardDataSet(): void {
-    this.background = `url("${this._boardData.background}")`;
-  }
+	override afterBoardDataSet(): void {
+		this.background = `url("${this._boardData.background}")`;
+		this.background2 = `url("${this._boardData.background2}")`;
+	}
 }

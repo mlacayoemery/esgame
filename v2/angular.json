@@ -39,7 +39,6 @@
               "src/styles.scss"
             ],
             "scripts": [
-              "src/assets/js/tiff.js/tiff.min.js"
             ]
           },
           "configurations": {
