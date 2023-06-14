@@ -27,9 +27,12 @@
         <input type="number" matInput placeholder="0" name="maps-height" formControlName="gameBoardRows" required>
     </mat-form-field>
     <mat-form-field>
+        <mat-label>{{ 'highlight-color' | translate}}</mat-label>
+        <input type="text" matInput name="highlight-color" formControlName="highlightColor" required>
+    </mat-form-field>
+    <mat-form-field>
         <mat-label>{{ 'selection-size' | translate}}</mat-label>
-        <input type="number" matInput placeholder="0" name="slection-size" formControlName="elementSize"
-            [disabled]="formGroup.get('mapMode')!.value == 'svg'" required>
+        <input type="number" matInput placeholder="0" name="slection-size" formControlName="elementSize" required>
     </mat-form-field>
     <mat-checkbox formControlName="infiniteLevels">{{ 'infinite-levels' | translate}}</mat-checkbox>
     <h2>{{ 'agriculture-types' | translate }}</h2>
@@ -96,8 +99,11 @@
 						<mat-option value="Suitablity">
 							Suitablity
 						</mat-option>
-						<mat-option *ngIf="mapMode == 'svg'" value="Drawing">
-							Drawing
+						<mat-option *ngIf="this.formGroup.get('mapMode')!.value == 'svg'" value="Drawing">
+							Zones
+						</mat-option>
+                        <mat-option *ngIf="this.formGroup.get('mapMode')!.value == 'svg'" value="Background">
+							Background
 						</mat-option>
 						<mat-option value="Consequence">
 							Consequence

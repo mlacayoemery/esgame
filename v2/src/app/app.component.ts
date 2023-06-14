@@ -11,6 +11,7 @@ export class AppComponent {
 	title = 'Tradeoff-V2';
 
 	constructor(private translate: TranslateService) {
+
 		this.translate.addLangs(['de', 'en']);
 		this.translate.setDefaultLang('de');
 		this.translate.use('de');

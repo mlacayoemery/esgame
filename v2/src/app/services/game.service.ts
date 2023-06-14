@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, combineLatest, combineLatestAll, map, switchMap, tap, timeout } from 'rxjs';
+import { BehaviorSubject, combineLatest, combineLatestAll, from, map, switchMap, tap, timeout } from 'rxjs';
 import { GameBoard } from '../shared/models/game-board';
 import { GameBoardType } from '../shared/models/game-board-type';
 import { Level } from '../shared/models/level';
@@ -9,6 +9,7 @@ import { Field, HighlightField, HighlightSide, SelectedField } from '../shared/m
 import { TiffService } from './tiff.service';
 import { CustomColors, DefaultGradients } from '../shared/helpers/gradients';
 import { ScoreService } from './score.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Injectable({
 	providedIn: 'root'
@@ -46,7 +47,8 @@ export class GameService {
 
 	constructor(
 		private tiffService: TiffService,
-		private scoreService: ScoreService
+		private scoreService: ScoreService,
+		private translateService: TranslateService
 	) {}
 
 	highlightOnOtherFields(id: any) {
@@ -162,10 +164,10 @@ export class GameService {
 			const overlay = this.currentLevel.value!.gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
 
 			combineLatest([
-				this.tiffService.getSvgGameBoard("/assets/images/Consequence_1_Clip.tif", GameBoardType.ConsequenceMap, "Air Quality", DefaultGradients.Green, overlay),
-				this.tiffService.getSvgGameBoard("/assets/images/Consequence_2_Clip.tif", GameBoardType.ConsequenceMap, "Water Quality", DefaultGradients.Green, overlay),
-				this.tiffService.getSvgGameBoard("/assets/images/Consequence_3_Clip.tif", GameBoardType.ConsequenceMap, "Water Availability", DefaultGradients.Green, overlay),
-				this.tiffService.getSvgGameBoard("/assets/images/Consequence_4_Clip.tif", GameBoardType.ConsequenceMap, "Habitat Fragmentation", DefaultGradients.Green, overlay),
+				this.tiffService.getSvgGameBoard("", "/assets/images/Consequence_1_Clip.tif", GameBoardType.ConsequenceMap, "Air Quality", DefaultGradients.Green, overlay),
+				this.tiffService.getSvgGameBoard("","/assets/images/Consequence_2_Clip.tif", GameBoardType.ConsequenceMap, "Water Quality", DefaultGradients.Green, overlay),
+				this.tiffService.getSvgGameBoard("", "/assets/images/Consequence_3_Clip.tif", GameBoardType.ConsequenceMap, "Water Availability", DefaultGradients.Green, overlay),
+				this.tiffService.getSvgGameBoard("", "/assets/images/Consequence_4_Clip.tif", GameBoardType.ConsequenceMap, "Habitat Fragmentation", DefaultGradients.Green, overlay),
 			]).subscribe((gameBoards) => {
 				gameBoards.forEach(o => {
 					o.fields = overlay.fields
@@ -192,9 +194,12 @@ export class GameService {
 	initialiseSVGMode() {
 		this.settings.value.mode = 'SVG';
 		var level = new Level();
+
 		this.levels.push(level);
+
 		this.settings.value.imageMode = false;
 		this.loading();
+
 		var customColors = new CustomColors();
 		customColors.set(2, "a8a800");
 		customColors.set(3, "73b2ff");
@@ -205,28 +210,38 @@ export class GameService {
 		customColors.set(8, "98e600");
 		customColors.set(15, "00000000");
 
-		this.tiffService.getOverlayGameBoard("/assets/images/hexagon_raster.tif", GameBoardType.DrawingMap, "Zonen").pipe(
+		const settings = this.settings.value;
+		const currentLevel = settings.levels[0];
+		const drawingMap = settings.maps.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
+		const backgroundMap = settings.maps.find(o => o.gameBoardType == GameBoardType.BackgroundMap)!;
+		const otherMaps = settings.maps.filter(m => m.id in currentLevel.maps && (m.gameBoardType == GameBoardType.SuitabilityMap || m.gameBoardType == GameBoardType.ConsequenceMap));
+
+		const getSvg = (m : any, overlay: GameBoard) => this.tiffService.getSvgGameBoard(m.id, m.urlToData, m.gameBoardType, m.name[this.translateService.currentLang], DefaultGradients.Green, overlay);
+
+		this.tiffService.getOverlayGameBoard(drawingMap.id, drawingMap.urlToData, GameBoardType.DrawingMap, drawingMap.name[this.translateService.currentLang]).pipe(
 			switchMap(overlay => {
 				level.gameBoards.push(overlay);
-				return combineLatest([
-					this.tiffService.getSvgGameBoard("/assets/images/suit_arable_ext_zoneNEW.tif", GameBoardType.SuitabilityMap, "Extensive Arable Land", DefaultGradients.Green, overlay),
-					this.tiffService.getSvgGameBoard("/assets/images/suit_arable_int_zoneNEW.tif", GameBoardType.SuitabilityMap, "Intensive Arable Land", DefaultGradients.Blue, overlay),
-					this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_ext_zoneNEW.tif", GameBoardType.SuitabilityMap, "Extensive Livestock Land", DefaultGradients.Purple, overlay),
-					this.tiffService.getSvgGameBoard("/assets/images/suit_livestock_int_zoneNEW.tif", GameBoardType.SuitabilityMap, "Intensive Livestock Land", DefaultGradients.Red, overlay),
-					this.tiffService.getSvgBackground("/assets/images/land_use_only_raster.tif", customColors),
-				]);
+				return combineLatest(
+					[...otherMaps.map(m => getSvg(m, overlay)),
+					this.tiffService.getSvgBackground(backgroundMap.urlToData, customColors)]
+					);
 			})
-		).subscribe(([gameboard2, gameboard3, gameboard4, gameboard5, background]) => {
+		).subscribe((res) => {
+			const gameBoards = res.slice(0, res.length - 1).map(o => o as GameBoard);
+			const background = res[res.length - 1] as string;
 			
-			var gameBoards = [gameboard2, gameboard3, gameboard4, gameboard5];
 			gameBoards.forEach(o => {
 				o.background2 = background;
 			});
 
-			this.productionTypes.value.push(new ProductionType(10, "#f8cbad", gameBoards[0], "Extensives Ackerland"));
-			this.productionTypes.value.push(new ProductionType(20, "#843c0c", gameBoards[1], "Intensives Ackerland"));
-			this.productionTypes.value.push(new ProductionType(30, "#fbe5d6", gameBoards[2], "Extensive Viehzucht"));
-			this.productionTypes.value.push(new ProductionType(40, "#c55a11", gameBoards[3], "Intensive Viehzucht"));
+			for(let i = 0; i < settings.productionTypes.length; i++) {
+				const current = settings.productionTypes[i];
+				console.log(current.id, otherMaps);
+				const gameBoard = gameBoards.find(g => g.id == otherMaps.find(m => m.linkedToProductionTypes.includes(current.id))!.id)!;
+				const productionType = new ProductionType(i * 10 + 10, settings.productionTypes[i].fieldColor, gameBoard, settings.productionTypes[i].name[this.translateService.currentLang]);
+				this.productionTypes.value.push(productionType);
+			}
+
 			setTimeout(() => {
 				this.selectedProductionType.next(this.productionTypes.value[0]);
 			});

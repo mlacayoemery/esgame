@@ -1,38 +1,96 @@
 {
+	"mapMode": "svg",
 	"imageMode": false,
-	"elementSize": 2,
+	"elementSize": 1,
 	"infiniteLevels": false,
 	"gameBoardColumns": 28,
 	"gameBoardRows": 29,
 	"productionTypes": [
 		{
-			"id": "",
-			"name": { "en": "", "de": ""},
-			"fieldColor": "",
-			"image": null,
-			"maxElements": 0
+			"id": "10",
+			"name": { "en": "Extensives Ackerland", "de": "Extensives Ackerland"},
+			"fieldColor": "#f8cbad",
+			"image": "",
+			"maxElements": 200
+		},
+		{
+			"id": "20",
+			"name": { "en": "Intensives Ackerland", "de": "Intensives Ackerland"},
+			"fieldColor": "#843c0c",
+			"image": "",
+			"maxElements": 200
+		},
+		{
+			"id": "30",
+			"name": { "en": "Extensive Viehzucht", "de": "Extensive Viehzucht"},
+			"fieldColor": "#fbe5d6",
+			"image": "",
+			"maxElements": 200
+		},
+		{
+			"id": "40",
+			"name": { "en": "Intensive Viehzucht", "de": "Intensive Viehzucht"},
+			"fieldColor": "#c55a11",
+			"image": "",
+			"maxElements": 200
 		}
 	],
 	"maps": [
 		{
-			"id": "",
-			"name": { "en": "", "de": "" },
-			"linkToData": "",
+			"id": "1",
+			"name": { "en": "Zonen", "de": "Zonen" },
+			"linkToData": "/assets/images/hexagon_raster.tif",
 			"gradient": "",
-			"gameBoardtype": "",
+			"gameBoardtype": "Drawing",
+			"linkedToProductionTypes": []
+		},
+		{
+			"id": "2",
+			"name": { "en": "Extensive Arable Land", "de": "Extensive Arable Land" },
+			"linkToData": "/assets/images/suit_arable_ext_zoneNEW.tif",
+			"gradient": "Green",
+			"gameBoardtype": "Suitablity",
+			"linkedToProductionTypes": ["10"]
+		},
+		{
+			"id": "3",
+			"name": { "en": "Intensive Arable Land", "de": "Intensive Arable Land" },
+			"linkToData": "/assets/images/suit_arable_int_zoneNEW.tif",
+			"gradient": "Green",
+			"gameBoardtype": "Suitablity",
+			"linkedToProductionTypes": ["20"]
+		},
+		{
+			"id": "4",
+			"name": { "en": "Extensive Livestock Land", "de": "Extensive Livestock Land" },
+			"linkToData": "/assets/images/suit_livestock_ext_zoneNEW.tif",
+			"gradient": "Green",
+			"gameBoardtype": "Suitablity",
+			"linkedToProductionTypes": ["30"]
+		},
+		{
+			"id": "4",
+			"name": { "en": "Intensive Livestock Land", "de": "Intensive Livestock Land" },
+			"linkToData": "/assets/images/suit_livestock_int_zoneNEW.tif",
+			"gradient": "Green",
+			"gameBoardtype": "Suitablity",
+			"linkedToProductionTypes": ["40"]
+		},
+		{
+			"id": "5",
+			"name": { "en": "Background", "de": "Background" },
+			"linkToData": "/assets/images/land_use_only_raster.tif",
+			"gradient": "Green",
+			"gameBoardtype": "Background",
 			"linkedToProductionTypes": []
 		}
 	],
 	"levels": [
 		{
-			"maps": [0,1],
-			"name": { "en": "", "de": ""},
-			"instructions": { "en": "", "de": ""}
-		},
-		{
-			"maps": [0,1,2,3,4,5,6,7,8,9,10,11,12],
-			"name": { "en": "", "de": ""},
-			"instruction": { "en": "", "de": ""}
+			"id": "1",
+			"maps": ["1", "2", "3", "4", "5"],
+			"name": { "en": "Level 1", "de": "Level 1"},
+			"instructions": { "en": "test", "de": "test"}
 		}
 	]
 }
