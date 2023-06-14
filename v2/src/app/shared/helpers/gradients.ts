@@ -68,11 +68,15 @@ export class CustomColors {
 	}
 
 	colorToRgb(hex: string | undefined) {
-		if (!hex) return [255, 255, 255];
+		if (!hex) return [255, 255, 255, 0];
 		const r = hex.slice(0, 2);
 		const g = hex.slice(2, 4);
 		const b = hex.slice(4, 6);
+		const a = hex.slice(6, 8);
+		if (a) {
+			return [parseInt(r, 16), parseInt(g, 16), parseInt(b, 16), parseInt(a, 16)];
+		}
 
-		return [parseInt(r, 16), parseInt(g, 16), parseInt(b, 16)];
+		return [parseInt(r, 16), parseInt(g, 16), parseInt(b, 16), 255];
 	}
 }

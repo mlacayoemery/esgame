@@ -201,7 +201,7 @@ export class GameService {
 		customColors.set(6, "00734c");
 		customColors.set(7, "828282");
 		customColors.set(8, "98e600");
-		customColors.set(15, "e69800");
+		customColors.set(15, "00000000");
 
 		combineLatest([
 			this.tiffService.getSvgGameBoard("/assets/images/hexagon_raster.tif", GameBoardType.DrawingMap, "Zonen", DefaultGradients.Blue),
@@ -228,7 +228,7 @@ export class GameService {
 				this.selectedProductionType.next(this.productionTypes.value[0]);
 			});
 
-			level.gameBoards.push(...gameBoards);
+			level.gameBoards.push(...gameBoards, overlay);
 			level.levelNumber = 1;
 
 			this.currentLevel.next(level);

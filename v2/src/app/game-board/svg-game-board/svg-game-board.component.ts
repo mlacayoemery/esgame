@@ -19,7 +19,7 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 
 	constructor(gameService: GameService, renderer: Renderer2, elementRef: ElementRef, cdRef: ChangeDetectorRef) {
 		super(gameService, renderer, elementRef, cdRef);
-		this._sink.sink = this.gameService.highlightFieldObs.pipe(debounce(i => interval(50))).subscribe(fieldNumbers => {
+		this._sink.sink = this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
 			this._highlightedFields.forEach(o => this.svgFieldComponents?.find(s => s.field.id == o.id)?.removeHighlight());
 			this._highlightedFields = fieldNumbers;
 
