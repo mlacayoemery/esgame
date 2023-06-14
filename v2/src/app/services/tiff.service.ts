@@ -39,15 +39,16 @@ export class TiffService {
 			return this.getTiffSvgData(url, gradients.get(defaultGradient)!).pipe(
 				mergeMap(data => {
 					let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
-	
+					
 					uniqueValues = Array.from(data.paths.keys()).sort((a, b) => a - b).filter(a => a > 0);
+					console.log(uniqueValues.length);
 					gradient = gradients.get(defaultGradient!);
 					legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap };
 					const maxValue = Math.max(...uniqueValues);
 					const minValue = Math.min(...uniqueValues);
 					
 					fields = Array.from(data.paths).map(([key, value], i) => {
-						return new Field(i, new FieldType(gradient?.calculateColor(1 / (maxValue - minValue) * (key - minValue)) ?? "", "CONFIGURED"), key, null, key != data.nodata, undefined, value);
+						return new Field(key, new FieldType(gradient?.calculateColor(1 / (maxValue - minValue) * (key - minValue)) ?? "", "CONFIGURED"), key, null, key != data.nodata, undefined, value);
 					});
 	
 					const gameBoard = new GameBoard(gameBoardType, fields, legend, name, true, data.width, data.height, data.dataUrl);
@@ -67,7 +68,7 @@ export class TiffService {
 					const minValue = Math.min(...uniqueValues);
 	
 					fields = Array.from(data.paths).map(([key, value], i) => {
-						return new Field(i, new FieldType(customColors!.get(key), "CONFIGURED"), key, null, key != data.nodata, undefined, value);
+						return new Field(key, new FieldType(customColors!.get(key), "CONFIGURED"), key, null, key != data.nodata, undefined, value);
 					});
 	
 	

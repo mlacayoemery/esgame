@@ -46,9 +46,9 @@ export abstract class FieldBaseComponent implements OnDestroy {
 	addHoverListener() {
 		//if (this._field.editable)
 			this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', (e: MouseEvent) => {
-				if(e.buttons == 1)
+				if(e.buttons == 1 || e.shiftKey)
 					this.gameService.selectField(this._field.id)
-				else if(e.buttons == 2)
+				else if(e.buttons == 2 || e.altKey)
 					this.gameService.deselectField(this._field.id);
 				else 
 					this.gameService.highlightOnOtherFields(this._field.id);

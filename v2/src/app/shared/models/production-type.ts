@@ -9,7 +9,7 @@ export class ProductionType {
 	maxElements: number;
 	id: number;
 
-	constructor(id: number, fieldColor: string, scoreMap: GameBoard, name: string, image = "", maxElements = 99) {
+	constructor(id: number, fieldColor: string, scoreMap: GameBoard, name: string, image = "", maxElements = 200) {
 		this.id = id;
 		this.fieldColor = fieldColor;
 		this.suitabilityMap = scoreMap;

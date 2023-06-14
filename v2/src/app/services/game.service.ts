@@ -97,7 +97,8 @@ export class GameService {
 
 	goToNextLevel() {
 		var currentHighest = this.levels[this.levels.length - 1];
-
+		var results = this.selectedFields.value.map((o) =>  ({ id: o.fields[0].id, lulc: o.productionType.id }));
+		//TODO: send result if needed
 		if (currentHighest == this.currentLevel.value) {
 			this.prepareLevel2();
 		} else {
