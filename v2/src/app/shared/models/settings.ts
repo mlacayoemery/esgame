@@ -1,5 +1,6 @@
 import { GameBoardType } from "./game-board-type";
 import data from './../../../data.json';
+import { DefaultGradients } from "../helpers/gradients";
 
 type LanguageString = Record<string, string>;
 
@@ -12,7 +13,7 @@ export class Settings {
 		this.mode = data.mapMode == "svg" ? 'SVG' : 'GRID';
 		this.infiniteLevels = data.infiniteLevels;
 		this.productionTypes = data.productionTypes.map((o) => ({ id: o.id, name: o.name, fieldColor: o.fieldColor, image: o.image, maxElements: o.maxElements }));
-		this.maps = data.maps.map((o) => ({ id: o.id, name: o.name, gradient: o.gradient, gameBoardType: convertGameBoardType(o.gameBoardtype), linkedToProductionTypes: o.linkedToProductionTypes, urlToData: o.linkToData }));
+		this.maps = data.maps.map((o) => ({ id: o.id, name: o.name, gradient: convertGradient(o.gradient), gameBoardType: convertGameBoardType(o.gameBoardtype), linkedToProductionTypes: o.linkedToProductionTypes, urlToData: o.linkToData }));
 		this.levels = data.levels.map((o) => ({ id: o.id, name: o.name, maps: o.maps, instructions: o.instructions }));
 	}
 
@@ -23,7 +24,7 @@ export class Settings {
 	mode: 'GRID' | 'SVG';
 	infiniteLevels: boolean;
 	productionTypes: { id: string, name: LanguageString, fieldColor: string, image: string, maxElements: number}[] = [];
-	maps: { id: string, name: LanguageString, gradient: string, gameBoardType: GameBoardType, linkedToProductionTypes: string[], urlToData: string }[] = []; 
+	maps: { id: string, name: LanguageString, gradient: DefaultGradients, gameBoardType: GameBoardType, linkedToProductionTypes: string[], urlToData: string }[] = []; 
 	levels: { id: string, name: LanguageString, maps: string[], instructions: LanguageString }[] = [];
 }
 
@@ -36,3 +37,4 @@ const convertGameBoardType = (type: string) => {
 		default: return GameBoardType.SuitabilityMap;
 	}
 };
+const convertGradient = (gradientName: string) => gradientName as unknown as DefaultGradients;

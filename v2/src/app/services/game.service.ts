@@ -216,13 +216,13 @@ export class GameService {
 		const backgroundMap = settings.maps.find(o => o.gameBoardType == GameBoardType.BackgroundMap)!;
 		const otherMaps = settings.maps.filter(m => m.id in currentLevel.maps && (m.gameBoardType == GameBoardType.SuitabilityMap || m.gameBoardType == GameBoardType.ConsequenceMap));
 
-		const getSvg = (m : any, overlay: GameBoard) => this.tiffService.getSvgGameBoard(m.id, m.urlToData, m.gameBoardType, m.name[this.translateService.currentLang], DefaultGradients.Green, overlay);
+		const getSvg = (m : any, overlay: GameBoard) => this.tiffService.getSvgGameBoard(m.id, m.urlToData, m.gameBoardType, m.name[this.translateService.currentLang], m.gradient, overlay);
 
 		this.tiffService.getOverlayGameBoard(drawingMap.id, drawingMap.urlToData, GameBoardType.DrawingMap, drawingMap.name[this.translateService.currentLang]).pipe(
 			switchMap(overlay => {
 				level.gameBoards.push(overlay);
 				return combineLatest(
-					[...otherMaps.map(m => getSvg(m, overlay)),
+					[...otherMaps.map(m => { return getSvg(m, overlay)}),
 					this.tiffService.getSvgBackground(backgroundMap.urlToData, customColors)]
 					);
 			})
@@ -236,7 +236,6 @@ export class GameService {
 
 			for(let i = 0; i < settings.productionTypes.length; i++) {
 				const current = settings.productionTypes[i];
-				console.log(current.id, otherMaps);
 				const gameBoard = gameBoards.find(g => g.id == otherMaps.find(m => m.linkedToProductionTypes.includes(current.id))!.id)!;
 				const productionType = new ProductionType(i * 10 + 10, settings.productionTypes[i].fieldColor, gameBoard, settings.productionTypes[i].name[this.translateService.currentLang]);
 				this.productionTypes.value.push(productionType);

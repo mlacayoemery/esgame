@@ -15,7 +15,7 @@ export class ImportConfigComponent {
 		if (files && files.length) {
 			let fileReader = new FileReader();
 			fileReader.onload = (e) => {
-			console.log(fileReader.result);
+				console.log(fileReader.result);
 			}
 			fileReader.readAsText(files[0]);
 		}

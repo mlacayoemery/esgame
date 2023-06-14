@@ -48,7 +48,7 @@
 			"id": "2",
 			"name": { "en": "Extensive Arable Land", "de": "Extensive Arable Land" },
 			"linkToData": "/assets/images/suit_arable_ext_zoneNEW.tif",
-			"gradient": "Green",
+			"gradient": "green",
 			"gameBoardtype": "Suitablity",
 			"linkedToProductionTypes": ["10"]
 		},
@@ -56,7 +56,7 @@
 			"id": "3",
 			"name": { "en": "Intensive Arable Land", "de": "Intensive Arable Land" },
 			"linkToData": "/assets/images/suit_arable_int_zoneNEW.tif",
-			"gradient": "Green",
+			"gradient": "blue",
 			"gameBoardtype": "Suitablity",
 			"linkedToProductionTypes": ["20"]
 		},
@@ -64,23 +64,23 @@
 			"id": "4",
 			"name": { "en": "Extensive Livestock Land", "de": "Extensive Livestock Land" },
 			"linkToData": "/assets/images/suit_livestock_ext_zoneNEW.tif",
-			"gradient": "Green",
+			"gradient": "purple",
 			"gameBoardtype": "Suitablity",
 			"linkedToProductionTypes": ["30"]
 		},
 		{
-			"id": "4",
+			"id": "5",
 			"name": { "en": "Intensive Livestock Land", "de": "Intensive Livestock Land" },
 			"linkToData": "/assets/images/suit_livestock_int_zoneNEW.tif",
-			"gradient": "Green",
+			"gradient": "red",
 			"gameBoardtype": "Suitablity",
 			"linkedToProductionTypes": ["40"]
 		},
 		{
-			"id": "5",
+			"id": "6",
 			"name": { "en": "Background", "de": "Background" },
 			"linkToData": "/assets/images/land_use_only_raster.tif",
-			"gradient": "Green",
+			"gradient": "",
 			"gameBoardtype": "Background",
 			"linkedToProductionTypes": []
 		}
@@ -88,7 +88,7 @@
 	"levels": [
 		{
 			"id": "1",
-			"maps": ["1", "2", "3", "4", "5"],
+			"maps": ["1", "2", "3", "4", "5", "6"],
 			"name": { "en": "Level 1", "de": "Level 1"},
 			"instructions": { "en": "test", "de": "test"}
 		}
