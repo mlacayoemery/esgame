@@ -1,0 +1,120 @@
+{
+	"mapMode": "grid",
+	"imageMode": true,
+	"elementSize": 2,
+	"infiniteLevels": false,
+	"gameBoardColumns": 28,
+	"gameBoardRows": 29,
+	"productionTypes": [
+		{
+			"id": "10",
+			"name": { "en": "Arable land", "de": "Ackerland"},
+			"fieldColor": "#FFF",
+			"image": "https://cdn-icons-png.flaticon.com/512/5231/5231594.png",
+			"maxElements": 4
+		},
+		{
+			"id": "20",
+			"name": { "en": "Livestock", "de": "Viehzucht"},
+			"fieldColor": "#FFF",
+			"image": "https://cdn-icons-png.flaticon.com/512/3980/3980036.png",
+			"maxElements": 4
+		}
+	],
+	"maps": [
+		{
+			"id": "2",
+			"name": { "en": "Arable land", "de": "Ackerland" },
+			"linkToData": "/assets/images/esgame_img_ag.tif",
+			"gradient": "green",
+			"gameBoardtype": "Suitablity",
+			"linkedToProductionTypes": ["10"]
+		},
+		{
+			"id": "3",
+			"name": { "en": "Lickestock", "de": "Viehzucht" },
+			"linkToData": "/assets/images/esgame_img_ranch.tif",
+			"gradient": "orange",
+			"gameBoardtype": "Suitablity",
+			"linkedToProductionTypes": ["20"]
+		},
+		{
+			"id": "4",
+			"name": { "en": "Carbon", "de": "Kohlenstoff" },
+			"linkToData": "/assets/images/esgame_img_ag_carbon.tif",
+			"gradient": "yellow",
+			"gameBoardtype": "Consequence",
+			"linkedToProductionTypes": ["10"]
+		},
+		{
+			"id": "5",
+			"name": { "en": "Habitat", "de": "Lebensraum" },
+			"linkToData": "/assets/images/esgame_img_ag_habitat.tif",
+			"gradient": "purple",
+			"gameBoardtype": "Consequence",
+			"linkedToProductionTypes": ["10"]
+		},
+		{
+			"id": "6",
+			"name": { "en": "Water", "de": "Wasser" },
+			"linkToData": "/assets/images/esgame_img_ag_water.tif",
+			"gradient": "blue",
+			"gameBoardtype": "Consequence",
+			"linkedToProductionTypes": ["10"]
+		},
+		{
+			"id": "7",
+			"name": { "en": "Hunt", "de": "Jagd" },
+			"linkToData": "/assets/images/esgame_img_ag_hunt.tif",
+			"gradient": "red",
+			"gameBoardtype": "Consequence",
+			"linkedToProductionTypes": ["10"]
+		},
+		{
+			"id": "8",
+			"name": { "en": "Carbon", "de": "Kohlenstoff" },
+			"linkToData": "/assets/images/esgame_img_ranch_carbon.tif",
+			"gradient": "yellow",
+			"gameBoardtype": "Consequence",
+			"linkedToProductionTypes": ["20"]
+		},
+		{
+			"id": "9",
+			"name": { "en": "Habitat", "de": "Lebensraum" },
+			"linkToData": "/assets/images/esgame_img_ranch_habitat.tif",
+			"gradient": "purple",
+			"gameBoardtype": "Consequence",
+			"linkedToProductionTypes": ["20"]
+		},
+		{
+			"id": "10",
+			"name": { "en": "Water", "de": "Wasser" },
+			"linkToData": "/assets/images/esgame_img_ranch_water.tif",
+			"gradient": "blue",
+			"gameBoardtype": "Consequence",
+			"linkedToProductionTypes": ["20"]
+		},
+		{
+			"id": "11",
+			"name": { "en": "Hunt", "de": "Jagd" },
+			"linkToData": "/assets/images/esgame_img_ranch_hunt.tif",
+			"gradient": "red",
+			"gameBoardtype": "Consequence",
+			"linkedToProductionTypes": ["20"]
+		}
+	],
+	"levels": [
+		{
+			"id": "1",
+			"maps": ["1", "2"],
+			"name": { "en": "Level 1", "de": "Level 1"},
+			"instructions": { "en": "test", "de": "test"}
+		},
+		{
+			"id": "2",
+			"maps": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
+			"name": { "en": "Level 2", "de": "Level 2"},
+			"instructions": { "en": "test", "de": "test"}
+		}
+	]
+}

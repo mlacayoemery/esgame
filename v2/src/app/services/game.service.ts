@@ -102,7 +102,7 @@ export class GameService {
 		var results = this.selectedFields.value.map((o) => ({ id: o.fields[0].id, lulc: o.productionType.id }));
 		//TODO: send result if needed
 		if (currentHighest == this.currentLevel.value) {
-			this.prepareLevel2();
+			this.prepareNextLevel();
 		} else {
 			var lvl = this.levels.find(o => o.levelNumber == (this.currentLevel.value!.levelNumber + 1))!;
 			this.currentLevel.next(lvl);
@@ -122,7 +122,7 @@ export class GameService {
 		}
 	}
 
-	prepareLevel2() {
+	prepareNextLevel() {
 		this.loading();
 		var level = new Level();
 		level.showConsequenceMaps = true;
@@ -214,6 +214,7 @@ export class GameService {
 	getSvg = (m: any, overlay: GameBoard) => this.tiffService.getSvgGameBoard(m.id, m.urlToData, m.gameBoardType, m.name[this.translateService.currentLang], m.gradient, overlay);
 
 	initialiseSVGMode() {
+		this.translateService.setTranslation("de", {},)
 		this.settings.value.mode = 'SVG';
 		var level = new Level();
 
