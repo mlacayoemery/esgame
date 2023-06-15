@@ -124,7 +124,10 @@ export class GameService {
 
 	prepareNextLevel() {
 		this.loading();
-		var level = new Level();
+		const level = new Level();
+		const settings = this.settings.value;
+		const previousLevel = this.currentLevel.value!;
+		level.levelNumber = previousLevel.levelNumber + 1;
 		level.showConsequenceMaps = true;
 		this.levels.push(level);
 
@@ -133,24 +136,29 @@ export class GameService {
 			return Object.assign({}, o);
 		});
 
-		if (this.settings.value.mode == 'GRID') {
-			combineLatest([
-				this.tiffService.getGridGameBoard("", "/assets/images/esgame_img_ag_carbon.tif", DefaultGradients.Yellow, GameBoardType.ConsequenceMap),
-				this.tiffService.getGridGameBoard("","/assets/images/esgame_img_ag_habitat.tif", DefaultGradients.Purple, GameBoardType.ConsequenceMap),
-				this.tiffService.getGridGameBoard("","/assets/images/esgame_img_ag_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap),
-				this.tiffService.getGridGameBoard("","/assets/images/esgame_img_ag_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap),
-				this.tiffService.getGridGameBoard("","/assets/images/esgame_img_ranch_carbon.tif", DefaultGradients.Yellow, GameBoardType.ConsequenceMap),
-				this.tiffService.getGridGameBoard("","/assets/images/esgame_img_ranch_habitat.tif", DefaultGradients.Purple, GameBoardType.ConsequenceMap),
-				this.tiffService.getGridGameBoard("","/assets/images/esgame_img_ranch_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap),
-				this.tiffService.getGridGameBoard("","/assets/images/esgame_img_ranch_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap),
-			]).subscribe((gameBoards) => {
-				level.gameBoards.push(...this.currentLevel.value!.gameBoards);
-				level.gameBoards.push(...gameBoards);
-				level.levelNumber = 2;
+		let settingsLevel = settings.levels.at(this.currentLevel.value!.levelNumber);
+		if (settingsLevel == undefined) {
+			settingsLevel = settings.levels[settings.levels.length - 1];
+		}
 
-				// TODO: Nicht über Array
-				this.productionTypes.value[0].consequenceMaps.push(...gameBoards.slice(0, 4));
-				this.productionTypes.value[1].consequenceMaps.push(...gameBoards.slice(4, 8));
+		if (this.settings.value.mode == 'GRID') {
+			const maps = settings.maps.filter(
+				m => settingsLevel!.maps.includes(m.id) &&
+					(m.gameBoardType == GameBoardType.SuitabilityMap || m.gameBoardType == GameBoardType.ConsequenceMap) &&
+					!previousLevel.gameBoards.map(o => o.id).includes(m.id));
+
+			level.gameBoards.push(...previousLevel.gameBoards);
+
+
+			combineLatest(maps.map(m => this.getGridGameBoard(m))).subscribe((gameBoards) => {
+				level.gameBoards.push(...gameBoards);
+				gameBoards.forEach(c => {
+					let map = settings.maps.find(o => o.id == c.id);
+					map!.linkedToProductionTypes.forEach(p => {
+						let productionType = this.productionTypes.value.find(o => o.id == p);
+						productionType!.consequenceMaps.push(c);
+					});
+				});
 
 				this.selectedFields.value.forEach(o => o.updateScore());
 
@@ -159,11 +167,6 @@ export class GameService {
 				this.loading(false);
 			});
 		} else if (this.settings.value.mode == 'SVG') {
-			const settings = this.settings.value;
-
-
-			const previousLevel = this.currentLevel.value!;
-
 			const overlay = this.currentLevel.value!.gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
 			const backgroundMap = settings.maps.find(o => o.gameBoardType == GameBoardType.BackgroundMap)!;
 
@@ -177,17 +180,13 @@ export class GameService {
 			customColors.set(8, "98e600");
 			customColors.set(15, "00000000");
 
-			let settingsLevel = settings.levels.at(this.currentLevel.value!.levelNumber);
-			if (settingsLevel == undefined) {
-				settingsLevel = settings.levels[settings.levels.length - 1];
-			}
 			const otherMaps = settings.maps.filter(
-				m =>m.id in settingsLevel!.maps &&  
+				m => m.id in settingsLevel!.maps &&
 					(m.gameBoardType == GameBoardType.SuitabilityMap || m.gameBoardType == GameBoardType.ConsequenceMap) &&
 					!previousLevel.gameBoards.map(o => o.id).includes(m.id));
 
 			level.gameBoards.push(...previousLevel.gameBoards);
-			level.levelNumber = previousLevel.levelNumber + 1;
+			
 
 			combineLatest([
 				this.tiffService.getSvgBackground(backgroundMap.urlToData, customColors),
@@ -236,8 +235,8 @@ export class GameService {
 			switchMap(overlay => {
 				level.gameBoards.push(overlay);
 				return combineLatest(
-					[	this.tiffService.getSvgBackground(backgroundMap.urlToData, customColors),
-						...otherMaps.map(m => { return this.getSvg(m, overlay) }),]
+					[this.tiffService.getSvgBackground(backgroundMap.urlToData, customColors),
+					...otherMaps.map(m => { return this.getSvg(m, overlay) }),]
 				);
 			})
 		).subscribe(([background, ...gameBoards]) => {
@@ -249,7 +248,7 @@ export class GameService {
 			for (let i = 0; i < settings.productionTypes.length; i++) {
 				const current = settings.productionTypes[i];
 				const gameBoard = gameBoards.find(g => g.id == otherMaps.find(m => m.linkedToProductionTypes.includes(current.id))!.id)!;
-				const productionType = new ProductionType(i * 10 + 10, current.fieldColor, gameBoard, current.image, current.maxElements);
+				const productionType = new ProductionType(current.id, current.fieldColor, gameBoard, current.image, current.maxElements);
 				this.productionTypes.value.push(productionType);
 			}
 
@@ -286,11 +285,9 @@ export class GameService {
 			level.gameBoards.push(...gameBoards);
 			level.levelNumber = 1;
 
-			settings.productionTypes.forEach((p) => 
-			{ 	
+			settings.productionTypes.forEach((p) => {
 				const gameBoard = gameBoards.find(g => g.id == maps.find(m => m.linkedToProductionTypes.includes(p.id))!.id)!;
-				console.log(gameBoard)
-				this.productionTypes.value.push(new ProductionType(10, "#FFF", gameBoard, p.image, p.maxElements));
+				this.productionTypes.value.push(new ProductionType(p.id, "#FFF", gameBoard, p.image, p.maxElements));
 			});
 
 			this.productionTypes.next(this.productionTypes.value);

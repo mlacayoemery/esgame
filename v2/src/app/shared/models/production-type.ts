@@ -6,9 +6,9 @@ export class ProductionType {
 	consequenceMaps: GameBoard[] = [];
 	image: string;
 	maxElements: number;
-	id: number;
+	id: string;
 
-	constructor(id: number, fieldColor: string, scoreMap: GameBoard, image : string, maxElements : number) {
+	constructor(id: string, fieldColor: string, scoreMap: GameBoard, image : string, maxElements : number) {
 		this.id = id;
 		this.fieldColor = fieldColor;
 		this.suitabilityMap = scoreMap;
