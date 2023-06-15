@@ -102,6 +102,7 @@ export class TiffService {
 		const width = image.getWidth();
 		const height = image.getHeight();
 		const nodata = image.getGDALNoData()!;
+		console.log(nodata);
 
 		const dataUrl = await this.arrayToImage(numRaster, width, nodata, gradient, colors);
 		return { width, height, dataUrl, nodata, numRaster };
@@ -123,6 +124,7 @@ export class TiffService {
 				startPos: numRaster.indexOf(key)
 			});
 		});
+		console.log(image.getGDALNoData()!);
 		return { width: image.getWidth(), height: image.getHeight(), pathArray, nodata: image.getGDALNoData() };
 	}
 

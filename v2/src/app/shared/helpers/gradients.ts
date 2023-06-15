@@ -50,8 +50,15 @@ export enum DefaultGradients {
 	Yellow = 'yellow'
 }
 
+var currentMaxId: number = 0;
+
 export class CustomColors {
 	private colors = new Map<number, string>();
+	id: number;
+
+	constructor() {
+		this.id = ++currentMaxId;
+	}
 
 	get(i: number) {
 		const returnVal = this.colors.get(i);

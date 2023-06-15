@@ -170,7 +170,6 @@ export class GameService {
 				this.tiffService.getSvgGameBoard("", "/assets/images/Consequence_4_Clip.tif", GameBoardType.ConsequenceMap, "Habitat Fragmentation", DefaultGradients.Green, overlay),
 			]).subscribe((gameBoards) => {
 				gameBoards.forEach(o => {
-					o.fields = overlay.fields
 					o.width = overlay.width;
 					o.height = overlay.height;
 				});
