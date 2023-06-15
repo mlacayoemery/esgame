@@ -1,5 +1,5 @@
 import { GameBoardType } from "./game-board-type";
-import data from './../../../data2.json';
+import data from './../../../data.json';
 import { DefaultGradients } from "../helpers/gradients";
 import { TranslateService } from "@ngx-translate/core";
 
