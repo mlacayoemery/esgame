@@ -78,6 +78,38 @@
 		},
 		{
 			"id": "6",
+			"name": { "en": "Air Quality", "de": "Air Quality" },
+			"linkToData": "/assets/images/Consequence_1_Clip.tif",
+			"gradient": "red",
+			"gameBoardtype": "Consequence",
+			"linkedToProductionTypes": ["10", "20", "30", "40"]
+		},
+		{
+			"id": "7",
+			"name": { "en": "Water Quality", "de": "Water Quality" },
+			"linkToData": "/assets/images/Consequence_2_Clip.tif",
+			"gradient": "red",
+			"gameBoardtype": "Consequence",
+			"linkedToProductionTypes": ["10", "20", "30", "40"]
+		},
+		{
+			"id": "8",
+			"name": { "en": "Intensive Livestock Land", "de": "Intensive Livestock Land" },
+			"linkToData": "/assets/images/Consequence_3_Clip.tif",
+			"gradient": "red",
+			"gameBoardtype": "Consequence",
+			"linkedToProductionTypes": ["10", "20", "30", "40"]
+		},
+		{
+			"id": "9",
+			"name": { "en": "Intensive Livestock Land", "de": "Intensive Livestock Land" },
+			"linkToData": "/assets/images/Consequence_4_Clip.tif",
+			"gradient": "red",
+			"gameBoardtype": "Consequence",
+			"linkedToProductionTypes": ["10", "20", "30", "40"]
+		},
+		{
+			"id": "10",
 			"name": { "en": "Background", "de": "Background" },
 			"linkToData": "/assets/images/land_use_only_raster.tif",
 			"gradient": "",
@@ -90,6 +122,12 @@
 			"id": "1",
 			"maps": ["1", "2", "3", "4", "5", "6"],
 			"name": { "en": "Level 1", "de": "Level 1"},
+			"instructions": { "en": "test", "de": "test"}
+		},
+		{
+			"id": "2",
+			"maps": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+			"name": { "en": "Level 2", "de": "Level 2"},
 			"instructions": { "en": "test", "de": "test"}
 		}
 	]
