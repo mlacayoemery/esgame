@@ -20,7 +20,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FormsModule, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { MissingTranslationHandler, MissingTranslationHandlerParams, TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { ConfiguratorComponent } from './configurator/configurator.component';
@@ -41,6 +41,14 @@ export function HttpLoaderFactory(http: HttpClient) {
 export function createTranslateLoader(http: HttpClient) {
 	return new TranslateHttpLoader(http, './assets/i18n/', '.json');
 }
+
+export class MyMissingTranslationHandler implements MissingTranslationHandler {
+	handle(params: MissingTranslationHandlerParams): any {
+	  const missingKey = params.key;
+	//   console.log(missingKey);
+	  return missingKey;
+	}
+  }
 
 @NgModule({
 	declarations: [
@@ -81,11 +89,15 @@ export function createTranslateLoader(http: HttpClient) {
 		//FormControl,
 		TranslateModule.forRoot({
 			defaultLanguage: 'de',
+			missingTranslationHandler: {
+				provide: MissingTranslationHandler, useClass: MyMissingTranslationHandler
+			},
 			loader: {
 				provide: TranslateLoader,
 				useFactory: createTranslateLoader,
 				deps: [HttpClient]
-			}
+			},
+			extend: true
 		})
 	],
 	providers: [],

@@ -4,7 +4,7 @@
 		<th class="--right-align">{{totalScore}}</th>
 	</tr>
 	<tr *ngFor="let s of scores">
-		<td translate>{{s.name}}</td>
+		<td translate>{{ "map_name_" + s.id }}</td>
 		<td [ngClass]="s.score > 0 ? '--positive' : s.score < 0 ? '--negative' : ''" class="--right-align">{{s.score}}</td>
 	</tr>
 	

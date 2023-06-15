@@ -7,12 +7,12 @@
 <h1>{{ 'configurator' | translate }}</h1>
 <form [formGroup]="formGroup">
     <mat-form-field>
-        <mat-label>Map types</mat-label>
+        <mat-label translate>Map types</mat-label>
         <mat-select formControlName="mapMode">
-            <mat-option value="svg">
+            <mat-option value="svg" translate>
                 Zones
             </mat-option>
-            <mat-option value="grid">
+            <mat-option value="grid" translate>
                 Fields
             </mat-option>
         </mat-select>
@@ -160,4 +160,5 @@
     <button type="button" mat-raised-button (click)="addLevel()" color="primary" aria-label="Add map">
         <mat-icon>add</mat-icon> {{ 'new-level' | translate}}
     </button>
+	<button type="button" mat-raised-button (click)="exportData()" color="primary" translate>Export</button>
 </form>

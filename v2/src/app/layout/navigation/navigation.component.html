@@ -1,21 +1,15 @@
-<a [routerLink]="'game'">Zum Spiel (Rastervariante)</a>
-<a [routerLink]="'game-svg'">Zum Spiel (SVG-Variante)</a>
-<a [routerLink]="'configurator'">Zum Konfigurator</a>
+<a [routerLink]="'game'">Go to the game (grid version)</a>
+<a [routerLink]="'game-svg'">Go to the game (SVG version)</a>
+<a [routerLink]="'configurator'">Go to configurator</a>
 <br/>
 <br/>
 <br/>
 <mat-form-field appearance="fill">
-	<mat-label translate>Sprache</mat-label>
+	<mat-label translate>Language</mat-label>
 	<mat-select [value]="'de'" (selectionChange)="changeLanguage($event)">
-	  	<mat-option [value]="'de'">
-			{{'Deutsch' | translate}}
+	  	<mat-option *ngFor="let lang of languages" [value]="lang">
+			{{lang | translate}}
 	  	</mat-option>
-		  <mat-option [value]="'nl'">
-			{{'Niederländisch' | translate}}
-		</mat-option>
-	  	<mat-option [value]="'en'">
-			{{'Englisch' | translate}}
-		</mat-option>
 	</mat-select>
 </mat-form-field>
 <tro-import-config></tro-import-config>

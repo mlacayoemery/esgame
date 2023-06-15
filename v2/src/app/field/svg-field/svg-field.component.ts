@@ -20,7 +20,7 @@ export class SvgFieldComponent extends FieldBaseComponent {
 		if (productionType && this.clickable) {
 			this.fillColor = `${productionType.fieldColor}`;
 		} else if(productionType) {
-			this.fillColor = `url(#pattern_${productionType.name.replace(' ', '')})`;
+			this.fillColor = `url(#pattern_${productionType.id})`;
 		} else {
 			this.fillColor = `transparent`;
 		}

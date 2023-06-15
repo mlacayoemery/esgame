@@ -3,7 +3,7 @@ import { Level } from "../shared/models/level";
 import { SelectedField } from "../shared/models/field";
 
 export class ScoreEntry {
-	name: string;
+	id: string;
 	score: number;
 }
 
@@ -16,9 +16,9 @@ export class ScoreService {
 		if (level) {
 			let scores: ScoreEntry[] = [];
 			level?.gameBoards.forEach(gameBoard => {
-				if (scores.some(o => o.name == gameBoard.name) == false) {
+				if (scores.some(o => o.id == gameBoard.id) == false) {
 					scores.push(
-						{ name: gameBoard.name, score: 0 }
+						{ id: gameBoard.id, score: 0 }
 					);
 				}
 			});
@@ -29,7 +29,7 @@ export class ScoreService {
 
 	calculateScore(scores: ScoreEntry[], fields: SelectedField[]) {
 		scores.forEach(score => {
-			score.score = fields.reduce((a, b) => a + (b.scores.find(o => o.name == score.name)?.score ?? 0), 0)
+			score.score = fields.reduce((a, b) => a + (b.scores.find(o => o.id == score.id)?.score ?? 0), 0)
 		});
 	}
 }
