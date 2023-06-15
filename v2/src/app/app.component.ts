@@ -12,8 +12,8 @@ export class AppComponent {
 
 	constructor(private translate: TranslateService) {
 
-		this.translate.addLangs(['de', 'en']);
-		this.translate.setDefaultLang('de');
-		this.translate.use('de');
+		this.translate.addLangs(['de', 'en', 'nl']);
+		this.translate.setDefaultLang('en');
+		this.translate.use('en');
 	}
 }

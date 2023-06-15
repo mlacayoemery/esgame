@@ -67,25 +67,25 @@ export class ConfiguratorComponent {
 		this.maps.removeAt(index);
 	}
 
-	addAgricultureType() {
+	addProductionType() {
 		this.productionTypes.push(new FormGroup({
 			id: new FormControl(crypto.randomUUID()),
-			name: new FormGroup({ "en": new FormControl("Default Agriculture Type"), "de": new FormControl("Standard-Landwirtschaftstyp") }),
+			name: this.getLanguageControls(),
 			fieldColor: new FormControl("#000000"),
 			urlToIcon: new FormControl(""),
 			maxElements: new FormControl(-1)
 		}));
 	}
-	removeAgricultureType(index: number) {
+	removeProductionType(index: number) {
 		this.productionTypes.removeAt(index);
 	}
 
 	addLevel() {
 		this.levels.push(new FormGroup({
 			id: new FormControl(crypto.randomUUID()),
-			name: new FormGroup({ "en": new FormControl("Default Level"), "de": new FormControl("Standard Level") }),
+			name: this.getLanguageControls(),
 			maps: new FormControl([]),
-			instructions: new FormGroup({ "en": new FormControl("Default Instructions"), "de": new FormControl("Standard Anweisungen") })
+			instructions: this.getLanguageControls(),
 		}));
 	}
 
@@ -108,30 +108,4 @@ export class ConfiguratorComponent {
 		a.download = 'configuration.json';
 		a.click();
 	}
-}
-
-
-class Map {
-	id: string;
-	name: Record<string, string>;
-	urlToData: string = "";
-	gradient: string;
-	gameBoardType: string;
-	agricultueTypes: string[];
-	linkedToProductionTypes: [];
-}
-
-class AgricultureType {
-	id: string;
-	name: Record<string, string>;
-	fieldColor: string;
-	urlToIcon: string;
-	maxElements: number = -1;
-}
-
-class Level {
-	id: string;
-	maps: String[];
-	name: Record<string, string>;
-	instructions: Record<string, string>;
 }

@@ -10,6 +10,7 @@ import { GameService } from 'src/app/services/game.service';
 })
 export class NavigationComponent {
 	languages: string[];
+	currentLanguage: string;
 
 	constructor(
 		private translate: TranslateService,
@@ -17,6 +18,7 @@ export class NavigationComponent {
 	) {
 		this.gameService.resetGame();
 		this.languages = translate.getLangs();
+		this.currentLanguage = translate.currentLang;
 	}
 
 	changeLanguage(event: MatSelectChange) {

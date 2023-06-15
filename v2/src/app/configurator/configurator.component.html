@@ -7,13 +7,13 @@
 <h1>{{ 'configurator' | translate }}</h1>
 <form [formGroup]="formGroup">
     <mat-form-field>
-        <mat-label translate>Map types</mat-label>
+        <mat-label>{{ 'Map types' | translate }}</mat-label>
         <mat-select formControlName="mapMode">
-            <mat-option value="svg" translate>
-                Zones
+            <mat-option value="svg">
+                {{ 'Zones' | translate }}
             </mat-option>
             <mat-option value="grid" translate>
-                Fields
+                {{ 'Fields' | translate }}
             </mat-option>
         </mat-select>
     </mat-form-field>
@@ -35,7 +35,7 @@
         <input type="number" matInput placeholder="0" name="slection-size" formControlName="elementSize" required>
     </mat-form-field>
     <mat-checkbox formControlName="infiniteLevels">{{ 'infinite-levels' | translate}}</mat-checkbox>
-    <h2>{{ 'agriculture-types' | translate }}</h2>
+    <h2>{{ 'production types' | translate }}</h2>
     <div formArrayName="productionTypes">
         <div *ngFor="let type of productionTypes.controls; let i = index" [formGroupName]="i">
 			<ng-container formGroupName="name">
@@ -56,14 +56,14 @@
                 <mat-label>{{ 'max-elements' | translate}}</mat-label>
                 <input type="number" matInput name="max-elements-{i}" formControlName="maxElements" required>
             </mat-form-field>
-            <button type="button" mat-raised-button (click)="removeAgricultureType(i)" color="primary"
+            <button type="button" mat-raised-button (click)="removeProductionType(i)" color="primary"
                 aria-label="Add map">
-                <mat-icon>delete</mat-icon> {{ 'remove-agriculture-type' | translate}}
+                <mat-icon>delete</mat-icon> {{ 'remove-production-type' | translate}}
             </button>
         </div>
     </div>
-    <button type="button" mat-raised-button (click)="addAgricultureType()" color="primary" aria-label="Add map">
-        <mat-icon>add</mat-icon> {{ 'new-agriculture-type' | translate}}
+    <button type="button" mat-raised-button (click)="addProductionType()" color="primary" aria-label="Add map">
+        <mat-icon>add</mat-icon> {{ 'new-production-type' | translate}}
     </button>
     <h2>{{ 'maps' | translate}}</h2>
 	<ng-container formArrayName="maps">
@@ -82,13 +82,13 @@
 				<mat-form-field>
 					<mat-label>{{ 'map-Color' | translate}}</mat-label>
 					<mat-select formControlName="gradient">
-						<mat-option value="green">
+						<mat-option value="green" translate>
 							Green
 						</mat-option>
-						<mat-option value="red">
+						<mat-option value="red" translate>
 							Red
 						</mat-option>
-						<mat-option value="blue">
+						<mat-option value="blue" translate>
 							Blue
 						</mat-option>
 					</mat-select>
@@ -96,27 +96,27 @@
 				<mat-form-field>
 					<mat-label>{{ 'game-board-type' | translate}}</mat-label>
 					<mat-select formControlName="gameBoardType">
-						<mat-option value="Suitablity">
+						<mat-option value="Suitablity" translate>
 							Suitablity
 						</mat-option>
-						<mat-option *ngIf="this.formGroup.get('mapMode')!.value == 'svg'" value="Drawing">
+						<mat-option *ngIf="this.formGroup.get('mapMode')!.value == 'svg'" value="Drawing" translate>
 							Zones
 						</mat-option>
-                        <mat-option *ngIf="this.formGroup.get('mapMode')!.value == 'svg'" value="Background">
+                        <mat-option *ngIf="this.formGroup.get('mapMode')!.value == 'svg'" value="Background" translate>
 							Background
 						</mat-option>
-						<mat-option value="Consequence">
+						<mat-option value="Consequence" translate>
 							Consequence
 						</mat-option>
 					</mat-select>
 				</mat-form-field>
 				<mat-form-field>
-					<mat-label>{{ 'agriculture-types' | translate}}</mat-label>
+					<mat-label>{{ 'production-types' | translate}}</mat-label>
 					 <mat-select formControlName="productionTypes" multiple>
 						<mat-option *ngFor="let type of productionTypes.controls" [value]="type.get('id')!.value">{{type.get('name')!.get('en')!.value}}</mat-option>
 					</mat-select>
-					<mat-hint *ngIf="maps.length == 0">
-						{{'no-agriculture-types' | translate}}
+					<mat-hint *ngIf="productionTypes.length == 0">
+						{{'no-production-types' | translate}}
 					</mat-hint>
 				</mat-form-field>
 				<button type="button" mat-raised-button (click)="removeMap(i)" color="primary" aria-label="Remove map">
@@ -142,7 +142,7 @@
                     <mat-option [disabled]="maps.length == 0" *ngFor="let map of maps.controls"
                         [value]="map.get('id')!.value">{{map.get('name')!.get('en')!.value}}</mat-option>
                 </mat-select>
-                <mat-hint *ngIf="maps.controls.length == 0">
+                <mat-hint *ngIf="maps.length == 0">
                     {{'no-maps' | translate}}
                 </mat-hint>
             </mat-form-field>
@@ -160,5 +160,5 @@
     <button type="button" mat-raised-button (click)="addLevel()" color="primary" aria-label="Add map">
         <mat-icon>add</mat-icon> {{ 'new-level' | translate}}
     </button>
-	<button type="button" mat-raised-button (click)="exportData()" color="primary" translate>Export</button>
+	<button type="button" mat-raised-button (click)="exportData()" color="primary">{{ 'Export' | translate }}</button>
 </form>

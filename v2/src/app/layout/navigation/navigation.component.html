@@ -6,7 +6,7 @@
 <br/>
 <mat-form-field appearance="fill">
 	<mat-label translate>Language</mat-label>
-	<mat-select [value]="'de'" (selectionChange)="changeLanguage($event)">
+	<mat-select [value]="currentLanguage" (selectionChange)="changeLanguage($event)">
 	  	<mat-option *ngFor="let lang of languages" [value]="lang">
 			{{lang | translate}}
 	  	</mat-option>
