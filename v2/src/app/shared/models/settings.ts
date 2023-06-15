@@ -1,11 +1,14 @@
 import { GameBoardType } from "./game-board-type";
 import data from './../../../data.json';
 import { DefaultGradients } from "../helpers/gradients";
+import { TranslateService } from "@ngx-translate/core";
 
 type LanguageString = Record<string, string>;
 
 export class Settings {
-	constructor() {
+	constructor(
+		private translate: TranslateService
+	) {
 		this.elementSize = data.elementSize;
 		this.gameBoardColumns = data.gameBoardColumns;
 		this.gameBoardRows = data.gameBoardRows;
@@ -15,6 +18,25 @@ export class Settings {
 		this.productionTypes = data.productionTypes.map((o) => ({ id: o.id, name: o.name, fieldColor: o.fieldColor, image: o.image, maxElements: o.maxElements }));
 		this.maps = data.maps.map((o) => ({ id: o.id, name: o.name, gradient: convertGradient(o.gradient), gameBoardType: convertGameBoardType(o.gameBoardtype), linkedToProductionTypes: o.linkedToProductionTypes, urlToData: o.linkToData }));
 		this.levels = data.levels.map((o) => ({ id: o.id, name: o.name, maps: o.maps, instructions: o.instructions }));
+
+		this.translate.getLangs().forEach((lang) => {
+			this.maps.forEach(o => {
+				var translation = {} as any;
+				translation["map_name_" + o.id] = o.name[lang];
+				this.translate.setTranslation(lang, translation, true);
+			});
+			this.productionTypes.forEach(o =>  {
+				var translation = {} as any;
+				translation["production_type_" + o.id] = o.name[lang];
+				this.translate.setTranslation(lang, translation, true);
+			});
+			this.levels.forEach(o => {
+				var translation = {} as any;
+				translation["level_name_" + o.id] = o.name[lang];
+				translation["level_instructions_" + o.id] = o.instructions[lang];
+				this.translate.setTranslation(lang, translation, true);
+			});
+		});
 	}
 
 	elementSize: number;

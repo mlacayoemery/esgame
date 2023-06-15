@@ -7,19 +7,17 @@ export class GameBoard {
 	fields: Field[];
 	gameBoardType: GameBoardType;
 	legend: Legend | undefined;
-	name: string;
 	isSvg: boolean;
 	width: number;
 	height: number;
 	background: string;
 	background2: string;
 
-	constructor(id: string, gameBoardType: GameBoardType, fields: Field[], name: string, legend?: Legend, isSvg = false, width = 0, height = 0, background = "", background2 = "") {
+	constructor(id: string, gameBoardType: GameBoardType, fields: Field[], legend?: Legend, isSvg = false, width = 0, height = 0, background = "", background2 = "") {
 		this.id = id
 		this.fields = fields;
 		this.gameBoardType = gameBoardType;
 		this.legend = legend;
-		this.name = name;
 		this.isSvg = isSvg;
 		this.width = width;
 		this.height = height;

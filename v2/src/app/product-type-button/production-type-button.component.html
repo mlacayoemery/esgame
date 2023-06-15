@@ -1,4 +1,4 @@
 <div *ngIf="productionType">
 	<img [src]="productionType.image" *ngIf="productionType.image" />
-	<p>{{ productionType.name }}</p>
+	<p translate>{{ "production_type_" + productionType.id }}</p>
 </div>

@@ -14,7 +14,7 @@ import tiffToSvgPaths from '../shared/helpers/svg/tiffToSvgPaths';
 })
 export class TiffService {
 
-	getGridGameBoard(url: string, defaultGradient: DefaultGradients, gameBoardType: GameBoardType, name: string) {
+	getGridGameBoard(url: string, defaultGradient: DefaultGradients, gameBoardType: GameBoardType) {
 		return this.getTiffData(url).pipe(
 			mergeMap(data => {
 				let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
@@ -26,14 +26,14 @@ export class TiffService {
 				fields = data.map((o, i) => {
 					return new Field(i, new FieldType(gradient!.colors[(uniqueValues.indexOf(o))] as string, "CONFIGURED"), o);
 				});
-				const gameBoard = new GameBoard("", gameBoardType, fields, name, legend);
+				const gameBoard = new GameBoard("", gameBoardType, fields, legend);
 
 				return of(gameBoard);
 			})
 		);
 	}
 
-	getSvgGameBoard(id: string, url: string, gameBoardType: GameBoardType, name: string, defaultGradient: DefaultGradients, overlay: GameBoard) {
+	getSvgGameBoard(id: string, url: string, gameBoardType: GameBoardType, defaultGradient: DefaultGradients, overlay: GameBoard) {
 		return this.getTiffSvgData(url, gradients.get(defaultGradient)!).pipe(
 			mergeMap(data => {
 				let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
@@ -49,14 +49,14 @@ export class TiffService {
 					}
 				});
 
-				const gameBoard = new GameBoard(id, gameBoardType, fields, name, legend, true, data.width, data.height, data.dataUrl);
+				const gameBoard = new GameBoard(id, gameBoardType, fields, legend, true, data.width, data.height, data.dataUrl);
 
 				return of(gameBoard);
 			})
 		);
 	}
 
-	getOverlayGameBoard(id: string, url: string, gameBoardType: GameBoardType, name: string) {
+	getOverlayGameBoard(id: string, url: string, gameBoardType: GameBoardType) {
 		return this.getTiffSvgData2(url).pipe(
 			mergeMap(data => {
 				let fields: Field[];
@@ -65,7 +65,7 @@ export class TiffService {
 					return new Field(path.startPos, new FieldType("", "CONFIGURED"), 0, null, Number.parseInt(path.id.toString()) != Number.parseInt(data.nodata!.toString()), undefined, path.path);
 				});
 
-				return of(new GameBoard(id, gameBoardType, fields, name, undefined, true, data.width, data.height));
+				return of(new GameBoard(id, gameBoardType, fields, undefined, true, data.width, data.height));
 			})
 		);
 	}

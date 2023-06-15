@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { GameService } from '../services/game.service';
+import { Settings } from '../shared/models/settings';
 
 @Component({
   selector: 'tro-help',
@@ -10,7 +11,9 @@ import { GameService } from '../services/game.service';
 export class HelpComponent {
 	isOpen = false;
 
-	constructor(private gameService: GameService, private cdRef: ChangeDetectorRef) {
+	constructor(
+		private gameService: GameService,
+		private cdRef: ChangeDetectorRef) {
 		this.gameService.helpWindowObs.subscribe(o => {
 			this.isOpen = o;
 			this.cdRef.markForCheck();

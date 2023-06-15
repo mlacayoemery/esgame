@@ -1,12 +1,12 @@
 <div class="panel left-panel">
 	<ng-container *ngFor="let board of (leftGameBoards | async)">
-		<h2 translate>{{ board.name }}</h2>
+		<h2 translate>{{ "map_name_" + board.id }}</h2>
         <tro-svg-game-board [boardData]="board" hideLegend [clickMode]="clickMode.SelectBoard" [readOnly]="readOnly" ></tro-svg-game-board>
 	</ng-container>
 </div>
 <div class="panel center-panel">
 	<header>
-		<p translate [translateParams]="{value: (level | async)?.levelNumber}" troLevelIndicator>Runde</p>
+		<p translate [translateParams]="{value: (level | async)?.levelNumber}" troLevelIndicator>Level</p>
 		<h1 translate>Tradeoff: Agriculture Edition!</h1>
 		<span class="icon-help-circle" (click)="openHelp()"></span>
 	</header>
@@ -19,15 +19,15 @@
 	<div class="game-board-wrapper">
 		<tro-svg-game-board [boardData]="focusedGameBoard | async" hideLegend class="main-board" [readOnly]="readOnly"></tro-svg-game-board>
 		<div class="score-board-wrapper">
-			<button troButton class="btn-prev" (click)="prevLevel()" [disabled]="(level | async)?.levelNumber == 1" translate>Vorherige Runde</button>
-			<button troButton class="btn-next" (click)="nextLevel()" [disabled]="(level | async)?.levelNumber != 1" translate>Nächste Runde</button>
+			<button troButton class="btn-prev" (click)="prevLevel()" [disabled]="(level | async)?.levelNumber == 1" translate>Previous Level</button>
+			<button troButton class="btn-next" (click)="nextLevel()" [disabled]="(level | async)?.levelNumber != 1" translate>Next Level</button>
 			<tro-score-board class="score-board"></tro-score-board>
 		</div>
 	</div>
 </div>
 <div class="panel right-panel">
 	<ng-container *ngFor="let board of (rightGameBoards | async)">
-		<h2 translate>{{ board.name }}</h2>
+		<h2 translate>{{ "map_name_" + board.id }}</h2>
 		<tro-svg-game-board [boardData]="board" [clickMode]="clickMode.SelectBoard" hideLegend [readOnly]="readOnly"></tro-svg-game-board>
 	</ng-container>
 </div>
