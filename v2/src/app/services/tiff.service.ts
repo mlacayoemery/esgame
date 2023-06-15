@@ -14,7 +14,7 @@ import tiffToSvgPaths from '../shared/helpers/svg/tiffToSvgPaths';
 })
 export class TiffService {
 
-	getGridGameBoard(url: string, defaultGradient: DefaultGradients, gameBoardType: GameBoardType) {
+	getGridGameBoard(id : string, url: string, defaultGradient: DefaultGradients, gameBoardType: GameBoardType) {
 		return this.getTiffData(url).pipe(
 			mergeMap(data => {
 				let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
@@ -26,7 +26,7 @@ export class TiffService {
 				fields = data.map((o, i) => {
 					return new Field(i, new FieldType(gradient!.colors[(uniqueValues.indexOf(o))] as string, "CONFIGURED"), o);
 				});
-				const gameBoard = new GameBoard("", gameBoardType, fields, legend);
+				const gameBoard = new GameBoard(id, gameBoardType, fields, legend);
 
 				return of(gameBoard);
 			})
