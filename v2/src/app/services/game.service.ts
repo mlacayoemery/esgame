@@ -161,7 +161,13 @@ export class GameService {
 				this.loading(false);
 			});
 		} else if (this.settings.value.mode == 'SVG') {
+			const settings = this.settings.value;
+
 			const overlay = this.currentLevel.value!.gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
+			const background = this.currentLevel.value!.gameBoards.find(o => o.gameBoardType == GameBoardType.BackgroundMap)!;
+
+			const otherMaps = settings.maps.filter(m => m.id in currentLevel.maps && (m.gameBoardType == GameBoardType.SuitabilityMap || m.gameBoardType == GameBoardType.ConsequenceMap));
+
 
 			combineLatest([
 				this.tiffService.getSvgGameBoard("", "/assets/images/Consequence_1_Clip.tif", GameBoardType.ConsequenceMap, "Air Quality", DefaultGradients.Green, overlay),
@@ -179,8 +185,8 @@ export class GameService {
 				level2.gameBoards.push(...gameBoards);
 				level2.levelNumber = 2;
 				
-				this.productionTypes.value[0].consequenceMaps.push(...gameBoards);
-				this.productionTypes.value[1].consequenceMaps.push(...gameBoards);
+				this.productionTypes.value.forEach(c => c.consequenceMaps.push(...gameBoards));
+				//this.productionTypes.value[1].consequenceMaps.push(...gameBoards);
 				
 				this.selectedFields.value.forEach(o => o.updateScore());
 

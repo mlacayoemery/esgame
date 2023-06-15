@@ -10,14 +10,14 @@
 			"id": "10",
 			"name": { "en": "Extensives Ackerland", "de": "Extensives Ackerland"},
 			"fieldColor": "#f8cbad",
-			"image": "",
+			"image": "https://cdn-icons-png.flaticon.com/512/5231/5231594.png",
 			"maxElements": 200
 		},
 		{
 			"id": "20",
 			"name": { "en": "Intensives Ackerland", "de": "Intensives Ackerland"},
 			"fieldColor": "#843c0c",
-			"image": "",
+			"image": "https://cdn-icons-png.flaticon.com/512/3980/3980036.png",
 			"maxElements": 200
 		},
 		{
