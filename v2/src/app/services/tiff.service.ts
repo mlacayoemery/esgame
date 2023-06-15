@@ -154,7 +154,7 @@ export class TiffService {
 				if (Number.parseInt(data[i].toString()) == Number.parseInt(noData.toString())) {
 					tmpArray.push(255, 255, 255, 0);
 				} else {
-					var toAdd = gradient.calculateColorRGB(1 / (maxValue - minValue) * (data[i] - minValue))
+					var toAdd = gradient.calculateColorRGB(1 - 1 / (maxValue - minValue) * (data[i] - minValue))
 					tmpArray.push(...toAdd, 255);
 				}
 			}
