@@ -36,5 +36,21 @@
 	"instructions": "Instructions",
 	"remove-level": "Remove",
 	"no-maps": "No maps added yet",
-	"no-production-types": "No production types added yet"
+	"no-production-types": "No production types added yet",
+	"Zones": "Zones",
+	"Fields": "Fields",
+	"blue": "Blue",
+	"green": "Green",
+	"purple": "Purple",
+	"orange": "Orange",
+	"red": "Red",
+	"yellow": "Yellow",
+	"Suitability": "Suitability",
+	"Consequence": "Consequence",
+	"Background": "Background",
+	"Basic Instructions": "Instructions first level",
+	"Advanced Instructions": "Instructions later levels",
+	"Game name": "Name of the Game",
+	"Gameboard": "Gameboard",
+	"Image Mode": "Show images on planted fields"
 }

@@ -171,13 +171,13 @@ export class GameService {
 			const backgroundMap = settings.maps.find(o => o.gameBoardType == GameBoardType.BackgroundMap)!;
 
 			var customColors = new CustomColors();
-			customColors.set(2, "a8a800");
-			customColors.set(3, "73b2ff");
-			customColors.set(4, "70a800");
-			customColors.set(5, "CCCCCC");
-			customColors.set(6, "00734c");
-			customColors.set(7, "828282");
-			customColors.set(8, "98e600");
+			customColors.set(2, "a8a8007D");
+			customColors.set(3, "73b2ff7D");
+			customColors.set(4, "70a8007D");
+			customColors.set(5, "CCCCCC7D");
+			customColors.set(6, "00734c7D");
+			customColors.set(7, "8282827D");
+			customColors.set(8, "98e6007D");
 			customColors.set(15, "00000000");
 
 			const otherMaps = settings.maps.filter(
@@ -216,13 +216,13 @@ export class GameService {
 		this.loading();
 
 		var customColors = new CustomColors();
-		customColors.set(2, "a8a800");
-		customColors.set(3, "73b2ff");
-		customColors.set(4, "70a800");
-		customColors.set(5, "CCCCCC");
-		customColors.set(6, "00734c");
-		customColors.set(7, "828282");
-		customColors.set(8, "98e600");
+		customColors.set(2, "a8a8007D");
+		customColors.set(3, "73b2ff7D");
+		customColors.set(4, "70a8007D");
+		customColors.set(5, "CCCCCC7D");
+		customColors.set(6, "00734c7D");
+		customColors.set(7, "8282827D");
+		customColors.set(8, "98e6007D");
 		customColors.set(15, "00000000");
 
 		const settings = this.settings.value;

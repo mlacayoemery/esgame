@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, HostBinding, Input, Renderer2 } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostBinding, Input, OnInit, Renderer2 } from '@angular/core';
 import { GameService } from '../../services/game.service';
 import { HighlightSide } from '../../shared/models/field';
 import { ProductionType } from '../../shared/models/production-type';
@@ -10,9 +10,16 @@ import { FieldBaseComponent } from '../field-base.component';
 	styleUrls: ['./svg-field.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SvgFieldComponent extends FieldBaseComponent {
+export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 	@HostBinding('style.fill') private fillColor: string;
 	@HostBinding('style.stroke') private stroke: string;
+	highlightColor: string;
+
+	ngOnInit(): void {
+		this.gameService.settingsObs.subscribe(o => {
+			this.highlightColor = o.highlightColor;
+		});
+	}
 
 	setColor(productionType: ProductionType | null = null) {
 		if (!this._field) return;
@@ -24,6 +31,16 @@ export class SvgFieldComponent extends FieldBaseComponent {
 		} else {
 			this.fillColor = `transparent`;
 		}
+	}
+
+	override highlight(side: HighlightSide): void {
+		super.highlight(side);
+		this.stroke = this.highlightColor;
+	}
+
+	override removeHighlight(): void {
+		super.removeHighlight();
+		this.stroke = '';
 	}
 
 	assign(productionType: ProductionType, side: HighlightSide) {

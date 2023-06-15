@@ -1,23 +1,36 @@
 <!-- TO ADD:
 	Custom Colour für Hintergrund
-	Hintergrund generell
-	Highlightcolour
 -->
 
 <h1>{{ 'configurator' | translate }}</h1>
 <form [formGroup]="formGroup">
+    <h2>{{ 'general' | translate}}</h2>
+	<mat-form-field>
+        <mat-label>{{ 'Game name' | translate}}</mat-label>
+        <input type="text" matInput name="game-name" formControlName="title" required>
+    </mat-form-field>
+	<mat-form-field>
+        <mat-label>{{ 'Basic Instructions' | translate}}</mat-label>
+        <textarea type="text" matInput name="basic-instructions" formControlName="basicInstructions" required>
+		</textarea>
+    </mat-form-field>
+	<mat-form-field>
+        <mat-label>{{ 'Advanced Instructions' | translate}}</mat-label>
+        <textarea type="text" matInput name="advanced-instructions" formControlName="advancedInstructions" required>
+		</textarea>
+    </mat-form-field>
     <mat-form-field>
         <mat-label>{{ 'Map types' | translate }}</mat-label>
-        <mat-select formControlName="mapMode">
+        <mat-select formControlName="mapMode" required>
             <mat-option value="svg">
                 {{ 'Zones' | translate }}
             </mat-option>
-            <mat-option value="grid" translate>
+            <mat-option value="grid">
                 {{ 'Fields' | translate }}
             </mat-option>
         </mat-select>
     </mat-form-field>
-    <h2>{{ 'general' | translate}}</h2>
+	<h2>{{ 'Gameboard' | translate }}</h2>
     <mat-form-field>
         <mat-label>{{ 'maps-width' | translate}}</mat-label>
         <input type="number" matInput placeholder="0" name="maps-width" formControlName="gameBoardColumns" required>
@@ -35,6 +48,7 @@
         <input type="number" matInput placeholder="0" name="slection-size" formControlName="elementSize" required>
     </mat-form-field>
     <mat-checkbox formControlName="infiniteLevels">{{ 'infinite-levels' | translate}}</mat-checkbox>
+	<mat-checkbox formControlName="imageMode">{{ 'Image Mode' | translate}}</mat-checkbox>
     <h2>{{ 'production types' | translate }}</h2>
     <div formArrayName="productionTypes">
         <div *ngFor="let type of productionTypes.controls; let i = index" [formGroupName]="i">
@@ -50,7 +64,7 @@
             </mat-form-field>
             <mat-form-field>
                 <mat-label>{{ 'icon-url' | translate}}</mat-label>
-                <input type="url" matInput name="icon-url-{i}" placeholder="https://..." formControlName="urlToIcon" required>
+                <input type="url" matInput name="icon-url-{i}" placeholder="https://..." formControlName="urlToIcon">
             </mat-form-field>
             <mat-form-field>
                 <mat-label>{{ 'max-elements' | translate}}</mat-label>
@@ -82,31 +96,25 @@
 				<mat-form-field>
 					<mat-label>{{ 'map-Color' | translate}}</mat-label>
 					<mat-select formControlName="gradient">
-						<mat-option value="green" translate>
-							Green
-						</mat-option>
-						<mat-option value="red" translate>
-							Red
-						</mat-option>
-						<mat-option value="blue" translate>
-							Blue
+						<mat-option *ngFor="let gradient of gradients" [value]="gradient">
+							{{ gradient | translate }}
 						</mat-option>
 					</mat-select>
 				</mat-form-field>
 				<mat-form-field>
 					<mat-label>{{ 'game-board-type' | translate}}</mat-label>
 					<mat-select formControlName="gameBoardType">
-						<mat-option value="Suitablity" translate>
-							Suitablity
+						<mat-option value="Suitability">
+							{{'Suitability' | translate}}
 						</mat-option>
-						<mat-option *ngIf="this.formGroup.get('mapMode')!.value == 'svg'" value="Drawing" translate>
-							Zones
+						<mat-option value="Consequence">
+							{{'Consequence' | translate}}
 						</mat-option>
-                        <mat-option *ngIf="this.formGroup.get('mapMode')!.value == 'svg'" value="Background" translate>
-							Background
+						<mat-option *ngIf="this.formGroup.get('mapMode')!.value == 'svg'" value="Drawing">
+							{{'Zones' | translate}}
 						</mat-option>
-						<mat-option value="Consequence" translate>
-							Consequence
+                        <mat-option *ngIf="this.formGroup.get('mapMode')!.value == 'svg'" value="Background">
+							{{'Background' | translate}}
 						</mat-option>
 					</mat-select>
 				</mat-form-field>
@@ -126,39 +134,6 @@
 	</ng-container>
     <button type="button" mat-raised-button (click)="addMap()" color="primary" aria-label="Add map">
         <mat-icon>add</mat-icon> {{ 'new-map' | translate}}
-    </button>
-    <h2>{{ 'levels' | translate}}</h2>
-    <ng-container *ngFor="let level of levels.controls; let i = index" formArrayName="levels">
-        <div [formGroupName]="i">
-			<ng-container formGroupName="name">
-				<mat-form-field *ngFor="let lang of languages">
-					<mat-label>{{ 'name' | translate}} ({{lang}})</mat-label>
-					<input type="text" matInput placeholder="0" name="levels-name-{{i+lang}}" [formControlName]="lang" required>
-				</mat-form-field>
-			</ng-container>
-            <mat-form-field>
-                <mat-label>{{ 'maps' | translate}}</mat-label>
-                <mat-select formControlName="maps" multiple>
-                    <mat-option [disabled]="maps.length == 0" *ngFor="let map of maps.controls"
-                        [value]="map.get('id')!.value">{{map.get('name')!.get('en')!.value}}</mat-option>
-                </mat-select>
-                <mat-hint *ngIf="maps.length == 0">
-                    {{'no-maps' | translate}}
-                </mat-hint>
-            </mat-form-field>
-			<ng-container formGroupName="instructions">
-				<mat-form-field *ngFor="let lang of languages">
-					<mat-label>{{ 'instructions' | translate}} ({{lang}})</mat-label>
-					<textarea matInput placeholder="0" name="levels-instructions-{{i+lang}}" [formControlName]="lang" required></textarea>
-				</mat-form-field>
-			</ng-container>
-            <button type="button" mat-raised-button (click)="removeLevel(i)" color="primary" aria-label="Remove level">
-                <mat-icon>delete</mat-icon> {{ 'remove-level' | translate}}
-            </button>
-        </div>
-    </ng-container>
-    <button type="button" mat-raised-button (click)="addLevel()" color="primary" aria-label="Add map">
-        <mat-icon>add</mat-icon> {{ 'new-level' | translate}}
     </button>
 	<button type="button" mat-raised-button (click)="exportData()" color="primary">{{ 'Export' | translate }}</button>
 </form>

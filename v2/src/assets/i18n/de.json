@@ -36,5 +36,21 @@
 	"instructions": "Anleitung",
 	"remove-level": "Entfernen",
 	"no-maps": "Keine Karten hinzugefügt",
-	"no-production-types": "Keine Produktionstypen hinzugefügt"
+	"no-production-types": "Keine Produktionstypen hinzugefügt",
+	"Zones": "Zonen",
+	"Fields": "Felder",
+	"blue": "Blau",
+	"green": "Grün",
+	"purple": "Lila",
+	"orange": "Orange",
+	"red": "Rot",
+	"yellow": "Gelb",
+	"Suitability": "Eignung",
+	"Consequence": "Konsequenz",
+	"Background": "Hintergrund",
+	"Basic Instructions": "Anleitung erste Runde",
+	"Advanced Instructions": "Anleitung spätere Runden",
+	"Game name": "Spielname",
+	"Gameboard": "Spielfeld",
+	"Image Mode": "Bilder auf gesetzten Feldern anzeigen"
 }

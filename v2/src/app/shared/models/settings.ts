@@ -1,5 +1,5 @@
 import { GameBoardType } from "./game-board-type";
-import data from './../../../data2.json';
+import data from './../../../data.json';
 import { DefaultGradients } from "../helpers/gradients";
 import { TranslateService } from "@ngx-translate/core";
 
@@ -15,6 +15,7 @@ export class Settings {
 		this.imageMode = data.imageMode;
 		this.mode = data.mapMode == "svg" ? 'SVG' : 'GRID';
 		this.infiniteLevels = data.infiniteLevels;
+		this.highlightColor = data.highlightColor;
 		this.productionTypes = data.productionTypes.map((o) => ({ id: o.id, name: o.name, fieldColor: o.fieldColor, image: o.image, maxElements: o.maxElements }));
 		this.maps = data.maps.map((o) => ({ id: o.id, name: o.name, gradient: convertGradient(o.gradient), gameBoardType: convertGameBoardType(o.gameBoardtype), linkedToProductionTypes: o.linkedToProductionTypes, urlToData: o.linkToData }));
 		this.levels = data.levels.map((o) => ({ id: o.id, name: o.name, maps: o.maps, instructions: o.instructions }));
@@ -39,6 +40,7 @@ export class Settings {
 		});
 	}
 
+	highlightColor: string;
 	elementSize: number;
 	gameBoardColumns: number;
 	gameBoardRows: number;

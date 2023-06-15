@@ -4,6 +4,7 @@
 	"elementSize": 1,
 	"infiniteLevels": false,
 	"gameBoardColumns": 28,
+	"highlightColor": "#f0ff1b",
 	"gameBoardRows": 29,
 	"productionTypes": [
 		{
