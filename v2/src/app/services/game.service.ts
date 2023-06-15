@@ -124,9 +124,9 @@ export class GameService {
 
 	prepareLevel2() {
 		this.loading();
-		var level2 = new Level();
-		level2.showConsequenceMaps = true;
-		this.levels.push(level2);
+		var level = new Level();
+		level.showConsequenceMaps = true;
+		this.levels.push(level);
 
 		// var level1Score = this.scoreService.createEmptyScoreEntry(this.currentLevel.value);
 		// this.scoreService.calculateScore(level1Score, this.selectedFields.value);
@@ -146,9 +146,9 @@ export class GameService {
 				this.tiffService.getGridGameBoard("/assets/images/esgame_img_ranch_water.tif", DefaultGradients.Blue, GameBoardType.ConsequenceMap, "Wasser"),
 				this.tiffService.getGridGameBoard("/assets/images/esgame_img_ranch_hunt.tif", DefaultGradients.Red, GameBoardType.ConsequenceMap, "Jagd"),
 			]).subscribe((gameBoards) => {
-				level2.gameBoards.push(...this.currentLevel.value!.gameBoards);
-				level2.gameBoards.push(...gameBoards);
-				level2.levelNumber = 2;
+				level.gameBoards.push(...this.currentLevel.value!.gameBoards);
+				level.gameBoards.push(...gameBoards);
+				level.levelNumber = 2;
 
 				// TODO: Nicht über Array
 				this.productionTypes.value[0].consequenceMaps.push(...gameBoards.slice(0, 4));
@@ -156,7 +156,7 @@ export class GameService {
 
 				this.selectedFields.value.forEach(o => o.updateScore());
 
-				this.currentLevel.next(level2);
+				this.currentLevel.next(level);
 				this.selectedFields.next(this.selectedFields.value);
 				this.loading(false);
 			});
@@ -183,7 +183,6 @@ export class GameService {
 			if (settingsLevel == undefined) {
 				settingsLevel = settings.levels[settings.levels.length - 1];
 			}
-			let level = new Level();
 			const otherMaps = settings.maps.filter(
 				m =>m.id in settingsLevel!.maps &&  
 					(m.gameBoardType == GameBoardType.SuitabilityMap || m.gameBoardType == GameBoardType.ConsequenceMap) &&
