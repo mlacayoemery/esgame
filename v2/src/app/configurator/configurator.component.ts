@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormArray, FormControl, FormGroup } from '@angular/forms';
+import { AbstractControl, FormArray, FormControl, FormGroup } from '@angular/forms';
 import { TranslateService } from '@ngx-translate/core';
 import { DefaultGradients } from '../shared/helpers/gradients';
 
@@ -30,6 +30,7 @@ export class ConfiguratorComponent {
 			"gameBoardRows": new FormControl(29),
 			"productionTypes": new FormArray([]),
 			"maps": new FormArray([]),
+			"customColors": new FormArray([]),
 			"basicInstructions": new FormControl(""),
 			"advancedInstructions": new FormControl("")
 		});
@@ -58,6 +59,10 @@ export class ConfiguratorComponent {
 		return this.formGroup.get('maps') as FormArray;
 	}
 
+	get customColors() {
+		return this.formGroup.get('customColors') as FormArray;
+	}
+
 	addMap() {
 		this.maps.push(new FormGroup({
 			id: new FormControl(crypto.randomUUID()),
@@ -66,7 +71,8 @@ export class ConfiguratorComponent {
 			productionTypes: new FormControl([]),
 			gameBoardType: new FormControl("Suitability"),
 			linkedToProductionTypes: new FormArray([]),
-			urlToData: new FormControl("")
+			urlToData: new FormControl(""),
+			customColor: new FormControl()
 		}));
 	}
 
@@ -83,6 +89,34 @@ export class ConfiguratorComponent {
 			maxElements: new FormControl(-1)
 		}));
 	}
+
+	addCustomColors() {
+		this.customColors.push(new FormGroup({
+			id: new FormControl(crypto.randomUUID()),
+			colors: new FormArray([])
+		}));
+		this.addColor(this.customColors.controls[this.customColors.controls.length - 1]);
+	}
+
+	addColor(formGroup: AbstractControl) {
+		this.getColorsArray(formGroup).push(new FormGroup({
+			number: new FormControl(),
+			color: new FormControl()
+		}));
+	}
+
+	removeColor(formGroup: AbstractControl, index: number) {
+		this.getColorsArray(formGroup).removeAt(index);
+	}
+
+	removeColorSet(index: number) {
+		this.customColors.removeAt(index);
+	}
+
+	getColorsArray(formGroup: AbstractControl) {
+		return formGroup.get('colors') as FormArray;
+	}
+
 	removeProductionType(index: number) {
 		this.productionTypes.removeAt(index);
 	}
