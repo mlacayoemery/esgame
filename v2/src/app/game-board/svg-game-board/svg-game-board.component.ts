@@ -5,6 +5,7 @@ import { Field } from 'src/app/shared/models/field';
 import { GameBoard } from 'src/app/shared/models/game-board';
 import { GameService } from 'src/app/services/game.service';
 import { debounce, interval } from 'rxjs';
+import { GameBoardType } from 'src/app/shared/models/game-board-type';
 
 @Component({
 	selector: 'tro-svg-game-board',
@@ -16,6 +17,7 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	@ViewChildren(SvgFieldComponent) svgFieldComponents: QueryList<SvgFieldComponent>;
 	background: string = "";
 	background2: string = "";
+	consequenceType = GameBoardType.ConsequenceMap;
 
 	constructor(gameService: GameService, renderer: Renderer2, elementRef: ElementRef, cdRef: ChangeDetectorRef) {
 		super(gameService, renderer, elementRef, cdRef);

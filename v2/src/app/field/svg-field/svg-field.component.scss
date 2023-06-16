@@ -1,7 +1,11 @@
 :host{
     fill: transparent;
-	stroke: black;
-	stroke-width: .2px;
+	
+
+    &.show-stroke {
+        stroke: black;
+        stroke-width: .2px;
+    }
 
     &.--is-highlighted {
         stroke-width: 2px;
