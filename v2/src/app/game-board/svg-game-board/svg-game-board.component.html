@@ -5,4 +5,7 @@
 		</pattern>
 	</defs>
 	<path troSvgField [field]="field" [clickable]="clickMode == GameBoardClickMode.Field && field.editable  && !readOnly" *ngFor="let field of fields" [attr.d]="field.path"></path>
+	<foreignObject x="1" y="1" width="20%" height="100px">
+		<tro-legend-board *ngIf="legend != undefined" [legendData]="legend" [isSmall]="hideLegend"></tro-legend-board>
+	</foreignObject>
 </svg>

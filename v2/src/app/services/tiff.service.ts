@@ -21,7 +21,7 @@ export class TiffService {
 
 				uniqueValues = Array.from(new Set(data)).sort((a, b) => a - b);
 				gradient = gradients.get(defaultGradient)!;
-				legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap };
+				legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: false };
 
 				fields = data.map((o, i) => {
 					return new Field(i, new FieldType(gradient!.colors[(uniqueValues.indexOf(o))] as string, "CONFIGURED"), o);
@@ -38,14 +38,14 @@ export class TiffService {
 			mergeMap(data => {
 				let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
 				
-				uniqueValues = Array.from(new Set(data.numRaster)).sort((a, b) => a - b);
+				uniqueValues = Array.from(new Set(data.numRaster)).filter(c => c != data.nodata).sort((a, b) => a - b);
 				gradient = gradients.get(defaultGradient!);
-				legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap };
-				
+				legend = { elements: [{forValue: Math.round(uniqueValues[0] * 100), color: gradient!.startingColor}, {forValue: Math.round(uniqueValues[uniqueValues.length - 1] * 100), color: gradient!.endingColor}], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true };
+				console.log(uniqueValues, legend);
 				fields = overlay.fields.map((field) => {
 					return {
 						...field,
-						score: data.numRaster[field.id],
+						score: Math.round(data.numRaster[field.id] * 100),
 					}
 				});
 
@@ -102,7 +102,6 @@ export class TiffService {
 		const width = image.getWidth();
 		const height = image.getHeight();
 		const nodata = image.getGDALNoData()!;
-		console.log(nodata);
 
 		const dataUrl = await this.arrayToImage(numRaster, width, nodata, gradient, colors);
 		return { width, height, dataUrl, nodata, numRaster };
@@ -114,7 +113,6 @@ export class TiffService {
 		const raster = await image.readRasters({ interleave: true });
 		const numRaster = Array.from(raster.map(c => Number.parseFloat(c.toString())));
 
-		//TODO: Only if it is drawing map
 		const paths = tiffToSvgPaths(numRaster, { width: image.getWidth(), height: undefined, scale: 1 });
 		let pathArray: { id: number, path: string, startPos: number }[] = [];
 		paths.forEach((val, key) => {
@@ -124,7 +122,6 @@ export class TiffService {
 				startPos: numRaster.indexOf(key)
 			});
 		});
-		console.log(image.getGDALNoData()!);
 		return { width: image.getWidth(), height: image.getHeight(), pathArray, nodata: image.getGDALNoData() };
 	}
 

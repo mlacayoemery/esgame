@@ -11,15 +11,21 @@ export class LegendBoardComponent {
 	private _legendData: Legend;
 	legendElements: LegendElement[];
 	isNegative = false;
+	gradient: string = ""
+
 
 	@HostBinding('class.is-small') @Input() isSmall: boolean = false;
+	@HostBinding('class.is-gradient') @Input() isGradient: boolean = false;
 
 	@Input()
 	set legendData(data: Legend) {
 		if (data) {
 			this._legendData = data;
-			this.legendElements = data.elements.sort((a, b) => a.forValue - b.forValue).filter(o => o.forValue != 0);
+			this.legendElements = data.elements.sort((a, b) => a.forValue - b.forValue);
 			this.isNegative = data.isNegative;
+			this.isGradient = data.isGradient;
+			if (data.isGradient)
+				this.gradient = `linear-gradient(90deg, #${this.legendElements[0].color}, #${this.legendElements[1].color})`
 		}
 	}
 }

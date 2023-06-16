@@ -1,8 +1,18 @@
-<div>
-	<div *ngFor="let element of legendElements">
-		<div class="color-element" [ngStyle]="{ backgroundColor: element.color}">
+<ng-container *ngIf="!gradient">
+	<div class="colors">
+		<div *ngFor="let element of legendElements">
+			<div class="color-element" [ngStyle]="{ backgroundColor: element.color}">
 
+			</div>
+			<span
+				[ngClass]="{'--positive': !isNegative, '--negative': isNegative, 'is-small': isSmall}">{{element.forValue}}</span>
 		</div>
-		<span [ngClass]="{'--positive': !isNegative, '--negative': isNegative, 'is-small': isSmall}">{{element.forValue}}</span>
 	</div>
-</div>
+</ng-container>
+<ng-container *ngIf="gradient">
+	<div class="gradient">
+		<div [ngStyle]="{ background: gradient}"></div>
+		<p>{{legendElements[0].forValue}}</p>
+		<p>{{legendElements[1].forValue}}</p>
+	</div>
+</ng-container>
