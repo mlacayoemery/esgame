@@ -45,7 +45,7 @@ export function createTranslateLoader(http: HttpClient) {
 export class MyMissingTranslationHandler implements MissingTranslationHandler {
 	handle(params: MissingTranslationHandlerParams): any {
 	  const missingKey = params.key;
-	//   console.log(missingKey);
+	  console.log(missingKey);
 	  return missingKey;
 	}
   }
