@@ -61,7 +61,7 @@ export class TiffService {
 				let fields: Field[];
 
 				fields = data.pathArray.map(path => {
-					return new Field(path.startPos, new FieldType("", "CONFIGURED"), 0, null, Number.parseInt(path.id.toString()) != Number.parseInt(data.nodata!.toString()), undefined, path.path);
+					return new Field(path.startPos, new FieldType("", "CONFIGURED"), 0, null, path.id != data.nodata!, undefined, path.path);
 				});
 
 				return of(new GameBoard(id, gameBoardType, fields, undefined, true, data.width, data.height));
