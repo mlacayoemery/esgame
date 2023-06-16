@@ -6,6 +6,8 @@
 	"gameBoardColumns": 28,
 	"highlightColor": "#f0ff1b",
 	"gameBoardRows": 29,
+	"basicInstructions": { "en": "Instructions 1", "de": "Anleitung 1" },
+	"advancedInstructions": { "en": "Instructions 2", "de": "Anleitungs 2" },
 	"productionTypes": [
 		{
 			"id": "10",
@@ -116,20 +118,6 @@
 			"gradient": "",
 			"gameBoardtype": "Background",
 			"linkedToProductionTypes": []
-		}
-	],
-	"levels": [
-		{
-			"id": "1",
-			"maps": ["1", "2", "3", "4", "5", "6"],
-			"name": { "en": "Level 1", "de": "Level 1"},
-			"instructions": { "en": "test", "de": "test"}
-		},
-		{
-			"id": "2",
-			"maps": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-			"name": { "en": "Level 2", "de": "Level 2"},
-			"instructions": { "en": "test", "de": "test"}
 		}
 	]
 }

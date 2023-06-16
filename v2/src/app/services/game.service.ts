@@ -136,16 +136,10 @@ export class GameService {
 			return Object.assign({}, o);
 		});
 
-		let settingsLevel = settings.levels.at(this.currentLevel.value!.levelNumber);
-		if (settingsLevel == undefined) {
-			settingsLevel = settings.levels[settings.levels.length - 1];
-		}
-
 		if (this.settings.value.mode == 'GRID') {
 			const maps = settings.maps.filter(
-				m => settingsLevel!.maps.includes(m.id) &&
-					(m.gameBoardType == GameBoardType.SuitabilityMap || m.gameBoardType == GameBoardType.ConsequenceMap) &&
-					!previousLevel.gameBoards.map(o => o.id).includes(m.id));
+				m => m.gameBoardType == GameBoardType.ConsequenceMap && 
+				!previousLevel.gameBoards.map(o => o.id).includes(m.id));
 
 			level.gameBoards.push(...previousLevel.gameBoards);
 
@@ -181,8 +175,7 @@ export class GameService {
 			customColors.set(15, "00000000");
 
 			const otherMaps = settings.maps.filter(
-				m => m.id in settingsLevel!.maps &&
-					(m.gameBoardType == GameBoardType.SuitabilityMap || m.gameBoardType == GameBoardType.ConsequenceMap) &&
+				m => m.gameBoardType == GameBoardType.ConsequenceMap &&
 					!previousLevel.gameBoards.map(o => o.id).includes(m.id));
 
 			level.gameBoards.push(...previousLevel.gameBoards);
@@ -226,10 +219,9 @@ export class GameService {
 		customColors.set(15, "00000000");
 
 		const settings = this.settings.value;
-		const currentLevel = settings.levels[0];
 		const drawingMap = settings.maps.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
 		const backgroundMap = settings.maps.find(o => o.gameBoardType == GameBoardType.BackgroundMap)!;
-		const otherMaps = settings.maps.filter(m => m.id in currentLevel.maps && (m.gameBoardType == GameBoardType.SuitabilityMap || m.gameBoardType == GameBoardType.ConsequenceMap));
+		const otherMaps = settings.maps.filter(m => m.gameBoardType == GameBoardType.SuitabilityMap);
 
 		this.tiffService.getOverlayGameBoard(drawingMap.id, drawingMap.urlToData, GameBoardType.DrawingMap).pipe(
 			switchMap(overlay => {
@@ -275,9 +267,7 @@ export class GameService {
 
 
 		const settings = this.settings.value;
-		const currentLevel = settings.levels[0];
-		const maps = settings.maps.filter(m => currentLevel.maps.includes(m.id) && (m.gameBoardType == GameBoardType.SuitabilityMap || m.gameBoardType == GameBoardType.ConsequenceMap));
-		console.log(currentLevel.maps, settings.maps, maps);
+		const maps = settings.maps.filter(m => m.gameBoardType == GameBoardType.SuitabilityMap);
 
 		combineLatest([
 			...maps.map(m => this.getGridGameBoard(m))

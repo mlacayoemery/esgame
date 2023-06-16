@@ -16,9 +16,11 @@ export class Settings {
 		this.mode = data.mapMode == "svg" ? 'SVG' : 'GRID';
 		this.infiniteLevels = data.infiniteLevels;
 		this.highlightColor = data.highlightColor;
+		this.basicInstructions = data.basicInstructions;
+		this.advancedInstructions = data.advancedInstructions;
 		this.productionTypes = data.productionTypes.map((o) => ({ id: o.id, name: o.name, fieldColor: o.fieldColor, image: o.image, maxElements: o.maxElements }));
 		this.maps = data.maps.map((o) => ({ id: o.id, name: o.name, gradient: convertGradient(o.gradient), gameBoardType: convertGameBoardType(o.gameBoardtype), linkedToProductionTypes: o.linkedToProductionTypes, urlToData: o.linkToData }));
-		this.levels = data.levels.map((o) => ({ id: o.id, name: o.name, maps: o.maps, instructions: o.instructions }));
+		//this.levels = data.levels.map((o) => ({ id: o.id, name: o.name, maps: o.maps, instructions: o.instructions }));
 
 		this.translate.getLangs().forEach((lang) => {
 			this.maps.forEach(o => {
@@ -26,17 +28,15 @@ export class Settings {
 				translation["map_name_" + o.id] = o.name[lang];
 				this.translate.setTranslation(lang, translation, true);
 			});
-			this.productionTypes.forEach(o =>  {
+			this.productionTypes.forEach(o => {
 				var translation = {} as any;
 				translation["production_type_" + o.id] = o.name[lang];
 				this.translate.setTranslation(lang, translation, true);
 			});
-			this.levels.forEach(o => {
-				var translation = {} as any;
-				translation["level_name_" + o.id] = o.name[lang];
-				translation["level_instructions_" + o.id] = o.instructions[lang];
-				this.translate.setTranslation(lang, translation, true);
-			});
+			var translation = {} as any;
+			translation["basic_instructions"] = this.basicInstructions[lang];
+			translation["advanced_instructions"] = this.advancedInstructions[lang];
+			this.translate.setTranslation(lang, translation, true);
 		});
 	}
 
@@ -45,11 +45,13 @@ export class Settings {
 	gameBoardColumns: number;
 	gameBoardRows: number;
 	imageMode: boolean;
+	basicInstructions: LanguageString;
+	advancedInstructions: LanguageString;
 	mode: 'GRID' | 'SVG';
 	infiniteLevels: boolean;
-	productionTypes: { id: string, name: LanguageString, fieldColor: string, image: string, maxElements: number}[] = [];
-	maps: { id: string, name: LanguageString, gradient: DefaultGradients, gameBoardType: GameBoardType, linkedToProductionTypes: string[], urlToData: string }[] = []; 
-	levels: { id: string, name: LanguageString, maps: string[], instructions: LanguageString }[] = [];
+	productionTypes: { id: string, name: LanguageString, fieldColor: string, image: string, maxElements: number }[] = [];
+	maps: { id: string, name: LanguageString, gradient: DefaultGradients, gameBoardType: GameBoardType, linkedToProductionTypes: string[], urlToData: string }[] = [];
+	//levels: { id: string, name: LanguageString, maps: string[], instructions: LanguageString }[] = [];
 }
 
 const convertGameBoardType = (type: string) => {
