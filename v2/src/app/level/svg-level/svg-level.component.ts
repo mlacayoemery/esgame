@@ -11,9 +11,18 @@ import { GameBoardType } from 'src/app/shared/models/game-board-type';
 })
 export class SvgLevelComponent extends LevelBaseComponent {
 	overlayBoard = this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.find(p => p.gameBoardType == GameBoardType.DrawingMap)));
+	settings = this.gameService.settingsObs;
 
 	constructor(gameService: GameService) {
 		super(gameService);
 		gameService.initialiseSVGMode();
+	}
+
+	override nextLevel() {
+		if (this.gameService.checkIfAllFieldsAreSelected()) {
+			super.nextLevel();
+		} else {
+			alert('Du hast noch nicht alle Felder ausgewählt!');
+		}
 	}
 }

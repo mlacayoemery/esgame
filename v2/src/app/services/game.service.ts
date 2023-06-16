@@ -292,6 +292,10 @@ export class GameService {
 
 	}
 
+	checkIfAllFieldsAreSelected() {
+		return this.selectedFields.value.length == this.focusedGameBoard.value?.fields.filter(o => o.editable).length;
+	}
+
 	openHelp(close = false) { this.helpWindow.next(!close); }
 
 	loading(show = true) {

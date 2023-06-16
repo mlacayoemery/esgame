@@ -4,6 +4,7 @@ import { GameBoardClickMode } from '../shared/models/game-board';
 import { ProductionType } from '../shared/models/production-type';
 import { combineLatest, filter, map, merge, mergeMap, tap } from 'rxjs';
 import { GameBoardType } from '../shared/models/game-board-type';
+import { Settings } from '../shared/models/settings';
 
 @Component({
   template: '',

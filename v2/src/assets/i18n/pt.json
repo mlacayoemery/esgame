@@ -3,7 +3,7 @@
 	"en": "Inglês",
 	"nl": "Holandês",
 	"Language": "Idioma",
-	"Level": "Nível",
+	"Level": "Nível {{value}}",
 	"Instructions": "Instruções",
 	"Previous Level": "Nível anterior",
 	"Next Level": "Próximo Nível",

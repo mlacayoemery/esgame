@@ -7,8 +7,33 @@
 		max-height: 400px;
 	}
 
+	.side-board {
+		max-width: 350px;
+	}
+
 	.score-board {
 		grid-column: 1 / 3;
 		margin-top: 15px;
+	}
+
+	.small-title-left, .small-title-right {
+		margin: 5px 0;
+		font-size: 16px;
+		writing-mode: vertical-lr;
+	}
+	
+	.small-title-left {
+		transform: rotate(180deg);
+	}
+
+	.left-panel-gameboard, .right-panel-gameboard {
+		display: flex;
+		width: 100%;
+		align-items: center;
+		margin-top: 5px;
+	}
+
+	.right-panel-gameboard {
+		justify-content: end;
 	}
 }

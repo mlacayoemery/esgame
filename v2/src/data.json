@@ -1,4 +1,5 @@
 {
+	"title": "Tradeoff: Agriculture Edition!",
 	"mapMode": "svg",
 	"imageMode": false,
 	"elementSize": 1,
@@ -59,7 +60,7 @@
 			"id": "3",
 			"name": { "en": "Intensive Arable Land", "de": "Intensives  Ackerland" },
 			"linkToData": "/assets/images/suit_arable_int_zoneNEW.tif",
-			"gradient": "blue",
+			"gradient": "green",
 			"gameBoardtype": "Suitablity",
 			"linkedToProductionTypes": ["20"]
 		},
@@ -67,7 +68,7 @@
 			"id": "4",
 			"name": { "en": "Extensive Livestock Land", "de": "Extensive Viehzucht" },
 			"linkToData": "/assets/images/suit_livestock_ext_zoneNEW.tif",
-			"gradient": "blue",
+			"gradient": "yellow",
 			"gameBoardtype": "Suitablity",
 			"linkedToProductionTypes": ["30"]
 		},
@@ -75,7 +76,7 @@
 			"id": "5",
 			"name": { "en": "Intensive Livestock Land", "de": "Intensive Viehzucht" },
 			"linkToData": "/assets/images/suit_livestock_int_zoneNEW.tif",
-			"gradient": "blue",
+			"gradient": "purple",
 			"gameBoardtype": "Suitablity",
 			"linkedToProductionTypes": ["40"]
 		},

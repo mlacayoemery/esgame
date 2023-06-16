@@ -1,11 +1,9 @@
 <div class="backdrop" [ngClass]="{'--open': isOpen}">
 	<div class="content">
 		<div class="header">
-			<h2 translate>Instructions</h2>
+			<h2>{{ 'Instructions' | translate }}</h2>
 			<span class="icon-close" (click)="onClose()"></span>
 		</div>
-		<p translate>Anleitung-Text</p>
-		<h2 translate>Steuerung</h2>
-		<p translate>Steuerung-Text</p>
+		<p>{{ helpText | translate }}</p>
 	</div>
 </div>

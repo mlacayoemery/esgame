@@ -9,6 +9,7 @@ export class Settings {
 	constructor(
 		private translate: TranslateService
 	) {
+		this.title = data.title;
 		this.elementSize = data.elementSize;
 		this.gameBoardColumns = data.gameBoardColumns;
 		this.gameBoardRows = data.gameBoardRows;
@@ -34,12 +35,13 @@ export class Settings {
 				this.translate.setTranslation(lang, translation, true);
 			});
 			var translation = {} as any;
-			translation["basic_instructions"] = this.basicInstructions[lang];
-			translation["advanced_instructions"] = this.advancedInstructions[lang];
+			translation["basic instructions"] = this.basicInstructions[lang];
+			translation["advanced instructions"] = this.advancedInstructions[lang];
 			this.translate.setTranslation(lang, translation, true);
 		});
 	}
 
+	title: string;
 	highlightColor: string;
 	elementSize: number;
 	gameBoardColumns: number;

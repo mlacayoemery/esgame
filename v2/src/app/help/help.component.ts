@@ -10,13 +10,23 @@ import { Settings } from '../shared/models/settings';
 })
 export class HelpComponent {
 	isOpen = false;
+	helpText = 'basicInstructions';
 
 	constructor(
 		private gameService: GameService,
-		private cdRef: ChangeDetectorRef) {
+		private cdRef: ChangeDetectorRef,
+	) {
 		this.gameService.helpWindowObs.subscribe(o => {
 			this.isOpen = o;
 			this.cdRef.markForCheck();
+		});
+
+		this.gameService.currentLevelObs.subscribe(o => {
+			if (o?.levelNumber == 1) {
+				this.helpText = 'basic instructions';
+			} else {
+				this.helpText = 'advanced instructions';
+			}
 		});
 	}
 

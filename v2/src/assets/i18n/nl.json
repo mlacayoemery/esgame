@@ -3,7 +3,7 @@
 	"en": "Engels",
 	"nl": "Nederlands",
 	"Language": "Taal",
-	"Level": "Niveau",
+	"Level": "Niveau {{value}}",
 	"Instructions": "Instructies",
 	"Previous Level": "Vorige niveau",
 	"Next Level": "Volgende niveau",
