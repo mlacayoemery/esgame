@@ -79,6 +79,36 @@
     <button type="button" mat-raised-button (click)="addProductionType()" color="primary" aria-label="Add map">
         <mat-icon>add</mat-icon> {{ 'new-production-type' | translate}}
     </button>
+	<h2>{{ 'Custom Colors' | translate }}</h2>
+	<div formArrayName="customColors">
+		<div *ngFor="let color of customColors.controls; let i = index" [formGroupName]="i">
+			<h3>{{ 'Custom Color Set' | translate }} {{ i + 1 }}</h3>
+			<ng-container formArrayName="colors">
+				<ng-container *ngFor="let c of getColorsArray(color).controls; let j = index" [formGroupName]="j">
+					<mat-form-field>
+						<mat-label>{{ 'Value in TIFF' | translate }}</mat-label>
+						<input type="number" matInput formControlName="number" />
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label>{{ 'Color' | translate }}</mat-label>
+						<input type="text" matInput formControlName="color" />
+					</mat-form-field>
+					<button type="button" mat-raised-button (click)="removeColor(color, j)" color="primary" aria-label="Remove map">
+						<mat-icon>delete</mat-icon> {{ 'remove-color' | translate}}
+					</button>
+				</ng-container>
+			</ng-container>
+			<button type="button" mat-raised-button (click)="addColor(color)" color="primary" aria-label="Add color">
+				<mat-icon>add</mat-icon> {{ 'new-color' | translate}}
+			</button>
+			<button type="button" mat-raised-button (click)="removeColorSet(i)" color="primary" aria-label="Remove color">
+				<mat-icon>delete</mat-icon> {{ 'remove-color-set' | translate}}
+			</button>
+		</div>
+	</div>
+    <button type="button" mat-raised-button (click)="addCustomColors()" color="primary" aria-label="Add color">
+        <mat-icon>add</mat-icon> {{ 'new-custom-color' | translate}}
+    </button>
     <h2>{{ 'maps' | translate}}</h2>
 	<ng-container formArrayName="maps">
 			<div  *ngFor="let map of maps.controls; let i = index" [formGroupName]="i">
@@ -98,6 +128,9 @@
 					<mat-select formControlName="gradient">
 						<mat-option *ngFor="let gradient of gradients" [value]="gradient">
 							{{ gradient | translate }}
+						</mat-option>
+						<mat-option value="custom">
+							{{ 'custom' | translate }}
 						</mat-option>
 					</mat-select>
 				</mat-form-field>
@@ -125,6 +158,15 @@
 					</mat-select>
 					<mat-hint *ngIf="productionTypes.length == 0">
 						{{'no-production-types' | translate}}
+					</mat-hint>
+				</mat-form-field>
+				<mat-form-field>
+					<mat-label>{{ 'Custom Color Pattern' | translate }}</mat-label>
+					<mat-select formControlName="customColor" [disabled]="map.get('gradient')!.value != 'custom'">
+						<mat-option *ngFor="let color of customColors.controls; let j = index" [value]="j">{{ 'Color Set' | translate }} {{ j + 1 }}</mat-option>
+					</mat-select>
+					<mat-hint *ngIf="customColors.length == 0">
+						{{'no-custom-colors' | translate}}
 					</mat-hint>
 				</mat-form-field>
 				<button type="button" mat-raised-button (click)="removeMap(i)" color="primary" aria-label="Remove map">
