@@ -13,7 +13,6 @@ html {
 body {
 	margin: 0;
 	padding: 0;
-	overflow: hidden;
 }
 
 @import 'styles/material';
@@ -22,5 +21,6 @@ body {
 @import 'styles/utils';
 @import 'styles/headings';
 @import 'styles/button';
+@import 'styles/layout';
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

@@ -28,6 +28,7 @@ export class ConfiguratorComponent {
 			"infiniteLevels": new FormControl(false),
 			"gameBoardColumns": new FormControl(28),
 			"gameBoardRows": new FormControl(29),
+			"calcUrl": new FormControl(),
 			"productionTypes": new FormArray([]),
 			"maps": new FormArray([]),
 			"customColors": new FormArray([]),
@@ -64,7 +65,7 @@ export class ConfiguratorComponent {
 	}
 
 	addMap() {
-		this.maps.push(new FormGroup({
+		let fg = new FormGroup({
 			id: new FormControl(crypto.randomUUID()),
 			name: this.getLanguageControls(),
 			gradient: new FormControl("blue"),
@@ -72,8 +73,16 @@ export class ConfiguratorComponent {
 			gameBoardType: new FormControl("Suitability"),
 			linkedToProductionTypes: new FormArray([]),
 			urlToData: new FormControl(""),
-			customColor: new FormControl()
-		}));
+			customColor: new FormControl({value: "", disabled: true})
+		});
+		this.maps.push(fg);
+		fg.get('gradient')!.valueChanges.subscribe((value) => {
+			if (value == "custom") {
+				fg.get('customColor')?.enable();
+			} else {
+				fg.get('customColor')?.disable();
+			}
+		});
 	}
 
 	removeMap(index: number) {
