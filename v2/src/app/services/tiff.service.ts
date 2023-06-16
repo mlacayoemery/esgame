@@ -41,7 +41,6 @@ export class TiffService {
 				uniqueValues = Array.from(new Set(data.numRaster)).filter(c => c != data.nodata).sort((a, b) => a - b);
 				gradient = gradients.get(defaultGradient!);
 				legend = { elements: [{forValue: Math.round(uniqueValues[0] * 100), color: gradient!.startingColor}, {forValue: Math.round(uniqueValues[uniqueValues.length - 1] * 100), color: gradient!.endingColor}], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true };
-				console.log(uniqueValues, legend);
 				fields = overlay.fields.map((field) => {
 					return {
 						...field,
@@ -62,7 +61,7 @@ export class TiffService {
 				let fields: Field[];
 
 				fields = data.pathArray.map(path => {
-					return new Field(path.startPos, new FieldType("", "CONFIGURED"), 0, null, Number.parseInt(path.id.toString()) != Number.parseInt(data.nodata!.toString()), undefined, path.path);
+					return new Field(path.startPos, new FieldType("", "CONFIGURED"), 0, null, path.id != data.nodata!, undefined, path.path);
 				});
 
 				return of(new GameBoard(id, gameBoardType, fields, undefined, true, data.width, data.height));
@@ -144,13 +143,12 @@ export class TiffService {
 	private async arrayToImage(data: number[], columns: number, noData: number, gradient?: Gradient, colors?: CustomColors): Promise<string> {
 		const height = data.length / columns;
 		const tmpArray = []
-		const uniqueValues = Array.from(new Set(data)).filter(c => {
-			return Number.parseInt(c.toString()) != Number.parseInt(noData.toString())}).sort((a, b) => a - b);
+		const uniqueValues = Array.from(new Set(data)).filter(c => c != noData).sort((a, b) => a - b);
 		if (gradient) {
 			const maxValue = Math.max(...uniqueValues);
 			const minValue = Math.min(...uniqueValues);
 			for (var i = 0; i < data.length; i++) {
-				if (Number.parseInt(data[i].toString()) == Number.parseInt(noData.toString())) {
+				if (data[i] == noData) {
 					tmpArray.push(255, 255, 255, 0);
 				} else {
 					var toAdd = gradient.calculateColorRGB(1 - 1 / (maxValue - minValue) * (data[i] - minValue))

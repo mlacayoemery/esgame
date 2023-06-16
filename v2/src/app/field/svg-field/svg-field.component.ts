@@ -15,6 +15,8 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 	@HostBinding('style.stroke') private stroke: string;
 	highlightColor: string;
 
+	@HostBinding('class.show-stroke') @Input() showStroke: boolean = true;
+
 	ngOnInit(): void {
 		this.gameService.settingsObs.subscribe(o => {
 			this.highlightColor = o.highlightColor;
@@ -23,7 +25,6 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 
 	setColor(productionType: ProductionType | null = null) {
 		if (!this._field) return;
-
 		if (productionType && this.clickable) {
 			this.fillColor = `${productionType.fieldColor}`;
 		} else if(productionType) {
