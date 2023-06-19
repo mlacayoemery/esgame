@@ -12,7 +12,7 @@ import { FieldBaseComponent } from '../field-base.component';
 })
 export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 	override shouldSelect(e: MouseEvent): boolean {
-		return e.buttons == 1 || e.altKey
+		return e.buttons == 1 || e.shiftKey
 	}
 	override shouldDeselect(e: MouseEvent): boolean {
 		return e.buttons == 2 || e.ctrlKey
@@ -42,6 +42,7 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 
 	override highlight(side: HighlightSide): void {
 		super.highlight(side);
+		console.log(this.highlightColor);
 		this.stroke = this.highlightColor;
 	}
 
