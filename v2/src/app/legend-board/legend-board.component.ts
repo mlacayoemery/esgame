@@ -26,6 +26,8 @@ export class LegendBoardComponent {
 			this.isGradient = data.isGradient;
 			if (data.isGradient)
 				this.gradient = `linear-gradient(90deg, #${this.legendElements[0].color}, #${this.legendElements[1].color})`
+			else
+				this.legendElements = this.legendElements.filter(o => o.forValue != 0)
 		}
 	}
 }

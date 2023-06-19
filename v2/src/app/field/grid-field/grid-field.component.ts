@@ -12,6 +12,12 @@ import { ProductionType } from 'src/app/shared/models/production-type';
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GridFieldComponent extends FieldBaseComponent {
+	override shouldSelect(e: MouseEvent): boolean {
+		return false;
+	}
+	override shouldDeselect(e: MouseEvent): boolean {
+		return false;
+	}
 	private _imageMode = false;
 	private _sink = new SubSink();
 
