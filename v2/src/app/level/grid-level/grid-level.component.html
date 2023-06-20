@@ -7,7 +7,7 @@
 <div class="panel center-panel">
 	<header>
 		<i></i>
-		<h1 translate>Tradeoff: Agriculture Edition!</h1>
+		<h1>{{ (settings | async)?.title }}</h1>
 		<span class="icon-help-circle" (click)="openHelp()"></span>
 	</header>
 	<p translate [translateParams]="{value: (level | async)?.levelNumber}">Level</p>
@@ -22,7 +22,7 @@
 		<div class="score-board-wrapper">
 			<tro-score-board class="score-board"></tro-score-board>
 			<tro-score-indicator class="score-indicator"></tro-score-indicator>
-			<button troButton class="btn-prev" (click)="prevLevel()" [disabled]="(level | async)?.levelNumber == 1" translate>Past Level</button>
+			<button troButton class="btn-prev" (click)="prevLevel()" [disabled]="(level | async)?.levelNumber == 1" translate>Previous Level</button>
 			<button troButton class="btn-next" (click)="nextLevel()" [disabled]="(level | async)?.levelNumber != 1" translate>Next Level</button>
 		</div>
 	</div>

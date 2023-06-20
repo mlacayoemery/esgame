@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import { Level } from "../shared/models/level";
 import { SelectedField } from "../shared/models/field";
+import { GameBoardType } from "../shared/models/game-board-type";
 
 export class ScoreEntry {
 	id: string;
@@ -12,10 +13,10 @@ export class ScoreEntry {
 })
 export class ScoreService {
 
-	createEmptyScoreEntry(level: Level | null) {
+	createEmptyScoreEntry(level: Level | null, shownBoards = [GameBoardType.ConsequenceMap, GameBoardType.SuitabilityMap]) {
 		if (level) {
 			let scores: ScoreEntry[] = [];
-			level?.gameBoards.forEach(gameBoard => {
+			level?.gameBoards.filter(o => shownBoards.some(p => p == o.gameBoardType)).forEach(gameBoard => {
 				if (scores.some(o => o.id == gameBoard.id) == false) {
 					scores.push(
 						{ id: gameBoard.id, score: 0 }

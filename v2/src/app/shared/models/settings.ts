@@ -1,14 +1,34 @@
 import { GameBoardType } from "./game-board-type";
-import data from './../../../data.json';
 import { DefaultGradients } from "../helpers/gradients";
 import { TranslateService } from "@ngx-translate/core";
 
 type LanguageString = Record<string, string>;
 
 export class Settings {
+	title: string;
+	highlightColor: string;
+	elementSize: number;
+	gameBoardColumns: number;
+	gameBoardRows: number;
+	imageMode: boolean;
+	basicInstructions: LanguageString;
+	advancedInstructions: LanguageString;
+	mode: 'GRID' | 'SVG';
+	infiniteLevels: boolean;
+	productionTypes: { id: string, name: LanguageString, fieldColor: string, image: string, maxElements: number }[] = [];
+	maps: { id: string, name: LanguageString, gradient: DefaultGradients, gameBoardType: GameBoardType, linkedToProductionTypes: string[], urlToData: string }[] = [];
+	
 	constructor(
-		private translate: TranslateService
+		private translate: TranslateService,
+		data: any
 	) {
+		this.mapData(data);	
+	}
+
+	//levels: { id: string, name: LanguageString, maps: string[], instructions: LanguageString }[] = [];
+
+	mapData(data: any) {
+		console.log(data);
 		this.title = data.title;
 		this.elementSize = data.elementSize;
 		this.gameBoardColumns = data.gameBoardColumns;
@@ -19,8 +39,8 @@ export class Settings {
 		this.highlightColor = data.highlightColor;
 		this.basicInstructions = data.basicInstructions;
 		this.advancedInstructions = data.advancedInstructions;
-		this.productionTypes = data.productionTypes.map((o) => ({ id: o.id, name: o.name, fieldColor: o.fieldColor, image: o.image, maxElements: o.maxElements }));
-		this.maps = data.maps.map((o) => ({ id: o.id, name: o.name, gradient: convertGradient(o.gradient), gameBoardType: convertGameBoardType(o.gameBoardtype), linkedToProductionTypes: o.linkedToProductionTypes, urlToData: o.linkToData }));
+		this.productionTypes = data.productionTypes.map((o: any) => ({ id: o.id, name: o.name, fieldColor: o.fieldColor, image: o.image, maxElements: o.maxElements }));
+		this.maps = data.maps.map((o: any) => ({ id: o.id, name: o.name, gradient: convertGradient(o.gradient), gameBoardType: convertGameBoardType(o.gameBoardtype), linkedToProductionTypes: o.linkedToProductionTypes, urlToData: o.linkToData }));
 		//this.levels = data.levels.map((o) => ({ id: o.id, name: o.name, maps: o.maps, instructions: o.instructions }));
 
 		this.translate.getLangs().forEach((lang) => {
@@ -40,20 +60,6 @@ export class Settings {
 			this.translate.setTranslation(lang, translation, true);
 		});
 	}
-
-	title: string;
-	highlightColor: string;
-	elementSize: number;
-	gameBoardColumns: number;
-	gameBoardRows: number;
-	imageMode: boolean;
-	basicInstructions: LanguageString;
-	advancedInstructions: LanguageString;
-	mode: 'GRID' | 'SVG';
-	infiniteLevels: boolean;
-	productionTypes: { id: string, name: LanguageString, fieldColor: string, image: string, maxElements: number }[] = [];
-	maps: { id: string, name: LanguageString, gradient: DefaultGradients, gameBoardType: GameBoardType, linkedToProductionTypes: string[], urlToData: string }[] = [];
-	//levels: { id: string, name: LanguageString, maps: string[], instructions: LanguageString }[] = [];
 }
 
 const convertGameBoardType = (type: string) => {
