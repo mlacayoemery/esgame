@@ -20,7 +20,7 @@
 		<tro-svg-game-board [boardData]="focusedGameBoard | async" hideLegend class="main-board" [readOnly]="readOnly"></tro-svg-game-board>
 		<div class="score-board-wrapper">
 			<button troButton class="btn-prev" (click)="prevLevel()" [disabled]="(level | async)?.levelNumber == 1" translate>Previous Level</button>
-			<button troButton class="btn-next" (click)="nextLevel()" [disabled]="(level | async)?.levelNumber != 1" translate>Next Level</button>
+			<button troButton class="btn-next" (click)="nextLevel()" [disabled]="(!(settings | async)?.infiniteLevels) && (level | async)?.levelNumber != 1" translate>Next Level</button>
 			<tro-score-board class="score-board"></tro-score-board>
 		</div>
 	</div>

@@ -3,7 +3,7 @@
 	"mapMode": "svg",
 	"imageMode": false,
 	"elementSize": 1,
-	"infiniteLevels": false,
+	"infiniteLevels": true,
 	"gameBoardColumns": 28,
 	"highlightColor": "#f0ff1b",
 	"gameBoardRows": 29,
@@ -43,7 +43,7 @@
 		{
 			"id": "1",
 			"name": { "en": "Zones", "de": "Zonen" },
-			"linkToData": "/assets/images/hexagons_only3.tif",
+			"linkToData": "./assets/images/hexagons_only3.tif",
 			"gradient": "",
 			"gameBoardtype": "Drawing",
 			"linkedToProductionTypes": []
@@ -51,7 +51,7 @@
 		{
 			"id": "2",
 			"name": { "en": "Extensive Arable Land", "de": "Extensives Ackerland" },
-			"linkToData": "/assets/images/suit_arable_ext_zoneNEW.tif",
+			"linkToData": "./assets/images/suit_arable_ext_zoneNEW.tif",
 			"gradient": "blue",
 			"gameBoardtype": "Suitablity",
 			"linkedToProductionTypes": ["10"]
@@ -59,7 +59,7 @@
 		{
 			"id": "3",
 			"name": { "en": "Intensive Arable Land", "de": "Intensives  Ackerland" },
-			"linkToData": "/assets/images/suit_arable_int_zoneNEW.tif",
+			"linkToData": "./assets/images/suit_arable_int_zoneNEW.tif",
 			"gradient": "green",
 			"gameBoardtype": "Suitablity",
 			"linkedToProductionTypes": ["20"]
@@ -67,7 +67,7 @@
 		{
 			"id": "4",
 			"name": { "en": "Extensive Livestock Land", "de": "Extensive Viehzucht" },
-			"linkToData": "/assets/images/suit_livestock_ext_zoneNEW.tif",
+			"linkToData": "./assets/images/suit_livestock_ext_zoneNEW.tif",
 			"gradient": "yellow",
 			"gameBoardtype": "Suitablity",
 			"linkedToProductionTypes": ["30"]
@@ -75,7 +75,7 @@
 		{
 			"id": "5",
 			"name": { "en": "Intensive Livestock Land", "de": "Intensive Viehzucht" },
-			"linkToData": "/assets/images/suit_livestock_int_zoneNEW.tif",
+			"linkToData": "./assets/images/suit_livestock_int_zoneNEW.tif",
 			"gradient": "purple",
 			"gameBoardtype": "Suitablity",
 			"linkedToProductionTypes": ["40"]
@@ -83,7 +83,7 @@
 		{
 			"id": "6",
 			"name": { "en": "Air Quality", "de": "Luftqualität" },
-			"linkToData": "/assets/images/Consequence_1_Clip.tif",
+			"linkToData": "./assets/images/Consequence_1_Clip.tif",
 			"gradient": "blue",
 			"gameBoardtype": "Consequence",
 			"linkedToProductionTypes": ["10", "20", "30", "40"]
@@ -91,7 +91,7 @@
 		{
 			"id": "7",
 			"name": { "en": "Water Quality", "de": "Wasserqualität" },
-			"linkToData": "/assets/images/Consequence_2_Clip.tif",
+			"linkToData": "./assets/images/Consequence_2_Clip.tif",
 			"gradient": "blue",
 			"gameBoardtype": "Consequence",
 			"linkedToProductionTypes": ["10", "20", "30", "40"]
@@ -99,7 +99,7 @@
 		{
 			"id": "8",
 			"name": { "en": "Intensive Livestock Land", "de": "Intensives  Ackerland" },
-			"linkToData": "/assets/images/Consequence_3_Clip.tif",
+			"linkToData": "./assets/images/Consequence_3_Clip.tif",
 			"gradient": "blue",
 			"gameBoardtype": "Consequence",
 			"linkedToProductionTypes": ["10", "20", "30", "40"]
@@ -107,7 +107,7 @@
 		{
 			"id": "9",
 			"name": { "en": "Intensive Livestock Land", "de": "Intensives Ackerland" },
-			"linkToData": "/assets/images/Consequence_4_Clip.tif",
+			"linkToData": "./assets/images/Consequence_4_Clip.tif",
 			"gradient": "blue",
 			"gameBoardtype": "Consequence",
 			"linkedToProductionTypes": ["10", "20", "30", "40"]
@@ -115,7 +115,7 @@
 		{
 			"id": "10",
 			"name": { "en": "Background", "de": "Background" },
-			"linkToData": "/assets/images/Land_use_only_clip.tif",
+			"linkToData": "./assets/images/Land_use_only_clip.tif",
 			"gradient": "",
 			"gameBoardtype": "Background",
 			"linkedToProductionTypes": []
