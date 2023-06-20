@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { LevelBaseComponent } from '../level-base.component';
 import { GameService } from 'src/app/services/game.service';
-import { map } from 'rxjs';
+import { map, timeout } from 'rxjs';
 import { GameBoardType } from 'src/app/shared/models/game-board-type';
 
 @Component({
@@ -23,6 +23,7 @@ export class SvgLevelComponent extends LevelBaseComponent {
 			super.nextLevel();
 		} else {
 			alert('Du hast noch nicht alle Felder ausgewählt!');
+			setTimeout(() => { super.nextLevel() }, 10000)
 		}
 	}
 }

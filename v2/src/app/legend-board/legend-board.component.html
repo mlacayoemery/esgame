@@ -12,7 +12,7 @@
 <ng-container *ngIf="gradient">
 	<div class="gradient">
 		<div [ngStyle]="{ background: gradient}"></div>
-		<p>{{legendElements[0].forValue}}</p>
-		<p>{{legendElements[1].forValue}}</p>
+		<p [ngClass]="{'--positive': !isNegative, '--negative': isNegative}">{{legendElements[0].forValue}}</p>
+		<p [ngClass]="{'--positive': !isNegative, '--negative': isNegative}">{{legendElements[1].forValue}}</p>
 	</div>
 </ng-container>

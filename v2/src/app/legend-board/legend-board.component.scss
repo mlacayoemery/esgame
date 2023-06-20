@@ -28,6 +28,13 @@
             &:nth-child(2) {
                 float: left;
             }
+
+            &.--positive {
+                color: $color-positive;
+            }
+            &.--negative {
+                color: $color-negative;
+            }
         }
     }
 
