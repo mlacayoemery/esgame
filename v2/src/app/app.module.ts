@@ -34,6 +34,7 @@ import { LoadingIndicatorComponent } from './loading-indicator/loading-indicator
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LevelIndicatorComponent } from './level-indicator/level-indicator.component';
 import { ImportConfigComponent } from './import-config/import-config.component';
+import { StartComponent } from './start/start.component';
 
 export function HttpLoaderFactory(http: HttpClient) {
 	return new TranslateHttpLoader(http);
@@ -71,6 +72,7 @@ export class MyMissingTranslationHandler implements MissingTranslationHandler {
 		LoadingIndicatorComponent,
 		LevelIndicatorComponent,
 		ImportConfigComponent,
+  StartComponent,
 	],
 	imports: [
 		BrowserModule,

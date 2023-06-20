@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { GameService } from '../services/game.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'tro-import-config',
@@ -9,7 +10,7 @@ import { GameService } from '../services/game.service';
 })
 export class ImportConfigComponent {
 
-	constructor(private gameService: GameService) {
+	constructor(private gameService: GameService, private router: Router) {
 
 	}
 
@@ -29,5 +30,15 @@ export class ImportConfigComponent {
 			}
 			fileReader.readAsText(files[0]);
 		}
+	}
+
+	start() {
+		this.gameService.settingsObs.subscribe(settings => {
+			if (settings.mode == 'GRID') {
+				this.router.navigate(['static-game']);
+			} else {
+				this.router.navigate(['dynamic-game']);
+			}
+		});
 	}
 }
