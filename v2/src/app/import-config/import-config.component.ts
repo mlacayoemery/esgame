@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { GameService } from '../services/game.service';
 
 @Component({
   selector: 'tro-import-config',
@@ -7,6 +8,11 @@ import { FormControl } from '@angular/forms';
   styleUrls: ['./import-config.component.scss']
 })
 export class ImportConfigComponent {
+
+	constructor(private gameService: GameService) {
+
+	}
+
 	fileInput = new FormControl();
 
 	onImport(e: Event) {
@@ -15,6 +21,10 @@ export class ImportConfigComponent {
 		if (files && files.length) {
 			let fileReader = new FileReader();
 			fileReader.onload = (e) => {
+				let result = fileReader.result;
+				if (result) {
+					this.gameService.loadSettings(JSON.parse(result.toString()));
+				}
 				//console.log(fileReader.result);
 			}
 			fileReader.readAsText(files[0]);

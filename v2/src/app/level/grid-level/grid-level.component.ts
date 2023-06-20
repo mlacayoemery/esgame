@@ -8,6 +8,7 @@ import { GameService } from 'src/app/services/game.service';
 	styleUrls: ['./grid-level.component.scss', '../level-base.component.scss']
 })
 export class GridLevelComponent extends LevelBaseComponent {
+	settings = this.gameService.settingsObs;
 	constructor(gameService: GameService) {
 		super(gameService);
 		gameService.initialiseGridMode();

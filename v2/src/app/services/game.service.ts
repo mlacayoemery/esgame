@@ -10,6 +10,7 @@ import { TiffService } from './tiff.service';
 import { CustomColors, DefaultGradients } from '../shared/helpers/gradients';
 import { ScoreService } from './score.service';
 import { TranslateService } from '@ngx-translate/core';
+import data from './../../data.json';
 
 @Injectable({
 	providedIn: 'root'
@@ -20,7 +21,7 @@ export class GameService {
 	private selectedFields = new BehaviorSubject<SelectedField[]>([]);
 	private notSelectedFields = new BehaviorSubject<SelectedField[]>([]);
 	private currentlySelectedField = new BehaviorSubject<SelectedField | null>(null);
-	private settings = new BehaviorSubject<Settings>(new Settings(this.translateService));
+	private settings = new BehaviorSubject<Settings>(new Settings(this.translateService, data));
 	private productionTypes = new BehaviorSubject<ProductionType[]>([]);
 	private selectedProductionType = new BehaviorSubject<ProductionType | null>(null);
 	private focusedGameBoard = new BehaviorSubject<GameBoard | null>(null);
@@ -322,6 +323,11 @@ export class GameService {
 		this.selectedProductionType.next(null);
 		this.focusedGameBoard.next(null);
 		this.levels = [];
+	}
+
+	loadSettings(data: any) {
+		this.resetGame();
+		this.settings.next(new Settings(this.translateService, data));
 	}
 
 	private canFieldBePlaced(associatedFields: HighlightField[] = []) {
