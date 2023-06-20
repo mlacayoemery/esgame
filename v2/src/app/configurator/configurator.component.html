@@ -28,10 +28,12 @@
 							{{ 'Fields' | translate }}
 						</mat-option>
 					</mat-select>
+					<mat-hint>For details, have a look at the README file</mat-hint>
 				</mat-form-field>
 				<mat-form-field class="--full">
 					<mat-label>{{ 'Calculation URL' | translate}}</mat-label>
 					<input type="text" matInput name="calculation-url" formControlName="calcUrl" required>
+					<mat-hint>Link where the result of a level gets posted. A JSON is expected (definition in README)</mat-hint>
 				</mat-form-field>
 				<button mat-button matStepperNext class="--full --next-line --justify-end">Next</button>
 			</div>
@@ -50,10 +52,12 @@
 				<mat-form-field>
 					<mat-label>{{ 'highlight-color' | translate}}</mat-label>
 					<input type="text" matInput name="highlight-color" formControlName="highlightColor" required>
+					<mat-hint>A hex value in format #AABBCC</mat-hint>
 				</mat-form-field>
 				<mat-form-field>
 					<mat-label>{{ 'selection-size' | translate}}</mat-label>
-					<input type="number" matInput placeholder="0" name="slection-size" formControlName="elementSize" required>
+					<input type="number" matInput placeholder="0" name="selection-size" formControlName="elementSize" required>
+					<mat-hint>Width/height of an element</mat-hint>
 				</mat-form-field>
 				<mat-checkbox formControlName="infiniteLevels">{{ 'infinite-levels' | translate}}</mat-checkbox>
 				<mat-checkbox formControlName="imageMode">{{ 'Image Mode' | translate}}</mat-checkbox>
@@ -78,16 +82,19 @@
 							</mat-form-field>
 						</ng-container>
 						<mat-form-field>
-							<mat-label>{{ 'highlight-color' | translate}}</mat-label>
+							<mat-label>{{ 'field-color' | translate}}</mat-label>
 							<input type="text" matInput name="highlight-color-{i}" formControlName="fieldColor" required>
+							<mat-hint>A hex value in format #AABBCC</mat-hint>
 						</mat-form-field>
 						<mat-form-field>
 							<mat-label>{{ 'icon-url' | translate}}</mat-label>
 							<input type="url" matInput name="icon-url-{i}" placeholder="https://..." formControlName="urlToIcon">
+							<mat-hint>URL to the image which is shown on production type</mat-hint>
 						</mat-form-field>
 						<mat-form-field>
 							<mat-label>{{ 'max-elements' | translate}}</mat-label>
 							<input type="number" matInput name="max-elements-{i}" formControlName="maxElements" required>
+							<mat-hint>Set to 0 if there is no limit for this production type</mat-hint>
 						</mat-form-field>
 					</ng-container>
 				</ng-container>
@@ -101,6 +108,7 @@
 		<mat-step>
 			<ng-template matStepLabel>{{ 'Custom Colors' | translate }}</ng-template>
 			<div class="configurator-grid">
+				<p class="--full">The custom colours are only needed if there is a zone map which need a specific mapping of values in the tiff to certain colours. Otherwhise you can skip this step.</p>
 				<ng-container formArrayName="customColors">
 					<ng-container *ngFor="let color of customColors.controls; let i = index" [formGroupName]="i">
 						<h3 class="--next-line">{{ 'Custom Color Set' | translate }} {{ i + 1 }}</h3>
@@ -117,10 +125,12 @@
 								<mat-form-field>
 									<mat-label>{{ 'Value in TIFF' | translate }}</mat-label>
 									<input type="number" matInput formControlName="number" />
+									<mat-hint>The value in the tiff file which gets converted to this colour</mat-hint>
 								</mat-form-field>
 								<mat-form-field>
 									<mat-label>{{ 'Color' | translate }}</mat-label>
 									<input type="text" matInput formControlName="color" />
+									<mat-hint>A hex value in format #AABBCC or #AABBCCDD</mat-hint>
 								</mat-form-field>
 								<button class="--justify-start" type="button" mat-raised-button (click)="removeColor(color, j)" color="primary" aria-label="Remove map">
 									<mat-icon>delete</mat-icon> {{ 'remove-color' | translate}}
@@ -139,6 +149,9 @@
 		<mat-step>
 			<ng-template matStepLabel>{{ 'maps' | translate}}</ng-template>
 			<div class="configurator-grid">
+				<p class="--full">Definition of the maps. If you selected field mode, you need at least two suitability maps and one consequence map. 
+					If you selected zones mode, you need at least two suitability maps, at least two consequence maps, exact one zone map and exact one background map. Please make sure that all maps have the same size, 
+					otherwise the correct display of the maps can not be guaranteed.</p>
 				<ng-container formArrayName="maps">
 					<ng-container *ngFor="let map of maps.controls; let i = index" [formGroupName]="i">
 						<h3 class="--next-line">{{ 'map' | translate }} {{ i + 1 }}</h3>
@@ -155,6 +168,7 @@
 							<mat-label>{{ 'map-url' | translate}}</mat-label>
 							<input type="url" matInput placeholder="https://..." name="map-{{i}}-url" formControlName="urlToData"
 								required />
+							<mat-hint>URL to the tiff file</mat-hint>
 						</mat-form-field>
 						<mat-form-field>
 							<mat-label>{{ 'game-board-type' | translate}}</mat-label>
@@ -192,6 +206,7 @@
 									{{ 'custom' | translate }}
 								</mat-option>
 							</mat-select>
+							<mat-hint>The colour the map gets coloured in</mat-hint>
 						</mat-form-field>
 						<mat-form-field>
 							<mat-label>{{ 'Custom Color Pattern' | translate }}</mat-label>
@@ -214,6 +229,7 @@
 		<mat-step>
 			<ng-template matStepLabel>{{ 'Finish' | translate }}</ng-template>
 			<div class="configurator-grid">
+				<p class="--full">Please check if you filled all necessary data.</p>
 				<button class="--full" type="button" mat-raised-button (click)="exportData()" color="primary">{{ 'Export' | translate }}</button>
 				<button class="--next-line --justify-start" mat-button matStepperPrevious>Back</button>
 			</div>

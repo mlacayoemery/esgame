@@ -28,7 +28,7 @@ export class ConfiguratorComponent {
 			"infiniteLevels": new FormControl(false),
 			"gameBoardColumns": new FormControl(28),
 			"gameBoardRows": new FormControl(29),
-			"calcUrl": new FormControl(),
+			"calcUrl": new FormControl({ value: "", disabled: true }),
 			"productionTypes": new FormArray([]),
 			"maps": new FormArray([]),
 			"customColors": new FormArray([]),
@@ -43,11 +43,13 @@ export class ConfiguratorComponent {
 				this.formGroup.get('imageMode')!.setValue(false);
 				this.formGroup.get('gameBoardRows')!.disable();
 				this.formGroup.get('gameBoardColumns')!.disable();
+				this.formGroup.get('calcUrl')!.enable();
 			} else {
 				this.formGroup.get('elementSize')!.enable();
 				this.formGroup.get('imageMode')!.enable();
 				this.formGroup.get('gameBoardRows')!.enable();
 				this.formGroup.get('gameBoardColumns')!.enable();
+				this.formGroup.get('calcUrl')!.disable();
 			}
 		});
 	}
@@ -83,6 +85,14 @@ export class ConfiguratorComponent {
 				fg.get('customColor')?.disable();
 			}
 		});
+		fg.get('gameBoardType')!.valueChanges.subscribe(value => {
+			if (this.formGroup.get('mapMode')?.value == 'grid') return;
+			if (value == "Consequence") {
+				fg.get('urlToData')?.disable();
+			} else {
+				fg.get('urlToData')?.enable();
+			}
+		});
 	}
 
 	removeMap(index: number) {
@@ -95,7 +105,7 @@ export class ConfiguratorComponent {
 			name: this.getLanguageControls(),
 			fieldColor: new FormControl("#000000"),
 			urlToIcon: new FormControl(""),
-			maxElements: new FormControl(-1)
+			maxElements: new FormControl(0)
 		}));
 	}
 

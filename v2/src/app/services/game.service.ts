@@ -331,7 +331,7 @@ export class GameService {
 	}
 
 	private canFieldBePlaced(associatedFields: HighlightField[] = []) {
-		if (this.selectedProductionType.value?.maxElements == this.selectedFields.value.filter(o => o.productionType == this.selectedProductionType.value).length) return false;
+		if (this.selectedProductionType.value?.maxElements != 0 && this.selectedProductionType.value?.maxElements == this.selectedFields.value.filter(o => o.productionType == this.selectedProductionType.value).length) return false;
 		return !(this.selectedFields.value.some(o => o.fields.some(p => associatedFields.some(q => q.id == p.id))));
 	}
 
