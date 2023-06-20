@@ -16,7 +16,6 @@
 			<tro-production-type-button *ngFor="let type of productionTypes"
 				[productionType]="type" layout2></tro-production-type-button>
 		</div>
-		<p>{{ 'Active:' | translate }} {{ "production_type_" + (selectedProductionType | async)?.id | translate }}</p>
 	</div>
 	<div class="game-board-wrapper">
 		<tro-grid-game-board *ngIf="focusedGameBoard != null" [readOnly]="readOnly" [boardData]="focusedGameBoard | async"></tro-grid-game-board>

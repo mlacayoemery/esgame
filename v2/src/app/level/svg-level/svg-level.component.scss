@@ -1,3 +1,6 @@
+@import 'variables';
+
+
 :host {
 	.game-board-wrapper {
 		max-width: 700px;
@@ -35,5 +38,13 @@
 
 	.right-panel-gameboard {
 		justify-content: end;
+	}
+
+	.--is-positive {
+		color: $color-positive;
+	}
+
+	.--is-negative {
+		color: $color-negative;
 	}
 }

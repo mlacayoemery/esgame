@@ -29,6 +29,10 @@ export class GameBoard {
 		let scores = this.fields.filter(o => ids.some(p => o.id == p)).map(o => o.score);
 		return scores.reduce((a, b) => a+b, 0);
 	}
+
+	get isPositive() : boolean {
+		return this.gameBoardType == GameBoardType.SuitabilityMap;
+	}
 }
 
 export enum GameBoardClickMode {

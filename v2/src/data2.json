@@ -1,4 +1,8 @@
 {
+	"title": "Grid-Mode",
+	"highlightColor": "#FFF",
+	"basicInstructions": {	"en": "in", "de": "de" },
+	"advancedInstructions": { "en": "in", "de": "de" },
 	"mapMode": "grid",
 	"imageMode": true,
 	"elementSize": 2,
@@ -101,20 +105,6 @@
 			"gradient": "red",
 			"gameBoardtype": "Consequence",
 			"linkedToProductionTypes": ["20"]
-		}
-	],
-	"levels": [
-		{
-			"id": "1",
-			"maps": ["2", "3"],
-			"name": { "en": "Level 1", "de": "Level 1"},
-			"instructions": { "en": "test", "de": "test"}
-		},
-		{
-			"id": "2",
-			"maps": ["2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
-			"name": { "en": "Level 2", "de": "Level 2"},
-			"instructions": { "en": "test", "de": "test"}
 		}
 	]
 }

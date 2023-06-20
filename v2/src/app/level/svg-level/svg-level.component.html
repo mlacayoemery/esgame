@@ -1,6 +1,6 @@
 <div class="panel left-panel">
 	<div class="left-panel-gameboard" *ngFor="let board of (leftGameBoards | async)">
-		<h2 class="small-title-left" translate>{{ "map_name_" + board.id }}</h2>
+		<h2 class="small-title-left" [ngClass]="board.isPositive ? '--is-positive' : '--is-negative'" translate>{{ "map_name_" + board.id }}</h2>
         <tro-svg-game-board class="side-board" [boardData]="board" hideLegend [clickMode]="clickMode.SelectBoard" [readOnly]="readOnly" ></tro-svg-game-board>
 	</div>
 </div>
@@ -28,7 +28,7 @@
 <div class="panel right-panel">
 	<div class="right-panel-gameboard" *ngFor="let board of (rightGameBoards | async)">
 		<tro-svg-game-board class="side-board" [boardData]="board" [clickMode]="clickMode.SelectBoard" hideLegend [readOnly]="readOnly"></tro-svg-game-board>
-		<h2 class="small-title-right" translate>{{ "map_name_" + board.id }}</h2>
+		<h2 class="small-title-right" [ngClass]="board.isPositive ? '--is-positive' : '--is-negative'" translate>{{ "map_name_" + board.id }}</h2>
 	</div>
 </div>
 <tro-help></tro-help>

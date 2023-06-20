@@ -1,43 +1,49 @@
 @import 'variables';
 
 :host {
-	display: inline-flex;
-	border: $color-black 1px solid;
+	display: flex;
+	flex-direction: column;
 	align-items: center;
-	justify-content: center;
-	text-align: center;
-	width: auto;
-	height: auto;
-	border-radius: 7px;
 	cursor: pointer;
-	border-color: black;
-	width: 85px;
-	
+
 	p {
-		margin: 10px;
+		text-align: center;
+		margin: 5px 0px 0px 0px;
 		white-space: break-spaces;
-		font-size: 14px;
+		font-size: 12px;
+
 	}
-	
+
 	&.--active {
-		box-shadow: 0px 0px 10px #FAFF00;
-		background-color: transparent;
-	}
+		.img-wrapper {
+			border-color: $color-primary;
+		}
 
-	img {
-		margin: 0px;
-		width: 50px;
-		height: 50px;
-	}
-
-	&.--image-mode {
-		width: 50px;
-		height: 50px;
-		
 		p {
-			display: none;
+			font-weight: bold;
 		}
 	}
+
+	.img-wrapper {
+		padding: 2px;
+		width: 45px;
+		height: 45px;
+		border-radius: 50%;
+		border: 2px solid transparent;
+
+		.img {
+			vertical-align: middle;
+			justify-content: center;
+			align-items: center;
+			display: flex;
+			text-shadow: -1px 0 rgb(91, 91, 91), 0 1px rgb(91, 91, 91), 1px 0 rgb(91, 91, 91), 0 -1px rgb(91, 91, 91);
+			color: white;
+			font-weight: bold;
+			width: 100%;
+			height: 100%;
+			user-select: none;
+			border-radius: 50%;
+		}
+
+	}
 }
-
-

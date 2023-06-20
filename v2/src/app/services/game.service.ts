@@ -18,6 +18,7 @@ export class GameService {
 	private currentLevel = new BehaviorSubject<Level | null>(null);
 	private highlightFields = new BehaviorSubject<HighlightField[]>([]);
 	private selectedFields = new BehaviorSubject<SelectedField[]>([]);
+	private notSelectedFields = new BehaviorSubject<SelectedField[]>([]);
 	private currentlySelectedField = new BehaviorSubject<SelectedField | null>(null);
 	private settings = new BehaviorSubject<Settings>(new Settings(this.translateService));
 	private productionTypes = new BehaviorSubject<ProductionType[]>([]);
@@ -40,6 +41,7 @@ export class GameService {
 			return o;
 		})
 	);
+	notSelectedFieldsObs = this.notSelectedFields.asObservable();
 	focusedGameBoardObs = this.focusedGameBoard.asObservable();
 	currentlySelectedFieldObs = this.currentlySelectedField.asObservable();
 	helpWindowObs = this.helpWindow.asObservable();
@@ -90,7 +92,7 @@ export class GameService {
 	}
 
 	deselectField(id: number) {
-		this.selectedFields.next(this.selectedFields.value.filter(o => o.fields.some(p => p.id == id) == false));
+		this.selectedFields.next(this.selectedFields.value.filter(o => !o.fields.map(f => f.id).includes(id)));
 	}
 
 	selectGameBoard(boardData: GameBoard) {
@@ -277,7 +279,7 @@ export class GameService {
 
 			settings.productionTypes.forEach((p) => {
 				const gameBoard = gameBoards.find(g => g.id == maps.find(m => m.linkedToProductionTypes.includes(p.id))!.id)!;
-				this.productionTypes.value.push(new ProductionType(p.id, "#FFF", gameBoard, p.image, p.maxElements));
+				this.productionTypes.value.push(new ProductionType(p.id, p.fieldColor, gameBoard, p.image, p.maxElements));
 			});
 
 			this.productionTypes.next(this.productionTypes.value);
@@ -293,6 +295,9 @@ export class GameService {
 	}
 
 	checkIfAllFieldsAreSelected() {
+		const selectedFields = this.selectedFields.value!.map(c => c.fields[0].id)
+		const notSelected = this.focusedGameBoard.value?.fields.filter(o => o.editable && !selectedFields.includes(o.id)!).map(i => new SelectedField([{id: i.id, side: HighlightSide.ALLSIDES} as HighlightField], i.productionType!))!;
+		this.notSelectedFields.next(notSelected);
 		return this.selectedFields.value.length == this.focusedGameBoard.value?.fields.filter(o => o.editable).length;
 	}
 

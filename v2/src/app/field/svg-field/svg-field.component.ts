@@ -11,6 +11,12 @@ import { FieldBaseComponent } from '../field-base.component';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
+	override shouldSelect(e: MouseEvent): boolean {
+		return e.buttons == 1 || e.shiftKey
+	}
+	override shouldDeselect(e: MouseEvent): boolean {
+		return e.buttons == 2 || e.ctrlKey
+	}
 	@HostBinding('style.fill') private fillColor: string;
 	@HostBinding('style.stroke') private stroke: string;
 	highlightColor: string;
@@ -30,12 +36,13 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 		} else if(productionType) {
 			this.fillColor = `url(#pattern_${productionType.id})`;
 		} else {
-			this.fillColor = `transparent`;
+			this.fillColor = "";
 		}
 	}
 
 	override highlight(side: HighlightSide): void {
 		super.highlight(side);
+		console.log(this.highlightColor);
 		this.stroke = this.highlightColor;
 	}
 
@@ -56,4 +63,5 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 		this._field.productionType = null;
 		this.setColor();
 	}
+
 }

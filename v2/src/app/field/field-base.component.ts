@@ -9,14 +9,20 @@ import { ChangeDetectorRef, Component, ElementRef, HostBinding, Input, OnDestroy
 export abstract class FieldBaseComponent implements OnDestroy {
 	@HostBinding('class.--is-highlighted') public isHighlighted = false;
 	@HostBinding('class.--is-assigned') public isAssigned = false;
+	@HostBinding('class.--missing-selection') public isMissingSelection = false;
+	@HostBinding('class.--is-editable') public isEditable = false;
 	protected _field: Field;
 	private _listeners: (() => void)[] = [];
 	private _clickable = false;
+
+	abstract shouldSelect(e: MouseEvent): boolean;
+	abstract shouldDeselect(e: MouseEvent): boolean;
 
 	constructor(protected gameService: GameService, protected renderer: Renderer2, protected elementRef: ElementRef, protected cdRef: ChangeDetectorRef) { }
 
 	@Input() set field(field: Field) {
 		this._field = field;
+		this.isEditable = field.editable;
 		this.setColor();
 	}
 
@@ -46,9 +52,9 @@ export abstract class FieldBaseComponent implements OnDestroy {
 	addHoverListener() {
 		//if (this._field.editable)
 			this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', (e: MouseEvent) => {
-				if(e.buttons == 1 || e.shiftKey)
+				if(this.shouldSelect(e)) {
 					this.gameService.selectField(this._field.id)
-				else if(e.buttons == 2 || e.altKey)
+				} else if(this.shouldDeselect(e))
 					this.gameService.deselectField(this._field.id);
 				else 
 					this.gameService.highlightOnOtherFields(this._field.id);
@@ -80,6 +86,16 @@ export abstract class FieldBaseComponent implements OnDestroy {
 
 	removeHighlight() {
 		this.isHighlighted = false;
+		this.cdRef.markForCheck();
+	}
+
+	addMissingHighlight() {
+		this.isMissingSelection = true;
+		this.cdRef.markForCheck();
+	}
+
+	removeMissingHighlight() {
+		this.isMissingSelection = false;
 		this.cdRef.markForCheck();
 	}
 
