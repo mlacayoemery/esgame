@@ -5,4 +5,9 @@
 	color: white;
 	border-radius: $border-radius-default;
 	cursor: pointer;
+
+	&[disabled] {
+		color: lightgrey;
+		cursor: default;
+	}
 }
