@@ -12,6 +12,7 @@ import { GameBoardType } from 'src/app/shared/models/game-board-type';
 export class SvgLevelComponent extends LevelBaseComponent {
 	overlayBoard = this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.find(p => p.gameBoardType == GameBoardType.DrawingMap)));
 	settings = this.gameService.settingsObs;
+	imageExpand = false
 
 	constructor(gameService: GameService) {
 		super(gameService);
@@ -25,5 +26,9 @@ export class SvgLevelComponent extends LevelBaseComponent {
 			alert('Du hast noch nicht alle Felder ausgewählt!');
 			setTimeout(() => { super.nextLevel() }, 10000)
 		}
+	}
+
+	switchExpand() {
+		this.imageExpand = !this.imageExpand
 	}
 }
