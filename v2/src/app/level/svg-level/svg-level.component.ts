@@ -19,10 +19,10 @@ export class SvgLevelComponent extends LevelBaseComponent {
 	}
 
 	override nextLevel() {
-		if (this.gameService.checkIfAllFieldsAreSelected()) {
+		// if (this.gameService.checkIfAllFieldsAreSelected()) {
 			super.nextLevel();
-		} else {
-			alert('Du hast noch nicht alle Felder ausgewählt!');
-		}
+		// } else {
+			// alert('Du hast noch nicht alle Felder ausgewählt!');
+		// }
 	}
 }
