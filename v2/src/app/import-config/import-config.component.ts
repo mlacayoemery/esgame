@@ -26,7 +26,6 @@ export class ImportConfigComponent {
 				if (result) {
 					this.gameService.loadSettings(JSON.parse(result.toString()));
 				}
-				//console.log(fileReader.result);
 			}
 			fileReader.readAsText(files[0]);
 		}
