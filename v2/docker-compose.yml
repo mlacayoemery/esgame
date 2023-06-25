@@ -1,0 +1,7 @@
+version: '3'
+services:
+  esgame:
+    build:
+      context: .
+    ports:
+      - "999:80"
