@@ -35,7 +35,7 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 
 		gameService.notSelectedFieldsObs.subscribe(fields => {
 			fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.fields[0].id)?.addMissingHighlight());
-			setTimeout(() => fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.fields[0].id)?.removeMissingHighlight()), 7000);
+			setTimeout(() => fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.fields[0].id)?.removeMissingHighlight()), 3000);
 		});
 	}
 

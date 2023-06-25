@@ -24,7 +24,7 @@ export class SvgLevelComponent extends LevelBaseComponent {
 			super.nextLevel();
 		} else {
 			alert('Du hast noch nicht alle Felder ausgewählt!');
-			setTimeout(() => { super.nextLevel() }, 10000)
+			super.nextLevel();
 		}
 	}
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { fromUrl, writeArrayBuffer } from 'geotiff';
+import { fromBlob, fromUrl, writeArrayBuffer } from 'geotiff';
 import { Observable, from, mergeMap, of } from 'rxjs';
 import gradients, { CustomColors, DefaultGradients, Gradient } from '../shared/helpers/gradients';
 import { GameBoard } from '../shared/models/game-board';
@@ -34,6 +34,7 @@ export class TiffService {
 	}
 
 	getSvgGameBoard(id: string, url: string, gameBoardType: GameBoardType, defaultGradient: DefaultGradients, overlay: GameBoard) {
+		
 		return this.getTiffSvgData(url, gradients.get(defaultGradient)!).pipe(
 			mergeMap(data => {
 				let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
@@ -94,7 +95,9 @@ export class TiffService {
 	}
 
 	private async tiffToPaths(url: string, gradient?: Gradient, colors?: CustomColors) {
-		const tiff = await fromUrl(url);
+		//fromURL throws error
+		const tmp = await fetch(url).then(r => r.blob());
+		const tiff = await fromBlob(tmp);
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
 		const numRaster = Array.from(raster.map(c => c as number));
@@ -111,7 +114,7 @@ export class TiffService {
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
 		const numRaster = Array.from(raster.map(c => Number.parseFloat(c.toString())));
-
+		console.log(url);
 		const paths = tiffToSvgPaths(numRaster, { width: image.getWidth(), height: undefined, scale: 1 });
 		let pathArray: { id: number, path: string, startPos: number }[] = [];
 		paths.forEach((val, key) => {

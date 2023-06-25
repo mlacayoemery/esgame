@@ -13,6 +13,7 @@ export class Settings {
 	imageMode: boolean;
 	basicInstructions: LanguageString;
 	advancedInstructions: LanguageString;
+	calcUrl: string;
 	mode: 'GRID' | 'SVG';
 	infiniteLevels: boolean;
 	productionTypes: { id: string, name: LanguageString, fieldColor: string, image: string, maxElements: number }[] = [];
@@ -25,10 +26,7 @@ export class Settings {
 		this.mapData(data);	
 	}
 
-	//levels: { id: string, name: LanguageString, maps: string[], instructions: LanguageString }[] = [];
-
 	mapData(data: any) {
-		console.log(data);
 		this.title = data.title;
 		this.elementSize = data.elementSize;
 		this.gameBoardColumns = data.gameBoardColumns;
@@ -39,6 +37,7 @@ export class Settings {
 		this.highlightColor = data.highlightColor;
 		this.basicInstructions = data.basicInstructions;
 		this.advancedInstructions = data.advancedInstructions;
+		this.calcUrl = data.calcUrl;
 		this.productionTypes = data.productionTypes.map((o: any) => ({ id: o.id, name: o.name, fieldColor: o.fieldColor, image: o.image, maxElements: o.maxElements }));
 		this.maps = data.maps.map((o: any) => ({ id: o.id, name: o.name, gradient: convertGradient(o.gradient), gameBoardType: convertGameBoardType(o.gameBoardtype), linkedToProductionTypes: o.linkedToProductionTypes, urlToData: o.linkToData }));
 		//this.levels = data.levels.map((o) => ({ id: o.id, name: o.name, maps: o.maps, instructions: o.instructions }));

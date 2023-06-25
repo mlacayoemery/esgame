@@ -11,6 +11,8 @@ import { CustomColors, DefaultGradients } from '../shared/helpers/gradients';
 import { ScoreService } from './score.service';
 import { TranslateService } from '@ngx-translate/core';
 import data from './../../data.json';
+import { ApiService } from './api.service';
+import { CalculationResult } from '../shared/models/calculation-result';
 
 @Injectable({
 	providedIn: 'root'
@@ -28,6 +30,7 @@ export class GameService {
 	private helpWindow = new BehaviorSubject<boolean>(false);
 	private loadingIndicator = new BehaviorSubject<boolean[]>([]);
 	private levels: Level[] = [];
+	private gameId = 12;
 
 	highlightFieldObs = this.highlightFields.asObservable();
 	currentLevelObs = this.currentLevel.asObservable();
@@ -51,7 +54,8 @@ export class GameService {
 	constructor(
 		private tiffService: TiffService,
 		private scoreService: ScoreService,
-		private translateService: TranslateService
+		private translateService: TranslateService,
+		private apiService: ApiService
 	) { }
 
 	highlightOnOtherFields(id: any) {
@@ -102,10 +106,33 @@ export class GameService {
 
 	goToNextLevel() {
 		var currentHighest = this.levels[this.levels.length - 1];
-		var results = this.selectedFields.value.map((o) => ({ id: o.fields[0].id, lulc: o.productionType.id }));
 		//TODO: send result if needed
 		if (currentHighest == this.currentLevel.value) {
-			this.prepareNextLevel();
+			if (this.settings.value.calcUrl) {
+				this.loading(true);
+				var inputData = {} as any;
+				//TODO: remove not selected fields, should not be needed because all fields are selected
+				const allFields = [...this.selectedFields.value, ...this.notSelectedFields.value];
+				inputData.allocation = allFields.map((o) => ({ id: o.fields[0].id, lulc: Number.parseInt(o.productionType?.id ?? 20) }));
+				inputData.round = this.currentLevel.value!.levelNumber;
+				inputData.score = 40;
+				inputData.game_id = this.gameId;
+
+				this.apiService.postRequest(this.settings.value.calcUrl, inputData).subscribe({
+					next: (res) => {
+						const convertedResult = res as CalculationResult;
+						this.prepareNextLevel(convertedResult);
+						this.loading(false);
+					},
+					error: (err) => {
+						console.error(err);
+						alert("Something went wrong, please try again later")
+					}
+				});
+			} else {
+				this.prepareNextLevel();
+			}
+
 		} else {
 			var lvl = this.levels.find(o => o.levelNumber == (this.currentLevel.value!.levelNumber + 1))!;
 			this.currentLevel.next(lvl);
@@ -125,7 +152,7 @@ export class GameService {
 		}
 	}
 
-	prepareNextLevel() {
+	prepareNextLevel(calculationResult: CalculationResult | undefined = undefined) {
 		this.loading();
 		const level = new Level();
 		const settings = this.settings.value;
@@ -141,8 +168,8 @@ export class GameService {
 
 		if (this.settings.value.mode == 'GRID') {
 			const maps = settings.maps.filter(
-				m => m.gameBoardType == GameBoardType.ConsequenceMap && 
-				!previousLevel.gameBoards.map(o => o.id).includes(m.id));
+				m => m.gameBoardType == GameBoardType.ConsequenceMap &&
+					!previousLevel.gameBoards.map(o => o.id).includes(m.id));
 
 			level.gameBoards.push(...previousLevel.gameBoards);
 
@@ -181,12 +208,18 @@ export class GameService {
 				m => m.gameBoardType == GameBoardType.ConsequenceMap &&
 					!previousLevel.gameBoards.map(o => o.id).includes(m.id));
 
+			if (calculationResult) {
+				otherMaps.forEach(m => m.urlToData = calculationResult.results.find(c => c.id == m.id)?.url!);
+				console.log(otherMaps);
+			}
+
 			level.gameBoards.push(...previousLevel.gameBoards);
-			
+
 
 			combineLatest([
 				this.tiffService.getSvgBackground(backgroundMap.urlToData, customColors),
 				...otherMaps.map(m => { return this.getSvg(m, overlay) })]).subscribe(([background, ...gameBoards]) => {
+					console.log(gameBoards);
 					gameBoards.forEach(o => {
 						o.background2 = background;
 					});
@@ -297,7 +330,7 @@ export class GameService {
 
 	checkIfAllFieldsAreSelected() {
 		const selectedFields = this.selectedFields.value!.map(c => c.fields[0].id)
-		const notSelected = this.focusedGameBoard.value?.fields.filter(o => o.editable && !selectedFields.includes(o.id)!).map(i => new SelectedField([{id: i.id, side: HighlightSide.ALLSIDES} as HighlightField], i.productionType!))!;
+		const notSelected = this.focusedGameBoard.value?.fields.filter(o => o.editable && !selectedFields.includes(o.id)!).map(i => new SelectedField([{ id: i.id, side: HighlightSide.ALLSIDES } as HighlightField], i.productionType!))!;
 		this.notSelectedFields.next(notSelected);
 		return this.selectedFields.value.length == this.focusedGameBoard.value?.fields.filter(o => o.editable).length;
 	}

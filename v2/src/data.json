@@ -9,6 +9,7 @@
 	"gameBoardRows": 29,
 	"basicInstructions": { "en": "Instructions 1", "de": "Anleitung 1" },
 	"advancedInstructions": { "en": "Instructions 2", "de": "Anleitungs 2" },
+	"calcUrl": "http://127.0.0.1:3251/esgame",
 	"productionTypes": [
 		{
 			"id": "10",
@@ -81,7 +82,7 @@
 			"linkedToProductionTypes": ["40"]
 		},
 		{
-			"id": "6",
+			"id": "10",
 			"name": { "en": "Air Quality", "de": "Luftqualität" },
 			"linkToData": "./assets/images/Consequence_1_Clip.tif",
 			"gradient": "blue",
@@ -89,7 +90,7 @@
 			"linkedToProductionTypes": ["10", "20", "30", "40"]
 		},
 		{
-			"id": "7",
+			"id": "20",
 			"name": { "en": "Water Quality", "de": "Wasserqualität" },
 			"linkToData": "./assets/images/Consequence_2_Clip.tif",
 			"gradient": "blue",
@@ -97,7 +98,7 @@
 			"linkedToProductionTypes": ["10", "20", "30", "40"]
 		},
 		{
-			"id": "8",
+			"id": "30",
 			"name": { "en": "Intensive Livestock Land", "de": "Intensives  Ackerland" },
 			"linkToData": "./assets/images/Consequence_3_Clip.tif",
 			"gradient": "blue",
@@ -105,7 +106,7 @@
 			"linkedToProductionTypes": ["10", "20", "30", "40"]
 		},
 		{
-			"id": "9",
+			"id": "40",
 			"name": { "en": "Intensive Livestock Land", "de": "Intensives Ackerland" },
 			"linkToData": "./assets/images/Consequence_4_Clip.tif",
 			"gradient": "blue",
@@ -113,7 +114,15 @@
 			"linkedToProductionTypes": ["10", "20", "30", "40"]
 		},
 		{
-			"id": "10",
+			"id": "50",
+			"name": { "en": "Intensive Livestock Land", "de": "Intensives Ackerland" },
+			"linkToData": "./assets/images/Consequence_4_Clip.tif",
+			"gradient": "blue",
+			"gameBoardtype": "Consequence",
+			"linkedToProductionTypes": ["10", "20", "30", "40"]
+		},
+		{
+			"id": "6",
 			"name": { "en": "Background", "de": "Background" },
 			"linkToData": "./assets/images/Land_use_only_clip.tif",
 			"gradient": "",

@@ -42,7 +42,6 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 
 	override highlight(side: HighlightSide): void {
 		super.highlight(side);
-		console.log(this.highlightColor);
 		this.stroke = this.highlightColor;
 	}
 
