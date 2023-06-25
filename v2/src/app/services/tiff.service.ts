@@ -34,13 +34,13 @@ export class TiffService {
 	}
 
 	getSvgGameBoard(id: string, url: string, gameBoardType: GameBoardType, defaultGradient: DefaultGradients, overlay: GameBoard) {
-		return this.getTiffSvgData(url, gradients.get(defaultGradient)!).pipe(
+		return this.getTiffSvgDataUrl(url, gradients.get(defaultGradient)!).pipe(
 			mergeMap(data => {
 				let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
 				
 				uniqueValues = Array.from(new Set(data.numRaster)).filter(c => c != data.nodata).sort((a, b) => a - b);
 				gradient = gradients.get(defaultGradient!);
-				legend = { elements: [{forValue: Math.round(uniqueValues[0] * 100), color: gradient!.startingColor}, {forValue: Math.round(uniqueValues[uniqueValues.length - 1] * 100), color: gradient!.endingColor}], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true };
+				legend = { elements: [{forValue: Math.round(uniqueValues[0] * 100), color: gradient!.calculateColor(1 - 1 / (1 - 0) * (uniqueValues[0] - 0))}, {forValue: Math.round(uniqueValues[uniqueValues.length - 1] * 100), color: gradient!.calculateColor(1 - 1 / (1 - 0) * (uniqueValues[uniqueValues.length - 1] - 0))}], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true };
 				fields = overlay.fields.map((field) => {
 					return {
 						...field,
@@ -56,7 +56,7 @@ export class TiffService {
 	}
 
 	getOverlayGameBoard(id: string, url: string, gameBoardType: GameBoardType) {
-		return this.getTiffSvgData2(url).pipe(
+		return this.getTiffSvgData(url).pipe(
 			mergeMap(data => {
 				let fields: Field[];
 
@@ -70,7 +70,7 @@ export class TiffService {
 	}
 
 	getSvgBackground(url: string, customColors: CustomColors): Observable<string> {
-		return this.getTiffSvgData(url, undefined, customColors).pipe(
+		return this.getTiffSvgDataUrl(url, undefined, customColors).pipe(
 			mergeMap(data => {
 				return of(data.dataUrl);
 			})
@@ -85,15 +85,15 @@ export class TiffService {
 		return from(this.arrayToTiff(data, columns));
 	}
 
-	public getTiffSvgData(url: string, gradient?: Gradient, colors?: CustomColors) {
-		return from(this.tiffToPaths(url, gradient, colors));
+	public getTiffSvgDataUrl(url: string, gradient?: Gradient, colors?: CustomColors) {
+		return from(this.prepareDataUrl(url, gradient, colors));
 	}
 
-	public getTiffSvgData2(url: string) {
-		return from(this.tiffToPaths2(url));
+	public getTiffSvgData(url: string) {
+		return from(this.tiffToPaths(url));
 	}
 
-	private async tiffToPaths(url: string, gradient?: Gradient, colors?: CustomColors) {
+	private async prepareDataUrl(url: string, gradient?: Gradient, colors?: CustomColors) {
 		const tiff = await fromUrl(url);
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
@@ -106,7 +106,7 @@ export class TiffService {
 		return { width, height, dataUrl, nodata, numRaster };
 	}
 
-	private async tiffToPaths2(url: string) {
+	private async tiffToPaths(url: string) {
 		const tiff = await fromUrl(url);
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
@@ -145,8 +145,8 @@ export class TiffService {
 		const tmpArray = []
 		const uniqueValues = Array.from(new Set(data)).filter(c => c != noData).sort((a, b) => a - b);
 		if (gradient) {
-			const maxValue = Math.max(...uniqueValues);
-			const minValue = Math.min(...uniqueValues);
+			const maxValue = 1; //Math.max(...uniqueValues); // TODO: Evtl verschieben in Konfiguration?
+			const minValue = 0; //Math.min(...uniqueValues);
 			for (var i = 0; i < data.length; i++) {
 				if (data[i] == noData) {
 					tmpArray.push(255, 255, 255, 0);

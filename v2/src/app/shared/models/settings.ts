@@ -28,7 +28,6 @@ export class Settings {
 	//levels: { id: string, name: LanguageString, maps: string[], instructions: LanguageString }[] = [];
 
 	mapData(data: any) {
-		console.log(data);
 		this.title = data.title;
 		this.elementSize = data.elementSize;
 		this.gameBoardColumns = data.gameBoardColumns;
