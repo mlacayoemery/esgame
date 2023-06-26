@@ -27,7 +27,9 @@
 			<button troButton class="btn-next" (click)="nextLevel()"
 				[disabled]="(!(settings | async)?.infiniteLevels) && (level | async)?.levelNumber != 1" translate>Next
 				Level</button>
-			<tro-score-board class="score-board"></tro-score-board>
+
+			<tro-score-board *ngIf="!((level | async)?.scores)" class="score-board"></tro-score-board>
+			<tro-score-board *ngIf="(level | async)?.scores" isStatic [scores]="(level | async)!.scores" class="score-board"></tro-score-board>
 			<div [ngClass]="imageExpand ? 'expanded' : ''" class="expandable">
 				<img  src="./assets/images/Agroparks .png" />
 				<button mat-mini-fab color="primary" (click)="switchExpand()" aria-label="expand/collapse">

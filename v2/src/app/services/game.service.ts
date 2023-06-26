@@ -8,7 +8,7 @@ import { ProductionType } from '../shared/models/production-type';
 import { HighlightField, HighlightSide, SelectedField } from '../shared/models/field';
 import { TiffService } from './tiff.service';
 import { CustomColors, DefaultGradients } from '../shared/helpers/gradients';
-import { ScoreService } from './score.service';
+import { ScoreService, ScoreEntry } from './score.service';
 import { TranslateService } from '@ngx-translate/core';
 import data from './../../data.json';
 import { ApiService } from './api.service';
@@ -118,13 +118,14 @@ export class GameService {
 				inputData.round = this.currentLevel.value!.levelNumber;
 				const entries = this.scoreService.createEmptyScoreEntry(this.currentLevel.value);
 				this.scoreService.calculateScore(entries, this.selectedFields.value);
+				const score = entries.reduce((a, b) => a + b.score, 0);
 				inputData.score = entries.reduce((a, b) => a + b.score, 0);
 				inputData.game_id = this.gameId;
 
 				this.apiService.postRequest(this.settings.value.calcUrl, inputData).subscribe({
 					next: (res) => {
 						const convertedResult = res as CalculationResult;
-						this.prepareNextLevel(convertedResult);
+						this.prepareNextLevel(convertedResult, score);
 						this.loading(false);
 					},
 					error: (err) => {
@@ -179,7 +180,7 @@ export class GameService {
 		}
 	}
 
-	prepareNextLevel(calculationResult: CalculationResult | undefined = undefined) {
+	prepareNextLevel(calculationResult: CalculationResult | undefined = undefined, previousScore: number | undefined = undefined) {
 		this.loading();
 		const level = new Level();
 		const settings = this.settings.value;
@@ -227,10 +228,7 @@ export class GameService {
 
 			if (calculationResult) {
 				consequnces.forEach(m => m.urlToData = calculationResult.results.find(c => c.id == m.id)?.url!);
-				
-				//level.score = calculationResult.map(c => c).score;
-
-
+				level.scores = [{ id: "all", score: previousScore!} , ...calculationResult.results.filter(c => c.id != "-1").map(c => ({ score: -c.score, id: c.id } as ScoreEntry))];
 			}
 
 			level.gameBoards.push(...previousLevel.gameBoards.filter(c => c.gameBoardType != GameBoardType.ConsequenceMap));

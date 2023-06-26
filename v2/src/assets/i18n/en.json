@@ -68,5 +68,6 @@
 	"Advanced Instructions": "Instructions later levels",
 	"Game name": "Name of the Game",
 	"Gameboard": "Gameboard",
-	"Image Mode": "Show images on planted fields"
+	"Image Mode": "Show images on planted fields",
+	"map_name_all": "+"
 }
