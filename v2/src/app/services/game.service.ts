@@ -31,6 +31,7 @@ export class GameService {
 	private loadingIndicator = new BehaviorSubject<boolean[]>([]);
 	private levels: Level[] = [];
 	private gameId = 12;
+	private customColors: CustomColors[] = [];
 
 	highlightFieldObs = this.highlightFields.asObservable();
 	currentLevelObs = this.currentLevel.asObservable();
@@ -194,16 +195,6 @@ export class GameService {
 			const overlay = this.currentLevel.value!.gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
 			const backgroundMap = settings.maps.find(o => o.gameBoardType == GameBoardType.BackgroundMap)!;
 
-			var customColors = new CustomColors();
-			customColors.set(2, "a8a8007D");
-			customColors.set(3, "73b2ff7D");
-			customColors.set(4, "70a8007D");
-			customColors.set(5, "CCCCCC7D");
-			customColors.set(6, "00734c7D");
-			customColors.set(7, "8282827D");
-			customColors.set(8, "98e6007D");
-			customColors.set(15, "00000000");
-
 			const otherMaps = settings.maps.filter(
 				m => m.gameBoardType == GameBoardType.ConsequenceMap &&
 					!previousLevel.gameBoards.map(o => o.id).includes(m.id));
@@ -217,7 +208,7 @@ export class GameService {
 
 
 			combineLatest([
-				this.tiffService.getSvgBackground(backgroundMap.urlToData, customColors),
+				this.tiffService.getSvgBackground(backgroundMap.urlToData, this.customColors.find(o => o.id == backgroundMap.customColorId)!),
 				...otherMaps.map(m => { return this.getSvg(m, overlay) })]).subscribe(([background, ...gameBoards]) => {
 					console.log(gameBoards);
 					gameBoards.forEach(o => {
@@ -241,20 +232,27 @@ export class GameService {
 
 	initialiseSVGMode() {
 		var level = new Level();
+		const settings = this.settings.value;
 		this.levels.push(level);
 		this.loading();
 
-		var customColors = new CustomColors();
-		customColors.set(2, "a8a8007D");
-		customColors.set(3, "73b2ff7D");
-		customColors.set(4, "70a8007D");
-		customColors.set(5, "CCCCCC7D");
-		customColors.set(6, "00734c7D");
-		customColors.set(7, "8282827D");
-		customColors.set(8, "98e6007D");
-		customColors.set(15, "00000000");
+		settings.customColors.forEach((c) => {
+			var customColor = new CustomColors(c.id);
+			c.colors.forEach((c) => {
+				customColor.set(c.number, c.color);
+			});
+			this.customColors.push(customColor);
+		});
 
-		const settings = this.settings.value;
+		// customColors.set(2, "a8a8007D");
+		// customColors.set(3, "73b2ff7D");
+		// customColors.set(4, "70a8007D");
+		// customColors.set(5, "CCCCCC7D");
+		// customColors.set(6, "00734c7D");
+		// customColors.set(7, "8282827D");
+		// customColors.set(8, "98e6007D");
+		// customColors.set(15, "00000000");
+
 		const drawingMap = settings.maps.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
 		const backgroundMap = settings.maps.find(o => o.gameBoardType == GameBoardType.BackgroundMap)!;
 		const otherMaps = settings.maps.filter(m => m.gameBoardType == GameBoardType.SuitabilityMap);
@@ -263,7 +261,7 @@ export class GameService {
 			switchMap(overlay => {
 				level.gameBoards.push(overlay);
 				return combineLatest(
-					[this.tiffService.getSvgBackground(backgroundMap.urlToData, customColors),
+					[this.tiffService.getSvgBackground(backgroundMap.urlToData, this.customColors.find(o => o.id == backgroundMap.customColorId)!),
 					...otherMaps.map(m => { return this.getSvg(m, overlay) }),]
 				);
 			})

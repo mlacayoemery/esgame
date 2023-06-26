@@ -7,7 +7,7 @@
 <div class="panel center-panel">
 	<header>
 		<i></i>
-		<h1>{{ (settings | async)?.title }}</h1>
+		<h1>{{ 'title' | translate }}</h1>
 		<span class="icon-help-circle" (click)="openHelp()"></span>
 	</header>
 	<p translate [translateParams]="{value: (level | async)?.levelNumber}">Level</p>

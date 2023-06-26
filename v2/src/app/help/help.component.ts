@@ -23,9 +23,9 @@ export class HelpComponent {
 
 		this.gameService.currentLevelObs.subscribe(o => {
 			if (o?.levelNumber == 1) {
-				this.helpText = 'basic instructions';
+				this.helpText = 'basic_instructions';
 			} else {
-				this.helpText = 'advanced instructions';
+				this.helpText = 'advanced_instructions';
 			}
 		});
 	}

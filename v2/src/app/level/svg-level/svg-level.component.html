@@ -9,7 +9,7 @@
 <div class="panel center-panel">
 	<header>
 		<p translate [translateParams]="{value: (level | async)?.levelNumber}" troLevelIndicator>Level</p>
-		<h1 translate>{{ (settings | async)?.title }}</h1>
+		<h1 translate>{{ 'title' | translate }}</h1>
 		<span class="icon-help-circle" (click)="openHelp()"></span>
 	</header>
 	<div>
