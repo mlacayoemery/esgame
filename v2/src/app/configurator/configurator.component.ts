@@ -93,6 +93,13 @@ export class ConfiguratorComponent {
 			} else {
 				fg.get('urlToData')?.enable();
 			}
+			if (value == 'Drawing') {
+				fg.get('productionTypes')?.disable();
+				fg.get('gradient')?.disable();
+			} else {
+				fg.get('productionTypes')?.enable();
+				fg.get('gradient')?.enable();
+			}
 		});
 	}
 

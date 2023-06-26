@@ -5,7 +5,7 @@
 			<ng-template matStepLabel>{{ 'general' | translate}}</ng-template>
 			<div class="configurator-grid">
 				<div class="--full">
-					<input type="file" (change)="onFileSelected($event)" accept=".json">
+					Import existing configuration: <input type="file" (change)="onFileSelected($event)" accept=".json">
 				</div>
 				<ng-container formGroupName="title">
 					<mat-form-field *ngFor="let lang of languages">
@@ -184,12 +184,6 @@
 							<mat-hint>Must be unique</mat-hint>
 						</mat-form-field>
 						<mat-form-field>
-							<mat-label>{{ 'map-url' | translate}}</mat-label>
-							<input type="url" matInput placeholder="https://..." name="map-{{i}}-url" formControlName="urlToData"
-								required />
-							<mat-hint>URL to the tiff file</mat-hint>
-						</mat-form-field>
-						<mat-form-field>
 							<mat-label>{{ 'game-board-type' | translate}}</mat-label>
 							<mat-select formControlName="gameBoardType">
 								<mat-option value="Suitability">
@@ -205,6 +199,12 @@
 									{{'Background' | translate}}
 								</mat-option>
 							</mat-select>
+						</mat-form-field>
+						<mat-form-field>
+							<mat-label>{{ 'map-url' | translate}}</mat-label>
+							<input type="url" matInput placeholder="https://..." name="map-{{i}}-url" formControlName="urlToData"
+								required />
+							<mat-hint>URL to the tiff file</mat-hint>
 						</mat-form-field>
 						<mat-form-field>
 							<mat-label>{{ 'production-types' | translate}}</mat-label>
@@ -225,7 +225,7 @@
 									{{ 'custom' | translate }}
 								</mat-option>
 							</mat-select>
-							<mat-hint>The colour the map gets coloured in</mat-hint>
+							<mat-hint>{{'The colour the map gets coloured in' | translate }}</mat-hint>
 						</mat-form-field>
 						<mat-form-field>
 							<mat-label>{{ 'Custom Color Pattern' | translate }}</mat-label>
@@ -241,16 +241,17 @@
 				<button class="--full" type="button" mat-raised-button (click)="addMap()" color="primary" aria-label="Add map">
 					<mat-icon>add</mat-icon> {{ 'new-map' | translate}}
 				</button>
-				<button mat-button class="--next-line --justify-start" matStepperPrevious>Back</button>
-				<button mat-button class="--justify-end" matStepperNext>Next</button>
+				<button mat-button class="--next-line --justify-start" matStepperPrevious>{{ 'Back' | translate }}</button>
+				<button mat-button class="--justify-end" matStepperNext>{{'Next' | translate}}</button>
 			</div>
 		</mat-step>
 		<mat-step>
 			<ng-template matStepLabel>{{ 'Finish' | translate }}</ng-template>
 			<div class="configurator-grid">
-				<p class="--full">Please check if you filled all necessary data.</p>
+				<p class="--full" translate>Please check if you filled all necessary data.</p>
 				<button class="--full" type="button" mat-raised-button (click)="exportData()" color="primary">{{ 'Export' | translate }}</button>
-				<button class="--next-line --justify-start" mat-button matStepperPrevious>Back</button>
+				<button class="--next-line --justify-start" mat-button matStepperPrevious>{{'Back' | translate}}</button>
+				<button class="--justify-end" mat-button [routerLink]="['']">{{'Home' | translate}}</button>
 			</div>
 		</mat-step>
 	</mat-stepper>
