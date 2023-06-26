@@ -1,147 +1,332 @@
 {
-	"title": "Tradeoff: Agriculture Edition!",
+	"title": {
+		"de": "Titel Deutsch",
+		"en": "Title English",
+		"nl": null,
+		"pt": null
+	},
 	"mapMode": "svg",
 	"imageMode": false,
 	"elementSize": 1,
+	"highlightColor": "#f0ff1b",
 	"infiniteLevels": true,
 	"gameBoardColumns": 28,
-	"highlightColor": "#f0ff1b",
 	"gameBoardRows": 29,
-	"basicInstructions": { "en": "Instructions 1", "de": "Anleitung 1" },
-	"advancedInstructions": { "en": "Instructions 2", "de": "Anleitungs 2" },
 	"calcUrl": "http://127.0.0.1:5555/esgame",
 	"productionTypes": [
 		{
 			"id": "10",
-			"name": { "en": "Extensive Arable Land", "de": "Extensives Ackerland"},
+			"name": {
+				"de": "Extensives Ackerland",
+				"en": "Extensive Arable Land",
+				"nl": null,
+				"pt": null
+			},
 			"fieldColor": "#f8cbad",
-			"image": "./assets/images/ext_arable.png",
+			"urlToIcon": "./assets/images/ext_arable.png",
 			"maxElements": 200
 		},
 		{
 			"id": "20",
-			"name": { "en": "Intensive Arable Land", "de": "Intensives Ackerland"},
+			"name": {
+				"de": "Intensives Ackerland",
+				"en": "Intensive Arable Land",
+				"nl": null,
+				"pt": null
+			},
 			"fieldColor": "#843c0c",
-			"image": "./assets/images/int_arable.png",
+			"urlToIcon": "./assets/images/int_arable.png",
 			"maxElements": 200
 		},
 		{
 			"id": "30",
-			"name": { "en": "Extensive Livestock Land", "de": "Extensive Viehzucht"},
+			"name": {
+				"de": "Extensive Viehzucht",
+				"en": "Extensive Livestock Land",
+				"nl": null,
+				"pt": null
+			},
 			"fieldColor": "#fbe5d6",
-			"image": "./assets/images/ext_livestock.png",
+			"urlToIcon": "./assets/images/ext_livestock.png",
 			"maxElements": 200
 		},
 		{
 			"id": "40",
-			"name": { "en": "Intensive Livestock Land", "de": "Intensive Viehzucht"},
+			"name": {
+				"de": "Intensive Viehzucht",
+				"en": "Intensive Livestock Land",
+				"nl": null,
+				"pt": null
+			},
 			"fieldColor": "#c55a11",
-			"image": "./assets/images/int_livestock.png",
+			"urlToIcon": "./assets/images/int_livestock.png",
 			"maxElements": 200
 		},
 		{
 			"id": "50",
-			"name": { "en": "Extra nature", "de": "Zusätzliche Natur"},
+			"name": {
+				"de": "Zusätzliche Natur",
+				"en": "Extra nature",
+				"nl": null,
+				"pt": null
+			},
 			"fieldColor": "#c55a11",
-			"image": "./assets/images/extra_nature.png",
+			"urlToIcon": "./assets/images/extra_nature.png",
 			"maxElements": 200
 		},
 		{
 			"id": "60",
-			"name": { "en": "Agropark", "de": "Agropark"},
+			"name": {
+				"de": "Agropark",
+				"en": "Agropark",
+				"nl": null,
+				"pt": null
+			},
 			"fieldColor": "#c55a11",
-			"image": "./assets/images/agropark.png",
+			"urlToIcon": "./assets/images/agropark.png",
 			"maxElements": 200
 		}
 	],
 	"maps": [
 		{
 			"id": "1",
-			"name": { "en": "Zones", "de": "Zonen" },
-			"linkToData": "./assets/images/hexagons_only3.tif",
+			"name": {
+				"de": "Zonen",
+				"en": "Zones",
+				"nl": null,
+				"pt": null
+			},
 			"gradient": "",
-			"gameBoardtype": "Drawing",
-			"linkedToProductionTypes": []
+			"productionTypes": [],
+			"gameBoardType": "Drawing",
+			"urlToData": "./assets/images/hexagons_only3.tif",
+			"customColorId": ""
 		},
 		{
 			"id": "2",
-			"name": { "en": "Extensive Arable Land", "de": "Extensives Ackerland" },
-			"linkToData": "./assets/images/suit_arable_ext_zoneNEW.tif",
+			"name": {
+				"de": "Extensives Ackerland",
+				"en": "Extensive Arable Land",
+				"nl": null,
+				"pt": null
+			},
 			"gradient": "blue",
-			"gameBoardtype": "Suitablity",
-			"linkedToProductionTypes": ["10"]
+			"productionTypes": [
+				"10"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "./assets/images/suit_arable_ext_zoneNEW.tif",
+			"customColorId": ""
 		},
 		{
 			"id": "3",
-			"name": { "en": "Intensive Arable Land", "de": "Intensives  Ackerland" },
-			"linkToData": "./assets/images/suit_arable_int_zoneNEW.tif",
+			"name": {
+				"de": "Intensives  Ackerland",
+				"en": "Intensive Arable Land",
+				"nl": null,
+				"pt": null
+			},
 			"gradient": "blue",
-			"gameBoardtype": "Suitablity",
-			"linkedToProductionTypes": ["20"]
+			"productionTypes": [
+				"20"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "./assets/images/suit_arable_int_zoneNEW.tif",
+			"customColorId": ""
 		},
 		{
 			"id": "4",
-			"name": { "en": "Extensive Livestock Land", "de": "Extensive Viehzucht" },
-			"linkToData": "./assets/images/suit_livestock_ext_zoneNEW.tif",
+			"name": {
+				"de": "Extensive Viehzucht",
+				"en": "Extensive Livestock Land",
+				"nl": null,
+				"pt": null
+			},
 			"gradient": "red",
-			"gameBoardtype": "Suitablity",
-			"linkedToProductionTypes": ["30"]
+			"productionTypes": [
+				"30"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "./assets/images/suit_livestock_ext_zoneNEW.tif",
+			"customColorId": ""
 		},
 		{
 			"id": "5",
-			"name": { "en": "Intensive Livestock Land", "de": "Intensive Viehzucht" },
-			"linkToData": "./assets/images/suit_livestock_int_zoneNEW.tif",
+			"name": {
+				"de": "Intensive Viehzucht",
+				"en": "Intensive Livestock Land",
+				"nl": null,
+				"pt": null
+			},
 			"gradient": "red",
-			"gameBoardtype": "Suitablity",
-			"linkedToProductionTypes": ["40", "50", "60"]
+			"productionTypes": [
+				"40",
+				"50",
+				"60"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "./assets/images/suit_livestock_int_zoneNEW.tif",
+			"customColorId": ""
 		},
 		{
 			"id": "11",
-			"name": { "en": "Air Quality", "de": "Luftqualität" },
-			"linkToData": "./assets/images/Consequence_1_Clip.tif",
+			"name": {
+				"de": "Luftqualität",
+				"en": "Air Quality",
+				"nl": null,
+				"pt": null
+			},
 			"gradient": "blue",
-			"gameBoardtype": "Consequence",
-			"linkedToProductionTypes": ["10", "20", "30", "40"]
+			"productionTypes": [
+				"10",
+				"20",
+				"30",
+				"40"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/Consequence_1_Clip.tif",
+			"customColorId": ""
 		},
 		{
 			"id": "22",
-			"name": { "en": "Water Quality", "de": "Wasserqualität" },
-			"linkToData": "./assets/images/Consequence_2_Clip.tif",
+			"name": {
+				"de": "Wasserqualität",
+				"en": "Water Quality",
+				"nl": null,
+				"pt": null
+			},
 			"gradient": "blue",
-			"gameBoardtype": "Consequence",
-			"linkedToProductionTypes": ["10", "20", "30", "40"]
+			"productionTypes": [
+				"10",
+				"20",
+				"30",
+				"40"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/Consequence_2_Clip.tif",
+			"customColorId": ""
 		},
 		{
 			"id": "33",
-			"name": { "en": "Intensive Livestock Land", "de": "Intensives  Ackerland" },
-			"linkToData": "./assets/images/Consequence_3_Clip.tif",
+			"name": {
+				"de": "Intensives  Ackerland",
+				"en": "Intensive Livestock Land",
+				"nl": null,
+				"pt": null
+			},
 			"gradient": "blue",
-			"gameBoardtype": "Consequence",
-			"linkedToProductionTypes": ["10", "20", "30", "40"]
+			"productionTypes": [
+				"10",
+				"20",
+				"30",
+				"40"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/Consequence_3_Clip.tif",
+			"customColorId": ""
 		},
 		{
 			"id": "44",
-			"name": { "en": "Intensive Livestock Land", "de": "Intensives Ackerland" },
-			"linkToData": "./assets/images/Consequence_4_Clip.tif",
+			"name": {
+				"de": "Intensives Ackerland",
+				"en": "Intensive Livestock Land",
+				"nl": null,
+				"pt": null
+			},
 			"gradient": "blue",
-			"gameBoardtype": "Consequence",
-			"linkedToProductionTypes": ["10", "20", "30", "40"]
+			"productionTypes": [
+				"10",
+				"20",
+				"30",
+				"40"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/Consequence_4_Clip.tif",
+			"customColorId": ""
 		},
 		{
 			"id": "55",
-			"name": { "en": "Intensive Livestock Land", "de": "Intensives Ackerland" },
-			"linkToData": "./assets/images/Consequence_4_Clip.tif",
+			"name": {
+				"de": "Intensives Ackerland",
+				"en": "Intensive Livestock Land",
+				"nl": null,
+				"pt": null
+			},
 			"gradient": "blue",
-			"gameBoardtype": "Consequence",
-			"linkedToProductionTypes": ["10", "20", "30", "40"]
+			"productionTypes": [
+				"10",
+				"20",
+				"30",
+				"40"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/Consequence_4_Clip.tif",
+			"customColorId": ""
 		},
 		{
 			"id": "6",
-			"name": { "en": "Background", "de": "Background" },
-			"linkToData": "./assets/images/Land_use_only_clip.tif",
-			"gradient": "",
-			"gameBoardtype": "Background",
-			"linkedToProductionTypes": []
+			"name": {
+				"de": "Background",
+				"en": "Background",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "custom",
+			"productionTypes": [],
+			"gameBoardType": "Background",
+			"urlToData": "./assets/images/Land_use_only_clip.tif",
+			"customColorId": "8685a932-d972-438c-bf33-db4294266c7e"
 		}
-	]
+	],
+	"customColors": [
+		{
+			"id": "8685a932-d972-438c-bf33-db4294266c7e",
+			"colors": [
+				{
+					"number": 2,
+					"color": "#a8a8007D"
+				},
+				{
+					"number": 3,
+					"color": "#73b2ff7D"
+				},
+				{
+					"number": 4,
+					"color": "#70a8007D"
+				},
+				{
+					"number": 5,
+					"color": "#CCCCCC7D"
+				},
+				{
+					"number": 6,
+					"color": "#00734c7D"
+				},
+				{
+					"number": 7,
+					"color": "#8282827D"
+				},
+				{
+					"number": 8,
+					"color": "#98e6007D"
+				},
+				{
+					"number": 15,
+					"color": "#00000000"
+				}
+			]
+		}
+	],
+	"basicInstructions": {
+		"de": "Anleitung 1",
+		"en": "Instructions 1",
+		"nl": null,
+		"pt": null
+	},
+	"advancedInstructions": {
+		"de": "Anleitungs 2",
+		"en": "Instructions 2",
+		"nl": null,
+		"pt": null
+	}
 }
