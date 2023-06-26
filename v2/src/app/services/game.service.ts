@@ -142,7 +142,7 @@ export class GameService {
 
 			lvl.gameBoards.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap).forEach(map => {
 				const mapSettings = this.settings.value.maps.find(c => c.id == map.id)!;
-				mapSettings.linkedToProductionTypes.forEach(ptId => {
+				mapSettings.productionTypes.forEach(ptId => {
 					const pt = currentPt.find(c => c.id == ptId)!;
 					pt.consequenceMaps.push(map);
 				});
@@ -165,7 +165,7 @@ export class GameService {
 
 			lvl.gameBoards.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap).forEach(map => {
 				const mapSettings = this.settings.value.maps.find(c => c.id == map.id)!;
-				mapSettings.linkedToProductionTypes.forEach(ptId => {
+				mapSettings.productionTypes.forEach(ptId => {
 					const pt = currentPt.find(c => c.id == ptId)!;
 					pt.consequenceMaps.push(map);
 				});
