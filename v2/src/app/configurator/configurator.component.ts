@@ -178,9 +178,7 @@ export class ConfiguratorComponent {
 						this.addColor(this.customColors.controls[this.customColors.controls.length - 1]);
 					});
 				});
-				console.log(value);
 				this.formGroup.patchValue(value);
-				console.log(this.formGroup);
 
 			};
 			reader.readAsText(file);

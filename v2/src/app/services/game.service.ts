@@ -116,7 +116,9 @@ export class GameService {
 				const allFields = [...this.selectedFields.value, ...this.notSelectedFields.value];
 				inputData.allocation = allFields.map((o) => ({ id: o.fields[0].id, lulc: Number.parseInt(o.productionType?.id ?? 20) }));
 				inputData.round = this.currentLevel.value!.levelNumber;
-				inputData.score = 40;
+				const entries = this.scoreService.createEmptyScoreEntry(this.currentLevel.value);
+				this.scoreService.calculateScore(entries, this.selectedFields.value);
+				inputData.score = entries.reduce((a, b) => a + b.score, 0);
 				inputData.game_id = this.gameId;
 
 				this.apiService.postRequest(this.settings.value.calcUrl, inputData).subscribe({
@@ -225,7 +227,10 @@ export class GameService {
 
 			if (calculationResult) {
 				consequnces.forEach(m => m.urlToData = calculationResult.results.find(c => c.id == m.id)?.url!);
-				console.log(consequnces);
+				
+				//level.score = calculationResult.map(c => c).score;
+
+
 			}
 
 			level.gameBoards.push(...previousLevel.gameBoards.filter(c => c.gameBoardType != GameBoardType.ConsequenceMap));
@@ -234,7 +239,6 @@ export class GameService {
 			combineLatest([
 				this.tiffService.getSvgBackground(backgroundMap.urlToData, this.customColors.find(o => o.id == backgroundMap.customColorId)!),
 				...consequnces.map(m => { return this.getSvg(m, overlay) })]).subscribe(([background, ...gameBoards]) => {
-					console.log(gameBoards);
 					gameBoards.forEach(o => {
 						o.background2 = background;
 					});
@@ -258,7 +262,6 @@ export class GameService {
 	initialiseSVGMode() {
 		var level = new Level();
 		const settings = this.settings.value;
-		console.log(settings);
 		this.levels.push(level);
 		this.loading();
 
@@ -283,7 +286,6 @@ export class GameService {
 		const drawingMap = settings.maps.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
 		const backgroundMap = settings.maps.find(o => o.gameBoardType == GameBoardType.BackgroundMap)!;
 		const otherMaps = settings.maps.filter(m => m.gameBoardType == GameBoardType.SuitabilityMap);
-		console.log(this.customColors, backgroundMap);
 
 		this.tiffService.getOverlayGameBoard(drawingMap.id, drawingMap.urlToData, GameBoardType.DrawingMap).pipe(
 			switchMap(overlay => {

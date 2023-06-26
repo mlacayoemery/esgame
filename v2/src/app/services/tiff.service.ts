@@ -113,7 +113,6 @@ export class TiffService {
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
 		const numRaster = Array.from(raster.map(c => Number.parseFloat(c.toString())));
-		console.log(url);
 		const paths = tiffToSvgPaths(numRaster, { width: image.getWidth(), height: undefined, scale: 1 });
 		let pathArray: { id: number, path: string, startPos: number }[] = [];
 		paths.forEach((val, key) => {
