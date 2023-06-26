@@ -75,16 +75,15 @@ export class ConfiguratorComponent {
 			gradient: new FormControl("blue"),
 			productionTypes: new FormControl([]),
 			gameBoardType: new FormControl("Suitability"),
-			linkedToProductionTypes: new FormArray([]),
 			urlToData: new FormControl(""),
-			customColor: new FormControl({value: "", disabled: true})
+			customColorId: new FormControl({value: "", disabled: true})
 		});
 		this.maps.push(fg);
 		fg.get('gradient')!.valueChanges.subscribe((value) => {
 			if (value == "custom") {
-				fg.get('customColor')?.enable();
+				fg.get('customColorId')?.enable();
 			} else {
-				fg.get('customColor')?.disable();
+				fg.get('customColorId')?.disable();
 			}
 		});
 		fg.get('gameBoardType')!.valueChanges.subscribe(value => {
@@ -111,18 +110,20 @@ export class ConfiguratorComponent {
 		}));
 	}
 
-	addCustomColors() {
+	addCustomColors(addEmpty = false) {
 		this.customColors.push(new FormGroup({
 			id: new FormControl(crypto.randomUUID()),
 			colors: new FormArray([])
 		}));
-		this.addColor(this.customColors.controls[this.customColors.controls.length - 1]);
+		if (!addEmpty) {
+			this.addColor(this.customColors.controls[this.customColors.controls.length - 1]);
+		}
 	}
 
 	addColor(formGroup: AbstractControl) {
 		this.getColorsArray(formGroup).push(new FormGroup({
 			number: new FormControl(),
-			color: new FormControl()
+			color: new FormControl("#000000")
 		}));
 	}
 
@@ -156,5 +157,33 @@ export class ConfiguratorComponent {
 		a.href = `data:text/json;charset=utf-8,${encodeURIComponent(data)}`;
 		a.download = 'configuration.json';
 		a.click();
+	}
+
+	onFileSelected(event: any) {
+		const file: File = event.target.files[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onload = (e: any) => {
+				const contents = e.target.result;
+				let value = JSON.parse(contents);
+				value.maps?.forEach((map: any) => {
+					this.addMap();
+				});
+				value.productionTypes?.forEach((productionType: any) => {
+					this.addProductionType();
+				});
+				value.customColors?.forEach((customColor: any) => {
+					this.addCustomColors(true);
+					customColor.colors?.forEach((color: any, index: number) => {
+						this.addColor(this.customColors.controls[this.customColors.controls.length - 1]);
+					});
+				});
+				console.log(value);
+				this.formGroup.patchValue(value);
+				console.log(this.formGroup);
+
+			};
+			reader.readAsText(file);
+		}
 	}
 }

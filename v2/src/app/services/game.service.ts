@@ -179,7 +179,7 @@ export class GameService {
 				level.gameBoards.push(...gameBoards);
 				gameBoards.forEach(c => {
 					let map = settings.maps.find(o => o.id == c.id);
-					map!.linkedToProductionTypes.forEach(p => {
+					map!.productionTypes.forEach(p => {
 						let productionType = this.productionTypes.value.find(o => o.id == p);
 						productionType!.consequenceMaps.push(c);
 					});
@@ -233,6 +233,7 @@ export class GameService {
 	initialiseSVGMode() {
 		var level = new Level();
 		const settings = this.settings.value;
+		console.log(settings);
 		this.levels.push(level);
 		this.loading();
 
@@ -253,9 +254,11 @@ export class GameService {
 		// customColors.set(8, "98e6007D");
 		// customColors.set(15, "00000000");
 
+		
 		const drawingMap = settings.maps.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
 		const backgroundMap = settings.maps.find(o => o.gameBoardType == GameBoardType.BackgroundMap)!;
 		const otherMaps = settings.maps.filter(m => m.gameBoardType == GameBoardType.SuitabilityMap);
+		console.log(this.customColors, backgroundMap);
 
 		this.tiffService.getOverlayGameBoard(drawingMap.id, drawingMap.urlToData, GameBoardType.DrawingMap).pipe(
 			switchMap(overlay => {
@@ -273,8 +276,8 @@ export class GameService {
 
 			for (let i = 0; i < settings.productionTypes.length; i++) {
 				const current = settings.productionTypes[i];
-				const gameBoard = gameBoards.find(g => g.id == otherMaps.find(m => m.linkedToProductionTypes.includes(current.id))!.id)!;
-				const productionType = new ProductionType(current.id, current.fieldColor, gameBoard, current.image, current.maxElements);
+				const gameBoard = gameBoards.find(g => g.id == otherMaps.find(m => m.productionTypes.includes(current.id))!.id)!;
+				const productionType = new ProductionType(current.id, current.fieldColor, gameBoard, current.urlToIcon, current.maxElements);
 				this.productionTypes.value.push(productionType);
 			}
 
@@ -310,8 +313,8 @@ export class GameService {
 			level.levelNumber = 1;
 
 			settings.productionTypes.forEach((p) => {
-				const gameBoard = gameBoards.find(g => g.id == maps.find(m => m.linkedToProductionTypes.includes(p.id))!.id)!;
-				this.productionTypes.value.push(new ProductionType(p.id, p.fieldColor, gameBoard, p.image, p.maxElements));
+				const gameBoard = gameBoards.find(g => g.id == maps.find(m => m.productionTypes.includes(p.id))!.id)!;
+				this.productionTypes.value.push(new ProductionType(p.id, p.fieldColor, gameBoard, p.urlToIcon, p.maxElements));
 			});
 
 			this.productionTypes.next(this.productionTypes.value);

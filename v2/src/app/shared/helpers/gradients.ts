@@ -60,7 +60,7 @@ export class CustomColors {
 
 	get(i: number) {
 		const returnVal = this.colors.get(i);
-		if (!returnVal) return "FFFFFF";
+		if (!returnVal) return "#FFFFFF";
 		return returnVal;
 	}
 
@@ -74,10 +74,10 @@ export class CustomColors {
 
 	colorToRgb(hex: string | undefined) {
 		if (!hex) return [255, 255, 255, 0];
-		const r = hex.slice(0, 2);
-		const g = hex.slice(2, 4);
-		const b = hex.slice(4, 6);
-		const a = hex.slice(6, 8);
+		const r = hex.slice(1, 3);
+		const g = hex.slice(3, 5);
+		const b = hex.slice(5, 7);
+		const a = hex.slice(7, 9);
 		if (a) {
 			return [parseInt(r, 16), parseInt(g, 16), parseInt(b, 16), parseInt(a, 16)];
 		}

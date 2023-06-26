@@ -4,6 +4,9 @@
 		<mat-step>
 			<ng-template matStepLabel>{{ 'general' | translate}}</ng-template>
 			<div class="configurator-grid">
+				<div class="--full">
+					<input type="file" (change)="onFileSelected($event)" accept=".json">
+				</div>
 				<ng-container formGroupName="title">
 					<mat-form-field *ngFor="let lang of languages">
 						<mat-label>{{ 'Game name' | translate }} ({{lang}})</mat-label>
@@ -226,8 +229,8 @@
 						</mat-form-field>
 						<mat-form-field>
 							<mat-label>{{ 'Custom Color Pattern' | translate }}</mat-label>
-							<mat-select formControlName="customColor" required>
-								<mat-option *ngFor="let color of customColors.controls; let j = index" [value]="j">{{ 'Color Set' | translate }} {{ j + 1 }}</mat-option>
+							<mat-select formControlName="customColorId" required>
+								<mat-option *ngFor="let color of customColors.controls; let j = index" [value]="color.get('id')!.value">{{ 'Color Set' | translate }} {{ j + 1 }}</mat-option>
 							</mat-select>
 							<mat-hint *ngIf="customColors.length == 0">
 								{{'no-custom-colors' | translate}}
