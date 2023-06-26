@@ -30,7 +30,7 @@ export class GameService {
 	private helpWindow = new BehaviorSubject<boolean>(false);
 	private loadingIndicator = new BehaviorSubject<boolean[]>([]);
 	private levels: Level[] = [];
-	private gameId = 12;
+	private gameId = crypto.randomUUID();
 
 	highlightFieldObs = this.highlightFields.asObservable();
 	currentLevelObs = this.currentLevel.asObservable();
@@ -135,6 +135,18 @@ export class GameService {
 
 		} else {
 			var lvl = this.levels.find(o => o.levelNumber == (this.currentLevel.value!.levelNumber + 1))!;
+			const currentPt = this.productionTypes.value;
+
+			currentPt.forEach(pt => { pt.consequenceMaps = []; });
+
+			lvl.gameBoards.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap).forEach(map => {
+				const mapSettings = this.settings.value.maps.find(c => c.id == map.id)!;
+				mapSettings.linkedToProductionTypes.forEach(ptId => {
+					const pt = currentPt.find(c => c.id == ptId)!;
+					pt.consequenceMaps.push(map);
+				});
+			});
+
 			this.currentLevel.next(lvl);
 			this.selectedFields.next(lvl.selectedFields);
 		}
@@ -146,6 +158,18 @@ export class GameService {
 
 		if (currentLowest != this.currentLevel.value) {
 			var lvl = this.levels.find(o => o.levelNumber == this.currentLevel.value!.levelNumber - 1)!;
+			const currentPt = this.productionTypes.value;
+
+			currentPt.forEach(pt => { pt.consequenceMaps = []; });
+
+			lvl.gameBoards.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap).forEach(map => {
+				const mapSettings = this.settings.value.maps.find(c => c.id == map.id)!;
+				mapSettings.linkedToProductionTypes.forEach(ptId => {
+					const pt = currentPt.find(c => c.id == ptId)!;
+					pt.consequenceMaps.push(map);
+				});
+			});
+
 			this.currentLevel.next(lvl);
 			this.selectedFields.next(lvl.selectedFields);
 			this.loading(false);
@@ -204,29 +228,28 @@ export class GameService {
 			customColors.set(8, "98e6007D");
 			customColors.set(15, "00000000");
 
-			const otherMaps = settings.maps.filter(
-				m => m.gameBoardType == GameBoardType.ConsequenceMap &&
-					!previousLevel.gameBoards.map(o => o.id).includes(m.id));
+			const consequnces = settings.maps.filter(
+				m => m.gameBoardType == GameBoardType.ConsequenceMap);
 
 			if (calculationResult) {
-				otherMaps.forEach(m => m.urlToData = calculationResult.results.find(c => c.id == m.id)?.url!);
-				console.log(otherMaps);
+				consequnces.forEach(m => m.urlToData = calculationResult.results.find(c => c.id == m.id)?.url!);
+				console.log(consequnces);
 			}
 
-			level.gameBoards.push(...previousLevel.gameBoards);
+			level.gameBoards.push(...previousLevel.gameBoards.filter(c => c.gameBoardType != GameBoardType.ConsequenceMap));
 
 
 			combineLatest([
 				this.tiffService.getSvgBackground(backgroundMap.urlToData, customColors),
-				...otherMaps.map(m => { return this.getSvg(m, overlay) })]).subscribe(([background, ...gameBoards]) => {
-					console.log(gameBoards);
+				...consequnces.map(m => { return this.getSvg(m, overlay) })]).subscribe(([background, ...gameBoards]) => {
 					gameBoards.forEach(o => {
 						o.background2 = background;
 					});
 
 					level.gameBoards.push(...gameBoards);
 					level.showConsequenceMaps = true;
-					this.productionTypes.value.forEach(c => c.consequenceMaps.push(...gameBoards.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap)));
+					this.productionTypes.value.forEach(c => 
+						c.consequenceMaps = [...gameBoards.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap)]);
 
 					this.selectedFields.value.forEach(o => o.updateScore());
 

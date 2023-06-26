@@ -21,7 +21,7 @@ export abstract class LevelBaseComponent {
 	);
 	rightGameBoards = combineLatest([this.level, this.selectedProductionType]).pipe(
 		map(([o, p]) => {
-			if (o?.showConsequenceMaps) return p?.consequenceMaps;
+			if (o?.showConsequenceMaps) return o.gameBoards?.filter(p => p.gameBoardType == GameBoardType.ConsequenceMap);
 			else return [];
 		}));
 	productionTypes: ProductionType[];
