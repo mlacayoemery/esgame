@@ -63,7 +63,7 @@
 			"maxElements": 200
 		},
 		{
-			"id": "50",
+			"id": "60",
 			"name": {
 				"de": "Zusätzliche Natur",
 				"en": "Extra nature",
@@ -75,7 +75,7 @@
 			"maxElements": 200
 		},
 		{
-			"id": "60",
+			"id": "50",
 			"name": {
 				"de": "Agropark",
 				"en": "Agropark",
@@ -161,11 +161,26 @@
 			"gradient": "red",
 			"productionTypes": [
 				"40",
-				"50",
 				"60"
 			],
 			"gameBoardType": "Suitability",
 			"urlToData": "./assets/images/suit_livestock_int_zoneNEW.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "7",
+			"name": {
+				"de": "Agropark",
+				"en": "Agropark",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "purple",
+			"productionTypes": [
+				"50"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "./assets/images/suit_agropark_zoneNEW.tif",
 			"customColorId": ""
 		},
 		{
