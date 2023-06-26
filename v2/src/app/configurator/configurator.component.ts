@@ -14,13 +14,13 @@ export class ConfiguratorComponent {
 	gradients = Object.values(DefaultGradients);
 
 	constructor(private translate: TranslateService) {
-		this.initialiseForm();
 		this.languages = translate.getLangs();
+		this.initialiseForm();
 	}
 
 	initialiseForm() {
 		this.formGroup = new FormGroup({
-			"title": new FormControl(""),
+			"title": this.getLanguageControls(),
 			"mapMode": new FormControl("grid"),
 			"imageMode": new FormControl(false),
 			"elementSize": new FormControl(2),
@@ -32,8 +32,8 @@ export class ConfiguratorComponent {
 			"productionTypes": new FormArray([]),
 			"maps": new FormArray([]),
 			"customColors": new FormArray([]),
-			"basicInstructions": new FormControl(""),
-			"advancedInstructions": new FormControl("")
+			"basicInstructions": this.getLanguageControls(),
+			"advancedInstructions": this.getLanguageControls(),
 		});
 		this.formGroup.get('mapMode')!.valueChanges.subscribe((value) => {
 			if (value == "svg") {
@@ -44,6 +44,8 @@ export class ConfiguratorComponent {
 				this.formGroup.get('gameBoardRows')!.disable();
 				this.formGroup.get('gameBoardColumns')!.disable();
 				this.formGroup.get('calcUrl')!.enable();
+				this.formGroup.get('infiniteLevels')!.disable();
+				this.formGroup.get('infiniteLevels')!.setValue(false);
 			} else {
 				this.formGroup.get('elementSize')!.enable();
 				this.formGroup.get('imageMode')!.enable();
@@ -68,7 +70,7 @@ export class ConfiguratorComponent {
 
 	addMap() {
 		let fg = new FormGroup({
-			id: new FormControl(crypto.randomUUID()),
+			id: new FormControl((this.maps.length + 1) * 10),
 			name: this.getLanguageControls(),
 			gradient: new FormControl("blue"),
 			productionTypes: new FormControl([]),
@@ -101,7 +103,7 @@ export class ConfiguratorComponent {
 
 	addProductionType() {
 		this.productionTypes.push(new FormGroup({
-			id: new FormControl(crypto.randomUUID()),
+			id: new FormControl((this.productionTypes.length + 1) * 11),
 			name: this.getLanguageControls(),
 			fieldColor: new FormControl("#000000"),
 			urlToIcon: new FormControl(""),

@@ -4,20 +4,26 @@
 		<mat-step>
 			<ng-template matStepLabel>{{ 'general' | translate}}</ng-template>
 			<div class="configurator-grid">
-				<mat-form-field class="--full">
-					<mat-label>{{ 'Game name' | translate}}</mat-label>
-					<input type="text" matInput name="game-name" formControlName="title" required>
-				</mat-form-field>
-				<mat-form-field class="--full">
-					<mat-label>{{ 'Basic Instructions' | translate}}</mat-label>
-					<textarea type="text" matInput name="basic-instructions" formControlName="basicInstructions" required>
-					</textarea>
-				</mat-form-field>
-				<mat-form-field class="--full">
-					<mat-label>{{ 'Advanced Instructions' | translate}}</mat-label>
-					<textarea type="text" matInput name="advanced-instructions" formControlName="advancedInstructions" required>
-					</textarea>
-				</mat-form-field>
+				<ng-container formGroupName="title">
+					<mat-form-field *ngFor="let lang of languages">
+						<mat-label>{{ 'Game name' | translate }} ({{lang}})</mat-label>
+						<input type="text" matInput [formControlName]="lang" required>
+					</mat-form-field>
+				</ng-container>
+				<ng-container formGroupName="basicInstructions">
+					<mat-form-field *ngFor="let lang of languages">
+						<mat-label>{{ 'Basic Instructions' | translate }} ({{lang}})</mat-label>
+						<textarea type="text" matInput name="basic-instructions" [formControlName]="lang" required>
+						</textarea>
+					</mat-form-field>
+				</ng-container>
+				<ng-container formGroupName="advancedInstructions">
+					<mat-form-field *ngFor="let lang of languages">
+						<mat-label>{{ 'Advanced Instructions' | translate }} ({{lang}})</mat-label>
+						<textarea type="text" matInput name="advanced-instructions" [formControlName]="lang" required>
+						</textarea>
+					</mat-form-field>
+				</ng-container>
 				<mat-form-field class="--full">
 					<mat-label>{{ 'Map types' | translate }}</mat-label>
 					<mat-select formControlName="mapMode" required>
@@ -81,6 +87,11 @@
 								<input type="text" matInput name="agTypes-name-{{i+lang}}" [formControlName]="lang" required>
 							</mat-form-field>
 						</ng-container>
+						<mat-form-field>
+							<mat-label>{{ 'id' | translate }}</mat-label>
+							<input type="number" matInput formControlName="id" required>
+							<mat-hint>Must be unique</mat-hint>
+						</mat-form-field>
 						<mat-form-field>
 							<mat-label>{{ 'field-color' | translate}}</mat-label>
 							<input type="text" matInput name="highlight-color-{i}" formControlName="fieldColor" required>
@@ -164,6 +175,11 @@
 								<input type="text" matInput placeholder="0" name="maps-name-{{i + lang}}" [formControlName]="lang" required>
 							</mat-form-field>
 						</ng-container>
+						<mat-form-field>
+							<mat-label>{{ 'id' | translate }}</mat-label>
+							<input type="number" matInput formControlName="id" required>
+							<mat-hint>Must be unique</mat-hint>
+						</mat-form-field>
 						<mat-form-field>
 							<mat-label>{{ 'map-url' | translate}}</mat-label>
 							<input type="url" matInput placeholder="https://..." name="map-{{i}}-url" formControlName="urlToData"
