@@ -142,7 +142,7 @@
 				"nl": null,
 				"pt": null
 			},
-			"gradient": "red",
+			"gradient": "blue",
 			"productionTypes": [
 				"30"
 			],
@@ -158,7 +158,7 @@
 				"nl": null,
 				"pt": null
 			},
-			"gradient": "red",
+			"gradient": "blue",
 			"productionTypes": [
 				"40",
 				"60"
@@ -175,7 +175,7 @@
 				"nl": null,
 				"pt": null
 			},
-			"gradient": "purple",
+			"gradient": "blue",
 			"productionTypes": [
 				"50"
 			],
@@ -186,12 +186,12 @@
 		{
 			"id": "11",
 			"name": {
-				"de": "Luftqualität",
-				"en": "Air Quality",
+				"de": "Menschliche Gesundheit",
+				"en": "Human health",
 				"nl": null,
 				"pt": null
 			},
-			"gradient": "blue",
+			"gradient": "red",
 			"productionTypes": [
 				"10",
 				"20",
@@ -205,12 +205,12 @@
 		{
 			"id": "22",
 			"name": {
-				"de": "Wasserqualität",
-				"en": "Water Quality",
+				"de": "Nährstoffbelastung",
+				"en": "Nutrient Pollution",
 				"nl": null,
 				"pt": null
 			},
-			"gradient": "blue",
+			"gradient": "red",
 			"productionTypes": [
 				"10",
 				"20",
@@ -224,12 +224,12 @@
 		{
 			"id": "33",
 			"name": {
-				"de": "Intensives  Ackerland",
-				"en": "Intensive Livestock Land",
+				"de": "Wasserverfügbarkeit",
+				"en": "Water availability",
 				"nl": null,
 				"pt": null
 			},
-			"gradient": "blue",
+			"gradient": "red",
 			"productionTypes": [
 				"10",
 				"20",
@@ -243,12 +243,12 @@
 		{
 			"id": "44",
 			"name": {
-				"de": "Intensives Ackerland",
-				"en": "Intensive Livestock Land",
+				"de": "Lebensraumzusammenhalt",
+				"en": "Habitat cohesion",
 				"nl": null,
 				"pt": null
 			},
-			"gradient": "blue",
+			"gradient": "red",
 			"productionTypes": [
 				"10",
 				"20",
@@ -262,12 +262,12 @@
 		{
 			"id": "55",
 			"name": {
-				"de": "Intensives Ackerland",
-				"en": "Intensive Livestock Land",
+				"de": "Erholungswert",
+				"en": "Recreational value",
 				"nl": null,
 				"pt": null
 			},
-			"gradient": "blue",
+			"gradient": "red",
 			"productionTypes": [
 				"10",
 				"20",
@@ -299,31 +299,31 @@
 			"colors": [
 				{
 					"number": 2,
-					"color": "#a8a8007D"
+					"color": "#a8a800C0"
 				},
 				{
 					"number": 3,
-					"color": "#73b2ff7D"
+					"color": "#73b2ffC0"
 				},
 				{
 					"number": 4,
-					"color": "#70a8007D"
+					"color": "#70a800C0"
 				},
 				{
 					"number": 5,
-					"color": "#CCCCCC7D"
+					"color": "#CCCCCCC0"
 				},
 				{
 					"number": 6,
-					"color": "#00734c7D"
+					"color": "#00734cC0"
 				},
 				{
 					"number": 7,
-					"color": "#8282827D"
+					"color": "#828282C0"
 				},
 				{
 					"number": 8,
-					"color": "#98e6007D"
+					"color": "#98e600C0"
 				},
 				{
 					"number": 15,
