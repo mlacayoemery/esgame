@@ -13,6 +13,7 @@ import { TranslateService } from '@ngx-translate/core';
 import data from './../../data.json';
 import { ApiService } from './api.service';
 import { CalculationResult } from '../shared/models/calculation-result';
+import * as uuid from 'uuid';
 
 @Injectable({
 	providedIn: 'root'
@@ -30,7 +31,7 @@ export class GameService {
 	private helpWindow = new BehaviorSubject<boolean>(false);
 	private loadingIndicator = new BehaviorSubject<boolean[]>([]);
 	private levels: Level[] = [];
-	private gameId = crypto.randomUUID();
+	private gameId = uuid.v4();
 	private customColors: CustomColors[] = [];
 
 	highlightFieldObs = this.highlightFields.asObservable();

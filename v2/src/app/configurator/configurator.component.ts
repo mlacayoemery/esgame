@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { AbstractControl, FormArray, FormControl, FormGroup } from '@angular/forms';
 import { TranslateService } from '@ngx-translate/core';
 import { DefaultGradients } from '../shared/helpers/gradients';
+import * as uuid from 'uuid';
 
 @Component({
 	selector: 'tro-configurator',
@@ -119,7 +120,7 @@ export class ConfiguratorComponent {
 
 	addCustomColors(addEmpty = false) {
 		this.customColors.push(new FormGroup({
-			id: new FormControl(crypto.randomUUID()),
+			id: new FormControl(uuid.v4()),
 			colors: new FormArray([])
 		}));
 		if (!addEmpty) {
