@@ -117,7 +117,7 @@ export class GameService {
 				const allFields = [...this.selectedFields.value, ...this.notSelectedFields.value];
 				inputData.allocation = allFields.map((o) => ({ id: o.fields[0].id, lulc: Number.parseInt(o.productionType?.id ?? (this.levels.length == 1 ? 20 : 40) ) }));
 				inputData.round = this.currentLevel.value!.levelNumber;
-				const entries = this.scoreService.createEmptyScoreEntry(this.currentLevel.value);
+				const entries = this.scoreService.createEmptyScoreEntry(this.currentLevel.value, [GameBoardType.SuitabilityMap]);
 				this.scoreService.calculateScore(entries, this.selectedFields.value);
 				const score = entries.reduce((a, b) => a + b.score, 0);
 				inputData.score = entries.reduce((a, b) => a + b.score, 0);
