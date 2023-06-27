@@ -4,7 +4,6 @@ import { GameBoardClickMode } from '../shared/models/game-board';
 import { ProductionType } from '../shared/models/production-type';
 import { combineLatest, filter, map, merge, mergeMap, tap } from 'rxjs';
 import { GameBoardType } from '../shared/models/game-board-type';
-import { Settings } from '../shared/models/settings';
 
 @Component({
   template: '',
@@ -21,7 +20,7 @@ export abstract class LevelBaseComponent {
 	);
 	rightGameBoards = combineLatest([this.level, this.selectedProductionType]).pipe(
 		map(([o, p]) => {
-			if (o?.showConsequenceMaps) return o.gameBoards?.filter(p => p.gameBoardType == GameBoardType.ConsequenceMap);
+			if (o?.showConsequenceMaps) return p?.consequenceMaps;
 			else return [];
 		}));
 	productionTypes: ProductionType[];

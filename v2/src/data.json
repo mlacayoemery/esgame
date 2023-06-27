@@ -12,7 +12,7 @@
 	"infiniteLevels": true,
 	"gameBoardColumns": 28,
 	"gameBoardRows": 29,
-	"calcUrl": "http://127.0.0.1:5555/esgame",
+	"calcUrl": "http://localhost:5555/esgame",
 	"productionTypes": [
 		{
 			"id": "10",

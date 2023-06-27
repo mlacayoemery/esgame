@@ -40,7 +40,7 @@ export class TiffService {
 				
 				uniqueValues = Array.from(new Set(data.numRaster)).filter(c => c != data.nodata).sort((a, b) => a - b);
 				gradient = gradients.get(defaultGradient!);
-				legend = { elements: [{forValue: Math.round(uniqueValues[0] * 100), color: gradient!.calculateColor(1 - 1 / (1 - 0) * (uniqueValues[0] - 0))}, {forValue: Math.round(uniqueValues[uniqueValues.length - 1] * 100), color: gradient!.calculateColor(1 - 1 / (1 - 0) * (uniqueValues[uniqueValues.length - 1] - 0))}], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true };
+				legend = { elements: [{forValue: 0, color: gradient!.calculateColor(1)}, {forValue: 100, color: gradient!.calculateColor(0)}], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true };
 				fields = overlay.fields.map((field) => {
 					return {
 						...field,

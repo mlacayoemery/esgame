@@ -115,7 +115,7 @@ export class GameService {
 				var inputData = {} as any;
 				//TODO: remove not selected fields, should not be needed because all fields are selected
 				const allFields = [...this.selectedFields.value, ...this.notSelectedFields.value];
-				inputData.allocation = allFields.map((o) => ({ id: o.fields[0].id, lulc: Number.parseInt(o.productionType?.id ?? 20) }));
+				inputData.allocation = allFields.map((o) => ({ id: o.fields[0].id, lulc: Number.parseInt(o.productionType?.id ?? (this.levels.length == 1 ? 20 : 40) ) }));
 				inputData.round = this.currentLevel.value!.levelNumber;
 				const entries = this.scoreService.createEmptyScoreEntry(this.currentLevel.value);
 				this.scoreService.calculateScore(entries, this.selectedFields.value);
@@ -147,12 +147,12 @@ export class GameService {
 			lvl.gameBoards.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap).forEach(map => {
 				const mapSettings = this.settings.value.maps.find(c => c.id == map.id)!;
 				mapSettings.productionTypes.forEach(ptId => {
-					const pt = currentPt.find(c => c.id == ptId)!;
-					pt.consequenceMaps.push(map);
+					currentPt.find(c => c.id == ptId)!.consequenceMaps.push(map);
 				});
 			});
 
 			this.currentLevel.next(lvl);
+			this.productionTypes.next(currentPt);
 			this.selectedFields.next(lvl.selectedFields);
 		}
 	}
