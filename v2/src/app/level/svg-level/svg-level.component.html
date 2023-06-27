@@ -30,7 +30,7 @@
 
 			<tro-score-board *ngIf="!((level | async)?.scores)" class="score-board"></tro-score-board>
 			<tro-score-board *ngIf="(level | async)?.scores" isStatic [scores]="(level | async)!.scores" class="score-board"></tro-score-board>
-			<div [ngClass]="imageExpand ? 'expanded' : ''" class="expandable">
+			<div *ngIf="false" [ngClass]="imageExpand ? 'expanded' : ''" class="expandable">
 				<img  src="./assets/images/Agroparks .png" />
 				<button mat-mini-fab color="primary" (click)="switchExpand()" aria-label="expand/collapse">
 					<mat-icon *ngIf="!imageExpand">open_in_full</mat-icon>

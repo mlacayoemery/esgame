@@ -44,7 +44,7 @@ export class TiffService {
 				fields = overlay.fields.map((field) => {
 					return {
 						...field,
-						score: Math.round(data.numRaster[field.id] * 100),
+						score: Math.round(data.numRaster[field.startPos] * 100),
 					}
 				});
 
@@ -61,7 +61,7 @@ export class TiffService {
 				let fields: Field[];
 
 				fields = data.pathArray.map(path => {
-					return new Field(path.startPos, new FieldType("", "CONFIGURED"), 0, null, path.id != data.nodata!, undefined, path.path);
+					return new Field(path.id, new FieldType("", "CONFIGURED"), 0, null, path.id != data.nodata!, undefined, path.path, path.startPos);
 				});
 
 				return of(new GameBoard(id, gameBoardType, fields, undefined, true, data.width, data.height));
@@ -115,6 +115,7 @@ export class TiffService {
 		const numRaster = Array.from(raster.map(c => Number.parseFloat(c.toString())));
 		const paths = tiffToSvgPaths(numRaster, { width: image.getWidth(), height: undefined, scale: 1 });
 		let pathArray: { id: number, path: string, startPos: number }[] = [];
+		console.log(Array.from(new Set(numRaster)).sort((a, b) => a - b));
 		paths.forEach((val, key) => {
 			pathArray.push({
 				id: key,

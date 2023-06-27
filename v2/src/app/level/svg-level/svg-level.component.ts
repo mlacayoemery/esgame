@@ -23,8 +23,7 @@ export class SvgLevelComponent extends LevelBaseComponent {
 		if (this.gameService.checkIfAllFieldsAreSelected()) {
 			super.nextLevel();
 		} else {
-			alert('Du hast noch nicht alle Felder ausgewählt!');
-			super.nextLevel();
+			alert('Please select all fields!');
 		}
 	}
 

@@ -9,8 +9,9 @@ export class Field {
 	score: number;
 	id: number;
 	path: string;
+	startPos: number;
 
-	constructor(id: number, type: FieldType, score: number, productionType: ProductionType | null = null, editable = false, assigned = false, path: string = "") {
+	constructor(id: number, type: FieldType, score: number, productionType: ProductionType | null = null, editable = false, assigned = false, path: string = "", startPos: number = 0) {
 		this.id = id;
 		this.type = type;
 		this.productionType = productionType;
@@ -18,6 +19,7 @@ export class Field {
 		this.path = path;
 		this.editable = editable;
 		this.assigned = assigned;
+		this.startPos = startPos;
 	}
 }
 
