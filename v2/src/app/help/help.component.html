@@ -4,6 +4,6 @@
 			<h2>{{ 'Instructions' | translate }}</h2>
 			<span class="icon-close" (click)="onClose()"></span>
 		</div>
-		<p>{{ helpText | translate }}</p>
+		<p class="text" [innerHTML]="helpText | translate"></p>
 	</div>
 </div>

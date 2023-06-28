@@ -6,7 +6,7 @@ import { FieldBaseComponent } from '../field-base.component';
 
 @Component({
 	selector: '[troSvgField]',
-	templateUrl: './svg-field.component.html',
+	template: '',
 	styleUrls: ['./svg-field.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -23,6 +23,8 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 
 	@HostBinding('class.show-stroke') @Input() showStroke: boolean = true;
 
+	@Input() gameBoardId = '';
+
 	ngOnInit(): void {
 		this.gameService.settingsObs.subscribe(o => {
 			this.highlightColor = o.highlightColor;
@@ -34,7 +36,7 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 		if (productionType && this.clickable) {
 			this.fillColor = `${productionType.fieldColor}`;
 		} else if(productionType) {
-			this.fillColor = `url(#pattern_${productionType.id})`;
+			this.fillColor = `url(#pattern_${productionType.id}_${this.gameBoardId})`;
 		} else {
 			this.fillColor = "";
 		}

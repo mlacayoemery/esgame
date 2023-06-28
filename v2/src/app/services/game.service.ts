@@ -115,7 +115,7 @@ export class GameService {
 				var inputData = {} as any;
 				//TODO: remove not selected fields, should not be needed because all fields are selected
 				const allFields = [...this.selectedFields.value, ...this.notSelectedFields.value];
-				inputData.allocation = allFields.map((o) => ({ id: o.fields[0].id, lulc: Number.parseInt(o.productionType?.id ?? (this.levels.length == 1 ? 20 : 40) ) }));
+				inputData.allocation = allFields.map((o) => ({ id: o.fields[0].id, lulc: Number.parseInt(o.productionType?.id ?? 60) }));
 				inputData.round = this.currentLevel.value!.levelNumber;
 				const entries = this.scoreService.createEmptyScoreEntry(this.currentLevel.value, [GameBoardType.SuitabilityMap]);
 				this.scoreService.calculateScore(entries, this.selectedFields.value);
@@ -229,17 +229,16 @@ export class GameService {
 
 			if (calculationResult) {
 				consequnces.forEach(m => m.urlToData = calculationResult.results.find(c => c.id == m.id)?.url!);
-				level.scores = [{ id: "all", score: previousScore!} , ...calculationResult.results.filter(c => c.id != "-1").map(c => ({ score: -c.score, id: c.id } as ScoreEntry))];
+				level.scores = [{ id: "all", score: previousScore!} , ...calculationResult.results.filter(c => c.id != "-1").map(c => ({ score: -(c.score*100), id: c.id } as ScoreEntry))];
 			}
 
 			level.gameBoards.push(...previousLevel.gameBoards.filter(c => c.gameBoardType != GameBoardType.ConsequenceMap));
-
 
 			combineLatest([
 				this.tiffService.getSvgBackground(backgroundMap.urlToData, this.customColors.find(o => o.id == backgroundMap.customColorId)!),
 				...consequnces.map(m => { return this.getSvg(m, overlay) })]).subscribe(([background, ...gameBoards]) => {
 					gameBoards.forEach(o => {
-						o.background2 = background;
+						// o.background2 = background;
 					});
 
 					level.gameBoards.push(...gameBoards);

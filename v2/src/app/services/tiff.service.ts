@@ -115,7 +115,6 @@ export class TiffService {
 		const numRaster = Array.from(raster.map(c => Number.parseFloat(c.toString())));
 		const paths = tiffToSvgPaths(numRaster, { width: image.getWidth(), height: undefined, scale: 1 });
 		let pathArray: { id: number, path: string, startPos: number }[] = [];
-		console.log(Array.from(new Set(numRaster)).sort((a, b) => a - b));
 		paths.forEach((val, key) => {
 			pathArray.push({
 				id: key,

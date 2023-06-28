@@ -1,7 +1,7 @@
 {
 	"title": {
-		"de": "Titel Deutsch",
-		"en": "Title English",
+		"de": "Kompromiss: Landwirtschaftsedition!",
+		"en": "Tradeoff: Agriculture Edition!",
 		"nl": null,
 		"pt": null
 	},
@@ -18,7 +18,7 @@
 			"id": "10",
 			"name": {
 				"de": "Extensives Ackerland",
-				"en": "Extensive Arable Land",
+				"en": "Extensive Arable Farm",
 				"nl": null,
 				"pt": null
 			},
@@ -30,7 +30,7 @@
 			"id": "20",
 			"name": {
 				"de": "Intensives Ackerland",
-				"en": "Intensive Arable Land",
+				"en": "Intensive Arable Farm",
 				"nl": null,
 				"pt": null
 			},
@@ -42,7 +42,7 @@
 			"id": "30",
 			"name": {
 				"de": "Extensive Viehzucht",
-				"en": "Extensive Livestock Land",
+				"en": "Extensive Livestock Farm",
 				"nl": null,
 				"pt": null
 			},
@@ -54,7 +54,7 @@
 			"id": "40",
 			"name": {
 				"de": "Intensive Viehzucht",
-				"en": "Intensive Livestock Land",
+				"en": "Intensive Livestock Farm",
 				"nl": null,
 				"pt": null
 			},
@@ -66,7 +66,7 @@
 			"id": "60",
 			"name": {
 				"de": "Zusätzliche Natur",
-				"en": "Extra nature",
+				"en": "Extra Nature",
 				"nl": null,
 				"pt": null
 			},
@@ -106,7 +106,7 @@
 			"id": "2",
 			"name": {
 				"de": "Extensives Ackerland",
-				"en": "Extensive Arable Land",
+				"en": "Extensive Arable Farm",
 				"nl": null,
 				"pt": null
 			},
@@ -122,7 +122,7 @@
 			"id": "3",
 			"name": {
 				"de": "Intensives  Ackerland",
-				"en": "Intensive Arable Land",
+				"en": "Intensive Arable Farm",
 				"nl": null,
 				"pt": null
 			},
@@ -138,7 +138,7 @@
 			"id": "4",
 			"name": {
 				"de": "Extensive Viehzucht",
-				"en": "Extensive Livestock Land",
+				"en": "Extensive Livestock Farm",
 				"nl": null,
 				"pt": null
 			},
@@ -154,7 +154,7 @@
 			"id": "5",
 			"name": {
 				"de": "Intensive Viehzucht",
-				"en": "Intensive Livestock Land",
+				"en": "Intensive Livestock Farm",
 				"nl": null,
 				"pt": null
 			},
@@ -314,7 +314,7 @@
 			"colors": [
 				{
 					"number": 0,
-					"color": "#FFFFFFC0" 
+					"color": "#FFFFFFC0"
 				},
 				{
 					"number": 1,
@@ -356,14 +356,14 @@
 		}
 	],
 	"basicInstructions": {
-		"de": "Anleitung 1",
-		"en": "Instructions 1",
+		"de": "",
+		"en": "The game target is to allocate farms of different management intensities and farming types in a landscape. In Round 1, the objective is to fill the blank spaces in the landscape with farms based on maps that show their relative productivity. Darker colors reflect higher productivity, but note that scales differ for each farm type. You don't have to fill all spaces, just as much as you can and want. Right-click any element to make it disappear. When you are satisfied with your production score click on the Round 2 button.\n\nControls:\nLeft click: Fill the space with the currently selected farm. You can left-click and drag over the map to fill multiple spaces at once.\nRight click: Remove the farm from the current space. You can right-click and drag over the map to remove multiple farms at once.\nClick on a farm type: Change the farm type you want to place.\nClick on a side map: Display this map at the center to see it in a bigger size.",
 		"nl": null,
 		"pt": null
 	},
 	"advancedInstructions": {
 		"de": "Anleitungs 2",
-		"en": "Instructions 2",
+		"en": "All farm types contributed to the productivity but they also have negative impacts on local ecosystems services. Although this information was not available to you during Round 1, the negative effects still took place. Look at the new maps that illustrate the negative impacts of your choices on a set of ecosystem services. Your Round 1 Net Score integrates these externalities. Sad! \nYour objective in Round 2 will be to minimize the encountered trade-offs. Do this by switching out farm types (by clicking on them) and checking the spatial distribution of their impacts on the ecosystem services. The game is finished when you are satisfied with your net score. Were you able to reduce the externalities relative to Round 1? Did that mean reducing productivity as well? \nTake home message: Agricultural practices aim to increase the productivity on the parcels, but they can induce changes in the ecosystem condition and functioning that stretch way beyond the farm grounds. The processes that are triggered by agricultural land use depend not only on the amount of farms with different management intensities in a landscape, but largely also on the location and spatial arrangement of these farms relative to neighboring land uses.\n",
 		"nl": null,
 		"pt": null
 	}

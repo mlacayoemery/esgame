@@ -30,7 +30,7 @@ export class ScoreService {
 
 	calculateScore(scores: ScoreEntry[], fields: SelectedField[]) {
 		scores.forEach(score => {
-			score.score = fields.reduce((a, b) => a + (b.scores.find(o => o.id == score.id)?.score ?? 0), 0)
+			score.score = fields.reduce((a, b) => a + (b.scores.find(o => o.id == score.id)?.score ?? 0), 0);
 		});
 	}
 }

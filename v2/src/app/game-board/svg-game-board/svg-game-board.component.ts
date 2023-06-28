@@ -1,10 +1,7 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, Input, QueryList, Renderer2, ViewChildren, ViewEncapsulation } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, QueryList, Renderer2, ViewChildren } from '@angular/core';
 import { GameBoardBaseComponent } from '../game-board-base.component';
 import { SvgFieldComponent } from 'src/app/field/svg-field/svg-field.component';
-import { Field } from 'src/app/shared/models/field';
-import { GameBoard } from 'src/app/shared/models/game-board';
 import { GameService } from 'src/app/services/game.service';
-import { debounce, interval } from 'rxjs';
 import { GameBoardType } from 'src/app/shared/models/game-board-type';
 
 @Component({
@@ -35,8 +32,9 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 
 		gameService.notSelectedFieldsObs.subscribe(fields => {
 			if (this.svgFieldComponents) {
-				fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.fields[0].id)?.addMissingHighlight());
-				setTimeout(() => fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.fields[0].id)?.removeMissingHighlight()), 3000);
+				// TODO: Evtl. wieder einfügen
+				// fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.fields[0].id)?.addMissingHighlight());
+				// setTimeout(() => fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.fields[0].id)?.removeMissingHighlight()), 3000);
 			}
 		});
 	}
@@ -67,5 +65,12 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	override afterBoardDataSet(): void {
 		this.background = `url("${this._boardData.background}")`;
 		this.background2 = `url("${this._boardData.background2}")`;
+	}
+
+	getStrokeOpacity() {
+		if (this.boardData?.gameBoardType == GameBoardType.ConsequenceMap) {
+			return 0.5;
+		}
+		return 1;
 	}
 }
