@@ -229,7 +229,8 @@ export class GameService {
 
 			if (calculationResult) {
 				consequnces.forEach(m => m.urlToData = calculationResult.results.find(c => c.id == m.id)?.url!);
-				level.scores = [{ id: "all", score: previousScore!} , ...calculationResult.results.filter(c => c.id != "-1").map(c => ({ score: -(c.score*100), id: c.id } as ScoreEntry))];
+				calculationResult.results.forEach(c => c.score = isNaN(c.score) ? 0 : c.score);
+				level.scores = [{ id: "all", score: previousScore!} , ...calculationResult.results.filter(c => c.id != "-1").map(c => ({ score: -((c.score ?? 0)*100), id: c.id } as ScoreEntry))];
 			}
 
 			level.gameBoards.push(...previousLevel.gameBoards.filter(c => c.gameBoardType != GameBoardType.ConsequenceMap));
