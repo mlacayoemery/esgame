@@ -22,7 +22,7 @@ export class HelpComponent {
 		});
 
 		this.gameService.currentLevelObs.subscribe(o => {
-			if (o?.levelNumber == 1) {
+			if (!o || o.levelNumber == 1) {
 				this.helpText = 'basic_instructions';
 			} else {
 				this.helpText = 'advanced_instructions';

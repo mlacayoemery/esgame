@@ -11,7 +11,10 @@ import { GameBoardType } from '../shared/models/game-board-type';
 })
 export abstract class LevelBaseComponent {
 	readOnly = false;
-	level = this.gameService.currentLevelObs.pipe(tap(o => this.readOnly = o?.isReadOnly ?? false));
+	level = this.gameService.currentLevelObs.pipe(tap(o => {
+		this.readOnly = o?.isReadOnly ?? false;
+		if (!o || o.levelNumber <= 2) this.openHelp();
+	}));
 	selectedProductionType = this.gameService.selectedProductionTypeObs;
 	focusedGameBoard = this.gameService.focusedGameBoardObs.pipe(filter(o => o != null));
 	leftGameBoards = this.gameService.currentLevelObs.pipe(
