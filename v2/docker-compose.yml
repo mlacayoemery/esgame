@@ -2,7 +2,7 @@ version: '3'
 name: esgame-container
 services:
   esgame-angular:
-    image: esgame.azurecr.io/esgame:esgame-angular
+    image: esgame.azurecr.io/esgame:esgame-angular-local
     ports:
       - "81:80"
   esgame-calculation:
