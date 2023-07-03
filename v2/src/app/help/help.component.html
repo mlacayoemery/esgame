@@ -5,5 +5,8 @@
 			<span class="icon-close" (click)="onClose()"></span>
 		</div>
 		<p class="text" [innerHTML]="helpText | translate"></p>
+		<div class="image-wrapper">
+			<img *ngIf="imageUrl" class="image" [src]="imageUrl | async">
+		</div>
 	</div>
 </div>

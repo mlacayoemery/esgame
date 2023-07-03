@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { GameService } from '../services/game.service';
-import { Settings } from '../shared/models/settings';
+import { map } from 'rxjs';
 
 @Component({
   selector: 'tro-help',
@@ -11,6 +11,7 @@ import { Settings } from '../shared/models/settings';
 export class HelpComponent {
 	isOpen = false;
 	helpText = 'basicInstructions';
+	imageUrl = this.gameService.settingsObs.pipe(map(o => o.basicInstructionsImageUrl));
 
 	constructor(
 		private gameService: GameService,
@@ -24,8 +25,10 @@ export class HelpComponent {
 		this.gameService.currentLevelObs.subscribe(o => {
 			if (!o || o.levelNumber == 1) {
 				this.helpText = 'basic_instructions';
+				this.imageUrl = this.gameService.settingsObs.pipe(map(o => o.basicInstructionsImageUrl));
 			} else {
 				this.helpText = 'advanced_instructions';
+				this.imageUrl = this.gameService.settingsObs.pipe(map(o => o.advancedInstructionsImageUrl));
 			}
 		});
 	}

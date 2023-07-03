@@ -313,24 +313,16 @@
 			"id": "8685a932-d972-438c-bf33-db4294266c7e",
 			"colors": [
 				{
-					"number": 0,
-					"color": "#FFFFFFC0"
-				},
-				{
 					"number": 1,
-					"color": "#CCCCCCC0"
+					"color": "#73b2ffC0"
 				},
 				{
 					"number": 2,
 					"color": "#ccccccc0"
 				},
 				{
-					"number": 3,
-					"color": "#686868C0"
-				},
-				{
 					"number": 4,
-					"color": "#73b2ffC0"
+					"color": "#686868C0"
 				},
 				{
 					"number": 5,
@@ -338,7 +330,7 @@
 				},
 				{
 					"number": 6,
-					"color": "#686868C0"
+					"color": "#73b2ffC0"
 				},
 				{
 					"number": 7,
@@ -347,10 +339,6 @@
 				{
 					"number": 8,
 					"color": "#02734cC0"
-				},
-				{
-					"number": 15,
-					"color": "notused"
 				}
 			]
 		}
@@ -366,5 +354,6 @@
 		"en": "All farm types contributed to the productivity but they also have negative impacts on local ecosystems services. Although this information was not available to you during Round 1, the negative effects still took place. Look at the new maps that illustrate the negative impacts of your choices on a set of ecosystem services. Your Round 1 Net Score integrates these externalities. Sad! \n\nYour objective in Round 2 will be to minimize the encountered trade-offs. Do this by switching out farm types (by clicking on them) and checking the spatial distribution of their impacts on the ecosystem services. The game is finished when you are satisfied with your net score. Were you able to reduce the externalities relative to Round 1? Did that mean reducing productivity as well? \n\nTake home message: Agricultural practices aim to increase the productivity on the parcels, but they can induce changes in the ecosystem condition and functioning that stretch way beyond the farm grounds. The processes that are triggered by agricultural land use depend not only on the amount of farms with different management intensities in a landscape, but largely also on the location and spatial arrangement of these farms relative to neighboring land uses.\n",
 		"nl": null,
 		"pt": null
-	}
+	},
+	"basicInstructionsImageUrl": "./assets/images/Screenshot 2023-07-03 115404.png"
 }
