@@ -99,7 +99,7 @@
 			"gradient": "",
 			"productionTypes": [],
 			"gameBoardType": "Drawing",
-			"urlToData": "./assets/images/hexagons_only3.tif",
+			"urlToData": "./assets/images/New_hexagons.tif",
 			"customColorId": ""
 		},
 		{
@@ -115,7 +115,7 @@
 				"10"
 			],
 			"gameBoardType": "Suitability",
-			"urlToData": "./assets/images/suit_arable_ext_zoneNEW.tif",
+			"urlToData": "./assets/images/suit_arable_ext_NEWzone.tif",
 			"customColorId": ""
 		},
 		{
@@ -131,7 +131,7 @@
 				"20"
 			],
 			"gameBoardType": "Suitability",
-			"urlToData": "./assets/images/suit_arable_int_zoneNEW.tif",
+			"urlToData": "./assets/images/suit_arable_int_NEWzone.tif",
 			"customColorId": ""
 		},
 		{
@@ -147,7 +147,7 @@
 				"30"
 			],
 			"gameBoardType": "Suitability",
-			"urlToData": "./assets/images/suit_livestock_ext_zoneNEW.tif",
+			"urlToData": "./assets/images/suit_livestock_ext_NEWzone.tif",
 			"customColorId": ""
 		},
 		{
@@ -163,7 +163,7 @@
 				"40"
 			],
 			"gameBoardType": "Suitability",
-			"urlToData": "./assets/images/suit_livestock_int_zoneNEW.tif",
+			"urlToData": "./assets/images/suit_livestock_int_NEWzone.tif",
 			"customColorId": ""
 		},
 		{
@@ -179,7 +179,7 @@
 				"50"
 			],
 			"gameBoardType": "Suitability",
-			"urlToData": "./assets/images/suit_agropark_zoneNEW.tif",
+			"urlToData": "./assets/images/suit_agropark_NEWzone.tif",
 			"customColorId": ""
 		},
 		{
@@ -195,7 +195,7 @@
 				"60"
 			],
 			"gameBoardType": "Suitability",
-			"urlToData": "./assets/images/suit_extra_nature_zoneNEW.tif",
+			"urlToData": "./assets/images/suit_extra_nature_NEWzone.tif",
 			"customColorId": ""
 		},
 		{
@@ -304,7 +304,7 @@
 			"gradient": "custom",
 			"productionTypes": [],
 			"gameBoardType": "Background",
-			"urlToData": "./assets/images/Land_use_only_clip.tif",
+			"urlToData": "./assets/images/New_Land_use_only.tif",
 			"customColorId": "8685a932-d972-438c-bf33-db4294266c7e"
 		}
 	],

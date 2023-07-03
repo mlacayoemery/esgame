@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, QueryList, Renderer2, ViewChildren } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, QueryList, Renderer2, ViewChildren } from '@angular/core';
 import { GameBoardBaseComponent } from '../game-board-base.component';
 import { SvgFieldComponent } from 'src/app/field/svg-field/svg-field.component';
 import { GameService } from 'src/app/services/game.service';
@@ -39,6 +39,21 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 		});
 	}
 
+	displayPatterns = 'inline';
+	addShowHideListeners() {
+		if (this._boardData.gameBoardType != GameBoardType.SuitabilityMap) {
+			return;
+		}
+		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', () => {
+			this.displayPatterns = 'none';
+			this.cdRef.markForCheck();
+		}));
+		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseleave', () => {
+			this.displayPatterns = 'inline';
+			this.cdRef.markForCheck();
+		}));
+	}
+
 	ngAfterViewInit() {
 		this._sink.sink = this.gameService.selectedFieldsObs.subscribe(fields => {
 			this._selectedFields = fields;
@@ -65,6 +80,7 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	override afterBoardDataSet(): void {
 		this.background = `url("${this._boardData.background}")`;
 		this.background2 = `url("${this._boardData.background2}")`;
+		this.addShowHideListeners();
 	}
 
 	getStrokeOpacity() {
@@ -72,5 +88,13 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 			return 0.5;
 		}
 		return 1;
+	}
+
+	getStrokeWidth() {
+		if (this.boardData?.gameBoardType == GameBoardType.ConsequenceMap) {
+			return 20;
+		}
+
+		return 8;
 	}
 }
