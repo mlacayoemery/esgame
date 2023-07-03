@@ -13,6 +13,7 @@
 	"gameBoardColumns": 28,
 	"minValue": 0,
     "maxValue": 100,
+	"minSelected": 1,
     "defaultProductionType": "60",
 	"gameBoardRows": 29,
 	"calcUrl": "http://esgame-calculation.ehd9d8fwccbjaff0.switzerlandnorth.azurecontainer.io:8000/esgame",
