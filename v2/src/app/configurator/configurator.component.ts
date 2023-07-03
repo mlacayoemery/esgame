@@ -51,8 +51,8 @@ export class ConfiguratorComponent {
 				this.formGroup.get('gameBoardRows')!.disable();
 				this.formGroup.get('gameBoardColumns')!.disable();
 				this.formGroup.get('calcUrl')!.enable();
-				this.formGroup.get('infiniteLevels')!.disable();
-				this.formGroup.get('infiniteLevels')!.setValue(false);
+				this.formGroup.get('infiniteLevels')!.enable();
+				this.formGroup.get('infiniteLevels')!.setValue(true);
 				this.formGroup.get('minSelected')!.enable();
 				this.formGroup.get('minValue')!.enable();
 				this.formGroup.get('maxValue')!.enable();		
@@ -68,6 +68,8 @@ export class ConfiguratorComponent {
 				this.formGroup.get('minValue')!.setValue(0);
 				this.formGroup.get('maxValue')!.disable();
 				this.formGroup.get('maxValue')!.setValue(100);	
+				this.formGroup.get('infiniteLevels')!.disable();
+				this.formGroup.get('infiniteLevels')!.setValue(false);
 			}
 		});
 	}
