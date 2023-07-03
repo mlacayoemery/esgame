@@ -8,6 +8,7 @@
 	"new-custom-color": "Hinzufügen",
 	"Custom Colors": "Benutzerdefiniertes Farbschema",
 	"Finish": "Abschluss",
+	"Select minimum fields": "Wähle mindestens {{value}}% von allen Zonen aus (Aktuell: {{current}}%)",
 	"Custom Color Set": "Benutzerdefiniertes Farbschema",
 	"remove-color-set": "Farbschema entfernen",
 	"new-color": "Hinzufügen",

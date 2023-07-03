@@ -14,8 +14,9 @@ export class SvgLevelComponent extends LevelBaseComponent {
 	settings = this.gameService.settingsObs;
 	imageExpand = false
 	minSelected = 0;
+	currentlySelectedPercentage: string;
 
-	constructor(gameService: GameService) {
+	constructor(gameService: GameService) {	
 		super(gameService);
 		gameService.initialiseSVGMode();
 		this.settings.subscribe(o => {
@@ -24,12 +25,12 @@ export class SvgLevelComponent extends LevelBaseComponent {
 	}
 
 	override nextLevel() {
-		if (this.gameService.getPercentageSelectedFields() >= (this.minSelected / 100)) {
+		const selected = this.gameService.getPercentageSelectedFields();
+		this.currentlySelectedPercentage = (this.gameService.getPercentageSelectedFields() * 100).toFixed(1);
+		if (selected >= (this.minSelected / 100)) {
 			super.nextLevel();
 		} else {
-			alert("TODO: Show error message");
-			// TODO: Show error message
-			super.nextLevel();
+			(document.getElementById('svg-level-dialog') as any).showModal();
 		}
 	}
 
