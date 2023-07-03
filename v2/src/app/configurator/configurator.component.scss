@@ -35,3 +35,8 @@
 .--align-center {
 	align-self: center;
 }
+
+.flex-column {
+	display: flex;
+	flex-direction: column;
+}

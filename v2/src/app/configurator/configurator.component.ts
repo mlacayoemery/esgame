@@ -22,19 +22,25 @@ export class ConfiguratorComponent {
 	initialiseForm() {
 		this.formGroup = new FormGroup({
 			"title": this.getLanguageControls(),
-			"mapMode": new FormControl("grid"),
+			"mapMode": new FormControl("svg"),
 			"imageMode": new FormControl(false),
 			"elementSize": new FormControl(2),
+			"minSelected": new FormControl(0),
+			"minValue": new FormControl(0),
+			"maxValue": new FormControl(100),
 			"highlightColor": new FormControl("#000000"),
 			"infiniteLevels": new FormControl(false),
 			"gameBoardColumns": new FormControl(28),
 			"gameBoardRows": new FormControl(29),
 			"calcUrl": new FormControl({ value: "", disabled: true }),
 			"productionTypes": new FormArray([]),
+			"defaultProductionType": new FormControl(""),
 			"maps": new FormArray([]),
 			"customColors": new FormArray([]),
 			"basicInstructions": this.getLanguageControls(),
+			"basicInstructionsImageUrl": new FormControl(""),
 			"advancedInstructions": this.getLanguageControls(),
+			"advancedInstructionsImageUrl": new FormControl(""),
 		});
 		this.formGroup.get('mapMode')!.valueChanges.subscribe((value) => {
 			if (value == "svg") {
@@ -47,12 +53,21 @@ export class ConfiguratorComponent {
 				this.formGroup.get('calcUrl')!.enable();
 				this.formGroup.get('infiniteLevels')!.disable();
 				this.formGroup.get('infiniteLevels')!.setValue(false);
+				this.formGroup.get('minSelected')!.enable();
+				this.formGroup.get('minValue')!.enable();
+				this.formGroup.get('maxValue')!.enable();		
 			} else {
 				this.formGroup.get('elementSize')!.enable();
 				this.formGroup.get('imageMode')!.enable();
 				this.formGroup.get('gameBoardRows')!.enable();
 				this.formGroup.get('gameBoardColumns')!.enable();
 				this.formGroup.get('calcUrl')!.disable();
+				this.formGroup.get('minSelected')!.disable();
+				this.formGroup.get('minSelected')!.setValue(0);
+				this.formGroup.get('minValue')!.disable();
+				this.formGroup.get('minValue')!.setValue(0);
+				this.formGroup.get('maxValue')!.disable();
+				this.formGroup.get('maxValue')!.setValue(100);	
 			}
 		});
 	}
@@ -191,5 +206,9 @@ export class ConfiguratorComponent {
 			};
 			reader.readAsText(file);
 		}
+	}
+
+	formatLabel(value: number | undefined) {
+		return value + '%';
 	}
 }

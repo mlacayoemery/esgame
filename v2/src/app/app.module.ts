@@ -19,6 +19,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSliderModule } from '@angular/material/slider';
 import { FormsModule, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MissingTranslationHandler, MissingTranslationHandlerParams, TranslateLoader, TranslateModule } from '@ngx-translate/core';
@@ -83,6 +84,7 @@ export class MyMissingTranslationHandler implements MissingTranslationHandler {
 		MatIconModule,
 		MatDividerModule,
 		MatButtonModule,
+		MatSliderModule,
 		MatFormFieldModule,
 		MatProgressSpinnerModule,
 		MatCheckboxModule,

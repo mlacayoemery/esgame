@@ -9,9 +9,13 @@ export class Settings {
 	elementSize: number;
 	gameBoardColumns: number;
 	gameBoardRows: number;
+	minValue: number;
+	maxValue: number;
+	minSelected: number;
 	imageMode: boolean;
 	basicInstructions: LanguageString;
 	advancedInstructions: LanguageString;
+	defaultProductionType: string;
 	calcUrl: string;
 	mode: 'GRID' | 'SVG';
 	infiniteLevels: boolean;
@@ -33,6 +37,7 @@ export class Settings {
 		this.gameBoardColumns = data.gameBoardColumns;
 		this.gameBoardRows = data.gameBoardRows;
 		this.imageMode = data.imageMode;
+		this.defaultProductionType = data.defaultProductionType;
 		this.mode = data.mapMode == "svg" ? 'SVG' : 'GRID';
 		this.infiniteLevels = data.infiniteLevels;
 		this.highlightColor = data.highlightColor;
@@ -44,6 +49,9 @@ export class Settings {
 		this.customColors = data.customColors;
 		this.basicInstructionsImageUrl = data.basicInstructionsImageUrl;
 		this.advancedInstructionsImageUrl = data.advancedInstructionsImageUrl;
+		this.minValue = data.minValue;
+		this.maxValue = data.maxValue;
+		this.minSelected = data.minSelected;
 
 		this.translate.getLangs().forEach((lang) => {
 			this.maps.forEach(o => {

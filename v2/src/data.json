@@ -11,6 +11,9 @@
 	"highlightColor": "#f0ff1b",
 	"infiniteLevels": true,
 	"gameBoardColumns": 28,
+	"minValue": 0,
+    "maxValue": 100,
+    "defaultProductionType": "60",
 	"gameBoardRows": 29,
 	"calcUrl": "http://esgame-calculation.ehd9d8fwccbjaff0.switzerlandnorth.azurecontainer.io:8000/esgame",
 	"productionTypes": [
@@ -355,5 +358,6 @@
 		"nl": null,
 		"pt": null
 	},
-	"basicInstructionsImageUrl": "./assets/images/Screenshot 2023-07-03 115404.png"
+	"basicInstructionsImageUrl": "./assets/images/Screenshot 2023-07-03 115404.png",
+	"advanccedInstructionsImageUrl": ""
 }
