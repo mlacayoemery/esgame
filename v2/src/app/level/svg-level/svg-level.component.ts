@@ -3,6 +3,7 @@ import { LevelBaseComponent } from '../level-base.component';
 import { GameService } from 'src/app/services/game.service';
 import { map, timeout } from 'rxjs';
 import { GameBoardType } from 'src/app/shared/models/game-board-type';
+import { GameBoardClickMode } from 'src/app/shared/models/game-board';
 
 @Component({
 	selector: 'tro-svg-level',
@@ -15,6 +16,7 @@ export class SvgLevelComponent extends LevelBaseComponent {
 	imageExpand = false
 	minSelected = 0;
 	currentlySelectedPercentage: string;
+	gameBoardClickMode = GameBoardClickMode;
 
 	constructor(gameService: GameService) {	
 		super(gameService);

@@ -14,7 +14,7 @@ import { ProductionType } from '../shared/models/production-type';
 export abstract class GameBoardBaseComponent implements OnDestroy {
 	protected _boardData: GameBoard;
 	protected _hideLegend = false;
-	protected _clickMode = GameBoardClickMode.Field;
+	protected _clickMode = GameBoardClickMode.SelectBoard;
 	protected _selectedFields: SelectedField[] = [];
 	protected _highlightedFields: HighlightField[] = [];
 	protected _sink = new SubSink();

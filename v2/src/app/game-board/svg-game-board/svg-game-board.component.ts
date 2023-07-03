@@ -1,8 +1,9 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, QueryList, Renderer2, ViewChildren } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, Input, QueryList, Renderer2, ViewChildren } from '@angular/core';
 import { GameBoardBaseComponent } from '../game-board-base.component';
 import { SvgFieldComponent } from 'src/app/field/svg-field/svg-field.component';
 import { GameService } from 'src/app/services/game.service';
 import { GameBoardType } from 'src/app/shared/models/game-board-type';
+import { GameBoardClickMode } from 'src/app/shared/models/game-board';
 
 @Component({
 	selector: 'tro-svg-game-board',
@@ -15,6 +16,7 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	background: string = "";
 	background2: string = "";
 	consequenceType = GameBoardType.ConsequenceMap;
+	private _showHideListeners: (() => void)[] = [];
 
 	constructor(gameService: GameService, renderer: Renderer2, elementRef: ElementRef, cdRef: ChangeDetectorRef) {
 		super(gameService, renderer, elementRef, cdRef);
@@ -41,14 +43,16 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 
 	displayPatterns = 'inline';
 	addShowHideListeners() {
-		if (this._boardData.gameBoardType != GameBoardType.SuitabilityMap) {
+		if (this.clickMode != GameBoardClickMode.SelectBoard || this._boardData.gameBoardType == this.consequenceType || this.readOnly) {
+			this._showHideListeners.forEach(o => o());
+			this._showHideListeners = [];
 			return;
 		}
-		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', () => {
+		this._showHideListeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseenter', () => {
 			this.displayPatterns = 'none';
 			this.cdRef.markForCheck();
 		}));
-		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseleave', () => {
+		this._showHideListeners.push(this.renderer.listen(this.elementRef.nativeElement, 'mouseleave', () => {
 			this.displayPatterns = 'inline';
 			this.cdRef.markForCheck();
 		}));
@@ -81,6 +85,16 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 		this.background = `url("${this._boardData.background}")`;
 		this.background2 = `url("${this._boardData.background2}")`;
 		this.addShowHideListeners();
+	}
+
+	@Input() override set readOnly(value: boolean) {
+		if (value === false) this._readOnly = false;
+		else this._readOnly = true;
+		this.addShowHideListeners();
+	}
+
+	override get readOnly() {
+		return this._readOnly; // Keep that because otherwise it doesn't work since we're overriding the setter
 	}
 
 	getStrokeOpacity() {

@@ -19,7 +19,7 @@
 		</div>
 	</div>
 	<div class="game-board-wrapper">
-		<tro-svg-game-board [boardData]="focusedGameBoard | async" hideLegend class="main-board"
+		<tro-svg-game-board [boardData]="focusedGameBoard | async" hideLegend [clickMode]="gameBoardClickMode.Field" class="main-board"
 			[readOnly]="readOnly"></tro-svg-game-board>
 		<div class="score-board-wrapper">
 			<button troButton class="btn-prev" (click)="prevLevel()" [disabled]="(level | async)?.levelNumber == 1"
