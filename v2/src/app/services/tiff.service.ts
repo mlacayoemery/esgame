@@ -99,6 +99,7 @@ export class TiffService {
 		const width = image.getWidth();
 		const height = image.getHeight();
 		const nodata = image.getGDALNoData()!;
+		console.log(new Set(numRaster));
 
 		const dataUrl = await this.arrayToImage(numRaster, width, nodata, minValue, maxValue, gradient, colors);
 		return { width, height, dataUrl, nodata, numRaster };

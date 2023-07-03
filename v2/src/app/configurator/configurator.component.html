@@ -20,9 +20,9 @@
 						</textarea>
 					</mat-form-field>
 				</ng-container>
-				<mat-form-field>
+				<mat-form-field class="--full">
 					<mat-label>{{ 'Basic Instructions Image Url' | translate }}</mat-label>
-					<input type="url" matInput name="basic-instructions" formControlName="basicInstructionsImageUrl" required />
+					<input type="url" matInput name="basic-instructions" formControlName="basicInstructionsImageUrl" />
 				</mat-form-field>
 				<ng-container formGroupName="advancedInstructions">
 					<mat-form-field *ngFor="let lang of languages">
@@ -31,19 +31,11 @@
 						</textarea>
 					</mat-form-field>
 				</ng-container>
-				<mat-form-field>
-					<mat-label>{{ 'Advanced Instructions Image Url' | translate }}</mat-label>
-					<input type="url" matInput name="basic-instructions" formControlName="advancedInstructionsImageUrl" required />
-				</mat-form-field>
-				<mat-form-field>
-					<mat-label>{{ 'min value' | translate}}</mat-label>
-					<input type="u" matInput name="min-value" formControlName="minValue" required>
-				</mat-form-field>
-				<mat-form-field>
-					<mat-label>{{ 'max value' | translate}}</mat-label>
-					<input type="text" matInput name="max-value" formControlName="maxValue" required>
-				</mat-form-field>
 				<mat-form-field class="--full">
+					<mat-label>{{ 'Advanced Instructions Image Url' | translate }}</mat-label>
+					<input type="url" matInput name="basic-instructions" formControlName="advancedInstructionsImageUrl" />
+				</mat-form-field>
+				<mat-form-field class="--next-line">
 					<mat-label>{{ 'Map type' | translate }}</mat-label>
 					<mat-select formControlName="mapMode" required>
 						<mat-option value="svg">
@@ -62,16 +54,6 @@
 					<mat-hint>Link where the result of a level gets posted. A JSON is expected (definition in
 						README)</mat-hint>
 				</mat-form-field>
-				<div class="flex-column">
-					<label>{{ 'min-selected' | translate}}</label>
-					<mat-slider [displayWith]="formatLabel" discrete min="0" max="100" step="1" value="0">
-						<input formControlName="minSelected" matSliderThumb>
-					</mat-slider>
-					<label>{{formGroup.get('minSelected')?.value || 0}}%</label>
-				</div>
-				<div>
-					<!-- <mat-label>{{ 'Advanced Instructions' | translate }}</mat-label> -->
-				</div>
 				<button mat-button matStepperNext class="--full --next-line --justify-end">Next</button>
 			</div>
 		</mat-step>
@@ -84,7 +66,7 @@
 						required>
 				</mat-form-field>
 				<mat-form-field>
-					<mat-label>{{ 'maps-length' | translate}}</mat-label>
+					<mat-label>{{ 'maps-height' | translate}}</mat-label>
 					<input type="number" matInput placeholder="0" name="maps-height" formControlName="gameBoardRows"
 						required>
 				</mat-form-field>
@@ -99,9 +81,24 @@
 						required>
 					<mat-hint>Width/height of an element</mat-hint>
 				</mat-form-field>
+				<mat-form-field>
+					<mat-label>{{ 'min value' | translate}}</mat-label>
+					<input type="u" matInput name="min-value" formControlName="minValue" required>
+				</mat-form-field>
+				<mat-form-field>
+					<mat-label>{{ 'max value' | translate}}</mat-label>
+					<input type="text" matInput name="max-value" formControlName="maxValue" required>
+				</mat-form-field>
 				<mat-checkbox formControlName="infiniteLevels">{{ 'infinite-levels' | translate}}</mat-checkbox>
 				<mat-checkbox formControlName="imageMode">{{ 'Image Mode' | translate}}</mat-checkbox>
-				<button mat-button class="--new-line --justify-start" matStepperPrevious>Back</button>
+				<div class="flex-column">
+					<label>{{ 'min-selected' | translate}}</label>
+					<mat-slider [displayWith]="formatLabel" discrete min="0" max="100" step="1" value="0">
+						<input formControlName="minSelected" matSliderThumb>
+					</mat-slider>
+					<label>{{formGroup.get('minSelected')?.value || 0}}%</label>
+				</div>
+				<button mat-button class="--next-line --justify-start" matStepperPrevious>Back</button>
 				<button mat-button class="--justify-end" matStepperNext>Next</button>
 			</div>
 		</mat-step>

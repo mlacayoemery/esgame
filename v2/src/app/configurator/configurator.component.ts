@@ -42,35 +42,9 @@ export class ConfiguratorComponent {
 			"advancedInstructions": this.getLanguageControls(),
 			"advancedInstructionsImageUrl": new FormControl(""),
 		});
+		this.toggleMapMode('svg');
 		this.formGroup.get('mapMode')!.valueChanges.subscribe((value) => {
-			if (value == "svg") {
-				this.formGroup.get('elementSize')!.disable();
-				this.formGroup.get('elementSize')!.setValue(1);
-				this.formGroup.get('imageMode')!.disable();
-				this.formGroup.get('imageMode')!.setValue(false);
-				this.formGroup.get('gameBoardRows')!.disable();
-				this.formGroup.get('gameBoardColumns')!.disable();
-				this.formGroup.get('calcUrl')!.enable();
-				this.formGroup.get('infiniteLevels')!.enable();
-				this.formGroup.get('infiniteLevels')!.setValue(true);
-				this.formGroup.get('minSelected')!.enable();
-				this.formGroup.get('minValue')!.enable();
-				this.formGroup.get('maxValue')!.enable();		
-			} else {
-				this.formGroup.get('elementSize')!.enable();
-				this.formGroup.get('imageMode')!.enable();
-				this.formGroup.get('gameBoardRows')!.enable();
-				this.formGroup.get('gameBoardColumns')!.enable();
-				this.formGroup.get('calcUrl')!.disable();
-				this.formGroup.get('minSelected')!.disable();
-				this.formGroup.get('minSelected')!.setValue(0);
-				this.formGroup.get('minValue')!.disable();
-				this.formGroup.get('minValue')!.setValue(0);
-				this.formGroup.get('maxValue')!.disable();
-				this.formGroup.get('maxValue')!.setValue(100);	
-				this.formGroup.get('infiniteLevels')!.disable();
-				this.formGroup.get('infiniteLevels')!.setValue(false);
-			}
+			this.toggleMapMode(value);
 		});
 	}
 
@@ -207,6 +181,37 @@ export class ConfiguratorComponent {
 
 			};
 			reader.readAsText(file);
+		}
+	}
+
+	toggleMapMode(value: string) {
+		if (value == "svg") {
+			this.formGroup.get('elementSize')!.disable();
+			this.formGroup.get('elementSize')!.setValue(1);
+			this.formGroup.get('imageMode')!.disable();
+			this.formGroup.get('imageMode')!.setValue(false);
+			this.formGroup.get('gameBoardRows')!.disable();
+			this.formGroup.get('gameBoardColumns')!.disable();
+			this.formGroup.get('calcUrl')!.enable();
+			this.formGroup.get('infiniteLevels')!.enable();
+			this.formGroup.get('infiniteLevels')!.setValue(true);
+			this.formGroup.get('minSelected')!.enable();
+			this.formGroup.get('minValue')!.enable();
+			this.formGroup.get('maxValue')!.enable();		
+		} else {
+			this.formGroup.get('elementSize')!.enable();
+			this.formGroup.get('imageMode')!.enable();
+			this.formGroup.get('gameBoardRows')!.enable();
+			this.formGroup.get('gameBoardColumns')!.enable();
+			this.formGroup.get('calcUrl')!.disable();
+			this.formGroup.get('minSelected')!.disable();
+			this.formGroup.get('minSelected')!.setValue(0);
+			this.formGroup.get('minValue')!.disable();
+			this.formGroup.get('minValue')!.setValue(0);
+			this.formGroup.get('maxValue')!.disable();
+			this.formGroup.get('maxValue')!.setValue(100);	
+			this.formGroup.get('infiniteLevels')!.disable();
+			this.formGroup.get('infiniteLevels')!.setValue(false);
 		}
 	}
 
