@@ -33,18 +33,18 @@ export class TiffService {
 		);
 	}
 
-	getSvgGameBoard(id: string, url: string, gameBoardType: GameBoardType, defaultGradient: DefaultGradients, overlay: GameBoard) {
-		return this.getTiffSvgDataUrl(url, gradients.get(defaultGradient)!).pipe(
+	getSvgGameBoard(id: string, url: string, gameBoardType: GameBoardType, defaultGradient: DefaultGradients, overlay: GameBoard, minValue: number, maxValue: number) {
+		return this.getTiffSvgDataUrl(url, minValue, maxValue, gradients.get(defaultGradient)!).pipe(
 			mergeMap(data => {
 				let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
 				
 				uniqueValues = Array.from(new Set(data.numRaster)).filter(c => c != data.nodata).sort((a, b) => a - b);
 				gradient = gradients.get(defaultGradient!);
-				legend = { elements: [{forValue: 0, color: gradient!.calculateColor(1)}, {forValue: 100, color: gradient!.calculateColor(0)}], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true };
+				legend = { elements: [{forValue: minValue, color: gradient!.calculateColor(1)}, {forValue: maxValue, color: gradient!.calculateColor(0)}], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true };
 				fields = overlay.fields.map((field) => {
 					return {
 						...field,
-						score: Math.round(data.numRaster[field.startPos] * 100),
+						score: Math.round(data.numRaster[field.startPos]),
 					}
 				});
 
@@ -69,8 +69,8 @@ export class TiffService {
 		);
 	}
 
-	getSvgBackground(url: string, customColors: CustomColors): Observable<string> {
-		return this.getTiffSvgDataUrl(url, undefined, customColors).pipe(
+	getSvgBackground(url: string, minValue: number, maxValue: number, customColors: CustomColors): Observable<string> {
+		return this.getTiffSvgDataUrl(url, minValue, maxValue, undefined, customColors).pipe(
 			mergeMap(data => {
 				return of(data.dataUrl);
 			})
@@ -81,19 +81,15 @@ export class TiffService {
 		return from(this.tiffToArray(url));
 	}
 
-	public writeTiffData(data: number[], columns: number) {
-		return from(this.arrayToTiff(data, columns));
-	}
-
-	public getTiffSvgDataUrl(url: string, gradient?: Gradient, colors?: CustomColors) {
-		return from(this.prepareDataUrl(url, gradient, colors));
+	public getTiffSvgDataUrl(url: string, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors) {
+		return from(this.prepareDataUrl(url, minValue, maxValue, gradient, colors));
 	}
 
 	public getTiffSvgData(url: string) {
 		return from(this.tiffToPaths(url));
 	}
 
-	private async prepareDataUrl(url: string, gradient?: Gradient, colors?: CustomColors) {
+	private async prepareDataUrl(url: string, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors) {
 		//fromURL throws error
 		const tmp = await fetch(url).then(r => r.blob());
 		const tiff = await fromBlob(tmp);
@@ -104,7 +100,7 @@ export class TiffService {
 		const height = image.getHeight();
 		const nodata = image.getGDALNoData()!;
 
-		const dataUrl = await this.arrayToImage(numRaster, width, nodata, gradient, colors);
+		const dataUrl = await this.arrayToImage(numRaster, width, nodata, minValue, maxValue, gradient, colors);
 		return { width, height, dataUrl, nodata, numRaster };
 	}
 
@@ -134,20 +130,10 @@ export class TiffService {
 		return result;
 	}
 
-	private async arrayToTiff(data: number[], columns: number): Promise<Blob> {
+	private async arrayToImage(data: number[], columns: number, noData: number, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors): Promise<string> {
 		const height = data.length / columns;
-		const buffer = writeArrayBuffer(data, { width: columns, height: height, GDAL_NODATA: "-1" }) as ArrayBufferLike;
-		const result = new Blob([buffer], { type: 'application/octet-stream' });
-		return result;
-	}
-
-	private async arrayToImage(data: number[], columns: number, noData: number, gradient?: Gradient, colors?: CustomColors): Promise<string> {
-		const height = data.length / columns;
-		const tmpArray = []
-		const uniqueValues = Array.from(new Set(data)).filter(c => c != noData).sort((a, b) => a - b);
+		const tmpArray = [];
 		if (gradient) {
-			const maxValue = 1; //Math.max(...uniqueValues); // TODO: Evtl verschieben in Konfiguration?
-			const minValue = 0; //Math.min(...uniqueValues);
 			for (var i = 0; i < data.length; i++) {
 				if (data[i] == noData) {
 					tmpArray.push(255, 255, 255, 0);
@@ -161,8 +147,6 @@ export class TiffService {
 				tmpArray.push(...colors!.getRgb(value)!);
 			});
 		}
-
-		//const buffer = writeArrayBuffer(tmpArray, { width: columns, height: height, GDAL_NODATA: "-1" }) as ArrayBufferLike;
 		return this.arrayToDataUrl(tmpArray, columns, height);
 	}
 

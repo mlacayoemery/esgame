@@ -113,9 +113,9 @@ export class GameService {
 			if (this.settings.value.calcUrl) {
 				this.loading(true);
 				var inputData = {} as any;
-				//TODO: remove not selected fields, should not be needed because all fields are selected
 				const allFields = [...this.selectedFields.value, ...this.notSelectedFields.value];
-				inputData.allocation = allFields.map((o) => ({ id: o.fields[0].id, lulc: Number.parseInt(o.productionType?.id ?? 60) }));
+				//TODO: remove number parse int
+				inputData.allocation = allFields.map((o) => ({ id: o.fields[0].id, lulc: Number.parseInt(o.productionType?.id ?? this.settings.value.defaultProductionType) }));
 				inputData.round = this.currentLevel.value!.levelNumber;
 				const entries = this.scoreService.createEmptyScoreEntry(this.currentLevel.value, [GameBoardType.SuitabilityMap]);
 				this.scoreService.calculateScore(entries, this.selectedFields.value);
@@ -236,8 +236,8 @@ export class GameService {
 			level.gameBoards.push(...previousLevel.gameBoards.filter(c => c.gameBoardType != GameBoardType.ConsequenceMap));
 
 			combineLatest([
-				this.tiffService.getSvgBackground(backgroundMap.urlToData, this.customColors.find(o => o.id == backgroundMap.customColorId)!),
-				...consequnces.map(m => { return this.getSvg(m, overlay) })]).subscribe(([background, ...gameBoards]) => {
+				this.tiffService.getSvgBackground(backgroundMap.urlToData, settings.minValue, settings.maxValue, this.customColors.find(o => o.id == backgroundMap.customColorId)!),
+				...consequnces.map(m => { return this.getSvg(m, overlay, settings) })]).subscribe(([background, ...gameBoards]) => {
 					gameBoards.forEach(o => {
 						// o.background2 = background;
 					});
@@ -256,7 +256,7 @@ export class GameService {
 		}
 	}
 
-	getSvg = (m: any, overlay: GameBoard) => this.tiffService.getSvgGameBoard(m.id, m.urlToData, m.gameBoardType, m.gradient, overlay);
+	getSvg = (m: any, overlay: GameBoard, settings: Settings) => this.tiffService.getSvgGameBoard(m.id, m.urlToData, m.gameBoardType, m.gradient, overlay, settings.minValue, settings.maxValue);
 
 	initialiseSVGMode() {
 		var level = new Level();
@@ -280,8 +280,8 @@ export class GameService {
 			switchMap(overlay => {
 				level.gameBoards.push(overlay);
 				return combineLatest(
-					[this.tiffService.getSvgBackground(backgroundMap.urlToData, this.customColors.find(o => o.id == backgroundMap.customColorId)!),
-					...otherMaps.map(m => { return this.getSvg(m, overlay) }),]
+					[this.tiffService.getSvgBackground(backgroundMap.urlToData, settings.minValue, settings.maxValue, this.customColors.find(o => o.id == backgroundMap.customColorId)!),
+					...otherMaps.map(m => { return this.getSvg(m, overlay, settings) }),]
 				);
 			})
 		).subscribe(([background, ...gameBoards]) => {
@@ -345,11 +345,11 @@ export class GameService {
 
 	}
 
-	checkIfAllFieldsAreSelected() {
+	getPercentageSelectedFields() {
 		const selectedFields = this.selectedFields.value!.map(c => c.fields[0].id)
 		const notSelected = this.focusedGameBoard.value?.fields.filter(o => o.editable && !selectedFields.includes(o.id)!).map(i => new SelectedField([{ id: i.id, side: HighlightSide.ALLSIDES } as HighlightField], i.productionType!))!;
 		this.notSelectedFields.next(notSelected);
-		return this.selectedFields.value.length == this.focusedGameBoard.value?.fields.filter(o => o.editable).length;
+		return this.selectedFields.value.length / this.focusedGameBoard.value?.fields.filter(o => o.editable).length!;
 	}
 
 	openHelp(close = false) { this.helpWindow.next(!close); }
