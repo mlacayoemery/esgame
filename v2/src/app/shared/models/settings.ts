@@ -18,6 +18,8 @@ export class Settings {
 	productionTypes: { id: string, name: LanguageString, fieldColor: string, urlToIcon: string, maxElements: number }[] = [];
 	maps: { id: string, name: LanguageString, gradient: DefaultGradients, customColorId: string, gameBoardType: GameBoardType, productionTypes: string[], urlToData: string }[] = [];
 	customColors: { id: string, colors: { number: number, color: string }[] }[];
+	basicInstructionsImageUrl: string;
+	advancedInstructionsImageUrl: string;
 	
 	constructor(
 		private translate: TranslateService,
@@ -40,6 +42,8 @@ export class Settings {
 		this.productionTypes = data.productionTypes.map((o: any) => ({ id: o.id, name: o.name, fieldColor: o.fieldColor, urlToIcon: o.urlToIcon, maxElements: o.maxElements }));
 		this.maps = data.maps.map((o: any) => ({ id: o.id, name: o.name, gradient: convertGradient(o.gradient), customColorId: o.customColorId, gameBoardType: convertGameBoardType(o.gameBoardType), productionTypes: o.productionTypes, urlToData: o.urlToData }));
 		this.customColors = data.customColors;
+		this.basicInstructionsImageUrl = data.basicInstructionsImageUrl;
+		this.advancedInstructionsImageUrl = data.advancedInstructionsImageUrl;
 
 		this.translate.getLangs().forEach((lang) => {
 			this.maps.forEach(o => {
