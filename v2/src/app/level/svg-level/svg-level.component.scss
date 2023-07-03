@@ -77,4 +77,22 @@
 	.--is-negative {
 		color: $color-negative;
 	}
+
+	dialog::backdrop {
+		background: hsl(201 50% 40% /.5);
+	}
+
+	/* Festlegung im Default-Stylesheet der Browser */
+	dialog:not([open]) {
+		display: none;
+	}
+
+	/* Styling der geöffneten Popup-Box */
+	dialog[open] {
+		width: 20em;
+		border-radius: 5px;
+		background: white;
+		border: thin solid $color-primary;
+		margin: 5em auto;
+	}
 }

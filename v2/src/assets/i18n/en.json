@@ -9,6 +9,7 @@
 	"Finish": "Finish",
 	"production type": "Production Type",
 	"Custom Color Set": "Custom Color Set",
+	"Select minimum fields": "Select at least {{value}}% of all fields (Currently: {{current}}%)",
 	"remove-color-set": "Remove set",
 	"new-color": "Add",
 	"Value in TIFF": "Value in TIFF",
