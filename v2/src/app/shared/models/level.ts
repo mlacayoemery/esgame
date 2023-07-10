@@ -9,4 +9,5 @@ export class Level {
 	isReadOnly = false;
 	showConsequenceMaps = false;
 	scores: ScoreEntry[];
+	scoreImage: string;
 }

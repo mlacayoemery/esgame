@@ -233,6 +233,12 @@ export class GameService {
 				level.scores = [{ id: "all", score: previousScore!} , ...calculationResult.results.filter(c => c.id != "-1").map(c => ({ score: -((c.score ?? 0)*100), id: c.id } as ScoreEntry))];
 			}
 
+			const image = calculationResult?.results.find(c => c.id == "-1");
+			if(image) {
+				level.scoreImage = image.url;
+			}
+
+
 			level.gameBoards.push(...previousLevel.gameBoards.filter(c => c.gameBoardType != GameBoardType.ConsequenceMap));
 
 			combineLatest([
