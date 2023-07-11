@@ -248,7 +248,7 @@ export class GameService {
 				this.tiffService.getSvgBackground(backgroundMap.urlToData, settings.minValue, settings.maxValue, customColors),
 				...consequnces.map(m => { return this.getSvg(m, overlay, settings) })]).subscribe(([background, ...gameBoards]) => {
 					gameBoards.forEach(o => {
-						// o.background2 = background;
+						o.background2 = background;
 					});
 
 					level.gameBoards.push(...gameBoards);

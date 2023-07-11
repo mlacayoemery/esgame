@@ -13,7 +13,7 @@ export abstract class LevelBaseComponent {
 	readOnly = false;
 	level = this.gameService.currentLevelObs.pipe(tap(o => {
 		this.readOnly = o?.isReadOnly ?? false;
-		if (!o || o.levelNumber <= 2) this.openHelp();
+		if ((!o || o.levelNumber <= 2) && this.readOnly == false) this.openHelp();
 	}));
 	selectedProductionType = this.gameService.selectedProductionTypeObs;
 	focusedGameBoard = this.gameService.focusedGameBoardObs.pipe(filter(o => o != null));
