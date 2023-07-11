@@ -241,8 +241,11 @@ export class GameService {
 
 			level.gameBoards.push(...previousLevel.gameBoards.filter(c => c.gameBoardType != GameBoardType.ConsequenceMap));
 
+			let customColors = this.customColors.find(o => o.id == backgroundMap.customColorId)!;
+			customColors.addTransparencyToColors("3F"); // 25% opacity
+
 			combineLatest([
-				this.tiffService.getSvgBackground(backgroundMap.urlToData, settings.minValue, settings.maxValue, this.customColors.find(o => o.id == backgroundMap.customColorId)!),
+				this.tiffService.getSvgBackground(backgroundMap.urlToData, settings.minValue, settings.maxValue, customColors),
 				...consequnces.map(m => { return this.getSvg(m, overlay, settings) })]).subscribe(([background, ...gameBoards]) => {
 					gameBoards.forEach(o => {
 						// o.background2 = background;

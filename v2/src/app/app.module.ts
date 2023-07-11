@@ -5,7 +5,6 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { GridFieldComponent } from './field/grid-field/grid-field.component';
 import { ProductionTypeButtonComponent } from './product-type-button/production-type-button.component';
-import { NavigationComponent } from './layout/navigation/navigation.component';
 import { ScoreBoardComponent } from './score-board/score-board.component';
 import { LegendBoardComponent } from './legend-board/legend-board.component';
 import { ButtonDirective } from './shared/button.directive';
@@ -57,7 +56,6 @@ export class MyMissingTranslationHandler implements MissingTranslationHandler {
 		AppComponent,
 		GridFieldComponent,
 		ProductionTypeButtonComponent,
-		NavigationComponent,
 		ScoreBoardComponent,
 		LegendBoardComponent,
 		ButtonDirective,
@@ -72,7 +70,7 @@ export class MyMissingTranslationHandler implements MissingTranslationHandler {
 		LoadingIndicatorComponent,
 		LevelIndicatorComponent,
 		ImportConfigComponent,
-  StartComponent,
+  		StartComponent,
 	],
 	imports: [
 		BrowserModule,

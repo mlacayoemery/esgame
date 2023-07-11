@@ -68,6 +68,12 @@ export class CustomColors {
 		this.colors.set(key, value);
 	}
 
+	addTransparencyToColors(transparencyHex: string) {
+		this.colors.forEach((value, key) => {
+			this.colors.set(key, value.slice(0, 7) + transparencyHex);
+		});
+	}
+
 	getRgb(i: number) {
 		return this.colorToRgb(this.colors.get(i));
 	}
