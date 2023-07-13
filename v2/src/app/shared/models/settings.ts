@@ -33,6 +33,7 @@ export class Settings {
 	}
 
 	mapData(data: any) {
+		if (!data) return;
 		this.elementSize = data.elementSize;
 		this.gameBoardColumns = data.gameBoardColumns;
 		this.gameBoardRows = data.gameBoardRows;

@@ -18,7 +18,7 @@
 		</div>
 	</div>
 	<div class="game-board-wrapper">
-		<tro-grid-game-board *ngIf="focusedGameBoard != null" [readOnly]="readOnly" [boardData]="focusedGameBoard | async"></tro-grid-game-board>
+		<tro-grid-game-board *ngIf="focusedGameBoard != null" [readOnly]="readOnly" [clickMode]="clickMode.Field" [boardData]="focusedGameBoard | async"></tro-grid-game-board>
 		<div class="score-board-wrapper">
 			<tro-score-board class="score-board"></tro-score-board>
 			<tro-score-indicator class="score-indicator"></tro-score-indicator>

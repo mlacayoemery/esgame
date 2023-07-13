@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { LevelBaseComponent } from '../level-base.component';
 import { GameService } from 'src/app/services/game.service';
+import staticData from '../../../data2.json';
 
 @Component({
 	selector: 'tro-grid-level',
@@ -11,6 +12,7 @@ export class GridLevelComponent extends LevelBaseComponent {
 	settings = this.gameService.settingsObs;
 	constructor(gameService: GameService) {
 		super(gameService);
+		this.gameService.loadSettings(staticData);
 		gameService.initialiseGridMode();
 	}
 }

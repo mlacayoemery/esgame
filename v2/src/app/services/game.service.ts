@@ -10,7 +10,6 @@ import { TiffService } from './tiff.service';
 import { CustomColors, DefaultGradients } from '../shared/helpers/gradients';
 import { ScoreService, ScoreEntry } from './score.service';
 import { TranslateService } from '@ngx-translate/core';
-import data from './../../data.json';
 import { ApiService } from './api.service';
 import { CalculationResult } from '../shared/models/calculation-result';
 import * as uuid from 'uuid';
@@ -24,7 +23,7 @@ export class GameService {
 	private selectedFields = new BehaviorSubject<SelectedField[]>([]);
 	private notSelectedFields = new BehaviorSubject<SelectedField[]>([]);
 	private currentlySelectedField = new BehaviorSubject<SelectedField | null>(null);
-	private settings = new BehaviorSubject<Settings>(new Settings(this.translateService, data));
+	private settings = new BehaviorSubject<Settings>(new Settings(this.translateService, null));
 	private productionTypes = new BehaviorSubject<ProductionType[]>([]);
 	private selectedProductionType = new BehaviorSubject<ProductionType | null>(null);
 	private focusedGameBoard = new BehaviorSubject<GameBoard | null>(null);

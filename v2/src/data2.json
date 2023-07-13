@@ -1,1 +1,219 @@
-{"title":{"de":null,"en":null,"nl":null,"pt":null},"mapMode":"grid","imageMode":true,"elementSize":2,"highlightColor":"#FFF","infiniteLevels":false,"gameBoardColumns":28,"gameBoardRows":29,"calcUrl":"","productionTypes":[{"id":"10","name":{"de":"Ackerland","en":"Arable land","nl":null,"pt":null},"fieldColor":"#FFF","urlToIcon":"https://github.com/mlacayoemery/esgame/blob/master/images/corn.png?raw=true","maxElements":4},{"id":"20","name":{"de":"Viehzucht","en":"Livestock","nl":null,"pt":null},"fieldColor":"#FFF","urlToIcon":"https://github.com/mlacayoemery/esgame/blob/master/images/cow?raw=true","maxElements":4}],"maps":[{"id":"2","name":{"de":"Ackerland","en":"Arable land","nl":null,"pt":null},"gradient":"green","productionTypes":["10"],"gameBoardType":"Suitability","urlToData":"/assets/images/esgame_img_ag.tif","customColorId":""},{"id":"3","name":{"de":"Viehzucht","en":"Lickestock","nl":null,"pt":null},"gradient":"orange","productionTypes":["20"],"gameBoardType":"Suitability","urlToData":"/assets/images/esgame_img_ranch.tif","customColorId":""},{"id":"4","name":{"de":"Kohlenstoff","en":"Carbon","nl":null,"pt":null},"gradient":"yellow","productionTypes":["10"],"gameBoardType":"Consequence","urlToData":"/assets/images/esgame_img_ag_carbon.tif","customColorId":""},{"id":"5","name":{"de":"Lebensraum","en":"Habitat","nl":null,"pt":null},"gradient":"purple","productionTypes":["10"],"gameBoardType":"Consequence","urlToData":"/assets/images/esgame_img_ag_habitat.tif","customColorId":""},{"id":"6","name":{"de":"Wasser","en":"Water","nl":null,"pt":null},"gradient":"blue","productionTypes":["10"],"gameBoardType":"Consequence","urlToData":"/assets/images/esgame_img_ag_water.tif","customColorId":""},{"id":"7","name":{"de":"Jagd","en":"Hunt","nl":null,"pt":null},"gradient":"red","productionTypes":["10"],"gameBoardType":"Consequence","urlToData":"/assets/images/esgame_img_ag_hunt.tif","customColorId":""},{"id":"8","name":{"de":"Kohlenstoff","en":"Carbon","nl":null,"pt":null},"gradient":"yellow","productionTypes":["20"],"gameBoardType":"Consequence","urlToData":"/assets/images/esgame_img_ranch_carbon.tif","customColorId":""},{"id":"9","name":{"de":"Lebensraum","en":"Habitat","nl":null,"pt":null},"gradient":"purple","productionTypes":["20"],"gameBoardType":"Consequence","urlToData":"/assets/images/esgame_img_ranch_habitat.tif","customColorId":""},{"id":"10","name":{"de":"Wasser","en":"Water","nl":null,"pt":null},"gradient":"blue","productionTypes":["20"],"gameBoardType":"Consequence","urlToData":"/assets/images/esgame_img_ranch_water.tif","customColorId":""},{"id":"11","name":{"de":"Jagd","en":"Hunt","nl":null,"pt":null},"gradient":"red","productionTypes":["20"],"gameBoardType":"Consequence","urlToData":"/assets/images/esgame_img_ranch_hunt.tif","customColorId":""}],"customColors":[],"basicInstructions":{"de":"de","en":"in","nl":null,"pt":null},"advancedInstructions":{"de":"de","en":"in","nl":null,"pt":null}}
+{
+	"title": {
+		"de": null,
+		"en": null,
+		"nl": null,
+		"pt": null
+	},
+	"mapMode": "grid",
+	"imageMode": true,
+	"elementSize": 2,
+	"highlightColor": "#00E0FF",
+	"infiniteLevels": false,
+	"gameBoardColumns": 28,
+	"gameBoardRows": 29,
+	"calcUrl": "",
+	"productionTypes": [
+		{
+			"id": "10",
+			"name": {
+				"de": "Ackerland",
+				"en": "Arable land",
+				"nl": null,
+				"pt": null
+			},
+			"fieldColor": "#FFF",
+			"urlToIcon": "https://github.com/mlacayoemery/esgame/blob/master/images/corn.png?raw=true",
+			"maxElements": 4
+		},
+		{
+			"id": "20",
+			"name": {
+				"de": "Viehzucht",
+				"en": "Livestock",
+				"nl": null,
+				"pt": null
+			},
+			"fieldColor": "#FFF",
+			"urlToIcon": "https://raw.githubusercontent.com/mlacayoemery/esgame/master/images/cow.png",
+			"maxElements": 4
+		}
+	],
+	"maps": [
+		{
+			"id": "2",
+			"name": {
+				"de": "Ackerland",
+				"en": "Arable land",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "green",
+			"productionTypes": [
+				"10"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "/assets/images/esgame_img_ag.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "3",
+			"name": {
+				"de": "Viehzucht",
+				"en": "Livestock",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "orange",
+			"productionTypes": [
+				"20"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "/assets/images/esgame_img_ranch.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "4",
+			"name": {
+				"de": "Kohlenstoff",
+				"en": "Carbon",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "yellow",
+			"productionTypes": [
+				"10"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "/assets/images/esgame_img_ag_carbon.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "5",
+			"name": {
+				"de": "Lebensraum",
+				"en": "Habitat",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "purple",
+			"productionTypes": [
+				"10"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "/assets/images/esgame_img_ag_habitat.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "6",
+			"name": {
+				"de": "Wasser",
+				"en": "Water",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "blue",
+			"productionTypes": [
+				"10"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "/assets/images/esgame_img_ag_water.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "7",
+			"name": {
+				"de": "Jagd",
+				"en": "Hunt",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "red",
+			"productionTypes": [
+				"10"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "/assets/images/esgame_img_ag_hunt.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "8",
+			"name": {
+				"de": "Kohlenstoff",
+				"en": "Carbon",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "yellow",
+			"productionTypes": [
+				"20"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "/assets/images/esgame_img_ranch_carbon.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "9",
+			"name": {
+				"de": "Lebensraum",
+				"en": "Habitat",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "purple",
+			"productionTypes": [
+				"20"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "/assets/images/esgame_img_ranch_habitat.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "10",
+			"name": {
+				"de": "Wasser",
+				"en": "Water",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "blue",
+			"productionTypes": [
+				"20"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "/assets/images/esgame_img_ranch_water.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "11",
+			"name": {
+				"de": "Jagd",
+				"en": "Hunt",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "red",
+			"productionTypes": [
+				"20"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "/assets/images/esgame_img_ranch_hunt.tif",
+			"customColorId": ""
+		}
+	],
+	"customColors": [],
+	"basicInstructions": {
+		"de": "Die Anleitung auf Deutsch",
+		"en": "The instructions in English",
+		"nl": null,
+		"pt": null
+	},
+	"advancedInstructions": {
+		"de": "Die Anleitung der 2. Runde auf Deutsch",
+		"en": "The instructions of the 2nd level in English",
+		"nl": null,
+		"pt": null
+	},
+	"basicInstructionsImageUrl": "",
+	"advanccedInstructionsImageUrl": ""
+}

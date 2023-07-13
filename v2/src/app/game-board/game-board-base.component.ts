@@ -23,7 +23,6 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 
 	fields: Field[] = [];
 	settings: Settings;
-	board: GameBoard | undefined;
 	legend: Legend | undefined;
 	GameBoardClickMode = GameBoardClickMode;
 	productionTypes: ProductionType[] = [];
@@ -44,7 +43,6 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 			this._boardData = data;
 			this.fields = data.fields;
 			this.legend = data.legend;
-			this.board = data;
 			this.afterBoardDataSet();
 		}
 	}
@@ -94,8 +92,8 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 	private addClickListener() {
 		if (this.readOnly) return;
 		this._listeners.push(this.renderer.listen(this.elementRef.nativeElement, 'click', () => {
-			if (this.boardData) {
-				this.gameService.selectGameBoard(this.boardData);
+			if (this._boardData) {
+				this.gameService.selectGameBoard(this._boardData);
 			}
 		}));
 	}

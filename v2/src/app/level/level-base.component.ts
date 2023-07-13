@@ -19,7 +19,7 @@ export abstract class LevelBaseComponent {
 	focusedGameBoard = this.gameService.focusedGameBoardObs.pipe(filter(o => o != null));
 	leftGameBoards = this.gameService.currentLevelObs.pipe(
 		map(o => o?.gameBoards), 
-		map(o => o?.filter(p => p.gameBoardType == GameBoardType.SuitabilityMap))
+		map(o => o?.filter(p => p.gameBoardType == GameBoardType.SuitabilityMap)),
 	);
 	rightGameBoards = combineLatest([this.level, this.selectedProductionType]).pipe(
 		map(([o, p]) => {

@@ -30,6 +30,7 @@ export class HelpComponent {
 				this.helpText = 'advanced_instructions';
 				this.imageUrl = this.gameService.settingsObs.pipe(map(o => o.advancedInstructionsImageUrl));
 			}
+			this.cdRef.markForCheck();
 		});
 	}
 

@@ -4,6 +4,8 @@ import { GameService } from 'src/app/services/game.service';
 import { map, timeout } from 'rxjs';
 import { GameBoardType } from 'src/app/shared/models/game-board-type';
 import { GameBoardClickMode } from 'src/app/shared/models/game-board';
+import dynamicData from '../../../data.json';
+
 
 @Component({
 	selector: 'tro-svg-level',
@@ -20,6 +22,7 @@ export class SvgLevelComponent extends LevelBaseComponent {
 
 	constructor(gameService: GameService) {	
 		super(gameService);
+		this.gameService.loadSettings(dynamicData);
 		gameService.initialiseSVGMode();
 		this.settings.subscribe(o => {
 			this.minSelected = o?.minSelected ?? 0;

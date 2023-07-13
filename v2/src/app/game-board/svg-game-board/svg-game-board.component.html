@@ -1,5 +1,5 @@
 <svg [ngStyle]="{'background-image': background + ', ' + background2}"
-	attr.viewBox="0 0 {{board?.width ?? 0}} {{board?.height ?? 0}}">
+	attr.viewBox="0 0 {{boardData?.width ?? 0}} {{boardData?.height ?? 0}}">
 	<defs>
 		<pattern *ngFor="let productionType of productionTypes" [attr.id]="'pattern_' + productionType.id + '_' + boardData?.id"
 			patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(45)">

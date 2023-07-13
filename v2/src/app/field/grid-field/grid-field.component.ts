@@ -38,6 +38,9 @@ export class GridFieldComponent extends FieldBaseComponent {
 
 	imageSize = 0;
 	elementSize: number;
+	
+	@HostBinding('style.--highlight-color')
+	highlightColor = '';
 
 	constructor(
 		gameService: GameService,
@@ -49,6 +52,9 @@ export class GridFieldComponent extends FieldBaseComponent {
 		this._sink.sink = this.gameService.settingsObs.subscribe(settings => {
 			this.elementSize = settings.elementSize;
 			this.imageMode = settings.imageMode;
+		});
+		gameService.settingsObs.subscribe(settings => {
+			this.highlightColor = settings.highlightColor;
 		});
 	}
 

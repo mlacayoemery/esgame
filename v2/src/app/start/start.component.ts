@@ -2,8 +2,6 @@ import { Component } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { GameService } from '../services/game.service';
 import { MatSelectChange } from '@angular/material/select';
-import dynamicData from '../../data.json';
-import staticData from '../../data2.json';
 import { Router } from '@angular/router';
 
 @Component({
@@ -30,12 +28,10 @@ export class StartComponent {
 	}
 
 	loadDynamic() {
-		this.gameService.loadSettings(dynamicData);
 		this.router.navigate(['dynamic-game'])
 	}
 
 	loadStatic() {
-		this.gameService.loadSettings(staticData);
 		this.router.navigate(['static-game'])
 	}
 }
