@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { ScoreEntry, ScoreService } from '../services/score.service';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'tro-score-board',
@@ -22,6 +23,16 @@ export class ScoreBoardComponent implements OnInit {
 		return this._scores;
 	}
 
+	get groupedScores() {
+		const grouped =  this._scores?.reduce(
+			(entryMap, e) => entryMap.set(this.translateService.instant("map_name_" + e.id) as string, [...entryMap.get(this.translateService.instant("map_name_" + e.id))||[], e]),
+			new Map<string, ScoreEntry[]>()
+		);
+		console.log(this._scores)
+
+		return Array.from(grouped).map((a) => ({ name: a[0], score: a[1].reduce((a, b) => a + b.score, 0)}));
+	}
+
 	@Input() set isStatic(value: any) {
 		if (value === false) this._isStatic = false;
 		else this._isStatic = true;
@@ -30,7 +41,8 @@ export class ScoreBoardComponent implements OnInit {
 	constructor(
 		private gameService: GameService,
 		private cdRef: ChangeDetectorRef,
-		private scoreService: ScoreService
+		private scoreService: ScoreService,
+		private translateService: TranslateService
 	) {}
 
 	ngOnInit() {
