@@ -61,6 +61,9 @@
                 //background-color: white;
                 font-size: min(0.7vw, 14px);
                 font-weight: 600;
+                display: flex;
+                justify-content: center;
+                width: 0px;
 
                 &.is-small {
                     font-weight: 600;
