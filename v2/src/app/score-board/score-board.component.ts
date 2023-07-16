@@ -28,7 +28,6 @@ export class ScoreBoardComponent implements OnInit {
 			(entryMap, e) => entryMap.set(this.translateService.instant("map_name_" + e.id) as string, [...entryMap.get(this.translateService.instant("map_name_" + e.id))||[], e]),
 			new Map<string, ScoreEntry[]>()
 		);
-		console.log(this._scores)
 
 		return Array.from(grouped).map((a) => ({ name: a[0], score: a[1].reduce((a, b) => a + b.score, 0)}));
 	}
