@@ -6,5 +6,8 @@ export class Level {
 	levelNumber: number;
 	gameBoards: GameBoard[] = [];
 	selectedFields: SelectedField[];
-	previousRoundScore: ScoreEntry[];
+	isReadOnly = false;
+	showConsequenceMaps = false;
+	scores: ScoreEntry[];
+	scoreImage: string;
 }

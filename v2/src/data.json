@@ -1,24 +1,364 @@
 {
+	"title": {
+		"de": "Kompromiss: Landwirtschaftsedition!",
+		"en": "Tradeoff: Agriculture Edition!",
+		"nl": null,
+		"pt": null
+	},
+	"mapMode": "svg",
 	"imageMode": false,
-	"elementSize": 2,
+	"elementSize": 1,
+	"highlightColor": "#f0ff1b",
+	"infiniteLevels": true,
 	"gameBoardColumns": 28,
+	"minValue": 0,
+    "maxValue": 100,
+	"minSelected": 1,
+    "defaultProductionType": "60",
 	"gameBoardRows": 29,
+	"calcUrl": "https://esgame-calculation.azurewebsites.net/esgame",
 	"productionTypes": [
 		{
-			"name": "",
-			"fieldColor": "",
-			"suitabilityMap": "",
-			"consequenceMaps": [],
-			"image": null,
-			"maxElements": 0
+			"id": "10",
+			"name": {
+				"de": "Extensives Ackerland",
+				"en": "Extensive Arable Farm",
+				"nl": null,
+				"pt": null
+			},
+			"fieldColor": "#40916c",
+			"urlToIcon": "./assets/images/ext_arable.png",
+			"maxElements": 700
+		},
+		{
+			"id": "20",
+			"name": {
+				"de": "Intensives Ackerland",
+				"en": "Intensive Arable Farm",
+				"nl": null,
+				"pt": null
+			},
+			"fieldColor": "#2d6a4f",
+			"urlToIcon": "./assets/images/int_arable.png",
+			"maxElements": 700
+		},
+		{
+			"id": "30",
+			"name": {
+				"de": "Extensive Viehzucht",
+				"en": "Extensive Livestock Farm",
+				"nl": null,
+				"pt": null
+			},
+			"fieldColor": "#ff9900",
+			"urlToIcon": "./assets/images/ext_livestock.png",
+			"maxElements": 700
+		},
+		{
+			"id": "40",
+			"name": {
+				"de": "Intensive Viehzucht",
+				"en": "Intensive Livestock Farm",
+				"nl": null,
+				"pt": null
+			},
+			"fieldColor": "#ff8000",
+			"urlToIcon": "./assets/images/int_livestock.png",
+			"maxElements": 700
+		},
+		{
+			"id": "60",
+			"name": {
+				"de": "Zusätzliche Natur",
+				"en": "Extra Nature",
+				"nl": null,
+				"pt": null
+			},
+			"fieldColor": "#f72585",
+			"urlToIcon": "./assets/images/extra_nature.png",
+			"maxElements": 700
+		},
+		{
+			"id": "50",
+			"name": {
+				"de": "Agropark",
+				"en": "Agropark",
+				"nl": null,
+				"pt": null
+			},
+			"fieldColor": "#3a0ca3",
+			"urlToIcon": "./assets/images/agropark.png",
+			"maxElements": 700
 		}
 	],
 	"maps": [
 		{
-			"name": "",
-			"linkToData": "",
+			"id": "1",
+			"name": {
+				"de": "Zonen",
+				"en": "Zones",
+				"nl": null,
+				"pt": null
+			},
 			"gradient": "",
-			"gameBoardtype": ""
+			"productionTypes": [],
+			"gameBoardType": "Drawing",
+			"urlToData": "./assets/images/New_hexagons.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "2",
+			"name": {
+				"de": "Extensives Ackerland",
+				"en": "Extensive Arable Farm",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "yellow",
+			"productionTypes": [
+				"10"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "./assets/images/suit_arable_ext_NEWzone.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "3",
+			"name": {
+				"de": "Intensives  Ackerland",
+				"en": "Intensive Arable Farm",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "yellow",
+			"productionTypes": [
+				"20"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "./assets/images/suit_arable_int_NEWzone.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "4",
+			"name": {
+				"de": "Extensive Viehzucht",
+				"en": "Extensive Livestock Farm",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "yellow",
+			"productionTypes": [
+				"30"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "./assets/images/suit_livestock_ext_NEWzone.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "5",
+			"name": {
+				"de": "Intensive Viehzucht",
+				"en": "Intensive Livestock Farm",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "yellow",
+			"productionTypes": [
+				"40"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "./assets/images/suit_livestock_int_NEWzone.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "7",
+			"name": {
+				"de": "Agropark",
+				"en": "Agropark",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "yellow",
+			"productionTypes": [
+				"50"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "./assets/images/suit_agropark_NEWzone.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "8",
+			"name": {
+				"de": "Zusätzliche Natur",
+				"en": "Extra Nature",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "yellow",
+			"productionTypes": [
+				"60"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "./assets/images/suit_extra_nature_NEWzone.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "11",
+			"name": {
+				"de": "Menschliche Gesundheit",
+				"en": "Human health",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "red",
+			"productionTypes": [
+				"10",
+				"20",
+				"30",
+				"40"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/Consequence_1_Clip.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "22",
+			"name": {
+				"de": "Nährstoffbelastung",
+				"en": "Nutrient Pollution",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "red",
+			"productionTypes": [
+				"10",
+				"20",
+				"30",
+				"40"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/Consequence_2_Clip.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "33",
+			"name": {
+				"de": "Wasserverfügbarkeit",
+				"en": "Water availability",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "red",
+			"productionTypes": [
+				"10",
+				"20",
+				"30",
+				"40"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/Consequence_3_Clip.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "44",
+			"name": {
+				"de": "Lebensraumzusammenhalt",
+				"en": "Habitat cohesion",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "red",
+			"productionTypes": [
+				"10",
+				"20",
+				"30",
+				"40"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/Consequence_4_Clip.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "55",
+			"name": {
+				"de": "Erholungswert",
+				"en": "Recreational value",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "red",
+			"productionTypes": [
+				"10",
+				"20",
+				"30",
+				"40"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/Consequence_4_Clip.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "999",
+			"name": {
+				"de": "Background",
+				"en": "Background",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "custom",
+			"productionTypes": [],
+			"gameBoardType": "Background",
+			"urlToData": "./assets/images/New_Land_use_only.tif",
+			"customColorId": "8685a932-d972-438c-bf33-db4294266c7e"
 		}
-	]
+	],
+	"customColors": [
+		{
+			"id": "8685a932-d972-438c-bf33-db4294266c7e",
+			"colors": [
+				{
+					"number": 2,
+					"color": "#b2b2b2c0"
+				},
+				{
+					"number": 3,
+					"color": "#686868C0"
+				},
+				{
+					"number": 4,
+					"color": "#7ab6f5C0"
+				},
+				{
+					"number": 5,
+					"color": "#38a800C0"
+				},
+				{
+					"number": 6,
+					"color": "#267300C0"
+				},
+				{
+					"number": 7,
+					"color": "#98e600C0"
+				},
+				{
+					"number": 8,
+					"color": "#00a884C0"
+				}
+			]
+		}
+	],
+	"basicInstructions": {
+		"de": "Ziel des Spiels ist es, Betriebe unterschiedlicher Bewirtschaftungsintensität und Bewirtschaftungsart in einer Landschaft zu verteilen. In Runde 1 besteht das Ziel darin, die leeren Flächen in der Landschaft mit landwirtschaftlichen Betrieben auf der Grundlage von Karten zu füllen, die deren relative Produktivität zeigen. Dunklere Farben stehen für eine höhere Produktivität, aber beachten Sie, dass die Skalen für jeden Betriebstyp unterschiedlich sind. Ihr müsst nicht alle Lücken füllen, sondern nur so viel, wie ihr könnt und wollt. Klicken Sie mit der rechten Maustaste auf ein Element, um es zu entfernen. Wenn Sie mit Ihrem Produktionsergebnis zufrieden sind, klicken Sie auf die Schaltfläche Runde 2.\n\nSteuerelemente:\nLinksklick: Füllen Sie den Raum mit dem aktuell ausgewählten Bauernhof. Du kannst mit der linken Maustaste klicken und über die Karte ziehen, um mehrere Felder auf einmal zu füllen.\nRechtsklick: Entfernen Sie die Farm aus dem aktuellen Bereich. Sie können mit der rechten Maustaste klicken und über die Karte ziehen, um mehrere Farmen auf einmal zu entfernen.\nKlicken Sie auf einen Farmtyp: Ändern Sie den Farmtyp, den Sie platzieren möchten.\nKlicken Sie auf eine Seitenkarte: Zeigen Sie diese Karte in der Mitte an, um sie in einem größeren Format zu sehen.",
+		"en": "The game target is to allocate farms of different management intensities and farming types in a landscape. In Round 1, the objective is to fill the blank spaces in the landscape with farms based on maps that show their relative productivity. Darker colors reflect higher productivity, but note that scales differ for each farm type. You don't have to fill all spaces, just as much as you can and want. Right-click any element to make it disappear. When you are satisfied with your production score click on the Round 2 button.\n\nControls:\nLeft click: Fill the space with the currently selected farm. You can left-click and drag over the map to fill multiple spaces at once.\nRight click: Remove the farm from the current space. You can right-click and drag over the map to remove multiple farms at once.\nClick on a farm type: Change the farm type you want to place.\nClick on a side map: Display this map at the center to see it in a bigger size.",
+		"nl": null,
+		"pt": null
+	},
+	"advancedInstructions": {
+		"de": "Alle Betriebsformen haben zur Produktivität beigetragen, aber sie haben auch negative Auswirkungen auf die lokalen Ökosystemleistungen. Obwohl Ihnen diese Informationen in Runde 1 nicht zur Verfügung standen, waren die negativen Auswirkungen dennoch vorhanden. Sehen Sie sich die neuen Karten an, die die negativen Auswirkungen Ihrer Entscheidungen auf eine Reihe von Ökosystemleistungen veranschaulichen. Ihr Nettoergebnis der Runde 1 berücksichtigt diese externen Effekte. Traurig! \n\nIhr Ziel in Runde 2 wird es sein, die aufgetretenen Kompromisse zu minimieren. Dazu wechseln Sie die Betriebstypen aus (indem Sie sie anklicken) und überprüfen die räumliche Verteilung ihrer Auswirkungen auf die Ökosystemleistungen. Das Spiel ist beendet, wenn Sie mit Ihrer Nettopunktzahl zufrieden sind. Konnten Sie die externen Effekte im Vergleich zu Runde 1 reduzieren? Bedeutete das auch eine Verringerung der Produktivität? \n\nBotschaft zum Mitnehmen: Landwirtschaftliche Praktiken zielen darauf ab, die Produktivität auf den Parzellen zu steigern, aber sie können Veränderungen im Zustand und in der Funktionsweise des Ökosystems bewirken, die weit über das Betriebsgelände hinausgehen. Die Prozesse, die durch die landwirtschaftliche Bodennutzung ausgelöst werden, hängen nicht nur von der Anzahl der landwirtschaftlichen Betriebe mit unterschiedlicher Bewirtschaftungsintensität in einer Landschaft ab, sondern in hohem Maße auch von der Lage und der räumlichen Anordnung dieser Betriebe im Verhältnis zu benachbarten Landnutzungen.\n",
+		"en": "All farm types contributed to the productivity but they also have negative impacts on local ecosystems services. Although this information was not available to you during Round 1, the negative effects still took place. Look at the new maps that illustrate the negative impacts of your choices on a set of ecosystem services. Your Round 1 Net Score integrates these externalities. Sad! \n\nYour objective in Round 2 will be to minimize the encountered trade-offs. Do this by switching out farm types (by clicking on them) and checking the spatial distribution of their impacts on the ecosystem services. The game is finished when you are satisfied with your net score. Were you able to reduce the externalities relative to Round 1? Did that mean reducing productivity as well? \n\nTake home message: Agricultural practices aim to increase the productivity on the parcels, but they can induce changes in the ecosystem condition and functioning that stretch way beyond the farm grounds. The processes that are triggered by agricultural land use depend not only on the amount of farms with different management intensities in a landscape, but largely also on the location and spatial arrangement of these farms relative to neighboring land uses.\n",
+		"nl": null,
+		"pt": null
+	},
+	"basicInstructionsImageUrl": "",
+	"advanccedInstructionsImageUrl": ""
 }

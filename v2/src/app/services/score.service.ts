@@ -1,9 +1,10 @@
 import { Injectable } from "@angular/core";
 import { Level } from "../shared/models/level";
 import { SelectedField } from "../shared/models/field";
+import { GameBoardType } from "../shared/models/game-board-type";
 
 export class ScoreEntry {
-	name: string;
+	id: string;
 	score: number;
 }
 
@@ -12,13 +13,13 @@ export class ScoreEntry {
 })
 export class ScoreService {
 
-	createEmptyScoreEntry(level: Level | null) {
+	createEmptyScoreEntry(level: Level | null, shownBoards = [GameBoardType.ConsequenceMap, GameBoardType.SuitabilityMap]) {
 		if (level) {
 			let scores: ScoreEntry[] = [];
-			level?.gameBoards.forEach(gameBoard => {
-				if (scores.some(o => o.name == gameBoard.name) == false) {
+			level?.gameBoards.filter(o => shownBoards.some(p => p == o.gameBoardType)).forEach(gameBoard => {
+				if (scores.some(o => o.id == gameBoard.id) == false) {
 					scores.push(
-						{ name: gameBoard.name, score: 0 }
+						{ id: gameBoard.id, score: 0 }
 					);
 				}
 			});
@@ -29,7 +30,7 @@ export class ScoreService {
 
 	calculateScore(scores: ScoreEntry[], fields: SelectedField[]) {
 		scores.forEach(score => {
-			score.score = fields.reduce((a, b) => a + (b.scores.find(o => o.name == score.name)?.score ?? 0), 0)
+			score.score = fields.reduce((a, b) => a + (b.scores.find(o => o.id == score.id)?.score ?? 0), 0);
 		});
 	}
 }

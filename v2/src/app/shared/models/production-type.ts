@@ -4,14 +4,14 @@ export class ProductionType {
 	fieldColor: string;
 	suitabilityMap: GameBoard;
 	consequenceMaps: GameBoard[] = [];
-	name: string;
 	image: string;
 	maxElements: number;
+	id: string;
 
-	constructor(fieldColor: string, scoreMap: GameBoard, name: string, image = "", maxElements = 4) {
+	constructor(id: string, fieldColor: string, scoreMap: GameBoard, image : string, maxElements : number) {
+		this.id = id;
 		this.fieldColor = fieldColor;
 		this.suitabilityMap = scoreMap;
-		this.name = name;
 		this.image = image;
 		this.maxElements = maxElements;
 	}

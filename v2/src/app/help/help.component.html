@@ -1,11 +1,12 @@
 <div class="backdrop" [ngClass]="{'--open': isOpen}">
 	<div class="content">
 		<div class="header">
-			<h2 translate>Anleitung</h2>
+			<h2>{{ 'Instructions' | translate }}</h2>
 			<span class="icon-close" (click)="onClose()"></span>
 		</div>
-		<p translate>Anleitung-Text</p>
-		<h2 translate>Steuerung</h2>
-		<p translate>Steuerung-Text</p>
+		<p class="text" [innerHTML]="helpText | translate"></p>
+		<div class="image-wrapper">
+			<img *ngIf="imageUrl" class="image" [src]="imageUrl | async">
+		</div>
 	</div>
 </div>

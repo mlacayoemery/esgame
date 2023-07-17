@@ -1,7 +1,13 @@
 .button {
 	padding: 5px 20px;
-	background-color: #5BCF00;
+	background-color: $color-primary;
 	border: none;
-	border-radius: 10px;
+	color: white;
+	border-radius: $border-radius-default;
 	cursor: pointer;
+
+	&[disabled] {
+		color: lightgrey;
+		cursor: default;
+	}
 }
