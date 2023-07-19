@@ -138,7 +138,7 @@ export class TiffService {
 				if (value == noData) {
 					tmpArray.push(255, 255, 255, 0);
 				} else {
-					tmpArray.push(...gradient.calculateColorRGB(1 - 1 / (maxValue - minValue) * (value - minValue)));
+					tmpArray.push(...gradient.calculateColorRGB(1 - 1 / (maxValue - minValue) * (value - minValue)), 255);
 				}
 			});
 		} else if (colors) {
