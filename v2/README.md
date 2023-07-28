@@ -24,6 +24,17 @@ $ npm install
 
 Run `$ ng serve` for creating a development server. By default the app is reachable at `http://localhost:4200/`. The app will automatically reload if there are changes in the code.
 
+### Run with docker
+**Build**
+```
+$ docker build -t tradeoffv2 .
+```
+
+**Run**
+```
+$ docker run -p 81:80 tradeoffv2
+```
+
 ## Configuration
 
 The configuration is stored in the [data.json](src/data.json) file. You can generate a new configuration on the `/configuration` endpoint. Once you are done with the configuration a file will be downloaded. You can replace the data.json file with the newely downloaded file.
