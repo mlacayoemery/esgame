@@ -26,7 +26,9 @@ Run `$ ng serve` for creating a development server. By default the app is reacha
 
 ## Configuration
 
-The configuration is stored in the [data.json](src/data.json) file. It is important to configure the GDAL_NODATA in the tiff file. The GDAL_NODATA is used for the non-selectable areas.
+The configuration is stored in the [data.json](src/data.json) file. You can generate a new configuration on the /configuration endpoint
+
+It is important to configure the GDAL_NODATA in the tiff file. The GDAL_NODATA is used for the non-selectable areas.
 The maps have to be tiff files. It is important that every map has the same size, otherwise it's not possible to show the maps properly.
 
 ### Map type
