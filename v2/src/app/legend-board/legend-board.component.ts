@@ -8,7 +8,6 @@ import { LegendElement, Legend } from '../shared/models/legend';
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LegendBoardComponent {
-	private _legendData: Legend;
 	legendElements: LegendElement[];
 	isNegative = false;
 	gradient: string = ""
@@ -20,7 +19,6 @@ export class LegendBoardComponent {
 	@Input()
 	set legendData(data: Legend) {
 		if (data) {
-			this._legendData = data;
 			this.legendElements = data.elements.sort((a, b) => a.forValue - b.forValue);
 			this.isNegative = data.isNegative;
 			this.isGradient = data.isGradient;
