@@ -107,13 +107,11 @@ export class GameService {
 
 	goToNextLevel() {
 		var currentHighest = this.levels[this.levels.length - 1];
-		//TODO: send result if needed
 		if (currentHighest == this.currentLevel.value) {
 			if (this.settings.value.calcUrl) {
 				this.loading(true);
 				var inputData = {} as any;
 				const allFields = [...this.selectedFields.value, ...this.notSelectedFields.value];
-				//TODO: remove number parse int
 				inputData.allocation = allFields.map((o) => ({ id: o.fields[0].id, lulc: Number.parseInt(o.productionType?.id ?? this.settings.value.defaultProductionType) }));
 				inputData.round = this.currentLevel.value!.levelNumber;
 				const entries = this.scoreService.createEmptyScoreEntry(this.currentLevel.value, [GameBoardType.SuitabilityMap]);
