@@ -3,7 +3,7 @@ export function toIndex(x, y, width) {
 }
 export default function tiffToSvgPaths(data, options = {}) {
     const UNDEFINED_VALUE = 0;
-    var _a, _b, _c, _d, _e, _f;
+    let _a, _b, _c, _d, _e, _f;
     let bitmask, width, height, scale = 1, offsetX = 0, offsetY = 0;
     if (options.width) {
         bitmask = data;
@@ -45,12 +45,10 @@ export default function tiffToSvgPaths(data, options = {}) {
     }
     // Edges data structure has [x, y, nextEdge, group]
     const edgeXCount = width * (height + 1);
-    const edgeYCount = (width + 1) * height;
-    const edgeCount = edgeXCount + edgeYCount;
-    
+
     const uniqueValues = new Set(bitmask);
     const valueGroups = new Map();
-    
+
     for(let uniqueValue of uniqueValues) {
         // const a = new Array(edgeCount);
         // for (var i = 0; i < edgeCount; i++) {
@@ -196,7 +194,7 @@ export default function tiffToSvgPaths(data, options = {}) {
         let path = '';
         for (const edge of groups) {
             path += `M${edge.x * scale},${edge.y * scale}`;
-            for (var itr = edge.next; itr != edge; itr = itr === null || itr === void 0 ? void 0 : itr.next) {
+            for (let itr = edge.next; itr != edge; itr = itr === null || itr === void 0 ? void 0 : itr.next) {
                 if ((itr === null || itr === void 0 ? void 0 : itr.type) == 'H') {
                     path += `H${((itr === null || itr === void 0 ? void 0 : itr.x) * scale) + offsetX}`;
                 }

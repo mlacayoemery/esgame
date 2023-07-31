@@ -152,23 +152,23 @@ export class ConfiguratorComponent {
 
 	exportData() {
 		const data = JSON.stringify(this.formGroup.getRawValue());
-		var a = document.createElement('a');
+		let a = document.createElement('a');
 		a.href = `data:text/json;charset=utf-8,${encodeURIComponent(data)}`;
 		a.download = 'configuration.json';
 		a.click();
 	}
 
-	onFileSelected(event: any) {
-		const file: File = event.target.files[0];
+	onFileSelected(event: Event) {
+		const file: File = (event.target as HTMLInputElement).files![0];
 		if (file) {
 			const reader = new FileReader();
 			reader.onload = (e: any) => {
 				const contents = e.target.result;
 				let value = JSON.parse(contents);
-				value.maps?.forEach((map: any) => {
+				value.maps?.forEach((_: any) => {
 					this.addMap();
 				});
-				value.productionTypes?.forEach((productionType: any) => {
+				value.productionTypes?.forEach((_: any) => {
 					this.addProductionType();
 				});
 				value.customColors?.forEach((customColor: any) => {
@@ -197,7 +197,7 @@ export class ConfiguratorComponent {
 			this.formGroup.get('infiniteLevels')!.setValue(true);
 			this.formGroup.get('minSelected')!.enable();
 			this.formGroup.get('minValue')!.enable();
-			this.formGroup.get('maxValue')!.enable();		
+			this.formGroup.get('maxValue')!.enable();
 		} else {
 			this.formGroup.get('elementSize')!.enable();
 			this.formGroup.get('imageMode')!.enable();
@@ -209,7 +209,7 @@ export class ConfiguratorComponent {
 			this.formGroup.get('minValue')!.disable();
 			this.formGroup.get('minValue')!.setValue(0);
 			this.formGroup.get('maxValue')!.disable();
-			this.formGroup.get('maxValue')!.setValue(100);	
+			this.formGroup.get('maxValue')!.setValue(100);
 			this.formGroup.get('infiniteLevels')!.disable();
 			this.formGroup.get('infiniteLevels')!.setValue(false);
 		}

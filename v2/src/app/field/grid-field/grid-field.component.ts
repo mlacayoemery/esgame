@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, Renderer2 } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, Input, Renderer2 } from '@angular/core';
 import { SubSink } from 'subsink';
 import { FieldBaseComponent } from '../field-base.component';
 import { HighlightSide } from 'src/app/shared/models/field';
@@ -22,8 +22,7 @@ export class GridFieldComponent extends FieldBaseComponent {
 	private _sink = new SubSink();
 
 	@Input() set imageMode(mode: any) {
-		if (mode === false) this._imageMode = false;
-		else this._imageMode = true;
+		this._imageMode = mode !== false;
 	}
 
 	get imageMode() { return this._imageMode; }
@@ -38,7 +37,7 @@ export class GridFieldComponent extends FieldBaseComponent {
 
 	imageSize = 0;
 	elementSize: number;
-	
+
 	@HostBinding('style.--highlight-color')
 	highlightColor = '';
 
@@ -84,7 +83,7 @@ export class GridFieldComponent extends FieldBaseComponent {
 		this.field.assigned = this.isAssigned = true;
 		this.field.productionType = productionType;
 		this.highlightSide = side;
-		if (this.imageMode == false) {
+		if (!this.imageMode) {
 			this.setColor();
 		}
 		this.gameService.removeHighlight();
@@ -96,7 +95,7 @@ export class GridFieldComponent extends FieldBaseComponent {
 		this._field.productionType = null;
 		this.showProductionImage = false;
 		this.highlightSide = HighlightSide.NONE;
-		if (this.imageMode == false) {
+		if (!this.imageMode) {
 			this.setColor();
 		}
 		this.cdRef.markForCheck();

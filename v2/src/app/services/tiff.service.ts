@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { fromBlob, fromUrl, writeArrayBuffer } from 'geotiff';
+import { fromBlob, fromUrl } from 'geotiff';
 import { Observable, from, mergeMap, of } from 'rxjs';
 import gradients, { CustomColors, DefaultGradients, Gradient } from '../shared/helpers/gradients';
 import { GameBoard } from '../shared/models/game-board';
@@ -36,10 +36,8 @@ export class TiffService {
 	getSvgGameBoard(id: string, url: string, gameBoardType: GameBoardType, defaultGradient: DefaultGradients, overlay: GameBoard, minValue: number, maxValue: number) {
 		return this.getTiffSvgDataUrl(url, minValue, maxValue, gradients.get(defaultGradient)!).pipe(
 			mergeMap(data => {
-				let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
-
-				uniqueValues = Array.from(new Set(data.numRaster)).filter(c => c != data.nodata).sort((a, b) => a - b);
-				gradient = gradients.get(defaultGradient!);
+				let gradient: Gradient | undefined, legend: Legend, fields: Field[];
+        gradient = gradients.get(defaultGradient!);
 				legend = { elements: [{ forValue: minValue, color: gradient!.calculateColor(1) }, { forValue: maxValue, color: gradient!.calculateColor(0) }], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true };
 				fields = overlay.fields.map((field) => {
 					return {
@@ -125,9 +123,7 @@ export class TiffService {
 		const tiff = await fromUrl(url);
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
-		const result = Array.from(raster.map(c => Number.parseFloat(c.toString())));
-
-		return result;
+		return Array.from(raster.map(c => Number.parseFloat(c.toString())));
 	}
 
 	private async arrayToImage(data: number[], columns: number, noData: number, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors): Promise<string> {
@@ -151,13 +147,13 @@ export class TiffService {
 
 	// Source: https://stackoverflow.com/questions/22823752/creating-image-from-array-in-javascript-and-html5
 	private arrayToDataUrl(data: number[], width: number, height: number) {
-		var canvas = document.createElement('canvas'),
+		let canvas = document.createElement('canvas'),
 			ctx = canvas.getContext('2d')!;
 		canvas.width = width;
 		canvas.height = height;
-		var idata = ctx.createImageData(width, height);
-		idata.data.set(data);
-		ctx.putImageData(idata, 0, 0);
+		let image_data = ctx.createImageData(width, height);
+		image_data.data.set(data);
+		ctx.putImageData(image_data, 0, 0);
 		return canvas.toDataURL();
 	}
 }

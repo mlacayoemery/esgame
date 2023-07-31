@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { LevelBaseComponent } from '../level-base.component';
 import { GameService } from 'src/app/services/game.service';
-import { map, tap, timeout } from 'rxjs';
+import { map, tap } from 'rxjs';
 import { GameBoardType } from 'src/app/shared/models/game-board-type';
 import { GameBoardClickMode } from 'src/app/shared/models/game-board';
 import dynamicData from '../../../data.json';
@@ -21,10 +21,10 @@ export class SvgLevelComponent extends LevelBaseComponent {
 	gameBoardClickMode = GameBoardClickMode;
 	override level = this.gameService.currentLevelObs.pipe(tap(o => {
 		this.readOnly = o?.isReadOnly ?? false;
-		if ((!o || o.levelNumber <= 2) && this.readOnly == false) this.openHelp();
+		if ((!o || o.levelNumber <= 2) && !this.readOnly) this.openHelp();
 	}));
-	
-	constructor(gameService: GameService) {	
+
+	constructor(gameService: GameService) {
 		super(gameService);
 		this.gameService.loadSettings(dynamicData);
 		gameService.initialiseSVGMode();

@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, Input, QueryList, Renderer2, ViewChildren } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, QueryList, Renderer2, ViewChildren } from '@angular/core';
 import { GameBoardBaseComponent } from '../game-board-base.component';
 import { SvgFieldComponent } from 'src/app/field/svg-field/svg-field.component';
 import { GameService } from 'src/app/services/game.service';
@@ -32,9 +32,9 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 			this.cdRef.markForCheck();
 		});
 
-		gameService.notSelectedFieldsObs.subscribe(fields => {
+		gameService.notSelectedFieldsObs.subscribe(_ => {
 			if (this.svgFieldComponents) {
-				// TODO: Evtl. wieder einfügen
+				// TODO: eventually add again
 				// fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.fields[0].id)?.addMissingHighlight());
 				// setTimeout(() => fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.fields[0].id)?.removeMissingHighlight()), 3000);
 			}
@@ -64,7 +64,7 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 			setTimeout(() => this.drawSelectedFields());
 		});
 
-		this._sink.sink = this.svgFieldComponents.changes.subscribe(r => {
+		this._sink.sink = this.svgFieldComponents.changes.subscribe(_ => {
 			setTimeout(() => this.drawSelectedFields());
 		});
 	}
@@ -88,8 +88,7 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	}
 
 	@Input() override set readOnly(value: boolean) {
-		if (value === false) this._readOnly = false;
-		else this._readOnly = true;
+		this._readOnly = value !== false;
 		this.addShowHideListeners();
 	}
 
