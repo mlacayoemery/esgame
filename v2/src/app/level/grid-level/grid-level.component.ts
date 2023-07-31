@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { LevelBaseComponent } from '../level-base.component';
 import { GameService } from 'src/app/services/game.service';
-import staticData from '../../../data2.json';
+import staticData from '../../../dataGridExample.json';
 
 @Component({
 	selector: 'tro-grid-level',
