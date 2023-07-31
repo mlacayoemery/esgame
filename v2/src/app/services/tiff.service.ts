@@ -14,7 +14,7 @@ import tiffToSvgPaths from '../shared/helpers/svg/tiffToSvgPaths';
 })
 export class TiffService {
 
-	getGridGameBoard(id : string, url: string, defaultGradient: DefaultGradients, gameBoardType: GameBoardType) {
+	getGridGameBoard(id: string, url: string, defaultGradient: DefaultGradients, gameBoardType: GameBoardType) {
 		return this.getTiffData(url).pipe(
 			mergeMap(data => {
 				let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
@@ -37,10 +37,10 @@ export class TiffService {
 		return this.getTiffSvgDataUrl(url, minValue, maxValue, gradients.get(defaultGradient)!).pipe(
 			mergeMap(data => {
 				let uniqueValues: number[], gradient: Gradient | undefined, legend: Legend, fields: Field[];
-				
+
 				uniqueValues = Array.from(new Set(data.numRaster)).filter(c => c != data.nodata).sort((a, b) => a - b);
 				gradient = gradients.get(defaultGradient!);
-				legend = { elements: [{forValue: minValue, color: gradient!.calculateColor(1)}, {forValue: maxValue, color: gradient!.calculateColor(0)}], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true };
+				legend = { elements: [{ forValue: minValue, color: gradient!.calculateColor(1) }, { forValue: maxValue, color: gradient!.calculateColor(0) }], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true };
 				fields = overlay.fields.map((field) => {
 					return {
 						...field,
@@ -132,16 +132,15 @@ export class TiffService {
 
 	private async arrayToImage(data: number[], columns: number, noData: number, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors): Promise<string> {
 		const height = data.length / columns;
-		const tmpArray = [];
+		const tmpArray: number[] = [];
 		if (gradient) {
-			for (var i = 0; i < data.length; i++) {
-				if (data[i] == noData) {
+			data.forEach(value => {
+				if (value == noData) {
 					tmpArray.push(255, 255, 255, 0);
 				} else {
-					var toAdd = gradient.calculateColorRGB(1 - 1 / (maxValue - minValue) * (data[i] - minValue))
-					tmpArray.push(...toAdd, 255);
+					tmpArray.push(...gradient.calculateColorRGB(1 - 1 / (maxValue - minValue) * (value - minValue)), 255);
 				}
-			}
+			});
 		} else if (colors) {
 			data.forEach(value => {
 				tmpArray.push(...colors!.getRgb(value)!);
@@ -153,17 +152,12 @@ export class TiffService {
 	// Source: https://stackoverflow.com/questions/22823752/creating-image-from-array-in-javascript-and-html5
 	private arrayToDataUrl(data: number[], width: number, height: number) {
 		var canvas = document.createElement('canvas'),
-    	ctx = canvas.getContext('2d')!;
-
+			ctx = canvas.getContext('2d')!;
 		canvas.width = width;
 		canvas.height = height;
-
 		var idata = ctx.createImageData(width, height);
-
 		idata.data.set(data);
-
 		ctx.putImageData(idata, 0, 0);
-
 		return canvas.toDataURL();
 	}
 }
