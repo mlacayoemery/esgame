@@ -22,7 +22,7 @@ $ npm install
 ```
 ### Run it locally
 
-Run `$ ng serve` for creating a development server. By default the app is reachable at `http://localhost:4200/`. The app will automatically reload if there are changes in the code.
+Run `$ ng serve` for creating a development server. By default, the app is reachable at `http://localhost:4200/`. The app will automatically reload if there are changes in the code.
 
 ### Run with docker
 **Build**
@@ -39,7 +39,7 @@ $ docker run -p 81:80 tradeoffv2
 
 ## Configuration
 
-The configuration is stored in the [data.json](src/data.json) file. You can generate a new configuration on the `/configuration` endpoint. Once you are done with the configuration a file will be downloaded. You can replace the data.json file with the newely downloaded file.
+The configuration is stored in the [data.json](src/data.json) file. You can generate a new configuration on the `/configuration` endpoint. Once you are done with the configuration a file will be downloaded. You can replace the data.json file with the newly downloaded file.
 
 It is important to configure the GDAL_NODATA in the tiff file. The GDAL_NODATA is used for the non-selectable areas.
 The maps have to be tiff files. It is important that every map has the same size, otherwise it's not possible to show the maps properly.
@@ -54,37 +54,37 @@ On level change, this is the url were the result of the level gets posted. Pleas
 
 #### Object that is sent to the calculation url
 
-| Name of field			| Type	            | Usage											|
-| --------------------- | ----------------- | --------------------------------------------- |
-| round					| number 			| Shows the current round number of the game 	|
-| score 				| number 			| The total score of the round 					|
-| game_id 				| string 			| the uuid of the game 							|
-| allocation 			| Array[Field] 		| An array of field objects 					|
+| Name of field			 | Type	           | Usage											                             |
+|------------------|-----------------|----------------------------------------------|
+| round					       | number 			      | Shows the current round number of the game 	 |
+| score 				       | number 			      | The total score of the round 					           |
+| game_id 				     | string 			      | the uuid of the game 							                 |
+| allocation 			   | Array[Field] 		 | An array of field objects 					              |
 
 #### Field object
 
-| Name of field			| Type	            | Usage											|
-| --------------------- | ----------------- | --------------------------------------------- |
-| id					| number 			| The id of the field						 	|
-| lulc 				| number 			| The id of the production type that is set in this field |
+| Name of field			 | Type	      | Usage											                                        |
+|------------------|------------|---------------------------------------------------------|
+| id					          | number 			 | The id of the field						 	                             |
+| lulc 				        | number 			 | The id of the production type that is set in this field |
 
 
 
 #### Expected response from calculation url
 
-| Name of field			| Type	            | Usage											|
-| --------------------- | ----------------- | --------------------------------------------- |
-| results				| Array[result]		| An array of result objects				 	|
+| Name of field			 | Type	           | Usage											                 |
+|------------------|-----------------|----------------------------------|
+| results				      | Array[result]		 | An array of result objects				 	 |
 
 
 
 #### Result object
 
-| Name of field			| Type	            | Usage											|
-| --------------------- | ----------------- | --------------------------------------------- |
-| name					| string 			| A random string; unused					 	|
-| id 					| number 			| The id of the consequence map					|
-| score 				| number 			| The score of this consequence		 			|
-| url 					| string	 		| The url to the tiff file of the consequence map |
+| Name of field			 | Type	      | Usage											                                |
+|------------------|------------|-------------------------------------------------|
+| name					        | string 			 | A random string; unused					 	                  |
+| id 					         | number 			 | The id of the consequence map					              |
+| score 				       | number 			 | The score of this consequence		 			             |
+| url 					        | string	 		 | The url to the tiff file of the consequence map |
 
 The id that is given in this object must match the id that is configured to the fitting consequence map in the configuration.
