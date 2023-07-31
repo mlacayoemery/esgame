@@ -33,8 +33,7 @@ export class ScoreBoardComponent implements OnInit {
 	}
 
 	@Input() set isStatic(value: any) {
-		if (value === false) this._isStatic = false;
-		else this._isStatic = true;
+		this._isStatic = value !== false;
 	}
 
 	constructor(
@@ -45,12 +44,12 @@ export class ScoreBoardComponent implements OnInit {
 	) {}
 
 	ngOnInit() {
-		if (this._isStatic == false) {
+		if (!this._isStatic) {
 			this.gameService.currentLevelObs.subscribe(level => {
 				this._scores = this.scoreService.createEmptyScoreEntry(level);
 				this.cdRef.markForCheck();
 			});
-	
+
 			this.gameService.selectedFieldsObs.subscribe(fields => {
 				this.scoreService.calculateScore(this._scores, fields);
 				this.calculateTotalScore();

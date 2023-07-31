@@ -1,5 +1,5 @@
 import { GameBoardType } from "./game-board-type";
-import { CustomColors, DefaultGradients } from "../helpers/gradients";
+import { DefaultGradients } from "../helpers/gradients";
 import { TranslateService } from "@ngx-translate/core";
 
 type LanguageString = Record<string, string>;
@@ -24,12 +24,12 @@ export class Settings {
 	customColors: { id: string, colors: { number: number, color: string }[] }[];
 	basicInstructionsImageUrl: string;
 	advancedInstructionsImageUrl: string;
-	
+
 	constructor(
 		private translate: TranslateService,
 		data: any
 	) {
-		this.mapData(data);	
+		this.mapData(data);
 	}
 
 	mapData(data: any) {
@@ -56,16 +56,16 @@ export class Settings {
 
 		this.translate.getLangs().forEach((lang) => {
 			this.maps.forEach(o => {
-				var translation = {} as any;
+				let translation = {} as any;
 				translation["map_name_" + o.id] = o.name[lang];
 				this.translate.setTranslation(lang, translation, true);
 			});
 			this.productionTypes.forEach(o => {
-				var translation = {} as any;
+				let translation = {} as any;
 				translation["production_type_" + o.id] = o.name[lang];
 				this.translate.setTranslation(lang, translation, true);
 			});
-			var translation = {} as any;
+			let translation = {} as any;
 			translation["basic_instructions"] = this.basicInstructions[lang];
 			translation["advanced_instructions"] = this.advancedInstructions[lang];
 			translation["title"] = data.title[lang];
@@ -76,7 +76,7 @@ export class Settings {
 
 const convertGameBoardType = (type: string) => {
 	switch (type) {
-		case "Suitablity": return GameBoardType.SuitabilityMap;
+		case "Suitability": return GameBoardType.SuitabilityMap;
 		case "Consequence": return GameBoardType.ConsequenceMap;
 		case "Drawing": return GameBoardType.DrawingMap;
 		case "Background": return GameBoardType.BackgroundMap;
