@@ -69,7 +69,7 @@ export default function tiffToSvgPaths(data, options = {}) {
         valueGroups.get(value).set.add(edge);
     }
     function UnionGroup(edge, value) {
-        for (let itr = edge.next; itr !== undefined && itr !== edge; itr = itr.next) {
+        for (var itr = edge.next; itr !== undefined && itr !== edge; itr = itr.next) {
             valueGroups.get(value).set.delete(itr);
         }
         if (itr !== undefined) {
