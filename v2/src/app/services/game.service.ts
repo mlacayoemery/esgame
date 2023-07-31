@@ -102,11 +102,11 @@ export class GameService {
 	}
 
 	goToNextLevel() {
-		var currentHighest = this.levels[this.levels.length - 1];
+		let currentHighest = this.levels[this.levels.length - 1];
 		if (currentHighest == this.currentLevel.value) {
 			if (this.settings.value.calcUrl) {
 				this.loading(true);
-				var inputData = {} as { allocation: { id: number, lulc: number }[], round: number, score: number, game_id: string};
+				let inputData = {} as { allocation: { id: number, lulc: number }[], round: number, score: number, game_id: string};
 				const allFields = [...this.selectedFields.value, ...this.notSelectedFields.value];
 				inputData.allocation = allFields.map((o) => ({ id: o.fields[0].id, lulc: o.productionType?.id ?? this.settings.value.defaultProductionType }));
 				inputData.round = this.currentLevel.value!.levelNumber;
@@ -133,7 +133,7 @@ export class GameService {
 			}
 
 		} else {
-			var lvl = this.levels.find(o => o.levelNumber == (this.currentLevel.value!.levelNumber + 1))!;
+			let lvl = this.levels.find(o => o.levelNumber == (this.currentLevel.value!.levelNumber + 1))!;
 			const currentPt = this.productionTypes.value;
 
 			currentPt.forEach(pt => { pt.consequenceMaps = []; });
@@ -153,10 +153,10 @@ export class GameService {
 
 	goToPreviousLevel() {
 		this.loading();
-		var currentLowest = this.levels[0];
+		let currentLowest = this.levels[0];
 
 		if (currentLowest != this.currentLevel.value) {
-			var lvl = this.levels.find(o => o.levelNumber == this.currentLevel.value!.levelNumber - 1)!;
+			let lvl = this.levels.find(o => o.levelNumber == this.currentLevel.value!.levelNumber - 1)!;
 			const currentPt = this.productionTypes.value;
 
 			currentPt.forEach(pt => { pt.consequenceMaps = []; });
@@ -217,11 +217,11 @@ export class GameService {
 			const overlay = this.currentLevel.value!.gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
 			const backgroundMap = settings.maps.find(o => o.gameBoardType == GameBoardType.BackgroundMap)!;
 
-			const consequnces = settings.maps.filter(
+			const consequences = settings.maps.filter(
 				m => m.gameBoardType == GameBoardType.ConsequenceMap);
 
 			if (calculationResult) {
-				consequnces.forEach(m => m.urlToData = calculationResult.results.find(c => c.id == m.id)?.url!);
+				consequences.forEach(m => m.urlToData = calculationResult.results.find(c => c.id == m.id)?.url!);
 				calculationResult.results.forEach(c => c.score = isNaN(c.score) ? 0 : c.score);
 				level.scores = [{ id: "all", score: previousScore!} , ...calculationResult.results.filter(c => c.id != "-1").map(c => ({ score: -((c.score ?? 0)*100), id: c.id } as ScoreEntry))];
 			}
@@ -238,14 +238,14 @@ export class GameService {
 
 			combineLatest([
 				this.tiffService.getSvgBackground(backgroundMap.urlToData, settings.minValue, settings.maxValue, customColors),
-				...consequnces.map(m => { return this.getSvg(m, overlay, settings) })]).subscribe(([background, ...gameBoards]) => {
+				...consequences.map(m => { return this.getSvg(m, overlay, settings) })]).subscribe(([background, ...gameBoards]) => {
 					gameBoards.forEach(o => {
 						o.background2 = background;
 					});
 
 					level.gameBoards.push(...gameBoards);
 					level.showConsequenceMaps = true;
-					this.productionTypes.value.forEach(c => 
+					this.productionTypes.value.forEach(c =>
 						c.consequenceMaps = [...gameBoards.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap)]);
 
 					this.selectedFields.value.forEach(o => o.updateScore());
@@ -260,13 +260,13 @@ export class GameService {
 	getSvg = (m: any, overlay: GameBoard, settings: Settings) => this.tiffService.getSvgGameBoard(m.id, m.urlToData, m.gameBoardType, m.gradient, overlay, settings.minValue, settings.maxValue);
 
 	initialiseSVGMode() {
-		var level = new Level();
+		let level = new Level();
 		const settings = this.settings.value;
 		this.levels.push(level);
 		this.loading();
 
 		settings.customColors.forEach((c) => {
-			var customColor = new CustomColors(c.id);
+			let customColor = new CustomColors(c.id);
 			c.colors.forEach((c) => {
 				customColor.set(c.number, c.color);
 			});
@@ -315,7 +315,7 @@ export class GameService {
 	getGridGameBoard = (m: any) => this.tiffService.getGridGameBoard(m.id, m.urlToData, m.gradient, m.gameBoardType);
 
 	initialiseGridMode() {
-		var level = new Level();
+		let level = new Level();
 		this.levels.push(level);
 		this.loading();
 
