@@ -158,8 +158,8 @@ export class ConfiguratorComponent {
 		a.click();
 	}
 
-	onFileSelected(event: any) {
-		const file: File = event.target.files[0];
+	onFileSelected(event: Event) {
+		const file: File = (event.target as HTMLInputElement).files![0];
 		if (file) {
 			const reader = new FileReader();
 			reader.onload = (e: any) => {

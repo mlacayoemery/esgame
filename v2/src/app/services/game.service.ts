@@ -106,7 +106,7 @@ export class GameService {
 		if (currentHighest == this.currentLevel.value) {
 			if (this.settings.value.calcUrl) {
 				this.loading(true);
-				var inputData = {} as any;
+				var inputData = {} as { allocation: { id: number, lulc: number }[], round: number, score: number, game_id: string};
 				const allFields = [...this.selectedFields.value, ...this.notSelectedFields.value];
 				inputData.allocation = allFields.map((o) => ({ id: o.fields[0].id, lulc: o.productionType?.id ?? this.settings.value.defaultProductionType }));
 				inputData.round = this.currentLevel.value!.levelNumber;
