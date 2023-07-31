@@ -1,6 +1,6 @@
 export class Gradient {
-	constructor(startinGolor: string, endingColor: string, colors: string[]) {
-		this.startingColor = startinGolor;
+	constructor(startingColor: string, endingColor: string, colors: string[]) {
+		this.startingColor = startingColor;
 		this.endingColor = endingColor;
 		this.colors = colors;
 	}
@@ -10,22 +10,22 @@ export class Gradient {
 	endingColor: string;
 
 	calculateColor(ratio: number) : string {
-		var hex = (x: number) => {
+		const hex = (x: number) => {
 			const strValue = x.toString(16);
 			return (strValue.length == 1) ? '0' + strValue : strValue;
 		};
 
-		var r = Math.ceil(parseInt(this.startingColor.substring(0, 2), 16) * ratio + parseInt(this.endingColor.substring(0, 2), 16) * (1 - ratio));
-		var g = Math.ceil(parseInt(this.startingColor.substring(2, 4), 16) * ratio + parseInt(this.endingColor.substring(2, 4), 16) * (1 - ratio));
-		var b = Math.ceil(parseInt(this.startingColor.substring(4, 6), 16) * ratio + parseInt(this.endingColor.substring(4, 6), 16) * (1 - ratio));
+		let r = Math.ceil(parseInt(this.startingColor.substring(0, 2), 16) * ratio + parseInt(this.endingColor.substring(0, 2), 16) * (1 - ratio));
+		let g = Math.ceil(parseInt(this.startingColor.substring(2, 4), 16) * ratio + parseInt(this.endingColor.substring(2, 4), 16) * (1 - ratio));
+		let b = Math.ceil(parseInt(this.startingColor.substring(4, 6), 16) * ratio + parseInt(this.endingColor.substring(4, 6), 16) * (1 - ratio));
 
 		return hex(r) + hex(g) + hex(b);
 	}
 
 	calculateColorRGB(ratio: number) : number[] {
-		var r = Math.ceil(parseInt(this.startingColor.substring(0, 2), 16) * ratio + parseInt(this.endingColor.substring(0, 2), 16) * (1 - ratio));
-		var g = Math.ceil(parseInt(this.startingColor.substring(2, 4), 16) * ratio + parseInt(this.endingColor.substring(2, 4), 16) * (1 - ratio));
-		var b = Math.ceil(parseInt(this.startingColor.substring(4, 6), 16) * ratio + parseInt(this.endingColor.substring(4, 6), 16) * (1 - ratio));
+		let r = Math.ceil(parseInt(this.startingColor.substring(0, 2), 16) * ratio + parseInt(this.endingColor.substring(0, 2), 16) * (1 - ratio));
+		let g = Math.ceil(parseInt(this.startingColor.substring(2, 4), 16) * ratio + parseInt(this.endingColor.substring(2, 4), 16) * (1 - ratio));
+		let b = Math.ceil(parseInt(this.startingColor.substring(4, 6), 16) * ratio + parseInt(this.endingColor.substring(4, 6), 16) * (1 - ratio));
 
 		return [r, g, b];
 	}
