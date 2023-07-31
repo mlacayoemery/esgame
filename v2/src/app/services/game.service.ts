@@ -7,7 +7,7 @@ import { Settings } from '../shared/models/settings';
 import { ProductionType } from '../shared/models/production-type';
 import { HighlightField, HighlightSide, SelectedField } from '../shared/models/field';
 import { TiffService } from './tiff.service';
-import { CustomColors, DefaultGradients } from '../shared/helpers/gradients';
+import { CustomColors } from '../shared/helpers/gradients';
 import { ScoreService, ScoreEntry } from './score.service';
 import { TranslateService } from '@ngx-translate/core';
 import { ApiService } from './api.service';
@@ -62,16 +62,12 @@ export class GameService {
 	highlightOnOtherFields(id: any) {
 		let ids = this.getAssociatedFields(id);
 		this.currentlySelectedField.next(new SelectedField(ids, this.selectedProductionType.value!));
-		if (!this.canFieldBePlaced(ids) || this.isIdSelected(id)) {
+		if (!this.canFieldBePlaced(ids)) {
 			this.removeHighlight();
 			return;
 		}
 
 		this.highlightFields.next(ids);
-	}
-
-	isIdSelected(id: number) {
-		return this.selectedFields.value.some(o => o.fields.some(p => p.id == id));
 	}
 
 	removeHighlight() {
@@ -112,7 +108,7 @@ export class GameService {
 				this.loading(true);
 				var inputData = {} as any;
 				const allFields = [...this.selectedFields.value, ...this.notSelectedFields.value];
-				inputData.allocation = allFields.map((o) => ({ id: o.fields[0].id, lulc: Number.parseInt(o.productionType?.id ?? this.settings.value.defaultProductionType) }));
+				inputData.allocation = allFields.map((o) => ({ id: o.fields[0].id, lulc: o.productionType?.id ?? this.settings.value.defaultProductionType }));
 				inputData.round = this.currentLevel.value!.levelNumber;
 				const entries = this.scoreService.createEmptyScoreEntry(this.currentLevel.value, [GameBoardType.SuitabilityMap]);
 				this.scoreService.calculateScore(entries, this.selectedFields.value);
@@ -129,6 +125,7 @@ export class GameService {
 					error: (err) => {
 						console.error(err);
 						alert("Something went wrong, please try again later")
+						this.loading(false);
 					}
 				});
 			} else {
@@ -220,7 +217,6 @@ export class GameService {
 			const overlay = this.currentLevel.value!.gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
 			const backgroundMap = settings.maps.find(o => o.gameBoardType == GameBoardType.BackgroundMap)!;
 
-
 			const consequnces = settings.maps.filter(
 				m => m.gameBoardType == GameBoardType.ConsequenceMap);
 
@@ -234,7 +230,6 @@ export class GameService {
 			if(image) {
 				level.scoreImage = image.url;
 			}
-
 
 			level.gameBoards.push(...previousLevel.gameBoards.filter(c => c.gameBoardType != GameBoardType.ConsequenceMap));
 
