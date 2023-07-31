@@ -6,7 +6,7 @@ A cross-platform game about Ecosystem Services and Tradeoffs built with Angular.
 
 ### Setting up
 
-Make sure you have Angular set up (https://angular.io/guide/setup-local). 
+Make sure you have Angular installed (https://angular.io/guide/setup-local). 
 
 **Clone the repository**
 
