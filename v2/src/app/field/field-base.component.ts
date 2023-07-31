@@ -1,7 +1,7 @@
 import { GameService } from "src/app/services/game.service";
 import { Field, HighlightSide } from "../shared/models/field";
 import { ProductionType } from "../shared/models/production-type";
-import { ChangeDetectorRef, Component, ElementRef, HostBinding, Input, OnDestroy, OnInit, Renderer2 } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostBinding, Input, OnDestroy, Renderer2 } from '@angular/core';
 
 @Component({
 	template: '',
@@ -33,7 +33,7 @@ export abstract class FieldBaseComponent implements OnDestroy {
 		} else {
 			this._clickable = true;
 			this.addListeners();
-		};
+		}
 	}
 
 	get clickable() { return this._clickable; }
@@ -56,7 +56,7 @@ export abstract class FieldBaseComponent implements OnDestroy {
 					this.gameService.selectField(this._field.id)
 				} else if(this.shouldDeselect(e))
 					this.gameService.deselectField(this._field.id);
-				else 
+				else
 					this.gameService.highlightOnOtherFields(this._field.id);
 			}));
 		//else

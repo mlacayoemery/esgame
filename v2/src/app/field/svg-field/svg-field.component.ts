@@ -1,5 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, HostBinding, Input, OnInit, Renderer2 } from '@angular/core';
-import { GameService } from '../../services/game.service';
+import { ChangeDetectionStrategy, Component, HostBinding, Input, OnInit } from '@angular/core';
 import { HighlightSide } from '../../shared/models/field';
 import { ProductionType } from '../../shared/models/production-type';
 import { FieldBaseComponent } from '../field-base.component';
@@ -53,7 +52,7 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 	}
 
 	assign(productionType: ProductionType, side: HighlightSide) {
-		if (this.field.editable == false) return;
+		if (!this.field.editable) return;
 		this._field.assigned = this.isAssigned = true;
 		this.setColor(productionType);
 		this.gameService.removeHighlight();

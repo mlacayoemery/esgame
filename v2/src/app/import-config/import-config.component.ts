@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { FormControl } from '@angular/forms';
 import { GameService } from '../services/game.service';
 import { Router } from '@angular/router';
 
@@ -14,14 +13,12 @@ export class ImportConfigComponent {
 
 	}
 
-	fileInput = new FormControl();
-
 	onImport(e: Event) {
 		let input = e.currentTarget as HTMLInputElement;
 		let files = input.files;
 		if (files && files.length) {
 			let fileReader = new FileReader();
-			fileReader.onload = (e) => {
+			fileReader.onload = _ => {
 				let result = fileReader.result;
 				if (result) {
 					this.gameService.loadSettings(JSON.parse(result.toString()));

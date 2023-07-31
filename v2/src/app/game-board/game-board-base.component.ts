@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, QueryList, Renderer2, ViewChildren } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, Renderer2 } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { Field, HighlightField, SelectedField } from '../shared/models/field';
 import { GameBoard, GameBoardClickMode } from '../shared/models/game-board';
@@ -52,20 +52,18 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 	get boardData() { return this._boardData; }
 
 	@Input() set hideLegend(value: any) {
-		if (value === false) this._hideLegend = false;
-		else this._hideLegend = true;
+		this._hideLegend = value !== false;
 	}
 
 	get hideLegend() { return this._hideLegend; }
 
 	@Input() set readOnly(value: any) {
-		if (value === false) this._readOnly = false;
-		else this._readOnly = true;
+		this._readOnly = value !== false;
 	}
 
 	get readOnly() { return this._readOnly; }
 
-	constructor(
+	protected constructor(
 		protected gameService: GameService,
 		protected renderer: Renderer2,
 		protected elementRef: ElementRef,
