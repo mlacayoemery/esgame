@@ -19,7 +19,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSliderModule } from '@angular/material/slider';
-import { FormsModule, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MissingTranslationHandler, MissingTranslationHandlerParams, TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -46,8 +46,7 @@ export function createTranslateLoader(http: HttpClient) {
 
 export class MyMissingTranslationHandler implements MissingTranslationHandler {
 	handle(params: MissingTranslationHandlerParams): any {
-	  const missingKey = params.key;
-	  return missingKey;
+	  return params.key;
 	}
   }
 
