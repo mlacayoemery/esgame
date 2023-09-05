@@ -16,7 +16,7 @@
 	"minSelected": 1,
     "defaultProductionType": "60",
 	"gameBoardRows": 29,
-	"calcUrl": "https://esgame-calculation.azurewebsites.net/esgame",
+	"calcUrl": "http://localhost:8000",
 	"productionTypes": [
 		{
 			"id": "10",

@@ -1,18 +1,18 @@
 library(jsonlite)
 #see https://cran.r-project.org/web/packages/jsonlite/vignettes/json-aaquickstart.html
 
-#* @get /hello
-hello <- function() {
-  print("Hello")
-}
-
-#* @post /hellothere
-hellothere <- function(req, text ="World!") {
-  print(paste("Hello ", text, sep = ""))
-}
+source("Tradeoff_Game.R")
 
 #* @post /hellojson
-hellojson <- function(req, jsontext ="[{\"who\" : \"World!\"},{\"who\" : \"me!\"}]") {
-  jsontext = fromJSON(jsontext, simplifyVector= TRUE)
-  print(paste("Hello ", jsontext$who, sep = ""))
+esgame <- function(req, json_in) {
+  #jsontext = fromJSON(jsontext, simplifyVector= TRUE)
+  
+  game_id <-
+  round_id <-
+  score <-
+  map_df <-
+  
+  json_out <- calculate(game_id, round_id, score, map_df)
+
+  print(json_out)
 }

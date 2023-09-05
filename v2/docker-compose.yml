@@ -1,17 +1,20 @@
 version: '3'
 name: esgame-container
 services:
-  esgame-angular:
-    image: esgame.azurecr.io/esgame:esgame-angular-local
+  esgame-core:
+    image: local/esgame-core
     ports:
       - "81:80"
-  esgame-calculation:
-    image: esgame.azurecr.io/esgame:esgame-calculation-local
+    #url: http://localhost:81/
+  esgame-calculator:
+    image: local/esgame-calculator
     ports:
       - "8000:8000"
+    #url: http://localhost:8000/openapi.json
   esgame-geoserver:
     image: docker.osgeo.org/geoserver:2.24.x
     environment:
       - CORS_ENABLED
     ports:
       - "8080:8080"
+    #url: http://localhost:8080/geoserver
