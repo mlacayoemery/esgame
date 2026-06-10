@@ -9,9 +9,12 @@ frontend/          thin overlay (FROM the esgame image): this example's SVG conf
                    from the static grid data) + a generated 28x29 zone map + background.
 calculator/        a tiny stateless FastAPI "simple calculator": per level submit returns a GeoServer
                    WCS URL per consequence map + a simple allocation-based score. It does NOT seed.
-geoserver/rasters/ the georeferenced consequence GeoTIFFs, mounted into GeoServer.
-geoserver/seed.sh  one-shot seeder (run as the geoserver-seed service): registers the rasters as
-                   external coverages once; GeoServer then reloads them from its data dir on boot.
+geoserver/rasters/    the georeferenced consequence GeoTIFFs, mounted into GeoServer.
+geoserver/palettes.json color palettes (copied from the frontend gradients) + which palette each
+                      coverage uses.
+geoserver/seed.py     one-shot seeder (the geoserver-seed service): registers the rasters as external
+                      coverages, builds an SLD raster style per palette, and sets it as each
+                      coverage's default style. GeoServer then reloads it all from its data dir on boot.
 docker-compose.yml frontend (:81) + calculator (:8000) + geoserver (:8080) + one-shot geoserver-seed.
 ```
 

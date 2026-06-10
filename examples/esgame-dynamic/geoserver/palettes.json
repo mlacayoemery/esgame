@@ -1,0 +1,16 @@
+{
+	"_comment": "Color palettes for the GeoServer raster styles, copied from the esgame frontend's gradients (v2/src/app/shared/helpers/gradients.ts). The seeder turns each into an SLD ColorMap and assigns it as the default style of the matching coverage. 'colors' is the discrete ramp (low -> high); start/end are the continuous gradient stops the SVG game uses.",
+	"valueRange": { "min": 0, "max": 125 },
+	"palettes": {
+		"blue":   { "start": "eff3ff", "end": "08519c", "colors": ["#d2b188", "#eff3ff", "#bdd7e7", "#6baed6", "#3182bd", "#08519c"] },
+		"green":  { "start": "edf8e9", "end": "006d2c", "colors": ["#d2b188", "#edf8e9", "#bae4b3", "#74c476", "#31a354", "#006d2c"] },
+		"orange": { "start": "feedde", "end": "a63603", "colors": ["#d2b188", "#feedde", "#fdbe85", "#fd8d3c", "#e6550d", "#a63603"] },
+		"purple": { "start": "f2f0f7", "end": "54278f", "colors": ["#d2b188", "#f2f0f7", "#cbc9e2", "#9e9ac8", "#756bb1", "#54278f"] },
+		"red":    { "start": "ffc0c0", "end": "c90000", "colors": ["#d2b188", "#fee5d9", "#fcae91", "#fb6a4a", "#de2d26", "#a50f15"] },
+		"yellow": { "start": "F8F27D", "end": "670B0D", "colors": ["#d2b188", "#F8F27D", "#F7D068", "#F6A825", "#AE5322", "#670B0D"] }
+	},
+	"coverageStyles": {
+		"ag_carbon": "yellow", "ag_habitat": "purple", "ag_water": "blue", "ag_hunt": "red",
+		"ranch_carbon": "yellow", "ranch_habitat": "purple", "ranch_water": "blue", "ranch_hunt": "red"
+	}
+}

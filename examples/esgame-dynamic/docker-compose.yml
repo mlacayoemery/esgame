@@ -54,5 +54,6 @@ services:
       GEOSERVER_URL: http://geoserver:8080/geoserver
     volumes:
       - ./geoserver/rasters:/rasters:ro
+      - ./geoserver/palettes.json:/palettes.json:ro
     depends_on: [geoserver]
     restart: "no"

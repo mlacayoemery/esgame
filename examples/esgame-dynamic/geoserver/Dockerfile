@@ -1,6 +1,4 @@
-# One-shot GeoServer seeder image (curl + the seed script).
-FROM alpine:3.20
-RUN apk add --no-cache curl
-COPY seed.sh /seed.sh
-RUN chmod +x /seed.sh
-ENTRYPOINT ["/seed.sh"]
+# One-shot GeoServer seeder image (Python stdlib only - registers coverages + palette styles).
+FROM python:3.12-slim
+COPY seed.py /seed.py
+ENTRYPOINT ["python3", "/seed.py"]
