@@ -60,20 +60,30 @@ GitHub Pages Action. Served at `https://<owner>.github.io/esgame/`. Requires rep
 `places` is currently a **vendored copy** of v2 (`docker_images/esgame/`) that has drifted by a few
 files. Target end-state: `places` carries **zero Angular source** and consumes the shared image.
 
-### 1. Customizations to upstream here (so places needs no source changes)
-All places drift is **visual theming** and should become config flags (defaults preserve current
-esgame look):
+### 1. Customizations upstreamed here (DONE — so places needs no source changes)
+All places drift is **visual theming**, now exposed as **config flags that default to esgame's
+current look** (implemented; esgame renders identically when they are absent/false):
 
-| places change | Files | Upstream as |
+| places change | Config field (in `data.json`) | Default |
 |---|---|---|
-| Opacity (`+7D` alpha) on consequence-map fields + a `.consequences` background overlay | `svg-field.component.ts`, `svg-game-board.component.{ts,html,scss}` | `visualOptions.consequenceFieldOpacity` (bool, default `false`) |
-| Red border on the focused board | `svg-level.component.{html,scss}` (`--is-center`) | `visualOptions.highlightFocusedBoard` (bool, default `false`) |
-| Neutral (black) score text instead of red/green | `svg-level.component.scss` | `visualOptions.neutralScoreColors` (bool, default `false`) |
-| `red` / `yellow` gradient start/end colors | `shared/helpers/gradients.ts` | `gradientOverrides: { <name>: { start, end } }`, applied in `loadSettings()` |
+| Opacity (`+7D` alpha) on consequence-map fields + a `.consequences` background overlay | `visualOptions.consequenceFieldOpacity` | `false` |
+| Outline the focused board | `visualOptions.highlightFocusedBoard` | `false` |
+| Neutral (black) map-title colors instead of green/red | `visualOptions.neutralScoreColors` | `false` |
+| `red` / `yellow` (or any) gradient start/end colors | `gradientOverrides: { "<name>": { "start", "end" } }` | built-in stops |
 
-Each flag is read from the loaded settings and threaded to the components; with defaults off,
-esgame renders exactly as today. `places` then sets the flags + gradient overrides in **its**
-`data.json` — no forked components.
+Example overlay a deployment (e.g. places) adds to its `data.json`:
+```jsonc
+{
+  "visualOptions": { "consequenceFieldOpacity": true, "highlightFocusedBoard": true, "neutralScoreColors": true },
+  "gradientOverrides": { "red": { "start": "F8F27D", "end": "A80000" }, "yellow": { "start": "FDF6EE", "end": "5D2124" } }
+}
+```
+Parsed in `Settings` (`shared/models/settings.ts` → `visualOptions`) and applied via
+`applyGradientOverrides()` (`shared/helpers/gradients.ts`, self-resetting between configs). Threaded
+to `svg-field`, `svg-game-board`, and `svg-level`. With defaults off, esgame is unchanged — verified
+(headless: default render shows no applied classes/overlay; enabling them activates the host
+`neutral-scores` class and the gated elements). `places` therefore needs **zero forked components** —
+only this config in its `data.json`.
 
 ### 2. places repo restructure
 1. Delete `docker_images/esgame/` (the vendored Angular copy + its Dockerfile).

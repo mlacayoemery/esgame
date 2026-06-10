@@ -81,6 +81,11 @@
 		color: $color-negative;
 	}
 
+	// Applied to a side board only when visualOptions.highlightFocusedBoard is enabled.
+	.--is-center {
+		border: 1px red solid;
+	}
+
 	dialog::backdrop {
 		background: hsl(201 50% 40% /.5);
 	}
@@ -97,5 +102,13 @@
 		background: white;
 		border: thin solid $color-primary;
 		margin: 5em auto;
+	}
+}
+
+// Neutral (black) map-title colors when visualOptions.neutralScoreColors is enabled.
+:host(.neutral-scores) {
+	.--is-positive,
+	.--is-negative {
+		color: black;
 	}
 }

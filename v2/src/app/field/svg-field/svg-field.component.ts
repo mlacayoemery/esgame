@@ -24,6 +24,9 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 
 	@Input() gameBoardId = '';
 
+	/** When true, placed fields are rendered semi-transparent (used for consequence maps). */
+	@Input() hasOpacity = false;
+
 	ngOnInit(): void {
 		this.gameService.settingsObs.subscribe(o => {
 			this.highlightColor = o.highlightColor;
@@ -33,7 +36,7 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 	setColor(productionType: ProductionType | null = null) {
 		if (!this._field) return;
 		if (productionType && this.clickable) {
-			this.fillColor = `${productionType.fieldColor}`;
+			this.fillColor = `${productionType.fieldColor}${this.hasOpacity ? '7D' : ''}`;
 		} else if(productionType) {
 			this.fillColor = `url(#pattern_${productionType.id}_${this.gameBoardId})`;
 		} else {

@@ -39,6 +39,32 @@ gradients.set('purple', new Gradient("f2f0f7", "54278f", ['#d2b188', '#f2f0f7', 
 gradients.set('red', new Gradient("ffc0c0", "c90000", ['#d2b188', '#fee5d9', '#fcae91', '#fb6a4a', '#de2d26', '#a50f15']));
 gradients.set('yellow', new Gradient("F8F27D", "670B0D", ['#d2b188', '#F8F27D', '#F7D068', '#F6A825', '#AE5322', '#670B0D']));
 
+// Snapshot the built-in start/end colors so per-deployment overrides can be reset between configs.
+const defaultGradientStops = new Map<string, { start: string, end: string }>();
+gradients.forEach((g, name) => defaultGradientStops.set(name, { start: g.startingColor, end: g.endingColor }));
+
+export interface GradientOverride { start?: string; end?: string; }
+
+/**
+ * Apply per-deployment gradient start/end overrides from config (e.g. data.json `gradientOverrides`).
+ * Always resets to the built-in defaults first, so loading a config without overrides restores them
+ * and one config's override never leaks into the next.
+ */
+export function applyGradientOverrides(overrides: { [name: string]: GradientOverride } = {}) {
+	defaultGradientStops.forEach((d, name) => {
+		const g = gradients.get(name);
+		if (g) { g.startingColor = d.start; g.endingColor = d.end; }
+	});
+	Object.keys(overrides).forEach(name => {
+		const g = gradients.get(name);
+		const o = overrides[name];
+		if (g && o) {
+			if (o.start) g.startingColor = o.start;
+			if (o.end) g.endingColor = o.end;
+		}
+	});
+}
+
 export default gradients;
 
 export enum DefaultGradients {

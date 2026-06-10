@@ -9,6 +9,7 @@
 		<path troSvgField [field]="field"
 			[clickable]="clickMode == GameBoardClickMode.Field && field.editable  && !readOnly"
 			[showStroke]="this._boardData.gameBoardType != consequenceType"
+			[hasOpacity]="consequenceFieldOpacity && this._boardData.gameBoardType == consequenceType"
 			[gameBoardId]="boardData!.id"
 			*ngFor="let field of fields" [attr.d]="field.path"></path>
 
@@ -16,3 +17,5 @@
 		<tro-legend-board *ngIf="legend != undefined" [legendData]="legend" [isSmall]="hideLegend"></tro-legend-board>
 	</foreignObject>
 </svg>
+<div class="consequences" *ngIf="consequenceFieldOpacity && mapType == consequenceType"
+	[ngStyle]="{'background-image': background }"></div>

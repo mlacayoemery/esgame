@@ -1,8 +1,24 @@
 import { GameBoardType } from "./game-board-type";
-import { DefaultGradients } from "../helpers/gradients";
+import { DefaultGradients, applyGradientOverrides } from "../helpers/gradients";
 import { TranslateService } from "@ngx-translate/core";
 
 type LanguageString = Record<string, string>;
+
+/** Optional, deployment-specific visual theming flags. All default to esgame's built-in look. */
+export interface VisualOptions {
+	/** Render consequence-map fields semi-transparent and overlay the consequence image. */
+	consequenceFieldOpacity: boolean;
+	/** Outline the currently focused board. */
+	highlightFocusedBoard: boolean;
+	/** Use neutral (black) map-title colors instead of positive/negative green/red. */
+	neutralScoreColors: boolean;
+}
+
+const DEFAULT_VISUAL_OPTIONS: VisualOptions = {
+	consequenceFieldOpacity: false,
+	highlightFocusedBoard: false,
+	neutralScoreColors: false
+};
 
 export class Settings {
 	highlightColor: string;
@@ -24,6 +40,7 @@ export class Settings {
 	customColors: { id: string, colors: { number: number, color: string }[] }[];
 	basicInstructionsImageUrl: string;
 	advancedInstructionsImageUrl: string;
+	visualOptions: VisualOptions = { ...DEFAULT_VISUAL_OPTIONS };
 
 	constructor(
 		private translate: TranslateService,
@@ -53,6 +70,8 @@ export class Settings {
 		this.minValue = data.minValue;
 		this.maxValue = data.maxValue;
 		this.minSelected = data.minSelected;
+		this.visualOptions = { ...DEFAULT_VISUAL_OPTIONS, ...(data.visualOptions ?? {}) };
+		applyGradientOverrides(data.gradientOverrides ?? {});
 
 		this.translate.getLangs().forEach((lang) => {
 			this.maps.forEach(o => {

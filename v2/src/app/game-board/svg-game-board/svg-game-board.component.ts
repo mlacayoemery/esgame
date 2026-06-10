@@ -16,10 +16,17 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	background: string = "";
 	background2: string = "";
 	consequenceType = GameBoardType.ConsequenceMap;
+	mapType: GameBoardType = GameBoardType.DrawingMap;
+	/** From settings.visualOptions; gates the consequence-map opacity + overlay. Default off. */
+	consequenceFieldOpacity = false;
 	private _showHideListeners: (() => void)[] = [];
 
 	constructor(gameService: GameService, renderer: Renderer2, elementRef: ElementRef, cdRef: ChangeDetectorRef) {
 		super(gameService, renderer, elementRef, cdRef);
+		this._sink.sink = this.gameService.settingsObs.subscribe(s => {
+			this.consequenceFieldOpacity = s?.visualOptions?.consequenceFieldOpacity ?? false;
+			this.cdRef.markForCheck();
+		});
 		this._sink.sink = this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
 			this._highlightedFields.forEach(o => this.svgFieldComponents?.find(s => s.field.id == o.id)?.removeHighlight());
 			this._highlightedFields = fieldNumbers;
@@ -82,6 +89,7 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	}
 
 	override afterBoardDataSet(): void {
+		this.mapType = this._boardData.gameBoardType;
 		this.background = `url("${this._boardData.background}")`;
 		this.background2 = `url("${this._boardData.background2}")`;
 		this.addShowHideListeners();

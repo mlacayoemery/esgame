@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostBinding } from '@angular/core';
 import { LevelBaseComponent } from '../level-base.component';
 import { GameService } from 'src/app/services/game.service';
 import { map, tap } from 'rxjs';
@@ -19,6 +19,9 @@ export class SvgLevelComponent extends LevelBaseComponent {
 	minSelected = 0;
 	currentlySelectedPercentage: string;
 	gameBoardClickMode = GameBoardClickMode;
+	/** From settings.visualOptions; default off so esgame's look is unchanged. */
+	highlightFocusedBoard = false;
+	@HostBinding('class.neutral-scores') neutralScoreColors = false;
 	override level = this.gameService.currentLevelObs.pipe(tap(o => {
 		this.readOnly = o?.isReadOnly ?? false;
 		if ((!o || o.levelNumber <= 2) && !this.readOnly) this.openHelp();
@@ -32,6 +35,8 @@ export class SvgLevelComponent extends LevelBaseComponent {
 		});
 		this.settings.subscribe(o => {
 			this.minSelected = o?.minSelected ?? 0;
+			this.highlightFocusedBoard = o?.visualOptions?.highlightFocusedBoard ?? false;
+			this.neutralScoreColors = o?.visualOptions?.neutralScoreColors ?? false;
 		});
 	}
 
