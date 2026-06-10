@@ -8,7 +8,7 @@
     }
 
     &.--is-highlighted.--is-editable {
-        stroke-width: 2px;
+        stroke-width: var(--highlight-stroke-width, 2px);
     }
 
     &.--missing-selection {

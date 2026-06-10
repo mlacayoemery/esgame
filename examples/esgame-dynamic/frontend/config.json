@@ -4,5 +4,6 @@
 	"calcUrl": "http://localhost:8000",
 	"defaultMode": "dynamic",
 	"gridLineColor": "#9e9e9e",
-	"gridLineWidth": "0.05px"
+	"gridLineWidth": "0.05px",
+	"highlightWidth": "1"
 }

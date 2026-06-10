@@ -22,6 +22,8 @@ export interface AppConfig {
 	gridLineColor?: string;
 	/** Optional SVG-mode cell border (grid line) width, e.g. "0.05px". */
 	gridLineWidth?: string;
+	/** Optional SVG-mode hover-highlight border width (board units), e.g. "1". */
+	highlightWidth?: string;
 }
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -61,6 +63,7 @@ export class ConfigService {
 				if (this.config.calcUrl !== undefined) out.calcUrl = this.config.calcUrl;
 				if (this.config.gridLineColor !== undefined) out.gridLineColor = this.config.gridLineColor;
 				if (this.config.gridLineWidth !== undefined) out.gridLineWidth = this.config.gridLineWidth;
+				if (this.config.highlightWidth !== undefined) out.highlightWidth = this.config.highlightWidth;
 				return out;
 			})
 		);

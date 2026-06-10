@@ -8,8 +8,9 @@ import { SubSink } from 'subsink';
 import { ProductionType } from '../shared/models/production-type';
 
 @Component({
-	template: '',
-	changeDetection: ChangeDetectionStrategy.OnPush
+    template: '',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export abstract class GameBoardBaseComponent implements OnDestroy {
 	protected _boardData: GameBoard;

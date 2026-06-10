@@ -7,11 +7,12 @@ import { ConfigService } from '../services/config.service';
  * configuration page stays at `/config`.
  */
 @Component({
-	selector: 'tro-home',
-	template: `
+    selector: 'tro-home',
+    template: `
 		<tro-svg-level *ngIf="dynamic"></tro-svg-level>
 		<tro-grid-level *ngIf="!dynamic"></tro-grid-level>
-	`
+	`,
+    standalone: false
 })
 export class HomeComponent {
 	dynamic: boolean;

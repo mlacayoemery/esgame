@@ -3,9 +3,10 @@ import { GameService } from '../services/game.service';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'tro-import-config',
-  templateUrl: './import-config.component.html',
-  styleUrls: ['./import-config.component.scss']
+    selector: 'tro-import-config',
+    templateUrl: './import-config.component.html',
+    styleUrls: ['./import-config.component.scss'],
+    standalone: false
 })
 export class ImportConfigComponent {
 

@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, HostBinding, Input } from '@angular
 import { LegendElement, Legend } from '../shared/models/legend';
 
 @Component({
-	selector: 'tro-legend-board',
-	templateUrl: './legend-board.component.html',
-	styleUrls: ['./legend-board.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tro-legend-board',
+    templateUrl: './legend-board.component.html',
+    styleUrls: ['./legend-board.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class LegendBoardComponent {
 	legendElements: LegendElement[];

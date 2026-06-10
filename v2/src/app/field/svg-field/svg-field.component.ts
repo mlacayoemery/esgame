@@ -4,10 +4,11 @@ import { ProductionType } from '../../shared/models/production-type';
 import { FieldBaseComponent } from '../field-base.component';
 
 @Component({
-	selector: '[troSvgField]',
-	template: '',
-	styleUrls: ['./svg-field.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+    selector: '[troSvgField]',
+    template: '',
+    styleUrls: ['./svg-field.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 	override shouldSelect(e: MouseEvent): boolean {
@@ -16,8 +17,8 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 	override shouldDeselect(e: MouseEvent): boolean {
 		return e.buttons == 2 || e.ctrlKey
 	}
-	@HostBinding('style.fill') private fillColor: string;
-	@HostBinding('style.stroke') private stroke: string;
+	@HostBinding('style.fill') fillColor: string;
+	@HostBinding('style.stroke') stroke: string;
 	highlightColor: string;
 
 	@HostBinding('class.show-stroke') @Input() showStroke: boolean = true;
@@ -33,6 +34,7 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 			// Optional per-deployment cell-border (grid line) styling; CSS falls back to the default.
 			if (o.gridLineColor) this.renderer.setStyle(this.elementRef.nativeElement, '--cell-stroke', o.gridLineColor, RendererStyleFlags2.DashCase);
 			if (o.gridLineWidth) this.renderer.setStyle(this.elementRef.nativeElement, '--cell-stroke-width', o.gridLineWidth, RendererStyleFlags2.DashCase);
+			if (o.highlightWidth) this.renderer.setStyle(this.elementRef.nativeElement, '--highlight-stroke-width', o.highlightWidth, RendererStyleFlags2.DashCase);
 		});
 	}
 

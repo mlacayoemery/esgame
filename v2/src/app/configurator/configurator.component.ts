@@ -5,9 +5,10 @@ import { DefaultGradients } from '../shared/helpers/gradients';
 import * as uuid from 'uuid';
 
 @Component({
-	selector: 'tro-configurator',
-	templateUrl: './configurator.component.html',
-	styleUrls: ['./configurator.component.scss']
+    selector: 'tro-configurator',
+    templateUrl: './configurator.component.html',
+    styleUrls: ['./configurator.component.scss'],
+    standalone: false
 })
 export class ConfiguratorComponent {
 	formGroup: FormGroup;
@@ -15,7 +16,7 @@ export class ConfiguratorComponent {
 	gradients = Object.values(DefaultGradients);
 
 	constructor(private translate: TranslateService) {
-		this.languages = translate.getLangs();
+		this.languages = [...translate.getLangs()];
 		this.initialiseForm();
 	}
 

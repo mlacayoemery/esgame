@@ -6,8 +6,9 @@ import { combineLatest, filter, map, tap } from 'rxjs';
 import { GameBoardType } from '../shared/models/game-board-type';
 
 @Component({
-  template: '',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+    template: '',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export abstract class LevelBaseComponent {
 	readOnly = false;

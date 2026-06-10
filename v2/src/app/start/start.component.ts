@@ -5,9 +5,10 @@ import { MatSelectChange } from '@angular/material/select';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'tro-start',
-  templateUrl: './start.component.html',
-  styleUrls: ['./start.component.scss']
+    selector: 'tro-start',
+    templateUrl: './start.component.html',
+    styleUrls: ['./start.component.scss'],
+    standalone: false
 })
 export class StartComponent {
 	languages: string[];
@@ -19,8 +20,8 @@ export class StartComponent {
 		private router: Router
 	) {
 		this.gameService.resetGame();
-		this.languages = translate.getLangs();
-		this.currentLanguage = translate.currentLang;
+		this.languages = [...translate.getLangs()];
+		this.currentLanguage = translate.currentLang() ?? 'en';
 	}
 
 	changeLanguage(event: MatSelectChange) {

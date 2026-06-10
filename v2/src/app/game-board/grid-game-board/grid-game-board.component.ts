@@ -5,9 +5,10 @@ import { GameBoard } from 'src/app/shared/models/game-board';
 import { GridFieldComponent } from 'src/app/field/grid-field/grid-field.component';
 
 @Component({
-  selector: 'tro-grid-game-board',
-  templateUrl: './grid-game-board.component.html',
-  styleUrls: ['./grid-game-board.component.scss']
+    selector: 'tro-grid-game-board',
+    templateUrl: './grid-game-board.component.html',
+    styleUrls: ['./grid-game-board.component.scss'],
+    standalone: false
 })
 export class GridGameBoardComponent extends GameBoardBaseComponent implements AfterViewInit {
 

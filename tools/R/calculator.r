@@ -42,7 +42,8 @@ esgame <- function(req, json_in='{}') {
 library(sf)
 library(sp)
 library(raster)
-library(rgdal)
+# rgdal was retired from CRAN (Oct 2023) and is not used directly here — modern
+# 'raster' delegates GeoTIFF I/O to 'terra'/GDAL, so no replacement import is needed.
 library(ggplot2)
 library(ggpubr)
 library(tidyverse)

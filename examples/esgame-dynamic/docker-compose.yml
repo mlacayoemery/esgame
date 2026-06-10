@@ -39,7 +39,7 @@ services:
       - "8000:8000"
 
   geoserver:
-    image: docker.osgeo.org/geoserver:2.24.x
+    image: docker.osgeo.org/geoserver:2.28.4
     container_name: esgame-dynamic-geoserver
     environment:
       CORS_ENABLED: "true"

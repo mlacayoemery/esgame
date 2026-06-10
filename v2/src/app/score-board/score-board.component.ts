@@ -4,10 +4,11 @@ import { ScoreEntry, ScoreService } from '../services/score.service';
 import { TranslateService } from '@ngx-translate/core';
 
 @Component({
-  selector: 'tro-score-board',
-  templateUrl: './score-board.component.html',
-  styleUrls: ['./score-board.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tro-score-board',
+    templateUrl: './score-board.component.html',
+    styleUrls: ['./score-board.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ScoreBoardComponent implements OnInit {
 	private _isStatic = false;
