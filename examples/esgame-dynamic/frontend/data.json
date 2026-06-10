@@ -257,5 +257,7 @@
 		"pt": null
 	},
 	"basicInstructionsImageUrl": "",
-	"advancedInstructionsImageUrl": ""
+	"advancedInstructionsImageUrl": "",
+	"gridLineColor": "#9e9e9e",
+	"gridLineWidth": "0.3px"
 }

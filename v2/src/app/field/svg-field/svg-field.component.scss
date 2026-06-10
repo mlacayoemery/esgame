@@ -3,8 +3,8 @@
 
 
     &.show-stroke.--is-editable {
-        stroke: darkslategray;
-        stroke-width: .2px;
+        stroke: var(--cell-stroke, darkslategray);
+        stroke-width: var(--cell-stroke-width, .2px);
     }
 
     &.--is-highlighted.--is-editable {
