@@ -44,5 +44,8 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "^2.2.0",
     "typescript": "6.0.3"
+  },
+  "overrides": {
+    "istanbul-lib-instrument": "^6.0.3"
   }
 }

@@ -2,13 +2,14 @@
 module.exports = function (config) {
   config.set({
     basePath: '',
-    frameworks: ['jasmine', '@angular/build'],
+    // The @angular/build:karma builder injects its own framework + plugin at runtime;
+    // the karma.conf only declares the user-facing frameworks/plugins.
+    frameworks: ['jasmine'],
     plugins: [
       require('karma-jasmine'),
       require('karma-chrome-launcher'),
       require('karma-jasmine-html-reporter'),
       require('karma-coverage'),
-      require('@angular/build/plugins/karma'),
     ],
     client: { jasmine: {}, clearContext: false },
     jasmineHtmlReporter: { suppressAll: true },

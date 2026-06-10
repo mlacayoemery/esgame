@@ -35,7 +35,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Angular 22 requires Node ^22.22.3 || ^24.15.0 || >=26.
+          node-version: 22.22.3
           cache: npm
           cache-dependency-path: v2/package-lock.json
 
