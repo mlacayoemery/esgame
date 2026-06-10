@@ -1,0 +1,261 @@
+{
+	"title": {
+		"de": "Kompromiss: Beispiel (dynamisch)",
+		"en": "Tradeoff: Example (dynamic)",
+		"nl": null,
+		"pt": null
+	},
+	"mapMode": "svg",
+	"imageMode": false,
+	"elementSize": 1,
+	"highlightColor": "#f0ff1b",
+	"infiniteLevels": true,
+	"gameBoardColumns": 28,
+	"gameBoardRows": 29,
+	"minValue": 0,
+	"maxValue": 375,
+	"minSelected": 1,
+	"defaultProductionType": "10",
+	"calcUrl": "http://localhost:8000",
+	"productionTypes": [
+		{
+			"id": "10",
+			"name": {
+				"de": "Ackerland",
+				"en": "Arable land",
+				"nl": null,
+				"pt": null
+			},
+			"fieldColor": "#40916c",
+			"urlToIcon": "https://github.com/mlacayoemery/esgame/blob/master/images/corn.png?raw=true",
+			"maxElements": 700
+		},
+		{
+			"id": "20",
+			"name": {
+				"de": "Viehzucht",
+				"en": "Livestock",
+				"nl": null,
+				"pt": null
+			},
+			"fieldColor": "#ff9900",
+			"urlToIcon": "https://raw.githubusercontent.com/mlacayoemery/esgame/master/images/cow.png",
+			"maxElements": 700
+		}
+	],
+	"maps": [
+		{
+			"id": "1",
+			"name": {
+				"de": "Zonen",
+				"en": "Zones",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "",
+			"productionTypes": [],
+			"gameBoardType": "Drawing",
+			"urlToData": "./assets/images/example_zones.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "999",
+			"name": {
+				"de": "Hintergrund",
+				"en": "Background",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "custom",
+			"productionTypes": [],
+			"gameBoardType": "Background",
+			"urlToData": "./assets/images/example_background.tif",
+			"customColorId": "example-bg"
+		},
+		{
+			"id": "2",
+			"name": {
+				"de": "Ackerland",
+				"en": "Arable land",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "green",
+			"productionTypes": [
+				"10"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "./assets/images/esgame_img_ag.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "3",
+			"name": {
+				"de": "Viehzucht",
+				"en": "Livestock",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "orange",
+			"productionTypes": [
+				"20"
+			],
+			"gameBoardType": "Suitability",
+			"urlToData": "./assets/images/esgame_img_ranch.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "110",
+			"name": {
+				"de": "Kohlenstoff",
+				"en": "Carbon",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "yellow",
+			"productionTypes": [
+				"10"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/esgame_img_ag_carbon.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "111",
+			"name": {
+				"de": "Lebensraum",
+				"en": "Habitat",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "purple",
+			"productionTypes": [
+				"10"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/esgame_img_ag_habitat.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "112",
+			"name": {
+				"de": "Wasser",
+				"en": "Water",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "blue",
+			"productionTypes": [
+				"10"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/esgame_img_ag_water.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "113",
+			"name": {
+				"de": "Jagd",
+				"en": "Hunt",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "red",
+			"productionTypes": [
+				"10"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/esgame_img_ag_hunt.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "120",
+			"name": {
+				"de": "Kohlenstoff",
+				"en": "Carbon",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "yellow",
+			"productionTypes": [
+				"20"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/esgame_img_ranch_carbon.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "121",
+			"name": {
+				"de": "Lebensraum",
+				"en": "Habitat",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "purple",
+			"productionTypes": [
+				"20"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/esgame_img_ranch_habitat.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "122",
+			"name": {
+				"de": "Wasser",
+				"en": "Water",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "blue",
+			"productionTypes": [
+				"20"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/esgame_img_ranch_water.tif",
+			"customColorId": ""
+		},
+		{
+			"id": "123",
+			"name": {
+				"de": "Jagd",
+				"en": "Hunt",
+				"nl": null,
+				"pt": null
+			},
+			"gradient": "red",
+			"productionTypes": [
+				"20"
+			],
+			"gameBoardType": "Consequence",
+			"urlToData": "./assets/images/esgame_img_ranch_hunt.tif",
+			"customColorId": ""
+		}
+	],
+	"customColors": [
+		{
+			"id": "example-bg",
+			"colors": [
+				{
+					"number": 2,
+					"color": "#dfeccac0"
+				}
+			]
+		}
+	],
+	"basicInstructions": {
+		"de": "Platziere Ackerland und Viehzucht, dann Naechste Runde.",
+		"en": "Place arable land and livestock on the zones, then press Next Level. The example backend computes ecosystem-service consequences and serves the consequence maps from GeoServer.",
+		"nl": null,
+		"pt": null
+	},
+	"advancedInstructions": {
+		"de": "Runde 2 zeigt die Konsequenzkarten.",
+		"en": "Round 2 shows the consequence maps returned by the calculator and served via GeoServer WCS.",
+		"nl": null,
+		"pt": null
+	},
+	"basicInstructionsImageUrl": "",
+	"advancedInstructionsImageUrl": ""
+}

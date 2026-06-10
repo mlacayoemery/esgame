@@ -1,0 +1,40 @@
+# Self-contained example of the esgame dynamic stack, using esgame's own (static grid) data:
+#   frontend    - the esgame image + this example's SVG config + generated zone/background maps
+#   calculator  - a tiny FastAPI stand-in: preseeds GeoServer, returns WCS URLs + simple scores
+#   geoserver   - serves the example consequence rasters (preseeded by the calculator)
+#
+#   ESGAME_IMAGE=local/esgame-core:latest docker compose -p esgame-dynamic-example up -d --build
+name: esgame-dynamic-example
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        ESGAME_IMAGE: ${ESGAME_IMAGE:-ghcr.io/mlacayoemery/esgame:master}
+    image: esgame-dynamic-example-frontend
+    container_name: esgame-dynamic-frontend
+    environment:
+      CALC_URL: http://localhost:8000     # browser posts here (client-side)
+    ports:
+      - "81:80"
+    depends_on: [calculator]
+
+  calculator:
+    build: ./calculator
+    image: esgame-dynamic-example-calculator
+    container_name: esgame-dynamic-calculator
+    environment:
+      GEOSERVER_URL: http://geoserver:8080/geoserver          # in-network (preseed REST)
+      GEOSERVER_PUBLIC_URL: http://localhost:8080/geoserver    # browser-facing (WCS URLs)
+    ports:
+      - "8000:8000"
+    depends_on: [geoserver]
+
+  geoserver:
+    image: docker.osgeo.org/geoserver:2.24.x
+    container_name: esgame-dynamic-geoserver
+    environment:
+      CORS_ENABLED: "true"
+    ports:
+      - "8080:8080"
