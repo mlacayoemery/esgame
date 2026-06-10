@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Generalized Kubernetes base for the full esgame stack:
+#   esgame-angular  (the published frontend image, served at the ingress root)
+#   esgame-calculation (the R Plumber backend; required only for dynamic mode)
+#   esgame-geoserver  (geodata service used by the calculation backend)
+#
+# The canonical esgame game (grid mode) is client-side and needs none of this. Deploy the full
+# stack only for dynamic mode. Downstream deployments (e.g. places) consume this base as an overlay,
+# overriding images, ingress hosts, the config, and adding their own geodata — see ../../README.md.
+
+resources:
+  - configmap.yaml
+  - angular-deployment.yaml
+  - angular-service.yaml
+  - angular-ingress.yaml
+  - calculation-deployment.yaml
+  - calculation-service.yaml
+  - calculation-ingress.yaml
+  - geoserver-deployment.yaml
+  - geoserver-service.yaml
+  - geoserver-ingress.yaml
+
+# Logical image names are referenced by the deployments and rewritten here, so an overlay can
+# repoint them with one `images:` entry instead of patching each manifest.
+images:
+  - name: esgame-angular
+    newName: ghcr.io/mlacayoemery/esgame
+    newTag: master
+  - name: esgame-calculation
+    # Build from ../../../tools/R and publish, or override in your overlay.
+    newName: ghcr.io/mlacayoemery/esgame-calculation
+    newTag: latest

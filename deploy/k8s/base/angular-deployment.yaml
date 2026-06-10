@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: esgame-angular
+  labels:
+    app: esgame-angular
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: esgame-angular
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: esgame-angular
+    spec:
+      containers:
+        - name: esgame-angular
+          image: esgame-angular # rewritten by kustomization.yaml images:
+          imagePullPolicy: Always
+          env:
+            # The entrypoint substitutes this into assets/config.json on start (runtime config).
+            - name: CALC_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: esgame-config
+                  key: CALC_URL
+          ports:
+            - containerPort: 80
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi

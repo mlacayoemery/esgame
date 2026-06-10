@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: esgame-geoserver-ingress
+  labels:
+    app: esgame-geoserver
+  annotations:
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: HTTP
+    nginx.ingress.kubernetes.io/app-root: /geoserver
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+spec:
+  rules:
+    - host: CHANGE-ME-esgame-geoserver.example.com
+      http:
+        paths:
+          - path: /geoserver
+            pathType: Prefix
+            backend:
+              service:
+                name: esgame-geoserver-service
+                port:
+                  number: 8080

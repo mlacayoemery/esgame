@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: esgame-geoserver
+  labels:
+    app: esgame-geoserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: esgame-geoserver
+  template:
+    metadata:
+      labels:
+        app: esgame-geoserver
+    spec:
+      containers:
+        - name: esgame-geoserver
+          # Pin to a specific patch (e.g. 2.24.4) for reproducible deploys instead of rolling 2.24.x.
+          image: docker.osgeo.org/geoserver:2.24.x
+          imagePullPolicy: Always
+          env:
+            - name: CORS_ENABLED
+              value: "true"
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2Gi
+            requests:
+              cpu: 500m
+              memory: 1Gi

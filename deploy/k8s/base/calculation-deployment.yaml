@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: esgame-calculation
+  labels:
+    app: esgame-calculation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: esgame-calculation
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: esgame-calculation
+    spec:
+      # Base ships an ephemeral data dir. An overlay (e.g. places) replaces this with a
+      # PersistentVolumeClaim + an init container that loads its geodata — see ../../README.md.
+      volumes:
+        - name: app-data
+          emptyDir: {}
+      containers:
+        - name: esgame-calculation
+          image: esgame-calculation # rewritten by kustomization.yaml images:
+          imagePullPolicy: Always
+          env:
+            - name: GEOSERVER
+              valueFrom:
+                configMapKeyRef:
+                  name: esgame-config
+                  key: GEOSERVER_URL
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          volumeMounts:
+            - name: app-data
+              mountPath: /app/data
+          resources:
+            limits:
+              cpu: "2"
+              memory: 2Gi
+            requests:
+              cpu: 500m
+              memory: 1Gi

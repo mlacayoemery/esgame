@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: esgame-geoserver-service
+  labels:
+    app: esgame-geoserver
+spec:
+  type: ClusterIP
+  selector:
+    app: esgame-geoserver
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP

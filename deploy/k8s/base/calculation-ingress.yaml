@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: esgame-calculation-ingress
+  labels:
+    app: esgame-calculation
+  annotations:
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: HTTP
+    # The browser posts here cross-origin, so CORS must allow the frontend origin.
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+spec:
+  rules:
+    # Must match CALC_URL in configmap.yaml (this is the public URL the browser posts to).
+    - host: CHANGE-ME-esgame-calculation.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: esgame-calculation-service
+                port:
+                  number: 8000
