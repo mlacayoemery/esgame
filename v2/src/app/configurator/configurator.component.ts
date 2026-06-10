@@ -16,7 +16,7 @@ export class ConfiguratorComponent {
 	gradients = Object.values(DefaultGradients);
 
 	constructor(private translate: TranslateService) {
-		this.languages = translate.getLangs();
+		this.languages = [...translate.getLangs()];
 		this.initialiseForm();
 	}
 

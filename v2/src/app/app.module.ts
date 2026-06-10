@@ -22,9 +22,9 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSliderModule } from '@angular/material/slider';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MissingTranslationHandler, MissingTranslationHandlerParams, TranslateLoader, TranslateModule } from '@ngx-translate/core';
-import { TranslateHttpLoader } from '@ngx-translate/http-loader';
-import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { MissingTranslationHandler, MissingTranslationHandlerParams, provideMissingTranslationHandler, provideTranslateService, TranslateDirective, TranslatePipe } from '@ngx-translate/core';
+import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
+import { HttpClientModule } from '@angular/common/http';
 import { ConfiguratorComponent } from './configurator/configurator.component';
 import { SvgGameBoardComponent } from './game-board/svg-game-board/svg-game-board.component';
 import { GridGameBoardComponent } from './game-board/grid-game-board/grid-game-board.component';
@@ -37,14 +37,6 @@ import { LevelIndicatorComponent } from './level-indicator/level-indicator.compo
 import { ImportConfigComponent } from './import-config/import-config.component';
 import { StartComponent } from './start/start.component';
 import { HomeComponent } from './home/home.component';
-
-export function HttpLoaderFactory(http: HttpClient) {
-	return new TranslateHttpLoader(http);
-}
-
-export function createTranslateLoader(http: HttpClient) {
-	return new TranslateHttpLoader(http, './assets/i18n/', '.json');
-}
 
 export class MyMissingTranslationHandler implements MissingTranslationHandler {
 	handle(params: MissingTranslationHandlerParams): any {
@@ -91,20 +83,15 @@ export class MyMissingTranslationHandler implements MissingTranslationHandler {
 		FormsModule,
 		ReactiveFormsModule,
 		MatStepperModule,
-		TranslateModule.forRoot({
-			defaultLanguage: 'de',
-			missingTranslationHandler: {
-				provide: MissingTranslationHandler, useClass: MyMissingTranslationHandler
-			},
-			loader: {
-				provide: TranslateLoader,
-				useFactory: createTranslateLoader,
-				deps: [HttpClient]
-			},
-			extend: true
-		})
+		TranslatePipe,
+		TranslateDirective,
 	],
 	providers: [
+		provideTranslateService({
+			fallbackLang: 'de',
+			loader: provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
+			missingTranslationHandler: provideMissingTranslationHandler(MyMissingTranslationHandler),
+		}),
 		{
 			provide: APP_INITIALIZER,
 			useFactory: (config: ConfigService) => () => config.load(),

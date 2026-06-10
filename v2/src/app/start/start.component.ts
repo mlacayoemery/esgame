@@ -20,8 +20,8 @@ export class StartComponent {
 		private router: Router
 	) {
 		this.gameService.resetGame();
-		this.languages = translate.getLangs();
-		this.currentLanguage = translate.currentLang;
+		this.languages = [...translate.getLangs()];
+		this.currentLanguage = translate.currentLang() ?? 'en';
 	}
 
 	changeLanguage(event: MatSelectChange) {
