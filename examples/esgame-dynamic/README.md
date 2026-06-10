@@ -21,17 +21,26 @@ docker-compose.yml frontend (:81) + calculator (:8000) + geoserver (:8080) + one
 ## Run
 
 ```sh
-# from the repo root:
-make example-up         # build + start the example (uses the published esgame image)
-# or against a locally-built esgame base:
-ESGAME_IMAGE=local/esgame-core:latest \
-  docker compose -p esgame-dynamic-example -f examples/esgame-dynamic/docker-compose.yml up -d --build
+# from the repo root (builds the esgame base locally, so no ghcr image needed):
+make esgame-dynamic-example-up
 
 # open http://localhost:81/  -> place arable/livestock on the zones, press Next Level.
 # Round 2 shows consequence maps served from GeoServer.
 
-make example-down       # stop + remove
+make esgame-dynamic-example-down   # stop + remove
 ```
+
+### Tweaking appearance / config
+`frontend/config.json` is **mounted** into the frontend, so you can change settings **without
+rebuilding the image** — e.g. `gridLineWidth` / `gridLineColor` (the SVG cell border), `defaultMode`,
+or `calcUrl`. Apply an edit with:
+
+```sh
+docker compose -p esgame-dynamic-example up -d --force-recreate frontend   # then reload the page
+```
+
+(A single-file bind mount won't reflect in-place edits live — editors that replace the file's inode
+need the container re-created, which the command above does. No image rebuild either way.)
 
 ## How it works
 

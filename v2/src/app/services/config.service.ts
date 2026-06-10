@@ -18,6 +18,10 @@ export interface AppConfig {
 	 * the SVG/backend game (`dynamic`). The start page stays at `/config` either way.
 	 */
 	defaultMode?: 'static' | 'dynamic';
+	/** Optional SVG-mode cell border (grid line) color, overriding the game data / built-in default. */
+	gridLineColor?: string;
+	/** Optional SVG-mode cell border (grid line) width, e.g. "0.05px". */
+	gridLineWidth?: string;
 }
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -48,11 +52,17 @@ export class ConfigService {
 
 	get appConfig(): AppConfig { return this.config; }
 
-	/** Fetch the game settings JSON for the given mode, applying any `calcUrl` override from config.json. */
+	/** Fetch the game settings JSON for the given mode, applying any overrides from config.json. */
 	getGameData(mode: 'static' | 'dynamic'): Observable<any> {
 		const url = mode === 'static' ? this.config.staticDataUrl : this.config.dynamicDataUrl;
 		return this.http.get<any>(url).pipe(
-			map(data => this.config.calcUrl !== undefined ? { ...data, calcUrl: this.config.calcUrl } : data)
+			map(data => {
+				const out = { ...data };
+				if (this.config.calcUrl !== undefined) out.calcUrl = this.config.calcUrl;
+				if (this.config.gridLineColor !== undefined) out.gridLineColor = this.config.gridLineColor;
+				if (this.config.gridLineWidth !== undefined) out.gridLineWidth = this.config.gridLineWidth;
+				return out;
+			})
 		);
 	}
 }

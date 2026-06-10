@@ -18,8 +18,13 @@ services:
         ESGAME_IMAGE: ${ESGAME_IMAGE:-ghcr.io/mlacayoemery/esgame:master}
     image: esgame-dynamic-example-frontend
     container_name: esgame-dynamic-frontend
-    environment:
-      CALC_URL: http://localhost:8000     # browser posts here (client-side)
+    # config.json is mounted (not just baked in), so you can tweak gridLineWidth / gridLineColor /
+    # calcUrl / defaultMode WITHOUT an image rebuild. Apply an edit with:
+    #   docker compose -p esgame-dynamic-example up -d --force-recreate frontend   (then reload)
+    # (a single-file bind mount won't pick up in-place edits live; re-creating the container re-reads
+    # it. calcUrl lives in config.json here, so the CALC_URL entrypoint injection isn't used.)
+    volumes:
+      - ./frontend/config.json:/usr/share/nginx/html/assets/config.json:ro
     ports:
       - "81:80"
     depends_on: [calculator]
