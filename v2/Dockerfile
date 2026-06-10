@@ -25,5 +25,6 @@ RUN chmod +x /docker-entrypoint.d/40-esgame-config.sh
 
 EXPOSE 80
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -q -O /dev/null http://localhost/ || exit 1
+# Use 127.0.0.1 (not localhost) so the probe doesn't resolve to IPv6 [::1] before nginx is reachable.
+HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget -q -O /dev/null http://127.0.0.1/ || exit 1
