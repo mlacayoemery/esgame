@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, NgModule } from '@angular/core';
+import { APP_INITIALIZER, Injectable, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ConfigService } from './services/config.service';
 
@@ -38,6 +38,7 @@ import { ImportConfigComponent } from './import-config/import-config.component';
 import { StartComponent } from './start/start.component';
 import { HomeComponent } from './home/home.component';
 
+@Injectable()
 export class MyMissingTranslationHandler implements MissingTranslationHandler {
 	handle(params: MissingTranslationHandlerParams): any {
 	  return params.key;
