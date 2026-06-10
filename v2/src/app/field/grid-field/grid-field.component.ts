@@ -30,9 +30,9 @@ export class GridFieldComponent extends FieldBaseComponent {
 
 	private _size: number = 10;
 
-	@HostBinding('style.width') private fieldWidth: string;
-	@HostBinding('style.height') private fieldHeight: string;
-	@HostBinding('style.background-color') private backgroundColor: string;
+	@HostBinding('style.width') fieldWidth: string;
+	@HostBinding('style.height') fieldHeight: string;
+	@HostBinding('style.background-color') backgroundColor: string;
 	@HostBinding('class') highlightSide = HighlightSide.NONE;
 	@HostBinding('class.--has-image') showProductionImage = false;
 

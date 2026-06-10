@@ -17,8 +17,8 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 	override shouldDeselect(e: MouseEvent): boolean {
 		return e.buttons == 2 || e.ctrlKey
 	}
-	@HostBinding('style.fill') private fillColor: string;
-	@HostBinding('style.stroke') private stroke: string;
+	@HostBinding('style.fill') fillColor: string;
+	@HostBinding('style.stroke') stroke: string;
 	highlightColor: string;
 
 	@HostBinding('class.show-stroke') @Input() showStroke: boolean = true;
