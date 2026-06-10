@@ -10,6 +10,7 @@ services:
     build:
       context: .
     image: local/esgame-core
+    container_name: esgame-core
     ports:
       - "81:80"
     # No CALC_URL set -> the image keeps its built-in assets/config.json (calcUrl ""),
