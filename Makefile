@@ -9,9 +9,9 @@
 #   make esgame-down           stop + remove the 'esgame' stack
 #   make esgame-dynamic-up     build + start 'esgame-dynamic'            (:81, :8000, :8080)
 #   make esgame-dynamic-down   stop + remove the 'esgame-dynamic' stack
-#   make example-up            self-contained dynamic EXAMPLE (esgame's own data + simple
-#                              FastAPI calculator + preseeded GeoServer) - playable end to end
-#   make example-down          stop + remove the example
+#   make esgame-dynamic-example-up    self-contained dynamic EXAMPLE (esgame's own data + simple
+#                                     FastAPI calculator + seeded GeoServer) - playable end to end
+#   make esgame-dynamic-example-down  stop + remove the example
 #
 # (All stacks publish the frontend on :81, so run one at a time on a given host.)
 
@@ -21,7 +21,7 @@ COMPOSE_EXAMPLE := docker compose -p esgame-dynamic-example -f examples/esgame-d
 
 .PHONY: esgame-build esgame-up esgame-down \
         esgame-dynamic-build esgame-dynamic-up esgame-dynamic-down \
-        example-build example-up example-down
+        esgame-dynamic-example-build esgame-dynamic-example-up esgame-dynamic-example-down
 
 # ---- static 'esgame' stack (frontend only) ----
 
@@ -58,20 +58,24 @@ esgame-dynamic-up: esgame-dynamic-build
 esgame-dynamic-down:
 	$(COMPOSE_DYNAMIC) down
 
-# ---- self-contained dynamic EXAMPLE (esgame's own data, simple calculator, preseeded geoserver) ----
+# ---- self-contained dynamic EXAMPLE (esgame's own data, simple calculator, seeded geoserver) ----
+# Builds the esgame base locally so it runs without pulling the (private) ghcr image.
 
-## Build the example images (frontend overlay + FastAPI calculator).
-example-build:
-	$(COMPOSE_EXAMPLE) build
+ESGAME_BASE := local/esgame-core:latest
+
+## Build the esgame base + the example images (frontend overlay, calculator, seeder).
+esgame-dynamic-example-build:
+	docker build -t $(ESGAME_BASE) v2
+	ESGAME_IMAGE=$(ESGAME_BASE) $(COMPOSE_EXAMPLE) build
 
 ## Build + start the playable dynamic example in the background.
-example-up: example-build
+esgame-dynamic-example-up: esgame-dynamic-example-build
 	$(COMPOSE_EXAMPLE) up -d
 	@echo ""
 	@echo "esgame-dynamic example up:  http://localhost:81/  (place fields, press Next Level)"
 	@echo "  calculator http://localhost:8000/   geoserver http://localhost:8080/geoserver"
-	@echo "  (GeoServer needs ~30-60s to start + be preseeded before round 2 works)"
+	@echo "  (GeoServer needs ~30-60s to start + be seeded before round 2 works)"
 
-## Stop and remove the example.
-example-down:
+## Stop and remove the example (keeps the geoserver-data volume; add 'down -v' to wipe it).
+esgame-dynamic-example-down:
 	$(COMPOSE_EXAMPLE) down
