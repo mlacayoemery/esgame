@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>esgame</title>
+    <!-- Single Page Apps for GitHub Pages: redirect a deep-link path into the SPA so HTML5
+         (clean-URL) routing works on Pages. The companion script in index.html restores the path.
+         pathSegmentsToKeep = 1 preserves the "/esgame/" project-site base segment.
+         https://github.com/rafgraph/spa-github-pages (MIT). Unused under nginx/Docker. -->
+    <script type="text/javascript">
+      var pathSegmentsToKeep = 1;
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>

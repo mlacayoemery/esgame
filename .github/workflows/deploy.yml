@@ -53,8 +53,8 @@ jobs:
           mkdir -p "$dist/v1"
           cp -r index.html calc.html wc.htm calc_files images "$dist/v1/"
 
-      - name: SPA fallback (serve index.html for unknown paths)
-        run: cp v2/dist/tradeoff-v2/index.html v2/dist/tradeoff-v2/404.html
+      # Note: 404.html (the spa-github-pages redirect for clean URLs) is built from src/404.html
+      # via the angular.json assets list, so no SPA-fallback copy step is needed here.
 
       - uses: actions/upload-pages-artifact@v3
         with:

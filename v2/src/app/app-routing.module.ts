@@ -7,25 +7,36 @@ import { StartComponent } from './start/start.component';
 
 const routes: Routes = [
 	{
+		// Default: launch straight into Configuration 2 (the static grid game).
 		path: '',
+		component: GridLevelComponent
+	},
+	{
+		// The start / configuration landing page (was the default route).
+		path: 'config',
 		component: StartComponent
 	},
 	{
 		path: 'static-game',
 		component: GridLevelComponent
-	}, 
+	},
 	{
 		path: 'dynamic-game',
 		component: SvgLevelComponent
-	}, 
+	},
 	{
 		path: 'configurator',
 		component: ConfiguratorComponent
 	},
+	{
+		// Unknown paths fall back to the game.
+		path: '**',
+		redirectTo: ''
+	},
 ];
 
 @NgModule({
-	imports: [RouterModule.forRoot(routes, { useHash: true })],
+	imports: [RouterModule.forRoot(routes)],
 	exports: [RouterModule]
 })
 export class AppRoutingModule { }
