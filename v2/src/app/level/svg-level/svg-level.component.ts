@@ -4,7 +4,7 @@ import { GameService } from 'src/app/services/game.service';
 import { map, tap } from 'rxjs';
 import { GameBoardType } from 'src/app/shared/models/game-board-type';
 import { GameBoardClickMode } from 'src/app/shared/models/game-board';
-import dynamicData from '../../../data.json';
+import { ConfigService } from 'src/app/services/config.service';
 
 
 @Component({
@@ -24,10 +24,12 @@ export class SvgLevelComponent extends LevelBaseComponent {
 		if ((!o || o.levelNumber <= 2) && !this.readOnly) this.openHelp();
 	}));
 
-	constructor(gameService: GameService) {
+	constructor(gameService: GameService, configService: ConfigService) {
 		super(gameService);
-		this.gameService.loadSettings(dynamicData);
-		gameService.initialiseSVGMode();
+		configService.getGameData('dynamic').subscribe(data => {
+			this.gameService.loadSettings(data);
+			gameService.initialiseSVGMode();
+		});
 		this.settings.subscribe(o => {
 			this.minSelected = o?.minSelected ?? 0;
 		});

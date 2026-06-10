@@ -1,5 +1,6 @@
-import { NgModule } from '@angular/core';
+import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { ConfigService } from './services/config.service';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -101,7 +102,14 @@ export class MyMissingTranslationHandler implements MissingTranslationHandler {
 			extend: true
 		})
 	],
-	providers: [],
+	providers: [
+		{
+			provide: APP_INITIALIZER,
+			useFactory: (config: ConfigService) => () => config.load(),
+			deps: [ConfigService],
+			multi: true
+		}
+	],
 	bootstrap: [AppComponent]
 })
 export class AppModule { }

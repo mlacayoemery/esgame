@@ -1,0 +1,25 @@
+name: CI
+
+# Build gate for the v2 app on pull requests and pushes to master.
+on:
+  pull_request:
+    paths: ['v2/**', '.github/workflows/ci.yml']
+  push:
+    branches: [master]
+    paths: ['v2/**', '.github/workflows/ci.yml']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: v2/package-lock.json
+      - run: npm ci
+      - run: npm run build -- --configuration production
