@@ -13,11 +13,17 @@ export interface AppConfig {
 	 * An empty string forces fully client-side play (no backend) — used by the static GitHub Pages deployment.
 	 */
 	calcUrl?: string;
+	/**
+	 * Which game the site root (`/`) launches: the client-side grid game (`static`, the default) or
+	 * the SVG/backend game (`dynamic`). The start page stays at `/config` either way.
+	 */
+	defaultMode?: 'static' | 'dynamic';
 }
 
 const DEFAULT_CONFIG: AppConfig = {
 	staticDataUrl: 'assets/dataGridExample.json',
-	dynamicDataUrl: 'assets/data.json'
+	dynamicDataUrl: 'assets/data.json',
+	defaultMode: 'static'
 };
 
 /**

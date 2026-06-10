@@ -4,12 +4,13 @@ import { ConfiguratorComponent } from './configurator/configurator.component';
 import { GridLevelComponent } from './level/grid-level/grid-level.component';
 import { SvgLevelComponent } from './level/svg-level/svg-level.component';
 import { StartComponent } from './start/start.component';
+import { HomeComponent } from './home/home.component';
 
 const routes: Routes = [
 	{
-		// Default: launch straight into Configuration 2 (the static grid game).
+		// Root landing: grid or dynamic game per config.json `defaultMode` (default grid).
 		path: '',
-		component: GridLevelComponent
+		component: HomeComponent
 	},
 	{
 		// The start / configuration landing page (was the default route).
