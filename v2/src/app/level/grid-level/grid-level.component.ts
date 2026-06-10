@@ -4,9 +4,10 @@ import { GameService } from 'src/app/services/game.service';
 import { ConfigService } from 'src/app/services/config.service';
 
 @Component({
-	selector: 'tro-grid-level',
-	templateUrl: './grid-level.component.html',
-	styleUrls: ['./grid-level.component.scss', '../level-base.component.scss']
+    selector: 'tro-grid-level',
+    templateUrl: './grid-level.component.html',
+    styleUrls: ['./grid-level.component.scss', '../level-base.component.scss'],
+    standalone: false
 })
 export class GridLevelComponent extends LevelBaseComponent {
 	settings = this.gameService.settingsObs;

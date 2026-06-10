@@ -1,8 +1,8 @@
 import { Directive, ElementRef } from '@angular/core';
 
 @Directive({
-	selector: '[troButton]',
-
+    selector: '[troButton]',
+    standalone: false
 })
 export class ButtonDirective {
 

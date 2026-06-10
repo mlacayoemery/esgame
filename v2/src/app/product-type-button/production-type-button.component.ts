@@ -3,10 +3,11 @@ import { ProductionType } from '../shared/models/production-type';
 import { GameService } from '../services/game.service';
 
 @Component({
-	selector: 'tro-production-type-button',
-	templateUrl: './production-type-button.component.html',
-	styleUrls: ['./production-type-button.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tro-production-type-button',
+    templateUrl: './production-type-button.component.html',
+    styleUrls: ['./production-type-button.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ProductionTypeButtonComponent implements OnInit {
 	@Input() productionType: ProductionType;

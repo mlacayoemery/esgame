@@ -4,10 +4,11 @@ import { ProductionType } from '../../shared/models/production-type';
 import { FieldBaseComponent } from '../field-base.component';
 
 @Component({
-	selector: '[troSvgField]',
-	template: '',
-	styleUrls: ['./svg-field.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+    selector: '[troSvgField]',
+    template: '',
+    styleUrls: ['./svg-field.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 	override shouldSelect(e: MouseEvent): boolean {

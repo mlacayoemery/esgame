@@ -3,10 +3,11 @@ import { GameService } from '../services/game.service';
 import { map } from 'rxjs';
 
 @Component({
-  selector: 'tro-help',
-  templateUrl: './help.component.html',
-  styleUrls: ['./help.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tro-help',
+    templateUrl: './help.component.html',
+    styleUrls: ['./help.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class HelpComponent {
 	isOpen = false;

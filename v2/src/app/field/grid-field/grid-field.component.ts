@@ -6,10 +6,11 @@ import { GameService } from 'src/app/services/game.service';
 import { ProductionType } from 'src/app/shared/models/production-type';
 
 @Component({
-	selector: 'tro-field',
-	templateUrl: './grid-field.component.html',
-	styleUrls: ['./grid-field.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush,
+    selector: 'tro-field',
+    templateUrl: './grid-field.component.html',
+    styleUrls: ['./grid-field.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class GridFieldComponent extends FieldBaseComponent {
 	override shouldSelect(e: MouseEvent): boolean {

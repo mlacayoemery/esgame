@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/
 import { GameService } from '../services/game.service';
 
 @Component({
-	selector: 'tro-score-indicator',
-	templateUrl: './score-indicator.component.html',
-	styleUrls: ['./score-indicator.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tro-score-indicator',
+    templateUrl: './score-indicator.component.html',
+    styleUrls: ['./score-indicator.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ScoreIndicatorComponent {
 	score: number | null = null;

@@ -4,7 +4,8 @@ import { ProductionType } from "../shared/models/production-type";
 import { ChangeDetectorRef, Component, ElementRef, HostBinding, Input, OnDestroy, Renderer2 } from '@angular/core';
 
 @Component({
-	template: '',
+    template: '',
+    standalone: false
 })
 export abstract class FieldBaseComponent implements OnDestroy {
 	@HostBinding('class.--is-highlighted') public isHighlighted = false;

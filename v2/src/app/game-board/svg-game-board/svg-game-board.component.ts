@@ -6,10 +6,11 @@ import { GameBoardType } from 'src/app/shared/models/game-board-type';
 import { GameBoardClickMode } from 'src/app/shared/models/game-board';
 
 @Component({
-	selector: 'tro-svg-game-board',
-	templateUrl: './svg-game-board.component.html',
-	styleUrls: ['./svg-game-board.component.scss'],
-	changeDetection: ChangeDetectionStrategy.OnPush
+    selector: 'tro-svg-game-board',
+    templateUrl: './svg-game-board.component.html',
+    styleUrls: ['./svg-game-board.component.scss'],
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SvgGameBoardComponent extends GameBoardBaseComponent implements AfterViewInit {
 	@ViewChildren(SvgFieldComponent) svgFieldComponents: QueryList<SvgFieldComponent>;

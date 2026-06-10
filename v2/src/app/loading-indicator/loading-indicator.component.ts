@@ -2,9 +2,10 @@ import { Component, HostBinding } from '@angular/core';
 import { GameService } from '../services/game.service';
 
 @Component({
-  selector: 'tro-loading-indicator',
-  templateUrl: './loading-indicator.component.html',
-  styleUrls: ['./loading-indicator.component.scss']
+    selector: 'tro-loading-indicator',
+    templateUrl: './loading-indicator.component.html',
+    styleUrls: ['./loading-indicator.component.scss'],
+    standalone: false
 })
 export class LoadingIndicatorComponent {
 	

@@ -8,9 +8,10 @@ import { ConfigService } from 'src/app/services/config.service';
 
 
 @Component({
-	selector: 'tro-svg-level',
-	templateUrl: './svg-level.component.html',
-	styleUrls: ['../level-base.component.scss', './svg-level.component.scss']
+    selector: 'tro-svg-level',
+    templateUrl: './svg-level.component.html',
+    styleUrls: ['../level-base.component.scss', './svg-level.component.scss'],
+    standalone: false
 })
 export class SvgLevelComponent extends LevelBaseComponent {
 	overlayBoard = this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.find(p => p.gameBoardType == GameBoardType.DrawingMap)));
