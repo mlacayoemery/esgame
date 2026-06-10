@@ -1,0 +1,29 @@
+# Overlay for the 'esgame-dynamic' stack: adds the R calculator + GeoServer (the containers
+# places needs) and points the frontend at the local calculator. Use together with the base:
+#
+#   docker compose -p esgame-dynamic -f docker-compose.yml -f docker-compose.dynamic.yml up -d
+#
+# (the repo-root Makefile's esgame-dynamic-* targets do this).
+
+services:
+  esgame-core:
+    environment:
+      # The browser reaches the calculator via the published host port (it POSTs client-side).
+      CALC_URL: "http://localhost:8000"
+
+  esgame-calculator:
+    build:
+      context: ../tools/R
+    image: local/esgame-calculator
+    ports:
+      - "8000:8000"
+    # url: http://localhost:8000/openapi.json
+
+  esgame-geoserver:
+    # Pin to a specific patch (e.g. 2.24.4) instead of the rolling 2.24.x tag for reproducibility.
+    image: docker.osgeo.org/geoserver:2.24.x
+    environment:
+      CORS_ENABLED: "true"
+    ports:
+      - "8080:8080"
+    # url: http://localhost:8080/geoserver

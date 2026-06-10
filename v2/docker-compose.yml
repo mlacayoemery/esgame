@@ -1,5 +1,8 @@
-# Full local stack: static frontend (nginx) + R calculation API + GeoServer.
-# Grid ("static") mode works with just esgame-core. Dynamic ("dynamic") mode needs the calculator.
+# Base / 'esgame' stack: just the frontend serving the client-side grid game (Configuration 2),
+# i.e. exactly what https://<owner>.github.io/esgame/ hosts. No backend (calcUrl stays "").
+#
+# The 'esgame-dynamic' stack layers docker-compose.dynamic.yml on top to add the R calculator
+# and GeoServer that the dynamic game (and places) needs. Driven by the repo-root Makefile.
 name: esgame
 
 services:
@@ -7,27 +10,8 @@ services:
     build:
       context: .
     image: local/esgame-core
-    environment:
-      # The browser runs on the host, so it reaches the calculator via the published host port,
-      # not the docker-internal hostname. Set to "" to force fully client-side (grid) play.
-      - CALC_URL=http://localhost:8000
     ports:
       - "81:80"
+    # No CALC_URL set -> the image keeps its built-in assets/config.json (calcUrl ""),
+    # i.e. the fully client-side grid game. The dynamic overlay sets CALC_URL.
     # url: http://localhost:81/
-
-  esgame-calculator:
-    build:
-      context: ../tools/R
-    image: local/esgame-calculator
-    ports:
-      - "8000:8000"
-    # url: http://localhost:8000/openapi.json
-
-  esgame-geoserver:
-    # Pin to a specific patch (e.g. 2.24.4) for reproducible deploys instead of the rolling 2.24.x tag.
-    image: docker.osgeo.org/geoserver:2.24.x
-    environment:
-      - CORS_ENABLED=true
-    ports:
-      - "8080:8080"
-    # url: http://localhost:8080/geoserver
