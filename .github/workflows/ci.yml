@@ -1,6 +1,6 @@
 name: CI
 
-# Build gate for the v2 app on pull requests and pushes to master.
+# Build + unit + e2e gate for the v2 app on pull requests and pushes to master.
 on:
   pull_request:
     paths: ['v2/**', '.github/workflows/ci.yml']
@@ -9,11 +9,14 @@ on:
     paths: ['v2/**', '.github/workflows/ci.yml']
 
 jobs:
-  build:
+  build-test:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: v2
+    env:
+      # Google Chrome is preinstalled on ubuntu-latest; Karma + Playwright (channel: chrome) use it.
+      CHROME_BIN: /usr/bin/google-chrome
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,5 +24,22 @@ jobs:
           node-version: 20
           cache: npm
           cache-dependency-path: v2/package-lock.json
+
       - run: npm ci
-      - run: npm run build -- --configuration production
+
+      - name: Build
+        run: npm run build -- --configuration production
+
+      - name: Unit tests
+        run: npm test -- --watch=false --browsers=ChromeHeadlessNoSandbox
+
+      - name: E2E (Playwright)
+        run: npm run e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: v2/playwright-report
+          retention-days: 7
