@@ -44,6 +44,8 @@ export class Settings {
 	/** SVG-mode cell border (between zones). Optional; defaults to the built-in look when unset. */
 	gridLineColor?: string;
 	gridLineWidth?: string;
+	/** SVG-mode hover-highlight border width (in board units). Optional; defaults to the built-in 2. */
+	highlightWidth?: string;
 
 	constructor(
 		private translate: TranslateService,
@@ -67,6 +69,7 @@ export class Settings {
 		this.calcUrl = data.calcUrl;
 		this.gridLineColor = data.gridLineColor;
 		this.gridLineWidth = data.gridLineWidth;
+		this.highlightWidth = data.highlightWidth;
 		this.productionTypes = data.productionTypes.map((o: any) => ({ id: Number.parseInt(o.id), name: o.name, fieldColor: o.fieldColor, urlToIcon: o.urlToIcon, maxElements: o.maxElements }));
 		this.maps = data.maps.map((o: any) => ({ id: o.id, name: o.name, gradient: convertGradient(o.gradient), customColorId: o.customColorId, gameBoardType: convertGameBoardType(o.gameBoardType), productionTypes: o.productionTypes.map((p: any) => Number.parseInt(p)), urlToData: o.urlToData }));
 		this.customColors = data.customColors;

@@ -33,6 +33,7 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 			// Optional per-deployment cell-border (grid line) styling; CSS falls back to the default.
 			if (o.gridLineColor) this.renderer.setStyle(this.elementRef.nativeElement, '--cell-stroke', o.gridLineColor, RendererStyleFlags2.DashCase);
 			if (o.gridLineWidth) this.renderer.setStyle(this.elementRef.nativeElement, '--cell-stroke-width', o.gridLineWidth, RendererStyleFlags2.DashCase);
+			if (o.highlightWidth) this.renderer.setStyle(this.elementRef.nativeElement, '--highlight-stroke-width', o.highlightWidth, RendererStyleFlags2.DashCase);
 		});
 	}
 
