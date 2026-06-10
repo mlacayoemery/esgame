@@ -1,10 +1,14 @@
 # Self-contained example of the esgame dynamic stack, using esgame's own (static grid) data:
-#   frontend    - the esgame image + this example's SVG config + generated zone/background maps
-#   calculator  - a tiny FastAPI stand-in: preseeds GeoServer, returns WCS URLs + simple scores
-#   geoserver   - serves the example consequence rasters (preseeded by the calculator)
+#   frontend         - the esgame image + this example's SVG config + generated zone/background maps
+#   calculator       - a tiny FastAPI stand-in: returns WCS URLs + simple scores (stateless)
+#   geoserver        - serves the consequence rasters; persistent data dir, reloaded on every boot
+#   geoserver-seed   - one-shot job that registers the rasters as external coverages (runs once)
 #
 #   ESGAME_IMAGE=local/esgame-core:latest docker compose -p esgame-dynamic-example up -d --build
 name: esgame-dynamic-example
+
+volumes:
+  geoserver-data:   # persistent GeoServer data dir (the catalog/sidecar config) - survives reboot
 
 services:
   frontend:
@@ -25,11 +29,9 @@ services:
     image: esgame-dynamic-example-calculator
     container_name: esgame-dynamic-calculator
     environment:
-      GEOSERVER_URL: http://geoserver:8080/geoserver          # in-network (preseed REST)
-      GEOSERVER_PUBLIC_URL: http://localhost:8080/geoserver    # browser-facing (WCS URLs)
+      GEOSERVER_PUBLIC_URL: http://localhost:8080/geoserver    # browser-facing (the WCS URLs it returns)
     ports:
       - "8000:8000"
-    depends_on: [geoserver]
 
   geoserver:
     image: docker.osgeo.org/geoserver:2.24.x
@@ -38,3 +40,19 @@ services:
       CORS_ENABLED: "true"
     ports:
       - "8080:8080"
+    volumes:
+      - geoserver-data:/opt/geoserver_data    # persistent catalog: reloaded on every boot, no re-seed
+      - ./geoserver/rasters:/rasters:ro        # the TIFF folder, referenced in place by external coverages
+
+  # One-shot: registers /rasters/*.tif as external coverages, then exits. Idempotent (skips if the
+  # data dir already has the workspace), so on reboot GeoServer just reloads from its data dir.
+  geoserver-seed:
+    build: ./geoserver
+    image: esgame-dynamic-example-seeder
+    container_name: esgame-dynamic-geoserver-seed
+    environment:
+      GEOSERVER_URL: http://geoserver:8080/geoserver
+    volumes:
+      - ./geoserver/rasters:/rasters:ro
+    depends_on: [geoserver]
+    restart: "no"
