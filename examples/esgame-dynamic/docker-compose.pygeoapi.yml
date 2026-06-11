@@ -1,0 +1,55 @@
+# Alternative to docker-compose.yml that replaces the heavyweight GeoServer (+ its one-shot seeder
+# and persistent data volume) with a single lightweight pygeoapi container.
+#
+#   frontend    - the esgame image + this example's SVG config (UNCHANGED vs the GeoServer stack)
+#   calculator  - the SAME image, but RASTER_URL_TEMPLATE points it at pygeoapi instead of WCS
+#   pygeoapi    - serves the consequence rasters as OGC API - Coverages (read-only)
+#
+# Drop-in: the frontend bundle and the calculator image are identical to the GeoServer stack; only
+# the calculator's RASTER_URL_TEMPLATE and the raster backend differ. Run EITHER this or the GeoServer
+# compose (they share the 81/8000 ports) — not both at once.
+#
+#   ESGAME_IMAGE=local/esgame-core:latest \
+#     docker compose -p esgame-dynamic-pygeoapi -f docker-compose.pygeoapi.yml up -d --build
+#
+# READ-ONLY caveat: pygeoapi publishes the rasters from a static config; there is no run-time
+# publish/REST API. Fine here because the example rasters never change. A deployment that must add or
+# mutate rasters at run time (as GeoServer's REST API allows) cannot use this variant.
+name: esgame-dynamic-pygeoapi
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        ESGAME_IMAGE: ${ESGAME_IMAGE:-ghcr.io/mlacayoemery/esgame:master}
+    image: esgame-dynamic-example-frontend
+    container_name: esgame-dynamic-pygeoapi-frontend
+    volumes:
+      - ./frontend/config.json:/usr/share/nginx/html/assets/config.json:ro
+    ports:
+      - "81:80"
+    depends_on: [calculator]
+
+  calculator:
+    build: ./calculator
+    image: esgame-dynamic-example-calculator
+    container_name: esgame-dynamic-pygeoapi-calculator
+    environment:
+      # Point the calculator at pygeoapi's OGC API - Coverages instead of GeoServer's WCS. The
+      # browser fetches this URL directly, so it is the host-facing pygeoapi address. {coverage} is
+      # substituted with the coverage name (e.g. ag_carbon).
+      RASTER_URL_TEMPLATE: "http://localhost:5005/collections/{coverage}/coverage?f=GTiff"
+    ports:
+      - "8000:8000"
+
+  pygeoapi:
+    build: ./pygeoapi
+    image: esgame-dynamic-example-pygeoapi
+    container_name: esgame-dynamic-pygeoapi
+    # The same raster folder GeoServer uses, mounted read-only. No catalog, no persistent volume,
+    # no seeder — pygeoapi reads the collections from its baked-in config on every start.
+    volumes:
+      - ./geoserver/rasters:/rasters:ro
+    ports:
+      - "5005:80"

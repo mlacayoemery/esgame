@@ -1,0 +1,183 @@
+# pygeoapi configuration — esgame dynamic example (lightweight GeoServer alternative).
+#
+# Serves the 8 consequence rasters as OGC API - Coverages, each returnable as GeoTIFF at
+#   /collections/<name>/coverage?f=GTiff
+# which is the drop-in equivalent of the GeoServer WCS GetCoverage the calculator otherwise emits.
+#
+# READ-ONLY: collections are defined statically here. Unlike GeoServer there is no REST API to
+# publish/modify data at run time — to add or change a raster you edit this file and restart.
+server:
+  bind:
+    host: 0.0.0.0
+    port: 80
+  url: http://localhost:5005
+  mimetype: application/json; charset=UTF-8
+  encoding: utf-8
+  languages: [en-US]
+  cors: true
+  pretty_print: true
+  limits:
+    default_items: 20
+    max_items: 50
+  map:
+    url: https://tile.openstreetmap.org/{z}/{x}/{y}.png
+    attribution: '&copy; OpenStreetMap contributors'
+
+logging:
+  level: ERROR
+
+metadata:
+  identification:
+    title: esgame example raster server (pygeoapi)
+    description: Consequence rasters for the esgame dynamic example, served via OGC API - Coverages.
+    keywords: [esgame, ecosystem services, coverages]
+    keywords_type: theme
+    terms_of_service: https://creativecommons.org/licenses/by/4.0/
+    url: https://github.com/mlacayoemery/esgame
+  license:
+    name: CC-BY 4.0
+    url: https://creativecommons.org/licenses/by/4.0/
+  provider:
+    name: esgame
+    url: https://github.com/mlacayoemery/esgame
+  contact:
+    name: esgame
+    url: https://github.com/mlacayoemery/esgame
+
+resources:
+
+  ag_carbon:
+    type: collection
+    title: ag_carbon
+    description: Consequence raster (carbon storage) for the esgame dynamic example.
+    keywords: [carbon]
+    extents:
+      spatial:
+        bbox: [0, 0, 28, 29]
+        crs: http://www.opengis.net/def/crs/EPSG/0/3857
+    providers:
+      - type: coverage
+        name: rasterio
+        data: /rasters/ag_carbon.tif
+        format:
+          name: GTiff
+          mimetype: application/x-geotiff
+
+  ag_habitat:
+    type: collection
+    title: ag_habitat
+    description: Consequence raster (habitat quality) for the esgame dynamic example.
+    keywords: [habitat]
+    extents:
+      spatial:
+        bbox: [0, 0, 28, 29]
+        crs: http://www.opengis.net/def/crs/EPSG/0/3857
+    providers:
+      - type: coverage
+        name: rasterio
+        data: /rasters/ag_habitat.tif
+        format:
+          name: GTiff
+          mimetype: application/x-geotiff
+
+  ag_water:
+    type: collection
+    title: ag_water
+    description: Consequence raster (water yield) for the esgame dynamic example.
+    keywords: [water]
+    extents:
+      spatial:
+        bbox: [0, 0, 28, 29]
+        crs: http://www.opengis.net/def/crs/EPSG/0/3857
+    providers:
+      - type: coverage
+        name: rasterio
+        data: /rasters/ag_water.tif
+        format:
+          name: GTiff
+          mimetype: application/x-geotiff
+
+  ag_hunt:
+    type: collection
+    title: ag_hunt
+    description: Consequence raster (hunting / recreation) for the esgame dynamic example.
+    keywords: [hunt]
+    extents:
+      spatial:
+        bbox: [0, 0, 28, 29]
+        crs: http://www.opengis.net/def/crs/EPSG/0/3857
+    providers:
+      - type: coverage
+        name: rasterio
+        data: /rasters/ag_hunt.tif
+        format:
+          name: GTiff
+          mimetype: application/x-geotiff
+
+  ranch_carbon:
+    type: collection
+    title: ranch_carbon
+    description: Consequence raster (carbon storage) for the esgame dynamic example.
+    keywords: [carbon]
+    extents:
+      spatial:
+        bbox: [0, 0, 28, 29]
+        crs: http://www.opengis.net/def/crs/EPSG/0/3857
+    providers:
+      - type: coverage
+        name: rasterio
+        data: /rasters/ranch_carbon.tif
+        format:
+          name: GTiff
+          mimetype: application/x-geotiff
+
+  ranch_habitat:
+    type: collection
+    title: ranch_habitat
+    description: Consequence raster (habitat quality) for the esgame dynamic example.
+    keywords: [habitat]
+    extents:
+      spatial:
+        bbox: [0, 0, 28, 29]
+        crs: http://www.opengis.net/def/crs/EPSG/0/3857
+    providers:
+      - type: coverage
+        name: rasterio
+        data: /rasters/ranch_habitat.tif
+        format:
+          name: GTiff
+          mimetype: application/x-geotiff
+
+  ranch_water:
+    type: collection
+    title: ranch_water
+    description: Consequence raster (water yield) for the esgame dynamic example.
+    keywords: [water]
+    extents:
+      spatial:
+        bbox: [0, 0, 28, 29]
+        crs: http://www.opengis.net/def/crs/EPSG/0/3857
+    providers:
+      - type: coverage
+        name: rasterio
+        data: /rasters/ranch_water.tif
+        format:
+          name: GTiff
+          mimetype: application/x-geotiff
+
+  ranch_hunt:
+    type: collection
+    title: ranch_hunt
+    description: Consequence raster (hunting / recreation) for the esgame dynamic example.
+    keywords: [hunt]
+    extents:
+      spatial:
+        bbox: [0, 0, 28, 29]
+        crs: http://www.opengis.net/def/crs/EPSG/0/3857
+    providers:
+      - type: coverage
+        name: rasterio
+        data: /rasters/ranch_hunt.tif
+        format:
+          name: GTiff
+          mimetype: application/x-geotiff

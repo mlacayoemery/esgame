@@ -18,10 +18,12 @@
 COMPOSE_STATIC  := docker compose -p esgame -f v2/docker-compose.yml
 COMPOSE_DYNAMIC := docker compose -p esgame-dynamic -f v2/docker-compose.yml -f v2/docker-compose.dynamic.yml
 COMPOSE_EXAMPLE := docker compose -p esgame-dynamic-example -f examples/esgame-dynamic/docker-compose.yml
+COMPOSE_PYGEOAPI := docker compose -p esgame-dynamic-pygeoapi -f examples/esgame-dynamic/docker-compose.pygeoapi.yml
 
 .PHONY: esgame-build esgame-up esgame-down \
         esgame-dynamic-build esgame-dynamic-up esgame-dynamic-down \
-        esgame-dynamic-example-build esgame-dynamic-example-up esgame-dynamic-example-down
+        esgame-dynamic-example-build esgame-dynamic-example-up esgame-dynamic-example-down \
+        esgame-dynamic-pygeoapi-build esgame-dynamic-pygeoapi-up esgame-dynamic-pygeoapi-down
 
 # ---- static 'esgame' stack (frontend only) ----
 
@@ -79,3 +81,25 @@ esgame-dynamic-example-up: esgame-dynamic-example-build
 ## Stop and remove the example (keeps the geoserver-data volume; add 'down -v' to wipe it).
 esgame-dynamic-example-down:
 	$(COMPOSE_EXAMPLE) down
+
+# ---- the same example, but with pygeoapi (READ-ONLY) instead of GeoServer ----
+# A lighter-weight drop-in: pygeoapi serves the consequence rasters as OGC API - Coverages from a
+# static config — no catalog, no persistent volume, no seeder. READ-ONLY: there is no runtime
+# publish/REST API. Shares the 81/8000 ports with the GeoServer example, so run only one at a time.
+
+## Build the esgame base + the pygeoapi-variant images.
+esgame-dynamic-pygeoapi-build:
+	docker build -t $(ESGAME_BASE) v2
+	ESGAME_IMAGE=$(ESGAME_BASE) $(COMPOSE_PYGEOAPI) build
+
+## Build + start the pygeoapi variant of the example in the background.
+esgame-dynamic-pygeoapi-up: esgame-dynamic-pygeoapi-build
+	$(COMPOSE_PYGEOAPI) up -d
+	@echo ""
+	@echo "esgame-dynamic (pygeoapi) up:  http://localhost:81/  (place fields, press Next Level)"
+	@echo "  calculator http://localhost:8000/   pygeoapi http://localhost:5005/"
+	@echo "  (pygeoapi starts in a few seconds; rasters are read-only, from its static config)"
+
+## Stop and remove the pygeoapi variant.
+esgame-dynamic-pygeoapi-down:
+	$(COMPOSE_PYGEOAPI) down
