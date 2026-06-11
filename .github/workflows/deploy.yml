@@ -8,6 +8,7 @@ on:
     branches: [master]
     paths:
       - 'v2/**'
+      - 'docs/**'
       - '.github/workflows/deploy.yml'
       # legacy v1 assets, so re-archived if they ever change
       - 'index.html'
@@ -56,6 +57,20 @@ jobs:
 
       # Note: 404.html (the spa-github-pages redirect for clean URLs) is built from src/404.html
       # via the angular.json assets list, so no SPA-fallback copy step is needed here.
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build Sphinx docs (served from /esgame/docs/)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r docs/requirements.txt
+          # Sphinx emits relative URLs, so the docs work unchanged under the /esgame/docs/ sub-path.
+          sphinx-build -b html docs v2/dist/tradeoff-v2/docs
+          # The Pages artifact is served without Jekyll, but be explicit so Sphinx's
+          # _static / _sources directories are never skipped.
+          touch v2/dist/tradeoff-v2/.nojekyll
 
       - uses: actions/upload-pages-artifact@v3
         with:
