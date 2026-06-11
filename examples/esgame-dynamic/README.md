@@ -64,3 +64,35 @@ So after the first `up`:
 - The durable source of truth is the committed `geoserver/rasters/` folder + the persisted catalog.
 - To wipe and re-seed from scratch: `docker compose -p esgame-dynamic-example down -v` (removes the
   volume), then `up`.
+
+## Alternative backend: pygeoapi (lighter-weight, **read-only**)
+
+`docker-compose.pygeoapi.yml` is a drop-in alternative that replaces GeoServer (plus its one-shot
+seeder and persistent data volume) with a single small [pygeoapi](https://github.com/geopython/pygeoapi)
+container. pygeoapi serves the same consequence rasters as **OGC API - Coverages**; each is fetchable
+as a GeoTIFF at `…/collections/<name>/coverage?f=GTiff` — the drop-in equivalent of GeoServer's WCS
+`GetCoverage`.
+
+```sh
+make esgame-dynamic-pygeoapi-up      # http://localhost:81/  (calculator :8000, pygeoapi :5005)
+make esgame-dynamic-pygeoapi-down
+# or directly:
+ESGAME_IMAGE=local/esgame-core:latest \
+  docker compose -p esgame-dynamic-pygeoapi -f docker-compose.pygeoapi.yml up -d --build
+```
+
+**It is a true drop-in:** the frontend bundle and the calculator *image* are identical to the
+GeoServer stack. The only differences are (1) the calculator's `RASTER_URL_TEMPLATE` env var, which
+points it at pygeoapi's coverage URL instead of WCS, and (2) the backend container. The frontend
+never changes — it just fetches whatever raster URL the calculator returns. (Shares the `81`/`8000`
+ports with the GeoServer example, so run only one at a time.)
+
+> ⚠️ **Read-only data only.** pygeoapi publishes collections from a **static config file**
+> (`pygeoapi/pygeoapi-config.yml`); there is **no run-time publish/REST API** as GeoServer has. That
+> is fine here because the example's rasters never change — but a deployment that must **add, replace,
+> or mutate rasters at run time** (as GeoServer's REST API and the seeder allow) cannot use this
+> variant. To add or change a raster with pygeoapi you edit the config and restart the container.
+
+Why it's lighter: no catalog, no persistent data volume, no separate seeder job, and a much smaller
+image — pygeoapi reads its collections from the baked-in config on every start. The rasters are the
+same `geoserver/rasters/*.tif`, mounted read-only.

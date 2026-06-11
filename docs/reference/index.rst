@@ -11,4 +11,5 @@ container in the system. Each page is grounded in the actual source.
    frontend-components
    calculator
    geoserver
+   pygeoapi
    containers
