@@ -25,7 +25,7 @@ This page is grounded in the example stack under
    * - :file:`geoserver/palettes.json`
      - Palette definitions and the coverage-to-style mapping the seeder consumes.
    * - :file:`geoserver/Dockerfile`
-     - Builds the seeder image (``python:3.12-slim`` + :file:`seed.py`).
+     - Builds the seeder image (``python:3.14-slim`` + :file:`seed.py`).
    * - :file:`geoserver/rasters/`
      - The eight ``*.tif`` consequence rasters, bind-mounted read-only into both GeoServer and the seeder.
    * - :file:`docker-compose.yml`
@@ -85,8 +85,23 @@ attaches the ``Authorization: Basic`` header, and (when ``ctype`` is given) a
 ``Content-Type`` header. The request is sent with a 30-second timeout.
 
 It returns **only the HTTP status code** — ``r.status`` on success, or
-``e.code`` when the response is an ``HTTPError``. No body is parsed; callers
-branch on the status code alone. This means a 4xx/5xx never raises out of ``gs``.
+``e.code`` when the response is an ``HTTPError``. No body is parsed, and a
+4xx/5xx never raises out of ``gs``, so that probing callers such as ``exists``
+can branch on the status.
+
+``gs_ok(method, path, data=None, ctype=None)``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Wraps ``gs`` and raises ``SeedError`` on any non-2xx status. **Every mutating
+call goes through it.** Calls used to go through ``gs`` directly with the status
+discarded, which meant a rejected request looked exactly like a successful one —
+the seeder logged ``[seed] done`` having registered nothing.
+
+``gs_json(path)``
+~~~~~~~~~~~~~~~~~
+
+GETs ``path`` and returns the parsed JSON body, or ``None`` if the call failed.
+Used by the final verification step.
 
 ``exists(path)``
 ~~~~~~~~~~~~~~~~
@@ -151,12 +166,19 @@ steps, in order:
 
       PUT /rest/workspaces/esgame/coveragestores/{name}/external.geotiff?coverageName={name}
       Content-Type: text/plain
-      file:///rasters/{name}.tif
+      /rasters/{name}.tif
 
-   The ``external.geotiff`` endpoint with a ``file://`` body tells GeoServer to
-   reference the GeoTIFF **in place** rather than copy/upload it — only the catalog
-   entry lands in the data dir. ``?coverageName={name}`` names the published
-   coverage to match the store.
+   The ``external.geotiff`` endpoint tells GeoServer to reference the GeoTIFF
+   **in place** rather than copy/upload it — only the catalog entry lands in the
+   data dir. ``?coverageName={name}`` names the published coverage to match the
+   store.
+
+   .. warning::
+
+      The body must be a **plain absolute path**, not a URL. GeoServer 2.28
+      rejects every ``file:`` form with ``400 Failed to locate the input file``.
+      The seeder used to send ``file:///rasters/{name}.tif`` and, because it
+      ignored the response status, reported success while registering nothing.
 
 #. **Create or update styles.** For each *distinct* style name actually used
    (``sorted(set(coverage_styles.values()))``), build the SLD with
@@ -214,7 +236,7 @@ REST endpoints used
      - Does the coverage store exist?
    * - ``PUT``
      - ``/rest/workspaces/esgame/coveragestores/{name}/external.geotiff?coverageName={name}``
-     - Register an *external* GeoTIFF (``file://`` body).
+     - Register an *external* GeoTIFF (plain absolute path as the body).
    * - ``GET``
      - ``/rest/workspaces/esgame/styles/{pname}.json``
      - Does the style exist?
@@ -343,7 +365,7 @@ never coupled to the registration logic, and registration runs exactly once.
 
 .. code-block:: dockerfile
 
-   FROM python:3.12-slim
+   FROM python:3.14-slim
    COPY seed.py /seed.py
    ENTRYPOINT ["python3", "/seed.py"]
 
@@ -392,8 +414,13 @@ Why this survives a reboot:
   read-only into the seeder so it has the same files GeoServer references.
 
 The rasters bind mount is the same source path (``./geoserver/rasters``) on both
-services, so the ``file:///rasters/{name}.tif`` URLs the seeder writes resolve
+services, so the ``/rasters/{name}.tif`` paths the seeder writes resolve
 identically inside the GeoServer container.
+
+After the styles are applied the seeder reads the catalog back and compares the
+registered coverage stores against the ``*.tif`` files on disk, raising
+``SeedError`` if they disagree. A silently empty workspace therefore fails the
+container instead of exiting 0.
 
 
 WCS GetCoverage access pattern

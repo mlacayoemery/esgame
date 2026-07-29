@@ -26,7 +26,7 @@ Build stage
 
 .. code-block:: dockerfile
 
-   FROM node:22-alpine AS build
+   FROM node:26-alpine AS build
    WORKDIR /app
    COPY package.json package-lock.json ./
    RUN npm ci
@@ -35,8 +35,9 @@ Build stage
 
 Notable points:
 
-* **Base image** ``node:22-alpine``. Node 22.22.3+ is required by Angular 22
-  (the package ``engines`` constraint is ``^22.22.3 || ^24.15.0 || >=26``).
+* **Base image** ``node:26-alpine`` — the newest major Angular 22 accepts
+  (``^22.22.3 || ^24.15.0 || >=26.0.0``), matching the ``26.5.0`` pin in CI and
+  the Pages deploy.
 * **Layer caching.** ``package.json`` and ``package-lock.json`` are copied first and
   ``npm ci`` is run before the rest of the source, so dependency installation is only
   re-run when the lockfile changes.
@@ -315,7 +316,7 @@ calculator
 ~~~~~~~~~~
 
 A stateless FastAPI stand-in built from :file:`calculator/Dockerfile`
-(``python:3.12-slim``; ``fastapi==0.115.6`` and ``uvicorn[standard]==0.34.0``), launched as
+(``python:3.14-slim``; ``fastapi==0.140.13`` and ``uvicorn[standard]==0.52.0``), launched as
 ``uvicorn app:app --host 0.0.0.0 --port 8000``. It exposes:
 
 * ``GET /`` — health, returns ``{"status": "ok"}``.
@@ -339,7 +340,7 @@ referenced *in place* by the external coverages the seeder registers.
 geoserver-seed (one-shot)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Built from :file:`geoserver/Dockerfile` (``python:3.12-slim``, stdlib only,
+Built from :file:`geoserver/Dockerfile` (``python:3.14-slim``, stdlib only,
 ``ENTRYPOINT ["python3", "/seed.py"]``) with ``restart: "no"`` — it runs once and exits.
 It ``depends_on: [geoserver]`` and reaches it via the **in-network** URL
 ``GEOSERVER_URL: http://geoserver:8080/geoserver`` (contrast the calculator's

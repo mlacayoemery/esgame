@@ -117,8 +117,8 @@ What the build does
 
 The ``build`` job runs on ``ubuntu-latest`` and:
 
-#. checks out the repo and sets up Node **22.22.3** (Angular 22 requires
-   ``^22.22.3 || ^24.15.0 || >=26``), with ``npm`` caching keyed on
+#. checks out the repo and sets up Node **26.5.0**, the newest release Angular 22
+   accepts (``^22.22.3 || ^24.15.0 || >=26.0.0``), with ``npm`` caching keyed on
    :file:`v2/package-lock.json`;
 #. installs with ``npm ci`` (working directory :file:`v2`);
 #. builds **with the project base href**:
@@ -134,7 +134,7 @@ The ``build`` job runs on ``ubuntu-latest`` and:
    ``calc.html``, ``wc.htm``, ``calc_files`` and ``images`` into
    :file:`v2/dist/tradeoff-v2/v1/`;
 #. uploads :file:`v2/dist/tradeoff-v2` as the Pages artifact
-   (``actions/upload-pages-artifact@v3``).
+   (``actions/upload-pages-artifact@v5``).
 
 The ``deploy`` job then publishes that artifact with
 ``actions/deploy-pages@v4`` into the ``github-pages`` environment. The required
