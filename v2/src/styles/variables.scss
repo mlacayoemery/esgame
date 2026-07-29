@@ -4,7 +4,10 @@ $color-negative: #DE4949;
 $color-green: #5BCF00;
 $color-black: #000000;
 $color-backdrop: #000000b0;
-$color-primary: #1E90FF;
+// 5.84:1 against white — clears WCAG AA (4.5:1) for both the link text and the white
+// text on .button. The previous #1E90FF was 3.24:1 and was the only remaining
+// accessibility failure, holding the Lighthouse score at 93.
+$color-primary: #0B5ED7;
 
 $border-radius-default: 10px;
 
