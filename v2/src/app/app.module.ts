@@ -14,7 +14,6 @@ import { ScoreIndicatorComponent } from './score-indicator/score-indicator.compo
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MissingTranslationHandler, MissingTranslationHandlerParams, provideMissingTranslationHandler, provideTranslateService, TranslateDirective, TranslatePipe } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { HttpClientModule } from '@angular/common/http';
@@ -56,7 +55,6 @@ export class MyMissingTranslationHandler implements MissingTranslationHandler {
 	],
 	imports: [
 		BrowserModule,
-		BrowserAnimationsModule,
 		AppRoutingModule,
 		HttpClientModule,
 		MatIconModule,
