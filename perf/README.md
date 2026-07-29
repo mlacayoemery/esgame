@@ -48,20 +48,29 @@ container's nginx), runs Lighthouse 3× under the `desktop` preset, and asserts:
 
 | Assertion | Budget | Measured |
 |---|---|---|
-| `resource-summary:script:size` | 1,100,000 B | 1,002,317 B |
+| `resource-summary:script:size` | 1,100,000 B | 1,002,152 B |
 | `resource-summary:stylesheet:size` | 120,000 B | 105,159 B |
-| `resource-summary:font:size` | 240,000 B | 213,088 B |
-| `resource-summary:total:size` | 1,550,000 B | 1,411,823 B |
-| `categories:performance` | ≥ 0.80 | 0.89 |
-| `largest-contentful-paint` | ≤ 2500 ms | ~1,647 ms |
-| `total-blocking-time` | ≤ 300 ms | 0 ms |
+| `resource-summary:font:size` | **125,000 B** | **108,429 B** |
+| `resource-summary:total:size` | **1,450,000 B** | **1,358,202 B** |
+| `categories:performance` | ≥ 0.80 | 0.82 |
+| `largest-contentful-paint` | ≤ 2500 ms | ~1,757 ms |
+| `total-blocking-time` | ≤ 300 ms | ~206 ms |
 | `cumulative-layout-shift` | ≤ 0.1 | 0 |
+
+The timing figures above were taken on a loaded desktop. They move a lot with machine
+load — three consecutive runs scored 57 / 82 / 85 while a Docker build was running — so
+**only compare timings A/B in the same sitting**, never against a number recorded on a
+different day. The byte figures are stable to the byte.
 
 Byte budgets are tight (~10% headroom) because transfer sizes are deterministic. The
 timing budgets are the Core Web Vitals "good" thresholds, left loose on purpose — a
 shared CI runner is noisy, and flaky perf gates get ignored. Reports upload as the
 `lighthouse-reports` artifact when the gate fails.
 
-Fonts are 213 kB — the largest non-script resource, and the most obvious next win.
+Fonts were the first thing fixed here: `Roboto-Regular` was served as a 164 kB TTF and
+the other eleven Roboto weights were shipped but never referenced. Converting the one
+used face to WOFF2 cut it 62% (168,260 → 63,608 B) and deleting the unused weights took
+~1.8 MB off the build output. `main` is now ~74% of the transfer, so route-level lazy
+loading is the next lever.
 
 The Playwright suite (`v2/e2e`) can also assert time-to-first-board-render.
