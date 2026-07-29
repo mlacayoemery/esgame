@@ -21,7 +21,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Newest Node that Angular 22's CLI accepts (^22.22.3 || ^24.15.0 || >=26.0.0).
+          # Keep in sync with deploy.yml so the gate matches what ships.
+          node-version: 26.5.0
           cache: npm
           cache-dependency-path: v2/package-lock.json
 
