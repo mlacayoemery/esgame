@@ -27,6 +27,25 @@ test('the dynamic route renders the SVG game', async ({ page }) => {
 	await expect(page.locator('tro-svg-game-board').first()).toBeVisible();
 });
 
+// Every assertion above passes against an empty board — they only prove the component
+// mounted. This one fails unless the GeoTIFFs actually decoded into fields, which is
+// what the byte-range support in e2e/serve.mjs exists for.
+test('the grid board decodes its GeoTIFFs into fields', async ({ page }) => {
+	const errors: string[] = [];
+	page.on('pageerror', e => errors.push(e.message));
+	page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+
+	await page.goto('/');
+	await expect(page.locator('tro-grid-game-board').first()).toBeVisible();
+	// 812 fields per 28x29 board; the page shows the main board plus side maps.
+	await expect.poll(() => page.locator('tro-field').count(), { timeout: 30_000 })
+		.toBeGreaterThanOrEqual(812);
+
+	// geotiff.js reports "Server responded with full file" when a Range request is
+	// answered with the whole body, and then silently renders nothing.
+	expect(errors).toEqual([]);
+});
+
 test('runtime config.json is served and selects the static default', async ({ request }) => {
 	const res = await request.get('/assets/config.json');
 	expect(res.ok()).toBeTruthy();
