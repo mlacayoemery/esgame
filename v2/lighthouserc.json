@@ -28,7 +28,7 @@
         "resource-summary:font:size": [
           "error",
           {
-            "maxNumericValue": 125000
+            "maxNumericValue": 150000
           }
         ],
         "resource-summary:total:size": [
@@ -81,6 +81,12 @@
           "error",
           {
             "minScore": 0.95
+          }
+        ],
+        "resource-summary:third-party:size": [
+          "error",
+          {
+            "maxNumericValue": 0
           }
         ]
       }

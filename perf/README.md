@@ -60,8 +60,9 @@ container's nginx), runs Lighthouse 3× under the `desktop` preset, and asserts:
 |---|---|---|---|
 | `resource-summary:script:size` | 780,000 B | 714,299 B | all runs |
 | `resource-summary:stylesheet:size` | 120,000 B | 105,159 B | all runs |
-| `resource-summary:font:size` | 125,000 B | 108,429 B | all runs |
-| `resource-summary:total:size` | 1,150,000 B | 1,070,303 B | all runs |
+| `resource-summary:font:size` | 150,000 B | 130,139 B | all runs |
+| `resource-summary:third-party:size` | **0 B** | **0 B** | all runs |
+| `resource-summary:total:size` | 1,150,000 B | 1,067,855 B | all runs |
 | `categories:performance` | ≥ 0.70 | ~0.87 | median |
 | `categories:accessibility` | ≥ 0.90 | 93 | all runs |
 | `categories:seo` | ≥ 0.95 | 100 | all runs |
@@ -92,6 +93,13 @@ earlier. Thresholds are deliberately far below the observed median so only a gen
 collapse trips them. Reports upload as the `lighthouse-reports` artifact when the gate
 fails.
 
+**`third-party:size` is asserted at 0 on purpose.** The app used to fetch Roboto and
+Material Icons from Google Fonts and two production-type icons from raw.githubusercontent
+— so the "self-contained" container image could not render correctly without reaching the
+internet, on exactly the offline and filtered school networks this game is played on.
+Everything is now vendored, and this assertion fails the build if any external asset
+creeps back in.
+
 Fonts were the first thing fixed here: `Roboto-Regular` was served as a 164 kB TTF and
 the other eleven Roboto weights were shipped but never referenced. Converting the one
 used face to WOFF2 cut it 62% (168,260 → 63,608 B) and deleting the unused weights took
@@ -100,6 +108,11 @@ used face to WOFF2 cut it 62% (168,260 → 63,608 B) and deleting the unused wei
 — and between them they owned every use of MatStepper, MatInput, MatCheckbox, MatSlider,
 MatSelect and MatFormField. Moving both behind `loadChildren` took 289,822 B out of the
 entry point.
+
+Self-hosting then added the 300/500 Roboto weights and a subset Material Icons face
+(356,840 B TTF → 23,336 B WOFF2, four ligatures). Fonts went 108,429 → 130,139 B but
+third-party went 43,168 → 0, so total transfer is marginally *lower* than before and the
+app makes no external request at all.
 
 The remaining levers, roughly by size: Angular Material is still ~29% of `main`, and
 nine of its ten modules are genuinely used by eagerly-loaded components;

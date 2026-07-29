@@ -13,15 +13,34 @@
 @use 'styles/button';
 @use 'styles/layout';
 
+// Roboto, self-hosted in all three weights the app uses. index.html previously also
+// pulled 300/400/500 from fonts.googleapis.com, so Roboto was fetched twice — once
+// locally and once from Google — and the 300/500 faces existed only on Google's copy.
+//
+// WOFF2 only: ~62% smaller than TTF and supported by every browser in the project's
+// browserslist target (Angular 22's default, Chrome 147+).
+// font-display: swap so text paints in the fallback face rather than staying invisible.
 @font-face {
 	font-family: 'Roboto';
-	// WOFF2 only: it is 62% smaller than the TTF and is supported by every browser
-	// in the project's browserslist target (Angular 22's default, Chrome 147+).
+	src: url('./assets/fonts/Roboto/Roboto-Light.woff2') format('woff2');
+	font-weight: 300;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Roboto';
 	src: url('./assets/fonts/Roboto/Roboto-Regular.woff2') format('woff2');
 	font-weight: 400;
 	font-style: normal;
-	// Render immediately in the fallback face and swap when Roboto arrives, rather
-	// than holding text invisible for the first ~100ms.
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Roboto';
+	src: url('./assets/fonts/Roboto/Roboto-Medium.woff2') format('woff2');
+	font-weight: 500;
+	font-style: normal;
 	font-display: swap;
 }
 

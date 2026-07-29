@@ -23,7 +23,7 @@
 				"pt": null
 			},
 			"fieldColor": "#FFF",
-			"urlToIcon": "https://github.com/mlacayoemery/esgame/blob/master/images/corn.png?raw=true",
+			"urlToIcon": "./assets/images/corn.png",
 			"maxElements": 4
 		},
 		{
@@ -35,7 +35,7 @@
 				"pt": null
 			},
 			"fieldColor": "#FFF",
-			"urlToIcon": "https://raw.githubusercontent.com/mlacayoemery/esgame/master/images/cow.png",
+			"urlToIcon": "./assets/images/cow.png",
 			"maxElements": 4
 		}
 	],
