@@ -1,0 +1,52 @@
+name: Validate manifests
+
+# deploy/k8s had one commit and no gate: it was added, never re-run, and drifted
+# (GeoServer stayed on a rolling 2.24.x tag while both compose stacks moved to 2.28.4).
+# This renders the Kustomize base and schema-checks the result, so drift and typos fail
+# a PR instead of waiting for someone to apply them to a real cluster.
+on:
+  pull_request:
+    paths: ['deploy/**', '.github/workflows/manifests.yml']
+  push:
+    branches: [master]
+    paths: ['deploy/**', '.github/workflows/manifests.yml']
+  schedule:
+    # Mondays 06:20 UTC, offset from the CI job so both do not start at once.
+    - cron: '20 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Render the Kustomize base
+        run: |
+          curl -sSfL -o kustomize.tar.gz \
+            https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.7.1/kustomize_v5.7.1_linux_amd64.tar.gz
+          tar -xzf kustomize.tar.gz
+          ./kustomize build deploy/k8s/base > rendered.yaml
+          echo "rendered $(grep -c '^kind:' rendered.yaml) resources"
+
+      - name: Schema-check against the Kubernetes API
+        run: |
+          curl -sSfL -o kubeconform.tar.gz \
+            https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz
+          tar -xzf kubeconform.tar.gz
+          ./kubeconform -strict -summary -kubernetes-version 1.31.0 rendered.yaml
+
+      - name: Check the GeoServer pin matches the compose stacks
+        run: |
+          # One version of GeoServer across k8s and both compose files, and never a
+          # rolling tag — the drift this workflow exists to catch.
+          pins=$(grep -rhoE 'docker\.osgeo\.org/geoserver:[0-9.x]+' \
+                   deploy/k8s/base v2/docker-compose.dynamic.yml \
+                   examples/esgame-dynamic/docker-compose.yml | sort -u)
+          echo "$pins"
+          if [ "$(echo "$pins" | wc -l)" -ne 1 ]; then
+            echo "::error::GeoServer pins disagree across k8s and the compose stacks"; exit 1
+          fi
+          if echo "$pins" | grep -q 'x$'; then
+            echo "::error::GeoServer is on a rolling tag; pin a specific patch"; exit 1
+          fi
