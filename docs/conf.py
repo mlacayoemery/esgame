@@ -21,7 +21,10 @@ pygments_style = "sphinx"
 
 # -- HTML output -------------------------------------------------------------
 html_theme = "furo"
-html_static_path = ["_static"]
+# No custom static assets yet. Pointing this at a non-existent "_static" made every
+# docs build — including the Pages deploy — warn "html_static_path entry '_static'
+# does not exist". Re-add the path when there is something to put in it.
+html_static_path = []
 html_title = "esgame documentation"
 
 # MyST niceties
