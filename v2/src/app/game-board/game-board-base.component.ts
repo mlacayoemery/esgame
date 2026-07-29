@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, HostListener, Input, OnDestroy, Renderer2 } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, ElementRef, HostBinding, HostListener, Input, OnDestroy, Renderer2, inject } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { Field, HighlightField, SelectedField } from '../shared/models/field';
 import { GameBoard, GameBoardClickMode } from '../shared/models/game-board';
 import { Settings } from '../shared/models/settings';
 import { Legend } from '../shared/models/legend';
-import { SubSink } from 'subsink';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ProductionType } from '../shared/models/production-type';
 
 @Component({
@@ -18,8 +18,10 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 	protected _clickMode = GameBoardClickMode.SelectBoard;
 	protected _selectedFields: SelectedField[] = [];
 	protected _highlightedFields: HighlightField[] = [];
-	protected _sink = new SubSink();
 	protected _listeners: (() => void)[] = [];
+	// Explicit ref so subclasses can use takeUntilDestroyed(this.destroyRef) from lifecycle hooks,
+	// which are not injection contexts.
+	protected readonly destroyRef = inject(DestroyRef);
 	protected _readOnly = false;
 
 	fields: Field[] = [];
@@ -70,10 +72,10 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 		protected elementRef: ElementRef,
 		protected cdRef: ChangeDetectorRef
 	) {
-		this._sink.sink = this.gameService.settingsObs.subscribe(settings => {
+		this.gameService.settingsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(settings => {
 			this.settings = settings;
 		});
-		gameService.productionTypesObs.subscribe(prodTypes => {
+		gameService.productionTypesObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(prodTypes => {
 			this.productionTypes = prodTypes;
 		});
 	}
@@ -100,7 +102,6 @@ export abstract class GameBoardBaseComponent implements OnDestroy {
 	protected abstract drawSelectedFields(): void;
 
 	ngOnDestroy(): void {
-		this._sink.unsubscribe();
 		this._listeners.forEach(fn => fn());
 	}
 }

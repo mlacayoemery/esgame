@@ -3,6 +3,7 @@ import { GameBoardBaseComponent } from '../game-board-base.component';
 import { GameService } from 'src/app/services/game.service';
 import { GameBoard } from 'src/app/shared/models/game-board';
 import { GridFieldComponent } from 'src/app/field/grid-field/grid-field.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
     selector: 'tro-grid-game-board',
@@ -26,7 +27,7 @@ export class GridGameBoardComponent extends GameBoardBaseComponent implements Af
 		cdRef: ChangeDetectorRef
 		) {
 			super(gameService, renderer, elementRef, cdRef);
-			this._sink.sink = this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
+			this.gameService.highlightFieldObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(fieldNumbers => {
 				this._highlightedFields.forEach(o => this.fieldComponents?.get(o.id)?.removeHighlight());
 				this._highlightedFields = fieldNumbers;
 
@@ -44,12 +45,12 @@ export class GridGameBoardComponent extends GameBoardBaseComponent implements Af
 		}
 
 		ngAfterViewInit() {
-			this._sink.sink = this.gameService.selectedFieldsObs.subscribe(fields => {
+			this.gameService.selectedFieldsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(fields => {
 				this._selectedFields = fields;
 				setTimeout(() => this.drawSelectedFields());
 			});
 
-			this._sink.sink = this.fieldComponents.changes.subscribe(_ => {
+			this.fieldComponents.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(_ => {
 				setTimeout(() => this.drawSelectedFields());
 			});
 		}

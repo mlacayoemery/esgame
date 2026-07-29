@@ -4,6 +4,7 @@ import { SvgFieldComponent } from 'src/app/field/svg-field/svg-field.component';
 import { GameService } from 'src/app/services/game.service';
 import { GameBoardType } from 'src/app/shared/models/game-board-type';
 import { GameBoardClickMode } from 'src/app/shared/models/game-board';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
     selector: 'tro-svg-game-board',
@@ -24,11 +25,11 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 
 	constructor(gameService: GameService, renderer: Renderer2, elementRef: ElementRef, cdRef: ChangeDetectorRef) {
 		super(gameService, renderer, elementRef, cdRef);
-		this._sink.sink = this.gameService.settingsObs.subscribe(s => {
+		this.gameService.settingsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(s => {
 			this.consequenceFieldOpacity = s?.visualOptions?.consequenceFieldOpacity ?? false;
 			this.cdRef.markForCheck();
 		});
-		this._sink.sink = this.gameService.highlightFieldObs.subscribe(fieldNumbers => {
+		this.gameService.highlightFieldObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(fieldNumbers => {
 			this._highlightedFields.forEach(o => this.svgFieldComponents?.find(s => s.field.id == o.id)?.removeHighlight());
 			this._highlightedFields = fieldNumbers;
 
@@ -67,12 +68,12 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	}
 
 	ngAfterViewInit() {
-		this._sink.sink = this.gameService.selectedFieldsObs.subscribe(fields => {
+		this.gameService.selectedFieldsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(fields => {
 			this._selectedFields = fields;
 			setTimeout(() => this.drawSelectedFields());
 		});
 
-		this._sink.sink = this.svgFieldComponents.changes.subscribe(_ => {
+		this.svgFieldComponents.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(_ => {
 			setTimeout(() => this.drawSelectedFields());
 		});
 	}
