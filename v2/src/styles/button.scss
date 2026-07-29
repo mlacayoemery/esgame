@@ -1,3 +1,5 @@
+@use 'variables' as *;
+
 .button {
 	padding: 5px 20px;
 	background-color: $color-primary;

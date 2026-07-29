@@ -1,5 +1,18 @@
 /* You can add global styles to this file, and also import other style files */
 
+/* @use must precede all other rules, so the partials load up front. Each partial
+   now @use-s what it needs instead of relying on @import order.
+   The emitted CSS holds the same 243 rules as the @import version — only their
+   order changes. Safe here because no partial targets html/body, so nothing that
+   moved competes with the element rules below. */
+@use 'styles/material';
+@use 'styles/fonts';
+@use 'styles/variables';
+@use 'styles/utils';
+@use 'styles/headings';
+@use 'styles/button';
+@use 'styles/layout';
+
 @font-face {
 	font-family: 'Roboto';
 	src: url('./assets/fonts/Roboto/Roboto-Regular.ttf');
@@ -15,12 +28,5 @@ body {
 	padding: 0;
 }
 
-@import 'styles/material';
-@import 'styles/fonts';
-@import 'styles/variables';
-@import 'styles/utils';
-@import 'styles/headings';
-@import 'styles/button';
-@import 'styles/layout';
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
