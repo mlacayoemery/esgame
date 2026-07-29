@@ -18,8 +18,8 @@ jobs:
       # Google Chrome is preinstalled on ubuntu-latest; Karma + Playwright (channel: chrome) use it.
       CHROME_BIN: /usr/bin/google-chrome
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           # Newest Node that Angular 22's CLI accepts (^22.22.3 || ^24.15.0 || >=26.0.0).
           # Keep in sync with deploy.yml so the gate matches what ships.
@@ -40,7 +40,7 @@ jobs:
 
       - name: Upload Playwright report on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: v2/playwright-report
