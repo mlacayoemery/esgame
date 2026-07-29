@@ -62,7 +62,10 @@ container's nginx), runs Lighthouse 3× under the `desktop` preset, and asserts:
 | `resource-summary:stylesheet:size` | 120,000 B | 105,159 B | all runs |
 | `resource-summary:font:size` | 125,000 B | 108,429 B | all runs |
 | `resource-summary:total:size` | 1,150,000 B | 1,070,303 B | all runs |
-| `categories:performance` | ≥ 0.70 | ~0.85 | median |
+| `categories:performance` | ≥ 0.70 | ~0.87 | median |
+| `categories:accessibility` | ≥ 0.90 | 93 | all runs |
+| `categories:seo` | ≥ 0.95 | 100 | all runs |
+| `categories:best-practices` | ≥ 0.95 | 100 | all runs |
 | `largest-contentful-paint` | ≤ 2500 ms | ~1,550 ms | median |
 | `total-blocking-time` | ≤ 500 ms | ~160 ms | median |
 | `cumulative-layout-shift` | ≤ 0.1 | 0 | median |
@@ -74,6 +77,13 @@ different day. The byte figures are stable to the byte.
 
 **The byte budgets are the gate.** Transfer sizes are byte-identical across runs, so they
 are held tight (~8-10% headroom) and will catch any real regression.
+
+The **accessibility / SEO / best-practices** scores are also byte-stable — identical on
+every run — so they are asserted tightly too. Accessibility sits at 93 rather than 100
+because of one remaining `color-contrast` failure: `$color-primary` (`#1e90ff`) gives
+3.23:1 against white, under the 4.5:1 WCAG AA threshold, both as link text and as a
+button background. Fixing it means darkening the brand colour, which is a design
+decision rather than a maintenance one, so it is deliberately left open.
 
 **The timing assertions are a smoke alarm, not a gate.** They aggregate on the *median*
 of the three runs, because a single noisy run is otherwise enough to fail the build —

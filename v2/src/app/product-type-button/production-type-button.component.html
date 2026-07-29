@@ -1,5 +1,8 @@
 <div class="img-wrapper" [ngStyle]="{ backgroundColor: productionType.fieldColor }">
-	<img class="img"  [src]="productionType.image"
+	<!-- alt="" on purpose: the <p> below already announces the production type, so a
+	     description here would make screen readers say it twice. The empty alt is what
+	     marks it decorative — omitting the attribute entirely is the accessibility bug. -->
+	<img class="img" alt="" [src]="productionType.image"
 		*ngIf="productionType.image" />
 	<div class="img" *ngIf="!productionType.image" [ngStyle]="{ backgroundColor: productionType.fieldColor }">{{
 		("production_type_" + productionType.id | translate).split(' ')[0].charAt(0) }} {{ ("production_type_" +
