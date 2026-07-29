@@ -32,9 +32,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           # Newest Node that Angular 22's CLI accepts (^22.22.3 || ^24.15.0 || >=26.0.0).
           # Keep in sync with ci.yml so the gate matches what ships.
@@ -59,9 +59,11 @@ jobs:
       # Note: 404.html (the spa-github-pages redirect for clean URLs) is built from src/404.html
       # via the angular.json assets list, so no SPA-fallback copy step is needed here.
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
-          python-version: '3.12'
+          # docs/requirements.txt is unpinned, so Sphinx floats to its newest
+          # release; nothing in it caps the interpreter.
+          python-version: '3.15'
 
       - name: Build Sphinx docs (served from /esgame/docs/)
         run: |
@@ -73,7 +75,7 @@ jobs:
           # _static / _sources directories are never skipped.
           touch v2/dist/tradeoff-v2/.nojekyll
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: v2/dist/tradeoff-v2
 
@@ -85,4 +87,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
