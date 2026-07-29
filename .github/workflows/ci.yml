@@ -15,7 +15,8 @@ jobs:
       run:
         working-directory: v2
     env:
-      # Google Chrome is preinstalled on ubuntu-latest; Karma + Playwright (channel: chrome) use it.
+      # Google Chrome is preinstalled on ubuntu-latest; Playwright (channel: chrome) uses it
+      # for the e2e suite. Unit tests run under vitest + jsdom and need no browser.
       CHROME_BIN: /usr/bin/google-chrome
     steps:
       - uses: actions/checkout@v7
@@ -33,7 +34,7 @@ jobs:
         run: npm run build -- --configuration production
 
       - name: Unit tests
-        run: npm test -- --watch=false --browsers=ChromeHeadlessNoSandbox
+        run: npm test -- --watch=false
 
       - name: E2E (Playwright)
         run: npm run e2e
