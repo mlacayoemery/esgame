@@ -31,8 +31,8 @@ Current state
      - Nothing shipped to the browser has an outstanding advisory.
    * - ``npm outdated``
      - **2 entries**
-     - ``typescript`` (capped, see `TypeScript`_) and ``@angular/animations``
-       (deprecated, see `@angular/animations`_). Nothing else is behind.
+     - Only ``typescript`` (capped, see `TypeScript`_). Nothing else is behind, and
+       no package in the tree is deprecated.
 
 
 Blocked upgrades
@@ -53,29 +53,6 @@ resolve it. 6.0.3 is already the newest ``6.0.x``.
 range, then bump both together. Check with::
 
    npm view @angular/compiler-cli@latest peerDependencies.typescript
-
-@angular/animations
-~~~~~~~~~~~~~~~~~~~
-
-*Formally deprecated upstream:* "``@angular/animations`` is deprecated. Use
-``animate.enter`` and ``animate.leave`` instead."
-
-It cannot simply be removed. :file:`app.module.ts` imports
-``BrowserAnimationsModule`` from ``@angular/platform-browser/animations``, which
-resolves ``@angular/animations/browser``. Dropping the package fails the build::
-
-   ✘ [ERROR] Could not resolve "@angular/animations/browser"
-       node_modules/@angular/platform-browser/fesm2022/animations.mjs:10:20
-
-(Its ``latest`` dist-tag points *backwards*, to 20.1.8, which is why
-``npm outdated`` lists it oddly. The installed 22.0.8 is correct.)
-
-**Blocker:** Angular Material's reliance on ``BrowserAnimationsModule``.
-
-**To unblock:** migrate the app off ``BrowserAnimationsModule`` — either to the
-``animate.enter`` / ``animate.leave`` API or to ``provideAnimationsAsync()``.
-This changes Material's component transitions, so it wants visual review rather
-than a blind swap. Not urgent: deprecated, still shipped, still supported.
 
 .. _@modelcontextprotocol/sdk:
 
@@ -229,6 +206,12 @@ Recorded so these are not re-investigated.
    * - ``angular-cli-ghpages``
      - **Removed.** Backed an ``ng deploy`` target nothing invoked; Pages
        deployment goes through ``actions/deploy-pages``.
+   * - ``@angular/animations``
+     - **Removed** (2026-07-29). Deprecated upstream, and Angular Material 22 no longer
+       needs it. Dropping ``BrowserAnimationsModule`` from :file:`app.module.ts` took
+       65,988 B off ``main``. Most Material motion is CSS-based and survives: the built
+       output goes from 110 ``transition``/``animation``/``@keyframes`` declarations to
+       102.
    * - ``rgdal`` (:file:`tools/R/Dockerfile`)
      - **Removed.** Archived on CRAN since Oct 2023, so ``install.packages`` was a
        silent no-op that still exited 0 — the image never had it.
