@@ -11,8 +11,6 @@ import { LegendBoardComponent } from './legend-board/legend-board.component';
 import { ButtonDirective } from './shared/button.directive';
 import { HelpComponent } from './help/help.component';
 import { ScoreIndicatorComponent } from './score-indicator/score-indicator.component';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -28,8 +26,6 @@ import { SvgLevelComponent } from './level/svg-level/svg-level.component';
 import { LoadingIndicatorComponent } from './loading-indicator/loading-indicator.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LevelIndicatorComponent } from './level-indicator/level-indicator.component';
-import { ImportConfigComponent } from './import-config/import-config.component';
-import { StartComponent } from './start/start.component';
 import { HomeComponent } from './home/home.component';
 
 @Injectable()
@@ -56,8 +52,6 @@ export class MyMissingTranslationHandler implements MissingTranslationHandler {
 		SvgLevelComponent,
 		LoadingIndicatorComponent,
 		LevelIndicatorComponent,
-		ImportConfigComponent,
-  		StartComponent,
 		HomeComponent,
 	],
 	imports: [
@@ -65,10 +59,8 @@ export class MyMissingTranslationHandler implements MissingTranslationHandler {
 		BrowserAnimationsModule,
 		AppRoutingModule,
 		HttpClientModule,
-		MatSelectModule,
 		MatIconModule,
 		MatButtonModule,
-		MatFormFieldModule,
 		MatProgressSpinnerModule,
 		FormsModule,
 		ReactiveFormsModule,

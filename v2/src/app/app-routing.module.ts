@@ -2,7 +2,6 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { GridLevelComponent } from './level/grid-level/grid-level.component';
 import { SvgLevelComponent } from './level/svg-level/svg-level.component';
-import { StartComponent } from './start/start.component';
 import { HomeComponent } from './home/home.component';
 
 const routes: Routes = [
@@ -12,9 +11,10 @@ const routes: Routes = [
 		component: HomeComponent
 	},
 	{
-		// The start / configuration landing page (was the default route).
+		// The start / configuration landing page (was the default route). Lazy: it is
+		// not on the path to the game and owns the last eager MatSelect/MatFormField use.
 		path: 'config',
-		component: StartComponent
+		loadChildren: () => import('./start/start.module').then(m => m.StartModule)
 	},
 	{
 		path: 'static-game',

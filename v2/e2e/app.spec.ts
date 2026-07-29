@@ -9,10 +9,18 @@ test('root launches the grid game by default (not the start screen)', async ({ p
 	await expect(page.getByText('Welcome to the new version')).toHaveCount(0);
 });
 
+// /config is lazy-loaded, so a broken chunk shows up here as a blank route.
 test('/config shows the start / configuration page', async ({ page }) => {
+	const errors: string[] = [];
+	page.on('pageerror', e => errors.push(e.message));
+	page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+
 	await page.goto('/config');
 	await expect(page.getByText('Welcome to the new version')).toBeVisible();
 	await expect(page.getByRole('button', { name: /Configuration 2 \(Static maps\)/ })).toBeVisible();
+	// mat-select lives only in the lazy chunk — if it rendered, the chunk resolved.
+	await expect(page.locator('mat-select').first()).toBeVisible();
+	expect(errors).toEqual([]);
 });
 
 test('the start page launches the static grid game', async ({ page }) => {
