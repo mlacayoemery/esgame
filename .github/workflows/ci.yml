@@ -1,12 +1,23 @@
 name: CI
 
-# Build + unit + e2e gate for the v2 app on pull requests and pushes to master.
+# Build + unit + e2e + Lighthouse gate for the v2 app.
+#
+# The path filter keeps PRs fast, but it is also how this gate once stayed red for
+# seven weeks unnoticed: CI never ran on the docs and examples PRs that were merged
+# during that period, so nothing reported the failure. The weekly schedule exists to
+# close that hole — master gets exercised whether or not anyone touches v2/, and
+# breakage that arrives from outside the repo (a runner image change, a deprecated
+# action, a new advisory) surfaces on its own.
 on:
   pull_request:
     paths: ['v2/**', '.github/workflows/ci.yml']
   push:
     branches: [master]
     paths: ['v2/**', '.github/workflows/ci.yml']
+  schedule:
+    # Mondays 06:00 UTC.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
 
 jobs:
   build-test:
@@ -62,3 +73,10 @@ jobs:
           name: lighthouse-reports
           path: v2/.lighthouseci/reports
           retention-days: 7
+
+      # Scheduled runs only: a new advisory against a shipped dependency should surface
+      # on its own, but should not block an unrelated PR that happens to be open when it
+      # lands. Production dependencies are at 0 — this defends that.
+      - name: Production dependency audit
+        if: github.event_name == 'schedule'
+        run: npm audit --omit=dev --audit-level=high

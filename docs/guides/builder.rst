@@ -432,6 +432,15 @@ jsdom. A pull request must pass build + unit + e2e + Lighthouse to be mergeable.
    outright, and the Build step failed on every run for roughly seven weeks before
    it was noticed. Keep the two workflows in step.
 
+   That outage went unnoticed because of the ``paths`` filter: CI never ran on the
+   docs and examples PRs merged during the period, so nothing surfaced the failure.
+   The workflow therefore also runs **weekly (Mondays 06:00 UTC)** and on
+   ``workflow_dispatch``, so master is exercised whether or not anyone touches
+   :file:`v2/`. Scheduled runs additionally execute
+   ``npm audit --omit=dev --audit-level=high``, which is deliberately *not* part of
+   the PR gate — a new advisory should surface on its own without blocking an
+   unrelated PR that happens to be open when it lands.
+
 
 Publishing the container image (ghcr)
 =====================================
