@@ -20,7 +20,22 @@ break to find the per-replica ceiling. Install k6: https://k6.io/docs/get-starte
 
 ## Frontend load (recommended next)
 
-The build is over its bundle budget (warns at ~995 KB vs the 500 KB initial budget in
-`v2/angular.json`), and the heavy client op is GeoTIFF decode → SVG. Add **Lighthouse CI** to gate
-bundle size + LCP/TBT regressions in CI; the Playwright suite (`v2/e2e`) can also assert
+The production build exceeds its `initial` bundle budget on every run. Measured on
+Angular 22.0.8 (`ng build --configuration production`):
+
+| Entry-point file | Size |
+|---|---|
+| `main-*.js` | 966,182 B (943 KiB) |
+| `styles-*.css` | 104,990 B (103 KiB) |
+| `polyfills-*.js` | 35,784 B (35 KiB) |
+| **initial total** | **1,106,956 B — 1.11 MB** |
+
+The budgets in `v2/angular.json` are `maximumWarning: 1mb` / `maximumError: 2mb`, so the
+build **warns** by ~107 kB but does not fail — the 2 MB error threshold is what would
+actually break CI. (Angular reports budgets in decimal units: 1 mb = 1,000,000 bytes.)
+
+`main` is 87% of the payload, and the heavy client op is GeoTIFF decode → SVG.
+
+A perpetual warning is not a gate. Add **Lighthouse CI** to hold the line on bundle size
+and LCP/TBT regressions; the Playwright suite (`v2/e2e`) can also assert
 time-to-first-board-render.
