@@ -114,3 +114,60 @@ describe('GameService placement rules', () => {
 		expect(await selectedIds(service)).toEqual([]);
 	});
 });
+
+// With elementSize > 1 a click places a square block whose top-left is the clicked cell,
+// except near the right/bottom edges where getAssociatedFields shifts the block back onto
+// the board. That clamping is index arithmetic with real off-by-one risk, and it decides
+// what a player actually gets when they click near an edge.
+describe('GameService placement geometry (elementSize 2)', () => {
+	let service: GameService;
+
+	// 4x4 board, ids 0..15 laid out row-major:
+	//    0  1  2  3
+	//    4  5  6  7
+	//    8  9 10 11
+	//   12 13 14 15
+	const board2 = { ...settingsData, elementSize: 2 };
+
+	beforeEach(() => {
+		service = newService();
+		service.loadSettings(board2);
+		service.setSelectedProductionType(productionType(1, 0));
+	});
+
+	it('places a 2x2 block anchored at the clicked cell', async () => {
+		service.selectField(5);
+		expect(await selectedIds(service)).toEqual([5, 6, 9, 10]);
+	});
+
+	it('shifts the block left when the click is against the right edge', async () => {
+		service.selectField(7); // rightmost column — a block anchored here would overflow
+		expect(await selectedIds(service)).toEqual([6, 7, 10, 11]);
+	});
+
+	it('shifts the block up when the click is on the bottom row', async () => {
+		service.selectField(13);
+		expect(await selectedIds(service)).toEqual([9, 10, 13, 14]);
+	});
+
+	it('shifts both ways in the bottom-right corner', async () => {
+		service.selectField(15);
+		expect(await selectedIds(service)).toEqual([10, 11, 14, 15]);
+	});
+
+	it('rejects a block that would overlap an existing one', async () => {
+		service.selectField(5);            // occupies 5, 6, 9, 10
+		service.selectField(6);            // would occupy 6, 7, 10, 11 — overlaps
+		expect(await selectedIds(service)).toEqual([5, 6, 9, 10]);
+
+		service.selectField(2);            // 2, 3, 6, 7 — also overlaps at 6
+		expect(await selectedIds(service)).toEqual([5, 6, 9, 10]);
+	});
+
+	it('counts a whole block as one element against maxElements', async () => {
+		service.setSelectedProductionType(productionType(2, 1));
+		service.selectField(0);            // one block = one element, quota now full
+		service.selectField(2);            // non-overlapping, but over quota
+		expect(await selectedIds(service)).toEqual([0, 1, 4, 5]);
+	});
+});
