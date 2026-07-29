@@ -27,6 +27,9 @@ deploy/k8s/base/          # this Kustomize base (angular + calculation + geoserv
    - `esgame-angular` → your published frontend tag (defaults to `ghcr.io/mlacayoemery/esgame:master`).
    - `esgame-calculation` → build [`../../tools/R`](../../tools/R) and push it, then point here (or override in an overlay).
 2. **Hosts** — replace the `CHANGE-ME-*.example.com` hosts in the three `*-ingress.yaml` files.
+   **Ingress class** — check `kubectl get ingressclass`. If none is marked default, uncomment
+   `ingressClassName` in all three files and set your controller's class. An Ingress with neither
+   applies without error and is then silently ignored: nothing routes, and nothing says why.
 3. **Backend URL** — in `base/configmap.yaml` set `CALC_URL` to the **public** calculation ingress
    host from step 2 (the browser posts there client-side, so it must be externally reachable, not the
    in-cluster service name). Set `CALC_URL: ""` for a client-side-only (grid) deployment.

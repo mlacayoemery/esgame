@@ -17,7 +17,9 @@ spec:
       containers:
         - name: esgame-geoserver
           # Pin to a specific patch (e.g. 2.24.4) for reproducible deploys instead of rolling 2.24.x.
-          image: docker.osgeo.org/geoserver:2.24.x
+          # Pinned to a specific patch, matching v2/docker-compose.dynamic.yml and
+          # examples/esgame-dynamic/docker-compose.yml. 2.24.x was a rolling tag.
+          image: docker.osgeo.org/geoserver:2.28.4
           imagePullPolicy: Always
           env:
             - name: CORS_ENABLED

@@ -10,6 +10,11 @@ metadata:
     # The browser posts here cross-origin, so CORS must allow the frontend origin.
     nginx.ingress.kubernetes.io/enable-cors: "true"
 spec:
+  # An Ingress with no ingressClassName is only picked up if the cluster has an
+  # IngressClass marked as default. Without one, this Ingress is silently ignored —
+  # it applies cleanly and nothing ever routes. Uncomment and set your controller's
+  # class if `kubectl get ingressclass` shows no default.
+  # ingressClassName: nginx
   rules:
     # Must match CALC_URL in configmap.yaml (this is the public URL the browser posts to).
     - host: CHANGE-ME-esgame-calculation.example.com
