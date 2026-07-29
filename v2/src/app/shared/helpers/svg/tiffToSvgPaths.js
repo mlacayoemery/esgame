@@ -193,7 +193,9 @@ export default function tiffToSvgPaths(data, options = {}) {
         const groups = valueGroups.get(key).set;
         let path = '';
         for (const edge of groups) {
-            path += `M${edge.x * scale},${edge.y * scale}`;
+            // Offsets belong on the moveto too: H/V below add them, so omitting them
+            // here put the subpath start in a different coordinate space from its own edges.
+            path += `M${(edge.x * scale) + offsetX},${(edge.y * scale) + offsetY}`;
             for (let itr = edge.next; itr != edge; itr = itr === null || itr === void 0 ? void 0 : itr.next) {
                 if ((itr === null || itr === void 0 ? void 0 : itr.type) == 'H') {
                     path += `H${((itr === null || itr === void 0 ? void 0 : itr.x) * scale) + offsetX}`;
