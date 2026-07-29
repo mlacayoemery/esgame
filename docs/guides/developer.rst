@@ -85,14 +85,16 @@ All versions below are pinned in :file:`esgame/v2/package.json`.
      - Version
      - Notes
    * - Angular
-     - ``22.0.0``
-     - ``@angular/core``, ``common``, ``forms``, ``router``, ``material``,
-       ``cdk``, ``animations``, ``platform-browser`` — all pinned to ``22.0.0``.
+     - ``22.0.8``
+     - ``@angular/core``, ``common``, ``forms``, ``router``, ``animations``,
+       ``platform-browser`` at ``22.0.8``; ``material`` and ``cdk`` at
+       ``22.0.6``. ``platform-browser-dynamic`` was dropped — ``src/main.ts``
+       bootstraps with ``platformBrowser()`` from ``@angular/platform-browser``.
    * - Build / serve / test builder
-     - ``@angular/build 22.0.0``
+     - ``@angular/build 22.0.9``
      - The esbuild-based **application** builder. ``angular.json`` uses
        ``@angular/build:application`` (build), ``:dev-server`` (serve), and
-       ``:karma`` (test). No webpack.
+       ``:unit-test`` (test). No webpack.
    * - TypeScript
      - ``6.0.3``
      - ``tsConfig`` targets ``ES2022`` with ``strict: true``,
@@ -108,30 +110,36 @@ All versions below are pinned in :file:`esgame/v2/package.json`.
      - ``~7.8.2``
      - Reactive state in ``GameService`` (``BehaviorSubject`` streams).
    * - uuid
-     - ``^14.0.0``
+     - ``^14.0.1``
      - Generates the per-session ``game_id`` sent to the calculator.
    * - zone.js
      - ``0.16.2``
      - Polyfill (configured in ``angular.json`` ``polyfills``).
-   * - Karma + Jasmine
-     - ``karma ~6.4.4``, ``jasmine-core ^6.3.0``
-     - Unit tests via ``@angular/build:karma``.
+   * - Vitest + jsdom
+     - ``vitest ^4.1.10``, ``jsdom ^30.0.1``
+     - Unit tests via ``@angular/build:unit-test`` (``npm test``). Replaced
+       Karma + Jasmine, whose ``socket.io``/``ws`` chain carried every
+       outstanding audit finding. The specs are unchanged — they use only
+       ``describe``/``it``/``expect``, which Vitest provides.
    * - Playwright
-     - ``^1.60.0``
-     - End-to-end tests (``npm run e2e``).
-   * - angular-cli-ghpages
-     - ``^3.1.0``
-     - The ``deploy`` architect target for the static GitHub Pages build.
+     - ``^1.62.0``
+     - End-to-end tests (``npm run e2e``), driving the system Chrome.
+   * - Lighthouse CI
+     - ``@lhci/cli ^0.15.1``
+     - Bundle-size and Core Web Vitals gate (``npm run lhci``), configured in
+       :file:`v2/lighthouserc.json`. See :file:`perf/README.md`.
 
 .. note::
 
-   **Node.js >= 22.22.3 is required.** Angular 22 and the
-   ``@angular/build`` esbuild toolchain do not run on older Node releases.
-   Verify your version before installing:
+   **Node.js ^22.22.3 || ^24.15.0 || >=26.0.0 is required.** That is the range
+   Angular 22's CLI accepts; the ``@angular/build`` esbuild toolchain does not
+   run outside it. CI and the Pages deploy both pin **26.5.0**, the newest
+   accepted release, so the gate runs the same runtime that ships. Verify your
+   version before installing:
 
    .. code-block:: sh
 
-      node --version    # must be >= 22.22.3
+      node --version    # ^22.22.3 || ^24.15.0 || >=26.0.0
 
 The build is configured in :file:`esgame/v2/angular.json`. Highlights:
 
@@ -177,19 +185,24 @@ Other scripts (from :file:`package.json`):
    * - ``npm run watch``
      - ``ng build --watch --configuration development`` — rebuild on change.
    * - ``npm test``
-     - ``ng test`` — Karma + Jasmine unit tests.
+     - ``ng test`` — Vitest unit tests.
    * - ``npm run e2e``
      - ``ng build && playwright test`` — end-to-end tests against the built app.
+   * - ``npm run lhci``
+     - Lighthouse CI bundle-size / Core Web Vitals gate.
 
-Running unit tests headless
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Running unit tests once
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-``npm test`` opens an interactive Chrome via ``karma-chrome-launcher`` by
-default. For CI or a headless terminal, run a single headless pass:
+``npm test`` runs Vitest in watch mode. For CI or a one-shot pass:
 
 .. code-block:: sh
 
-   npm test -- --watch=false --browsers=ChromeHeadless
+   npm test -- --watch=false
+
+No browser is involved: the unit suite runs under **jsdom**, so there is
+nothing to install and no ``CHROME_BIN`` to set. Real-browser behavior is
+covered by the Playwright e2e suite instead.
 
 Existing specs cover the configuration and scoring logic — for example
 :file:`services/config.service.spec.ts`, :file:`services/score.service.spec.ts`,

@@ -62,7 +62,7 @@ The scripts in :file:`v2/package.json`:
      - Incremental rebuild for local development.
    * - ``test``
      - ``ng test``
-     - Karma unit tests (``@angular/build:karma``).
+     - Vitest unit tests (``@angular/build:unit-test``, jsdom).
    * - ``e2e``
      - ``ng build && playwright test``
      - Build, then run the Playwright end-to-end suite.
@@ -189,7 +189,7 @@ Build stage
 
 .. code-block:: dockerfile
 
-   FROM node:22-alpine AS build
+   FROM node:26-alpine AS build
    WORKDIR /app
    COPY package.json package-lock.json ./
    RUN npm ci
@@ -198,8 +198,9 @@ Build stage
 
 Key points:
 
-* **Base image** ``node:22-alpine``. Node ``22.22.3+`` is required by Angular 22;
-  the package ``engines`` constraint is ``^22.22.3 || ^24.15.0 || >=26``.
+* **Base image** ``node:26-alpine`` — the newest major Angular 22 accepts
+  (``^22.22.3 || ^24.15.0 || >=26.0.0``), matching the ``26.5.0`` pin in CI and
+  the Pages deploy.
 * **Layer caching.** ``package.json`` and ``package-lock.json`` are copied *before*
   the rest of the source and ``npm ci`` runs against just the lockfile, so the
   dependency-install layer is only invalidated when the lockfile changes — editing
@@ -308,7 +309,7 @@ Example calculator (FastAPI)
 
 .. code-block:: dockerfile
 
-   FROM python:3.12-slim
+   FROM python:3.14-slim
    WORKDIR /app
    COPY requirements.txt .
    RUN pip install --no-cache-dir -r requirements.txt
@@ -329,9 +330,9 @@ simple allocation-based score. Pinned dependencies in
    * - Package
      - Version
    * - ``fastapi``
-     - ``0.115.6``
+     - ``0.140.13``
    * - ``uvicorn[standard]``
-     - ``0.34.0``
+     - ``0.52.0``
 
 The browser-facing GeoServer base URL is supplied at run time via the
 ``GEOSERVER_PUBLIC_URL`` environment variable (default
@@ -351,7 +352,7 @@ What *is* built is the one-shot **seeder**,
 
 .. code-block:: dockerfile
 
-   FROM python:3.12-slim
+   FROM python:3.14-slim
    COPY seed.py /seed.py
    ENTRYPOINT ["python3", "/seed.py"]
 
@@ -403,7 +404,7 @@ The job runs from the ``v2`` working directory and proceeds in order:
    * - Checkout
      - ``actions/checkout@v4``
    * - Node
-     - ``actions/setup-node@v4`` with ``node-version: 20``, ``cache: npm``,
+     - ``actions/setup-node@v7`` with ``node-version: 26.5.0``, ``cache: npm``,
        ``cache-dependency-path: v2/package-lock.json``
    * - Install
      - ``npm ci``
@@ -413,20 +414,23 @@ The job runs from the ``v2`` working directory and proceeds in order:
      - ``npm test -- --watch=false --browsers=ChromeHeadlessNoSandbox``
    * - E2E (Playwright)
      - ``npm run e2e``
+   * - Lighthouse CI
+     - ``npm run lhci``
    * - On failure
-     - upload ``v2/playwright-report`` (``actions/upload-artifact@v4``,
-       ``retention-days: 7``)
+     - upload ``v2/playwright-report`` and ``v2/.lighthouseci/reports``
+       (``actions/upload-artifact@v7``, ``retention-days: 7``)
 
-Karma and Playwright (``channel: chrome``) use the preinstalled Chrome via
-``CHROME_BIN: /usr/bin/google-chrome``. A pull request must pass build + unit + e2e
-to be mergeable.
+Playwright (``channel: chrome``) and Lighthouse use the preinstalled Chrome via
+``CHROME_BIN`` / ``CHROME_PATH``. The unit suite needs no browser — it runs under
+jsdom. A pull request must pass build + unit + e2e + Lighthouse to be mergeable.
 
 .. note::
 
-   CI pins ``node-version: 20`` for the build/test gate, whereas the image and
-   Pages builds use Node 22 (the version Angular 22 *requires* to run). The gate
-   confirms the app compiles and its tests pass; the published artifacts are built
-   on the required Node 22.
+   CI and the Pages deploy both pin ``node-version: 26.5.0`` — the newest release
+   Angular 22 accepts — so the gate runs the same runtime that ships. This has not
+   always been true: the gate previously pinned Node 20, which Angular 22 rejects
+   outright, and the Build step failed on every run for roughly seven weeks before
+   it was noticed. Keep the two workflows in step.
 
 
 Publishing the container image (ghcr)
@@ -456,8 +460,8 @@ Publishing to GitHub Pages
 A third workflow, :file:`.github/workflows/deploy.yml`, deploys the app to GitHub
 Pages at ``https://<owner>.github.io/esgame/``. It installs with ``npm ci`` and
 builds with ``--base-href /esgame/ --configuration production`` on Node
-``22.22.3``, archives the legacy v1 game under ``dist/tradeoff-v2/v1/``, and uploads
-``v2/dist/tradeoff-v2`` via ``actions/upload-pages-artifact@v3``. The ``404.html``
+``26.5.0``, archives the legacy v1 game under ``dist/tradeoff-v2/v1/``, and uploads
+``v2/dist/tradeoff-v2`` via ``actions/upload-pages-artifact@v5``. The ``404.html``
 SPA-redirect page is emitted automatically from ``src/404.html`` (it is in the
 ``angular.json`` assets list), so no extra fallback-copy step is needed.
 
@@ -479,17 +483,19 @@ same constraints are applied everywhere:
        failing if ``package.json`` and the lockfile disagree. Used identically in
        the Dockerfile, ``ci.yml``, and ``deploy.yml``.
    * - Pinned Angular packages
-     - All ``@angular/*`` packages and ``@angular/build`` / ``@angular/cli`` are
-       pinned to ``22.0.0`` (exact, no caret) in :file:`v2/package.json`;
+     - All ``@angular/*`` packages are pinned exactly (no caret) in
+       :file:`v2/package.json` — ``22.0.8`` for the framework, ``22.0.6`` for
+       ``material`` / ``cdk``, ``22.0.9`` for ``@angular/build`` / ``@angular/cli``;
        ``typescript`` is pinned to ``6.0.3`` and ``zone.js`` to ``0.16.2``.
+       ``typescript`` cannot advance past ``6.0.x``: ``@angular/compiler-cli@22``
+       declares ``typescript: ">=6.0 <6.1"``.
    * - Node version
-     - Angular 22 requires ``^22.22.3 || ^24.15.0 || >=26``. The image uses
-       ``node:22-alpine`` and Pages pins ``22.22.3``; CI's build/test gate runs on
-       Node 20.
+     - Angular 22 requires ``^22.22.3 || ^24.15.0 || >=26.0.0``. The image uses
+       ``node:26-alpine``; CI and Pages both pin ``26.5.0``.
    * - Pinned image bases
-     - ``node:22-alpine``, ``nginx:alpine``, ``python:3.12-slim``, and
+     - ``node:26-alpine``, ``nginx:alpine``, ``python:3.14-slim``, and
        ``docker.osgeo.org/geoserver:2.28.4``; the example calculator pins
-       ``fastapi==0.115.6`` and ``uvicorn[standard]==0.34.0``.
+       ``fastapi==0.140.13`` and ``uvicorn[standard]==0.52.0``.
    * - Configuration-free build
      - No backend address is compiled in. ``CALC_URL`` (and ``config.json`` more
        broadly) is applied at *run time*, so a given image hash is reproducible and

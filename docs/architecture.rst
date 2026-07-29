@@ -30,7 +30,8 @@ One Angular codebase, two modes
 ===============================
 
 The application is the Angular SPA under :file:`v2/` (Angular 22; the build requires
-Node ``22.22.3+``, per :file:`v2/Dockerfile`). Routing is **hash-based**
+Node ``^22.22.3 || ^24.15.0 || >=26.0.0`` and uses ``node:26-alpine``, per
+:file:`v2/Dockerfile`). Routing is **hash-based**
 (``useHash`` routing), so no server rewrite rules are required for the SPA to work
 under any base path.
 
@@ -218,7 +219,7 @@ The shared image
 
 :file:`v2/Dockerfile` is a two-stage build:
 
-* **Build stage** — ``node:22-alpine``; ``npm ci`` from the lockfile, then
+* **Build stage** — ``node:26-alpine``; ``npm ci`` from the lockfile, then
   ``npm run build -- --base-href / --configuration production``. The image serves from
   the domain root; a reverse proxy maps host/path to the container.
 * **Runtime stage** — ``nginx:alpine`` serving ``dist/tradeoff-v2/`` from
