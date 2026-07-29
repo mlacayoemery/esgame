@@ -151,6 +151,35 @@ rule but means two builds a month apart are not the same build.
        without a code change here.
 
 
+Runtime dependencies on external hosts
+---------------------------------------
+
+**There are none, and that is now enforced.**
+
+The app used to fetch Roboto and Material Icons from Google Fonts (declared in
+:file:`index.html`) and two production-type icons from ``raw.githubusercontent.com``
+(referenced by :file:`assets/dataGridExample.json`, the *default* dataset). The
+container image is described as self-contained, but could not render text or icons
+correctly without reaching the internet — a real problem on the offline and filtered
+school networks this game is played on.
+
+All of it is vendored now:
+
+* Roboto 300/400/500 as WOFF2 in :file:`src/assets/fonts/Roboto`.
+* Material Icons subset to the four ligatures the app uses
+  (``open_in_full``, ``close_fullscreen``, ``delete``, ``add``) — 356,840 B TTF down to
+  23,336 B WOFF2 — in :file:`src/assets/fonts/MaterialIcons`.
+* ``corn.png`` / ``cow.png`` copied from the repository's own :file:`images/` into
+  :file:`src/assets/images`.
+
+:file:`v2/lighthouserc.json` asserts ``resource-summary:third-party:size <= 0``, so any
+new external asset fails CI. Verified by loading the container with every non-localhost
+origin blocked: no request is even attempted, and icons, fonts and images all render.
+
+**Vendored font licensing:** Roboto and Material Icons are both Apache-2.0.
+:file:`src/assets/fonts/Roboto/LICENSE.txt` is retained.
+
+
 Superseded but maintained
 -------------------------
 
