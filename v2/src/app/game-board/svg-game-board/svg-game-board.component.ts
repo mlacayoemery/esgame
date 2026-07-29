@@ -52,7 +52,11 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 
 	displayPatterns = 'inline';
 	addShowHideListeners() {
-		if (this.clickMode != GameBoardClickMode.SelectBoard || this._boardData.gameBoardType == this.consequenceType || this.readOnly) {
+		// _boardData may still be unset: the boardData setter ignores a null value, and
+		// the main board binds it through an async pipe that starts null. Today the
+		// clickMode check short-circuits before this is reached, but that makes the
+		// component depend on the order the inputs happen to appear in the template.
+		if (this.clickMode != GameBoardClickMode.SelectBoard || this._boardData?.gameBoardType == this.consequenceType || this.readOnly) {
 			this._showHideListeners.forEach(o => o());
 			this._showHideListeners = [];
 			return;
