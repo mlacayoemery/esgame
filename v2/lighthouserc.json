@@ -3,7 +3,9 @@
     "collect": {
       "startServerCommand": "node e2e/serve.mjs",
       "startServerReadyPattern": "e2e server:",
-      "url": ["http://localhost:4173/"],
+      "url": [
+        "http://localhost:4173/"
+      ],
       "numberOfRuns": 3,
       "settings": {
         "preset": "desktop"
@@ -11,15 +13,54 @@
     },
     "assert": {
       "assertions": {
-        "resource-summary:script:size": ["error", { "maxNumericValue": 1100000 }],
-        "resource-summary:stylesheet:size": ["error", { "maxNumericValue": 120000 }],
-        "resource-summary:font:size": ["error", { "maxNumericValue": 125000 }],
-        "resource-summary:total:size": ["error", { "maxNumericValue": 1450000 }],
-
-        "categories:performance": ["error", { "minScore": 0.8 }],
-        "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
-        "total-blocking-time": ["error", { "maxNumericValue": 300 }],
-        "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }]
+        "resource-summary:script:size": [
+          "error",
+          {
+            "maxNumericValue": 1000000
+          }
+        ],
+        "resource-summary:stylesheet:size": [
+          "error",
+          {
+            "maxNumericValue": 120000
+          }
+        ],
+        "resource-summary:font:size": [
+          "error",
+          {
+            "maxNumericValue": 125000
+          }
+        ],
+        "resource-summary:total:size": [
+          "error",
+          {
+            "maxNumericValue": 1380000
+          }
+        ],
+        "categories:performance": [
+          "error",
+          {
+            "minScore": 0.8
+          }
+        ],
+        "largest-contentful-paint": [
+          "error",
+          {
+            "maxNumericValue": 2500
+          }
+        ],
+        "total-blocking-time": [
+          "error",
+          {
+            "maxNumericValue": 300
+          }
+        ],
+        "cumulative-layout-shift": [
+          "error",
+          {
+            "maxNumericValue": 0.1
+          }
+        ]
       }
     },
     "upload": {

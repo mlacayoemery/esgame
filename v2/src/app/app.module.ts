@@ -12,20 +12,14 @@ import { ButtonDirective } from './shared/button.directive';
 import { HelpComponent } from './help/help.component';
 import { ScoreIndicatorComponent } from './score-indicator/score-indicator.component';
 import { MatSelectModule } from '@angular/material/select';
-import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
-import { MatStepperModule } from '@angular/material/stepper';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatSliderModule } from '@angular/material/slider';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MissingTranslationHandler, MissingTranslationHandlerParams, provideMissingTranslationHandler, provideTranslateService, TranslateDirective, TranslatePipe } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { HttpClientModule } from '@angular/common/http';
-import { ConfiguratorComponent } from './configurator/configurator.component';
 import { SvgGameBoardComponent } from './game-board/svg-game-board/svg-game-board.component';
 import { GridGameBoardComponent } from './game-board/grid-game-board/grid-game-board.component';
 import { SvgFieldComponent } from './field/svg-field/svg-field.component';
@@ -55,7 +49,6 @@ export class MyMissingTranslationHandler implements MissingTranslationHandler {
 		ButtonDirective,
 		HelpComponent,
 		ScoreIndicatorComponent,
-		ConfiguratorComponent,
 		SvgFieldComponent,
 		SvgGameBoardComponent,
 		GridGameBoardComponent,
@@ -73,17 +66,12 @@ export class MyMissingTranslationHandler implements MissingTranslationHandler {
 		AppRoutingModule,
 		HttpClientModule,
 		MatSelectModule,
-		MatInputModule,
 		MatIconModule,
-		MatDividerModule,
 		MatButtonModule,
-		MatSliderModule,
 		MatFormFieldModule,
 		MatProgressSpinnerModule,
-		MatCheckboxModule,
 		FormsModule,
 		ReactiveFormsModule,
-		MatStepperModule,
 		TranslatePipe,
 		TranslateDirective,
 	],

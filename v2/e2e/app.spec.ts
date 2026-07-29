@@ -46,6 +46,20 @@ test('the grid board decodes its GeoTIFFs into fields', async ({ page }) => {
 	expect(errors).toEqual([]);
 });
 
+// /configurator is lazy-loaded. A broken chunk shows up as a blank route rather than
+// a build error, so assert the component and its heaviest widget actually mount.
+test('the lazy /configurator route loads its chunk and renders', async ({ page }) => {
+	const errors: string[] = [];
+	page.on('pageerror', e => errors.push(e.message));
+	page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+
+	await page.goto('/configurator');
+	await expect(page.locator('tro-configurator')).toBeVisible();
+	// MatStepper lives only in the lazy chunk — if it rendered, the chunk resolved.
+	await expect(page.locator('mat-stepper')).toBeVisible();
+	expect(errors).toEqual([]);
+});
+
 test('runtime config.json is served and selects the static default', async ({ request }) => {
 	const res = await request.get('/assets/config.json');
 	expect(res.ok()).toBeTruthy();
