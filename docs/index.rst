@@ -27,6 +27,7 @@ Start with the :doc:`architecture` overview, then the guide that matches your ro
    data-flow
    game-mechanics
    static-vs-dynamic
+   dependency-review
 
 .. toctree::
    :maxdepth: 2
