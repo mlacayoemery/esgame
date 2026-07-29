@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostBinding, Input, Renderer2 } from '@angular/core';
-import { SubSink } from 'subsink';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FieldBaseComponent } from '../field-base.component';
 import { HighlightSide } from 'src/app/shared/models/field';
 import { GameService } from 'src/app/services/game.service';
@@ -20,7 +20,6 @@ export class GridFieldComponent extends FieldBaseComponent {
 		return false;
 	}
 	private _imageMode = false;
-	private _sink = new SubSink();
 
 	@Input() set imageMode(mode: any) {
 		this._imageMode = mode !== false;
@@ -49,11 +48,11 @@ export class GridFieldComponent extends FieldBaseComponent {
 		cdRef: ChangeDetectorRef
 	) {
 		super(gameService, renderer, elementRef, cdRef);
-		this._sink.sink = this.gameService.settingsObs.subscribe(settings => {
+		this.gameService.settingsObs.pipe(takeUntilDestroyed()).subscribe(settings => {
 			this.elementSize = settings.elementSize;
 			this.imageMode = settings.imageMode;
 		});
-		gameService.settingsObs.subscribe(settings => {
+		gameService.settingsObs.pipe(takeUntilDestroyed()).subscribe(settings => {
 			this.highlightColor = settings.highlightColor;
 		});
 	}
@@ -106,8 +105,4 @@ export class GridFieldComponent extends FieldBaseComponent {
 		this.showProductionImage = true;
 	}
 
-	override ngOnDestroy(): void {
-		super.ngOnDestroy();
-		this._sink.unsubscribe();
-	}
 }
