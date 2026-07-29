@@ -25,18 +25,22 @@ The production build is **within** its `initial` budget. Measured on Angular 22.
 
 | Entry-point file | Size |
 |---|---|
-| `main-*.js` | 835,862 B |
+| `main-*.js` | 676,273 B |
 | `styles-*.css` | 105,077 B |
 | `polyfills-*.js` | 35,784 B |
-| **initial total** | **976,723 B** |
+| **initial total** | **817,134 B** |
 
 The budgets in `v2/angular.json` are `maximumWarning: 1mb` / `maximumError: 2mb`, and
 Angular reports them in decimal units (1 mb = 1,000,000 bytes). The build emitted the
-warning on every run until `/configurator` was made lazy — that moved 130,233 B out of
-the entry point (1,106,956 → 976,723) and the warning stopped.
+warning on every run until the two non-game routes were made lazy:
 
-That headroom is only ~23 kB, so the budget is now a live gate rather than background
-noise: the next thing added to the eager graph will trip it.
+| Change | initial total |
+|---|---|
+| (before) | 1,106,956 B |
+| `/configurator` lazy | 976,723 B |
+| `/config` lazy | **817,134 B** |
+
+a 289,822 B reduction (−26%). There is now ~183 kB of headroom under the warning.
 
 The heavy client op is GeoTIFF decode → SVG.
 
@@ -52,31 +56,40 @@ container's nginx), runs Lighthouse 3× under the `desktop` preset, and asserts:
 
 | Assertion | Budget | Measured |
 |---|---|---|
-| `resource-summary:script:size` | 1,000,000 B | 938,017 B |
-| `resource-summary:stylesheet:size` | 120,000 B | 105,159 B |
-| `resource-summary:font:size` | 125,000 B | 108,429 B |
-| `resource-summary:total:size` | 1,380,000 B | 1,294,040 B |
-| `categories:performance` | ≥ 0.80 | 0.83 |
-| `largest-contentful-paint` | ≤ 2500 ms | ~1,790 ms |
-| `total-blocking-time` | ≤ 300 ms | ~175 ms |
-| `cumulative-layout-shift` | ≤ 0.1 | 0 |
+| Assertion | Budget | Measured | Aggregation |
+|---|---|---|---|
+| `resource-summary:script:size` | 780,000 B | 714,299 B | all runs |
+| `resource-summary:stylesheet:size` | 120,000 B | 105,159 B | all runs |
+| `resource-summary:font:size` | 125,000 B | 108,429 B | all runs |
+| `resource-summary:total:size` | 1,150,000 B | 1,070,303 B | all runs |
+| `categories:performance` | ≥ 0.70 | ~0.85 | median |
+| `largest-contentful-paint` | ≤ 2500 ms | ~1,550 ms | median |
+| `total-blocking-time` | ≤ 500 ms | ~160 ms | median |
+| `cumulative-layout-shift` | ≤ 0.1 | 0 | median |
 
 The timing figures above were taken on a loaded desktop. They move a lot with machine
 load — three consecutive runs scored 57 / 82 / 85 while a Docker build was running — so
 **only compare timings A/B in the same sitting**, never against a number recorded on a
 different day. The byte figures are stable to the byte.
 
-Byte budgets are tight (~10% headroom) because transfer sizes are deterministic. The
-timing budgets are the Core Web Vitals "good" thresholds, left loose on purpose — a
-shared CI runner is noisy, and flaky perf gates get ignored. Reports upload as the
-`lighthouse-reports` artifact when the gate fails.
+**The byte budgets are the gate.** Transfer sizes are byte-identical across runs, so they
+are held tight (~8-10% headroom) and will catch any real regression.
+
+**The timing assertions are a smoke alarm, not a gate.** They aggregate on the *median*
+of the three runs, because a single noisy run is otherwise enough to fail the build —
+observed here: 88 / 90 / 69 in one sitting, and 77 / 86 / 85 for the same code moments
+earlier. Thresholds are deliberately far below the observed median so only a genuine
+collapse trips them. Reports upload as the `lighthouse-reports` artifact when the gate
+fails.
 
 Fonts were the first thing fixed here: `Roboto-Regular` was served as a 164 kB TTF and
 the other eleven Roboto weights were shipped but never referenced. Converting the one
 used face to WOFF2 cut it 62% (168,260 → 63,608 B) and deleting the unused weights took
-~1.8 MB off the build output. Route-level lazy loading came next: `/configurator` is an authoring tool, not on the
-path to the game, and the only consumer of MatStepper / MatInput / MatCheckbox /
-MatSlider. Moving it behind `loadChildren` took 130,233 B out of the entry point.
+~1.8 MB off the build output. Route-level lazy loading came next. Neither `/configurator` (an authoring tool) nor
+`/config` (the start page) is on the path a player takes — the game is the default route
+— and between them they owned every use of MatStepper, MatInput, MatCheckbox, MatSlider,
+MatSelect and MatFormField. Moving both behind `loadChildren` took 289,822 B out of the
+entry point.
 
 The remaining levers, roughly by size: Angular Material is still ~29% of `main`, and
 nine of its ten modules are genuinely used by eagerly-loaded components;
