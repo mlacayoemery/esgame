@@ -46,3 +46,19 @@ jobs:
           name: playwright-report
           path: v2/playwright-report
           retention-days: 7
+
+      # Bundle-size + Core Web Vitals gate. The Angular `initial` budget only warns,
+      # so this is what actually fails a regression. Reuses e2e/serve.mjs (same SPA
+      # fallback as the container's nginx) and the build produced above.
+      - name: Lighthouse CI
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: npm run lhci
+
+      - name: Upload Lighthouse reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-reports
+          path: v2/.lighthouseci/reports
+          retention-days: 7

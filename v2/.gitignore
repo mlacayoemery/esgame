@@ -41,6 +41,7 @@ testem.log
 /test-results
 /playwright-report
 /playwright/.cache
+/.lighthouseci
 
 # System files
 .DS_Store
