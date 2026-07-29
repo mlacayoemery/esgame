@@ -1,0 +1,4 @@
+# Without this file the SPA fallback answers /robots.txt with index.html, which
+# crawlers (and Lighthouse) then try to parse as robots syntax and reject.
+User-agent: *
+Allow: /
