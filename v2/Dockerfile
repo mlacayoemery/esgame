@@ -1,6 +1,7 @@
 # ---- Build stage ----
-# Node 22.22.3+ required by Angular 22 (engines: ^22.22.3 || ^24.15.0 || >=26).
-FROM node:22-alpine AS build
+# Angular 22 requires Node ^22.22.3 || ^24.15.0 || >=26.0.0. Track the newest
+# accepted major, matching the 26.5.0 pin in ci.yml / deploy.yml.
+FROM node:26-alpine AS build
 WORKDIR /app
 
 # Install deps first for better layer caching (only re-runs when lockfile changes)

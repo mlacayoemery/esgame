@@ -20,8 +20,9 @@ services:
     # url: http://localhost:8000/openapi.json
 
   esgame-geoserver:
-    # Pin to a specific patch (e.g. 2.24.4) instead of the rolling 2.24.x tag for reproducibility.
-    image: docker.osgeo.org/geoserver:2.24.x
+    # Pinned to a specific patch (not a rolling 2.x tag) for reproducibility, and kept in
+    # step with examples/esgame-dynamic/docker-compose.yml so both stacks run the same server.
+    image: docker.osgeo.org/geoserver:2.28.4
     environment:
       CORS_ENABLED: "true"
     ports:
