@@ -62,8 +62,10 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           # docs/requirements.txt is unpinned, so Sphinx floats to its newest
-          # release; nothing in it caps the interpreter.
-          python-version: '3.15'
+          # release; nothing in it caps the interpreter. The cap is the runner:
+          # 3.14.6 is the newest stable build actions/python-versions ships for
+          # ubuntu-24.04 x64 (3.15 is released, but has no image for it yet).
+          python-version: '3.14.6'
 
       - name: Build Sphinx docs (served from /esgame/docs/)
         run: |
