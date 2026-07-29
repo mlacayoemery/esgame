@@ -25,10 +25,10 @@ The production build is **within** its `initial` budget. Measured on Angular 22.
 
 | Entry-point file | Size |
 |---|---|
-| `main-*.js` | 676,273 B |
-| `styles-*.css` | 105,077 B |
+| `main-*.js` | 610,307 B |
+| `styles-*.css` | 105,750 B |
 | `polyfills-*.js` | 35,784 B |
-| **initial total** | **817,134 B** |
+| **initial total** | **751,841 B** |
 
 The budgets in `v2/angular.json` are `maximumWarning: 1mb` / `maximumError: 2mb`, and
 Angular reports them in decimal units (1 mb = 1,000,000 bytes). The build emitted the
@@ -38,9 +38,10 @@ warning on every run until the two non-game routes were made lazy:
 |---|---|
 | (before) | 1,106,956 B |
 | `/configurator` lazy | 976,723 B |
-| `/config` lazy | **817,134 B** |
+| `/config` lazy | 817,134 B |
+| `@angular/animations` dropped | **751,841 B** |
 
-a 289,822 B reduction (−26%). There is now ~183 kB of headroom under the warning.
+a 355,115 B reduction (−32%). There is now ~248 kB of headroom under the warning.
 
 The heavy client op is GeoTIFF decode → SVG.
 
@@ -58,11 +59,11 @@ container's nginx), runs Lighthouse 3× under the `desktop` preset, and asserts:
 |---|---|---|
 | Assertion | Budget | Measured | Aggregation |
 |---|---|---|---|
-| `resource-summary:script:size` | 780,000 B | 714,299 B | all runs |
+| `resource-summary:script:size` | 700,000 B | 648,333 B | all runs |
 | `resource-summary:stylesheet:size` | 120,000 B | 105,159 B | all runs |
 | `resource-summary:font:size` | 150,000 B | 130,139 B | all runs |
 | `resource-summary:third-party:size` | **0 B** | **0 B** | all runs |
-| `resource-summary:total:size` | 1,150,000 B | 1,067,855 B | all runs |
+| `resource-summary:total:size` | 1,080,000 B | 1,001,871 B | all runs |
 | `categories:performance` | ≥ 0.70 | ~0.87 | median |
 | `categories:accessibility` | **= 1.00** | 100 | all runs |
 | `categories:seo` | ≥ 0.95 | 100 | all runs |
@@ -116,9 +117,13 @@ Self-hosting then added the 300/500 Roboto weights and a subset Material Icons f
 third-party went 43,168 → 0, so total transfer is marginally *lower* than before and the
 app makes no external request at all.
 
-The remaining levers, roughly by size: Angular Material is still ~29% of `main`, and
-nine of its ten modules are genuinely used by eagerly-loaded components;
-`@angular/animations` is ~63 kB and only present because `app.module.ts` imports
-`BrowserAnimationsModule` (see the dependency review).
+`@angular/animations` went next: Angular Material 22 no longer needs it, so dropping
+`BrowserAnimationsModule` took another 65,988 B off `main`. Most Material motion is
+CSS-based and survives — the built output goes from 110 `transition`/`animation`/
+`@keyframes` declarations to 102.
+
+The main remaining lever is Angular Material itself, still ~29% of `main`, with nine of
+its ten modules genuinely used by eagerly-loaded components. Going further means
+component-level changes rather than configuration.
 
 The Playwright suite (`v2/e2e`) can also assert time-to-first-board-render.
