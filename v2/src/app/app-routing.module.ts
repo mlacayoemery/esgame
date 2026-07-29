@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { ConfiguratorComponent } from './configurator/configurator.component';
 import { GridLevelComponent } from './level/grid-level/grid-level.component';
 import { SvgLevelComponent } from './level/svg-level/svg-level.component';
 import { StartComponent } from './start/start.component';
@@ -26,8 +25,10 @@ const routes: Routes = [
 		component: SvgLevelComponent
 	},
 	{
+		// Lazy: the configurator is an authoring tool, not on the path to the game,
+		// and it owns the heaviest Material widgets (stepper/input/checkbox/slider).
 		path: 'configurator',
-		component: ConfiguratorComponent
+		loadChildren: () => import('./configurator/configurator.module').then(m => m.ConfiguratorModule)
 	},
 	{
 		// Unknown paths fall back to the game.
