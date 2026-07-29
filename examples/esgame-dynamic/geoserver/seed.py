@@ -21,7 +21,13 @@ RASTERS = os.environ.get("RASTERS_DIR", "/rasters")
 PALETTES_FILE = os.environ.get("PALETTES_FILE", "/palettes.json")
 
 
+class SeedError(RuntimeError):
+    """A GeoServer call the seed depends on did not succeed."""
+
+
 def gs(method, path, data=None, ctype=None):
+    """Perform the call and return its HTTP status. Never raises on an HTTP error -
+    callers that only probe (see exists) need the status, not an exception."""
     req = urllib.request.Request(GS + path, data=data, method=method)
     req.add_header("Authorization", "Basic " + AUTH)
     if ctype:
@@ -31,6 +37,30 @@ def gs(method, path, data=None, ctype=None):
             return r.status
     except urllib.error.HTTPError as e:
         return e.code
+
+
+def gs_ok(method, path, data=None, ctype=None):
+    """Like gs(), but abort the seed on a non-2xx status.
+
+    Every mutating call goes through here. Without it a rejected request is
+    indistinguishable from a successful one and the seed 'succeeds' having
+    registered nothing.
+    """
+    status = gs(method, path, data, ctype)
+    if not 200 <= status < 300:
+        raise SeedError(f"{method} {path} -> HTTP {status}")
+    return status
+
+
+def gs_json(path):
+    """GET path and return its parsed JSON body, or None if the call failed."""
+    req = urllib.request.Request(GS + path, method="GET")
+    req.add_header("Authorization", "Basic " + AUTH)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.load(r)
+    except (urllib.error.HTTPError, urllib.error.URLError, ValueError):
+        return None
 
 
 def exists(path):
@@ -45,6 +75,7 @@ def wait_for_geoserver():
         except Exception:
             pass
         time.sleep(2)
+    raise SeedError(f"GeoServer at {GS} did not become ready within 240s")
 
 
 def sld(name, colors, vmin, vmax):
@@ -76,18 +107,22 @@ def main():
     wait_for_geoserver()
 
     if not exists(f"/rest/workspaces/{WS}.json"):
-        gs("POST", "/rest/workspaces", f"<workspace><name>{WS}</name></workspace>".encode(), "text/xml")
+        gs_ok("POST", "/rest/workspaces", f"<workspace><name>{WS}</name></workspace>".encode(), "text/xml")
         print(f"[seed] workspace '{WS}' created", flush=True)
 
-    # External coverages
+    # External coverages.
+    # The body is a plain absolute path, NOT a file:// URL. GeoServer 2.28 rejects every
+    # file: form here with 400 "Failed to locate the input file"; the bare path is what
+    # RESTUtils.handleEXTERNALUpload resolves. The path is inside the GeoServer container,
+    # which mounts the same ./geoserver/rasters directory at /rasters as this seeder does.
     for fn in sorted(os.listdir(RASTERS)):
         if not fn.endswith(".tif"):
             continue
         name = fn[:-4]
         if exists(f"/rest/workspaces/{WS}/coveragestores/{name}.json"):
             continue
-        gs("PUT", f"/rest/workspaces/{WS}/coveragestores/{name}/external.geotiff?coverageName={name}",
-           f"file://{RASTERS}/{fn}".encode(), "text/plain")
+        gs_ok("PUT", f"/rest/workspaces/{WS}/coveragestores/{name}/external.geotiff?coverageName={name}",
+              f"{RASTERS}/{fn}".encode(), "text/plain")
         print(f"[seed] coverage {name}", flush=True)
 
     # Styles (one per palette actually used), create-or-update
@@ -95,17 +130,27 @@ def main():
         p = palettes[pname]
         body = sld(pname, p["colors"], vmin, vmax).encode()
         if exists(f"/rest/workspaces/{WS}/styles/{pname}.json"):
-            gs("PUT", f"/rest/workspaces/{WS}/styles/{pname}", body, "application/vnd.ogc.sld+xml")
+            gs_ok("PUT", f"/rest/workspaces/{WS}/styles/{pname}", body, "application/vnd.ogc.sld+xml")
         else:
-            gs("POST", f"/rest/workspaces/{WS}/styles?name={pname}", body, "application/vnd.ogc.sld+xml")
+            gs_ok("POST", f"/rest/workspaces/{WS}/styles?name={pname}", body, "application/vnd.ogc.sld+xml")
         print(f"[seed] style {pname}", flush=True)
 
     # Default style per coverage's layer
     for cov, pal in coverage_styles.items():
-        gs("PUT", f"/rest/layers/{WS}:{cov}",
-           f"<layer><defaultStyle><name>{WS}:{pal}</name></defaultStyle></layer>".encode(), "text/xml")
+        gs_ok("PUT", f"/rest/layers/{WS}:{cov}",
+              f"<layer><defaultStyle><name>{WS}:{pal}</name></defaultStyle></layer>".encode(), "text/xml")
         print(f"[seed] {cov} -> default style {pal}", flush=True)
 
+    # Prove the catalog actually holds what we just claimed to register, so a silent
+    # regression here fails the container instead of leaving an empty workspace behind.
+    expected = sorted(f[:-4] for f in os.listdir(RASTERS) if f.endswith(".tif"))
+    listed = gs_json(f"/rest/workspaces/{WS}/coveragestores.json") or {}
+    stores = listed.get("coverageStores") or {}
+    got = sorted(s["name"] for s in (stores.get("coverageStore") or [])) if stores else []
+    if got != expected:
+        raise SeedError(f"expected coveragestores {expected}, GeoServer has {got}")
+
+    print(f"[seed] verified {len(got)} coverage stores", flush=True)
     print("[seed] done", flush=True)
 
 
