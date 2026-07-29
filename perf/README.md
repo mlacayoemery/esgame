@@ -64,7 +64,7 @@ container's nginx), runs Lighthouse 3× under the `desktop` preset, and asserts:
 | `resource-summary:third-party:size` | **0 B** | **0 B** | all runs |
 | `resource-summary:total:size` | 1,150,000 B | 1,067,855 B | all runs |
 | `categories:performance` | ≥ 0.70 | ~0.87 | median |
-| `categories:accessibility` | ≥ 0.90 | 93 | all runs |
+| `categories:accessibility` | **= 1.00** | 100 | all runs |
 | `categories:seo` | ≥ 0.95 | 100 | all runs |
 | `categories:best-practices` | ≥ 0.95 | 100 | all runs |
 | `largest-contentful-paint` | ≤ 2500 ms | ~1,550 ms | median |
@@ -80,11 +80,13 @@ different day. The byte figures are stable to the byte.
 are held tight (~8-10% headroom) and will catch any real regression.
 
 The **accessibility / SEO / best-practices** scores are also byte-stable — identical on
-every run — so they are asserted tightly too. Accessibility sits at 93 rather than 100
-because of one remaining `color-contrast` failure: `$color-primary` (`#1e90ff`) gives
-3.23:1 against white, under the 4.5:1 WCAG AA threshold, both as link text and as a
-button background. Fixing it means darkening the brand colour, which is a design
-decision rather than a maintenance one, so it is deliberately left open.
+every run — so they are asserted tightly too. Accessibility is now **100 with no failing
+audits**, so its assertion is pinned at exactly 1.00: any new component that introduces
+a violation fails CI rather than quietly eroding the score.
+
+Getting there needed a brand change. `$color-primary` was `#1e90ff`, which is 3.24:1
+against white — under the 4.5:1 WCAG AA threshold — as both link text and a
+white-on-blue button background. It is now `#0b5ed7` at **5.84:1**.
 
 **The timing assertions are a smoke alarm, not a gate.** They aggregate on the *median*
 of the three runs, because a single noisy run is otherwise enough to fail the build —
