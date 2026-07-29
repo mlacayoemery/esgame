@@ -6,12 +6,14 @@ RUN R -e "install.packages('Rcpp')"
 RUN R -e "install.packages('sf')"
 RUN R -e "install.packages('sp')"
 RUN R -e "install.packages('raster')"
-RUN R -e "install.packages('rgdal')"
+# NOTE: rgdal is intentionally absent. It was retired from CRAN in Oct 2023, so
+# install.packages('rgdal') resolves to nothing while still exiting 0 — the image
+# built "successfully" without it for years. calculator.r does not use it.
+# 'grid' is likewise absent: it ships with R as a base package.
 RUN R -e "install.packages('ggplot2')"
 RUN R -e "install.packages('ggpubr')"
 RUN R -e "install.packages('tidyverse')"
 RUN R -e "install.packages('tidyr')"
-RUN R -e "install.packages('grid')"
 RUN R -e "install.packages('jsonlite')"
 #RUN R -e "install.packages('geosapi')"
 RUN R -e "install.packages('logger')"
