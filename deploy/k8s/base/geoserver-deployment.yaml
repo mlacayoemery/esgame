@@ -16,7 +16,6 @@ spec:
     spec:
       containers:
         - name: esgame-geoserver
-          # Pin to a specific patch (e.g. 2.24.4) for reproducible deploys instead of rolling 2.24.x.
           # Pinned to a specific patch, matching v2/docker-compose.dynamic.yml and
           # examples/esgame-dynamic/docker-compose.yml. 2.24.x was a rolling tag.
           image: docker.osgeo.org/geoserver:2.28.4
@@ -24,6 +23,21 @@ spec:
           env:
             - name: CORS_ENABLED
               value: "true"
+            # Without these the image keeps its default admin/geoserver login — on a
+            # deployment whose REST API is published through geoserver-ingress, and which
+            # the calculation backend uses to create workspaces and upload coverages.
+            # Deliberately required, with no default: a missing Secret must stop the
+            # rollout, not silently ship well-known credentials.
+            - name: GEOSERVER_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: esgame-geoserver-admin
+                  key: username
+            - name: GEOSERVER_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: esgame-geoserver-admin
+                  key: password
           ports:
             - containerPort: 8080
               protocol: TCP
