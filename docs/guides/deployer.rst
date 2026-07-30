@@ -503,20 +503,34 @@ The base (:file:`esgame/deploy/k8s/base`) ships three components — the
 dynamic mode only) and ``esgame-geoserver`` — plus an ``esgame-config``
 ConfigMap, services and ingresses. The overlay does four things:
 
-#. **Repoints images** to the places registry via a single ``images:`` block
-   (the base references *logical* image names ``esgame-angular`` /
-   ``esgame-calculation`` so they can be rewritten without patching each
-   manifest):
+#. **Repoints images** to the places registry via a single ``images:`` block:
 
    .. code-block:: yaml
 
       images:
-        - name: esgame-angular
+        - name: ghcr.io/mlacayoemery/esgame
           newName: CHANGE-ME-registry/places-frontend     # built from ../../frontend
           newTag: latest
-        - name: esgame-calculation
+        - name: ghcr.io/mlacayoemery/esgame-calculation
           newName: CHANGE-ME-registry/places-calculation   # built from ../../calculation
           newTag: latest
+
+   .. warning::
+
+      Key these on the image the **base already rewrote them to**, as above — not on
+      the base's logical names (``esgame-angular`` / ``esgame-calculation``). Kustomize
+      applies the base's own ``images:`` transformer first, so by the time the overlay
+      runs those logical names no longer appear and an entry keyed on them matches
+      nothing. It does not warn: the overlay renders cleanly and deploys the **upstream
+      esgame images** instead of the places ones.
+
+      Verified against esgame's base — keying on ``esgame-angular`` leaves
+      ``ghcr.io/mlacayoemery/esgame:master`` in the output, while keying on
+      ``ghcr.io/mlacayoemery/esgame`` produces the intended image. Always confirm with:
+
+      .. code-block:: console
+
+         $ kustomize build deploy/k8s | grep 'image:'
 
 #. **Overrides the config** (``patch-config.yaml``) — the places backend
    ``CALC_URL`` and ``GEOSERVER_URL`` in the ConfigMap. ``CALC_URL`` must be the

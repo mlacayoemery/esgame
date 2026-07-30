@@ -50,7 +50,27 @@ reload). See [../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
 Create an overlay `kustomization.yaml` with `resources: [../esgame/deploy/k8s/base]` (or a vendored
 copy) and layer on only what differs — no forked manifests:
 
-- **Images** — one `images:` entry to point `esgame-angular`/`esgame-calculation` at your registry.
+- **Images** — one `images:` entry per image. **Match the name this base rewrites them *to*, not the
+  logical name.** Kustomize applies the base's transformers first, so by the time an overlay runs,
+  `esgame-angular` no longer appears anywhere and an entry keyed on it matches nothing — silently,
+  with no error, leaving the upstream image deployed:
+
+  ```yaml
+  images:
+    # ✗ matches nothing — the base already rewrote esgame-angular
+    - name: esgame-angular
+      newName: my-registry/places-frontend
+    # ✓ matches what the base produced
+    - name: ghcr.io/mlacayoemery/esgame
+      newName: my-registry/places-frontend
+      newTag: latest
+    - name: ghcr.io/mlacayoemery/esgame-calculation
+      newName: my-registry/places-calculation
+      newTag: latest
+  ```
+
+  Check with `kustomize build <overlay> | grep image:` before deploying — a wrong key here produces
+  a clean render of the wrong application.
 - **Hosts / TLS** — patch the ingress hosts.
 - **Config/theming** — a ConfigMap with the deployment's `data.json` (setting `visualOptions` /
   `gradientOverrides`) mounted onto the frontend's `assets/`.

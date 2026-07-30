@@ -22,8 +22,12 @@ resources:
   - geoserver-service.yaml
   - geoserver-ingress.yaml
 
-# Logical image names are referenced by the deployments and rewritten here, so an overlay can
-# repoint them with one `images:` entry instead of patching each manifest.
+# The deployments reference logical names (esgame-angular, esgame-calculation); the entries below
+# rewrite them so this base is deployable as-is.
+#
+# NOTE FOR OVERLAYS: because these run first, an overlay's `images:` entry must key on the name
+# produced here (e.g. ghcr.io/mlacayoemery/esgame), NOT on the logical name — which no longer
+# exists by then. Keying on the logical name matches nothing and does not warn. See ../README.md.
 images:
   - name: esgame-angular
     newName: ghcr.io/mlacayoemery/esgame
