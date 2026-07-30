@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { GameService } from '../services/game.service';
 import { Router } from '@angular/router';
+import { take } from 'rxjs';
 
 @Component({
     selector: 'tro-import-config',
@@ -22,7 +23,15 @@ export class ImportConfigComponent {
 			fileReader.onload = _ => {
 				let result = fileReader.result;
 				if (result) {
-					this.gameService.loadSettings(JSON.parse(result.toString()));
+					// JSON.parse was unguarded here. Because this runs in FileReader.onload the
+					// throw is asynchronous, so no caller could catch it: choosing the wrong file
+					// looked exactly like choosing no file at all — nothing loaded, nothing said.
+					try {
+						this.gameService.loadSettings(JSON.parse(result.toString()));
+					} catch (err) {
+						console.error(err);
+						alert("That file could not be read as a game configuration.");
+					}
 				}
 			}
 			fileReader.readAsText(files[0]);
@@ -30,7 +39,11 @@ export class ImportConfigComponent {
 	}
 
 	start() {
-		this.gameService.settingsObs.subscribe(settings => {
+		// take(1): this used to subscribe for the lifetime of the component, so the subscription
+		// outlived the navigation and every later loadSettings re-ran it and navigated again —
+		// and the level components call loadSettings on init, immediately after arriving here.
+		// Two clicks left two live subscriptions, and each settings change fired both.
+		this.gameService.settingsObs.pipe(take(1)).subscribe(settings => {
 			if (settings.mode == 'GRID') {
 				this.router.navigate(['static-game']);
 			} else {
