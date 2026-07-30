@@ -48,10 +48,13 @@ http.createServer(async (req, res) => {
 	try {
 		if ((await stat(file)).isDirectory()) file = join(file, 'index.html');
 	} catch {
-		// SPA fallback — but NOT for assets. Serving index.html for a missing .tif returns
-		// 200 text/html, and geotiff.js then dies on "Invalid byte order value" having read
-		// "<!" as the byte order. That is a 404 wearing a 200, and it hid five missing
-		// consequence rasters referenced by src/assets/data.json. A real 404 says what is wrong.
+		// SPA fallback — but NOT for assets, because the container does not fall back either.
+		// nginx.conf matches .tif/.js/.css/fonts/config.json with `try_files $uri =404`, so a
+		// missing raster returns a real 404 there (verified against the published image). This
+		// server used to answer the same request with index.html at 200 text/html, and geotiff.js
+		// died on "Invalid byte order value" having read "<!" as the byte order — a 404 wearing a
+		// 200, and less faithful than production, which is how five missing consequence rasters
+		// referenced by src/assets/data.json went unnoticed.
 		if (pathname.startsWith('/assets/')) {
 			res.writeHead(404, { 'Content-Type': 'text/plain' });
 			res.end(`not found: ${pathname}`);

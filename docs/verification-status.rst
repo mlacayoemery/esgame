@@ -108,15 +108,20 @@ The dynamic game's consequence rasters are not in the repository
    :file:`v2/src/assets/data.json` names five consequence maps —
    ``Consequence_1_Clip.tif`` … ``Consequence_4_Clip.tif`` — and **none of those files exists**,
    in ``src`` or in a build. In dynamic mode with no calculator configured (``calcUrl: ""``,
-   which is the default), submitting a round fetches all five, and a static server's SPA
-   fallback answers each with ``index.html`` — **status 200, ``text/html``**. geotiff.js then
-   dies on ``Invalid byte order value`` having read ``<!`` as the byte order, the level never
-   advances, and no consequence board renders. A 404 wearing a 200.
+   which is the default), submitting a round fetches all five, they all fail, the level never
+   advances, and no consequence board renders.
+
+   The container is honest about it: :file:`v2/nginx.conf` matches ``.tif`` with
+   ``try_files $uri =404``, so a missing raster returns a real **404** — verified against the
+   published image. The *test* server was not. :file:`v2/e2e/serve.mjs` fell back to
+   ``index.html`` for everything, so the same request came back **200 ``text/html``** and
+   geotiff.js died on ``Invalid byte order value`` having read ``<!`` as the byte order. That
+   divergence is why the missing files went unnoticed; serve.mjs now 404s ``/assets/*`` like
+   nginx does.
 
    A deployment with a real calculator is unaffected: the URLs in ``data.json`` are placeholders
    that ``prepareNextLevel`` overwrites with whatever the calculator returns. So this only bites
-   the backend-less dynamic build. :file:`v2/e2e/serve.mjs` now returns a real 404 for a missing
-   ``/assets/*`` rather than masking it, which is what surfaced this.
+   the backend-less dynamic build.
 
 The committed base raster makes the game inert
    :file:`v2/src/assets/images/LU_and_NEW_hexa.tif` numbers its hexagons ``10``–``474``
