@@ -136,6 +136,19 @@ The committed base raster makes the game inert
    for exercising the plumbing, and a green round against it says nothing about the model.
    See :ref:`allocation-id-space`.
 
+The loading spinner does not clear when a level fails to build
+   ``prepareNextLevel`` now handles the error, clears the loading counter and tells the player
+   (:file:`v2/src/app/services/game.service.ts`, ``failLevel``) — before, a failed raster fetch
+   left the counter pushed, the level unchanged and nothing said at all. The **spinner itself
+   still does not disappear.** ``LoadingIndicatorComponent``'s subscriber does receive the
+   cleared value — verified in a browser, it runs with ``length 0`` — but its
+   ``@HostBinding('class.show')`` never reaches the DOM: the error arrives from outside Angular's
+   zone, and a host binding is evaluated by the *parent* view, not the component's own. Both
+   ``cdRef.detectChanges()`` in the component and ``NgZone.run()`` in its subscriber were tried
+   and neither updated it. Reachable today only in offline dynamic mode, which cannot finish a
+   round anyway (see above); a deployment with a working calculator does not hit it unless a
+   returned coverage URL fails.
+
 No default IngressClass is assumed
    The three Ingresses set no ``ingressClassName``. If the cluster has no default
    ``IngressClass`` they apply cleanly and route nothing, with no error. Check
