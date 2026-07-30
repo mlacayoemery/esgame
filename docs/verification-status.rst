@@ -277,6 +277,21 @@ Honest gaps, so nobody assumes otherwise.
   ``kube-proxy`` and cascades into an ingress controller that never gets its certificate.
   ``kind.sh up`` preflights that and prints the ``sysctl``.
 
+  Retested on 2026-07-30 at 21:40 with the preflight overridden
+  (``KIND_SKIP_SYSCTL_CHECK=1``), several hours and many torn-down containers after the
+  first attempt: identical failure. ``kube-proxy`` logs
+  ``"command failed" err="failed complete: too many open files"``, both
+  ``ingress-nginx-admission`` Jobs ``CrashLoopBackOff``, and the controller sits in
+  ``ContainerCreating`` waiting on a cert Secret that is never created. The host still runs
+  ~23 containers including another kind cluster. No alternative runtime is installed
+  (``k3d``, ``minikube``, ``k3s``, ``microk8s``, ``podman`` all absent), and k3s would hit
+  the same ceiling — ``kube-proxy`` is the consumer either way.
+
+  That run did establish one thing: ``kind.sh up`` failed *correctly*. It waited on the
+  admission webhook, reported ``!! admission webhook never got endpoints; Ingress applies
+  will fail`` and exited 1, rather than continuing into a half-deployed stack as it did on
+  the first attempt. The error handling added that morning works under a real failure.
+
   **What has been established about those scripts, and what has not.** They were written but
   unrunnable, so they were reviewed instead — which found four structural defects that would
   have made ``ingress-test.sh`` useless the first time anyone ran it. Chief among them: under
