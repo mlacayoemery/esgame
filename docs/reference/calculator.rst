@@ -51,7 +51,10 @@ The frontend POSTs a JSON body. Fields consumed across the backends:
        each carrying an ``lulc`` code (read as a string: ``"10"`` = agriculture,
        ``"20"`` = ranch). In the R engines it is passed straight into
        ``raster::reclassify(LU_hexa, map_AG, ...)`` as the reclassification
-       matrix that recodes the base hexagon raster.
+       matrix that recodes the base hexagon raster. Each entry's ``id`` is the
+       hexagon's **raster value**, not a positional index — SVG field ids come
+       from ``tiffToSvgPaths``, which keys on the pixel value. See
+       :ref:`allocation-id-space` for which ids are yours to allocate.
    * - ``game_id``
      - scalar
      - Game identifier; used by the R engines for output filenames and the
@@ -516,3 +519,51 @@ Example vs. real engine — summary
    * - Score range
      - 0–1 × factor
      - 0–100
+
+.. _allocation-id-space:
+
+Which hexagons may be allocated
+--------------------------------
+
+The board raster and the calculator's base raster are **not** the same id space, and
+the difference matters.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 42 16 42
+
+   * - Raster
+     - Distinct ids
+     - Role
+   * - ``New_hexagons.tif`` (the ``Drawing`` map)
+     - 465
+     - The playable board. These are the ids the frontend sends.
+   * - ``LU_and_NEW_hexa.tif`` (calculator input)
+     - 472
+     - The same 465, **plus 7** low values (``2``–``8``).
+
+Those seven extra values are fixed landscape features, not playable hexagons. The
+frontend never allocates them, and neither should anything else calling this endpoint:
+reclassifying them to a production-type code overwrites the features the model scores
+against.
+
+Doing so does not fail — the request still returns ``200``, the rasters are still
+produced, published and served. **Every score comes back ``NaN``.** Verified both ways
+against ``tools/R``:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 46 16 38
+
+   * - Allocation
+     - Scores
+     - Runtime
+   * - all 472 ids, including ``2``–``8``
+     - 5 of 5 ``NaN``
+     - 29 s
+   * - the 465 board ids only
+     - HH 42, NP 45, WA 48, HC 50, RV 44
+     - 15 s
+
+So a silently unscored round looks exactly like a successful one from the outside. If
+scores arrive as ``NaN``, suspect the allocation's id set before the model.
