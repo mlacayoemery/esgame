@@ -28,6 +28,7 @@ Start with the :doc:`architecture` overview, then the guide that matches your ro
    game-mechanics
    static-vs-dynamic
    dependency-review
+   verification-status
 
 .. toctree::
    :maxdepth: 2
