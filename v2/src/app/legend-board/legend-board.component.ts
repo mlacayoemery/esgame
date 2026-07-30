@@ -23,9 +23,17 @@ export class LegendBoardComponent {
 			this.legendElements = data.elements.sort((a, b) => a.forValue - b.forValue);
 			this.isNegative = data.isNegative;
 			this.isGradient = data.isGradient;
-			if (data.isGradient)
-				this.gradient = `linear-gradient(90deg, #${this.legendElements[0].color}, #${this.legendElements[1].color})`
-			else
+			if (data.isGradient) {
+				// A gradient needs two stops. With fewer, this used to index elements[1] and throw
+				// "Cannot read properties of undefined (reading 'color')" — and because this setter
+				// runs during change detection, that took out the view binding the legend rather
+				// than merely rendering it wrong. One entry now renders as a solid bar of its own
+				// colour, which is what a one-value gradient means; none renders nothing.
+				const [first, second] = this.legendElements;
+				this.gradient = first
+					? `linear-gradient(90deg, #${first.color}, #${(second ?? first).color})`
+					: '';
+			} else
 				this.legendElements = this.legendElements.filter(o => o.forValue != 0)
 		}
 	}

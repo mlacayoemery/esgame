@@ -99,21 +99,30 @@ describe('LegendBoardComponent', () => {
 			expect(data.elements.map(e => e.forValue)).toEqual([1, 2]);
 		});
 
-		// A gradient legend with fewer than two entries indexes elements[1] unguarded and THROWS.
-		// Recorded, not fixed, because it is a behaviour change rather than a test: the setter
-		// runs during change detection, so this does not merely render a wrong legend — it takes
-		// out the view binding it. Worth guarding in its own change.
-		it('throws on a gradient legend with only one entry', () => {
+		// This used to throw: elements[1] was indexed unguarded, giving "Cannot read properties
+		// of undefined (reading 'color')". Since the setter runs during change detection, that
+		// took out the view binding the legend rather than merely rendering it wrong.
+		it('renders a one-entry gradient as a solid bar', () => {
 			const c = new LegendBoardComponent();
 
-			expect(() => { c.legendData = legend([element(1, 'abcdef')], { isGradient: true }); })
-				.toThrow(/color/);
+			c.legendData = legend([element(1, 'abcdef')], { isGradient: true });
+
+			expect(c.gradient).toBe('linear-gradient(90deg, #abcdef, #abcdef)');
 		});
 
-		it('throws on a gradient legend with no entries', () => {
+		it('renders nothing for an empty gradient legend', () => {
 			const c = new LegendBoardComponent();
 
-			expect(() => { c.legendData = legend([], { isGradient: true }); }).toThrow();
+			c.legendData = legend([], { isGradient: true });
+
+			expect(c.gradient).toBe('');
+		});
+
+		it('does not throw for a short gradient legend', () => {
+			const c = new LegendBoardComponent();
+
+			expect(() => { c.legendData = legend([element(1, 'a')], { isGradient: true }); }).not.toThrow();
+			expect(() => { c.legendData = legend([], { isGradient: true }); }).not.toThrow();
 		});
 	});
 });
