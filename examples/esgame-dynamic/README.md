@@ -76,9 +76,12 @@ as a GeoTIFF at `…/collections/<name>/coverage?f=GTiff` — the drop-in equiva
 ```sh
 make esgame-dynamic-pygeoapi-up      # http://localhost:81/  (calculator :8000, pygeoapi :5005)
 make esgame-dynamic-pygeoapi-down
-# or directly:
+# or directly (ESGAME_IMAGE must already exist locally — the make target builds it):
+docker build -t local/esgame-core:latest v2
 ESGAME_IMAGE=local/esgame-core:latest \
   docker compose -p esgame-dynamic-pygeoapi -f docker-compose.pygeoapi.yml up -d --build
+
+# or omit ESGAME_IMAGE to build against the published ghcr.io/mlacayoemery/esgame:master
 ```
 
 **It is a true drop-in:** the frontend bundle and the calculator *image* are identical to the
