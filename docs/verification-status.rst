@@ -200,6 +200,53 @@ The places geodata is not in its working tree
    all 13 arrived and fail loudly otherwise. A deployment still has to supply the URL.
 
 
+The checks were audited for vacuity
+-----------------------------------
+
+A check that cannot fail is worse than no check: it reports success and stops anyone
+looking. On 2026-07-30 every check added that day was re-read for that shape — an
+assertion that also holds when the thing being examined is absent — and **six were
+found, all written the same day**:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 34 40 26
+
+   * - Check
+     - Why it could not fail
+     - Covered by a sibling?
+   * - GeoServer default password (places ``test/stack.sh``)
+     - ``[ "$PASS" = geoserver ] || ...`` short-circuited, and the stack ran with the
+       default password
+     - no — it asserted nothing in every run
+   * - coverage URLs are not in-network names (places)
+     - ``! grep -q`` over an **empty** URL list inverts to true
+     - yes, the ≥5 count check
+   * - RFC 1123 hosts (places ``test/k8s.sh``)
+     - the loop validates whatever it is given, including nothing
+     - yes, the "exactly 3 places hosts" check
+   * - GeoServer pin agreement (CI)
+     - ``echo "" | wc -l`` is 1, so an empty match set looks like one agreed pin
+     - no
+   * - no run-time R package install (CI)
+     - ``grep`` on a missing file exits non-zero, which reads as "clean"
+     - no
+   * - RFC 1123 hosts (CI)
+     - same empty-loop shape, and nothing else asserted the Ingresses existed
+     - **no**
+
+None produced a false green — the ones with siblings were caught, and the others happened
+to be examining files that were present. That is luck rather than design, and all six now
+assert that the thing they examine exists and is non-empty before judging it.
+
+The remaining checks were re-read and are sound: positive assertions where a failed
+``curl`` yields no match, conjunctions that fail on an empty value, and ``.every()`` in the
+specs guarded by a preceding length assertion.
+
+**The lesson is specific, not general:** *"assert X is not present"* is satisfied by *"the
+file is gone"*. Every absence-assertion needs a presence-assertion in front of it.
+
+
 Not verified
 ------------
 
