@@ -133,3 +133,41 @@ describe('GameService loading indicator', () => {
 		expect(await isLoading(service)).toBe(false);
 	});
 });
+
+// The dynamic game with no calculator configured. Its consequence maps come from the
+// calculator, so there is nothing to build — but this used to call prepareNextLevel anyway,
+// which fetched data.json's placeholder URLs (not real assets), 404'd, and hung on a spinner
+// that never cleared. Reachable on the published GitHub Pages site.
+describe('GameService dynamic mode without a calculator', () => {
+	let alertSpy: any;
+	beforeEach(() => {
+		alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => { });
+		vi.spyOn(console, 'error').mockImplementation(() => { });
+	});
+	afterEach(() => vi.restoreAllMocks());
+
+	const svgServiceWithoutCalcUrl = () => {
+		const service = makeService();
+		// loadSettings sets mode from mapMode: 'svg', and calcUrl is absent.
+		return service;
+	};
+
+	it('says a backend is needed rather than hanging', async () => {
+		const service = svgServiceWithoutCalcUrl();
+		const before = await firstValueFrom(service.currentLevelObs);
+
+		service.goToNextLevel();
+
+		expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('calculation backend'));
+		// And the level is untouched — no half-built level left behind.
+		expect(await firstValueFrom(service.currentLevelObs)).toBe(before);
+	});
+
+	it('does not leave the loading indicator running', async () => {
+		const service = svgServiceWithoutCalcUrl();
+
+		service.goToNextLevel();
+
+		expect(await isLoading(service)).toBe(false);
+	});
+});

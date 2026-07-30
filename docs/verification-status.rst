@@ -135,11 +135,19 @@ The dynamic game's consequence rasters are not in the repository — **and this 
 
    **Measured on the live site, not inferred.** ``/dynamic-game`` is reachable on Pages via the
    ``404.html`` SPA redirect, and the SVG board renders its 466 hexagons there. Placing hexagons
-   and pressing *Next Level* on https://mlacayoemery.github.io/esgame/dynamic-game produces five
-   ``404``\ s, a level that stays at 1, and a spinner that does not clear. Any visitor can reach
-   it. Since the level-failure handler shipped they are at least told — one "Something went
-   wrong" alert now appears where previously nothing did — but the round still cannot complete,
-   and the spinner remains the unresolved half of that fix.
+   and pressing *Next Level* on https://mlacayoemery.github.io/esgame/dynamic-game produced five
+   ``404``\ s, a level that stayed at 1, and a spinner that never cleared. Any visitor could
+   reach it.
+
+   **Now refused rather than attempted.** The dynamic game's consequence maps come *from* the
+   calculator — the ``urlToData`` in ``data.json`` are placeholders it overwrites — so with no
+   ``calcUrl`` there is nothing to compute and nothing to fetch. ``goToNextLevel`` says so
+   instead of going ahead: *"This game needs a calculation backend, and none is configured."*
+   Measured in a browser afterwards — **zero 404s, no spinner**, level unchanged. The missing
+   rasters are still missing; nothing now walks into them.
+
+   That also removes the only reachable trigger for the spinner that would not clear (see
+   below). The host-binding problem underneath it is still unfixed.
 
 The committed base raster makes the game inert
    :file:`v2/src/assets/images/LU_and_NEW_hexa.tif` numbers its hexagons ``10``–``474``

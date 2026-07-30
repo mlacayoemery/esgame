@@ -128,6 +128,14 @@ export class GameService {
 						this.loading(false);
 					}
 				});
+			} else if (this.settings.value.mode == 'SVG') {
+				// The dynamic game has no consequence maps of its own — they come back from the
+				// calculator, and the urlToData in data.json are placeholders it overwrites.
+				// Without a calcUrl there is nothing to compute and nothing to show, but this
+				// used to go ahead anyway: it fetched those placeholders, they 404'd (they are
+				// not real assets, and never were), the combineLatest errored, and the player
+				// got a spinner that never cleared. Reachable on the published site.
+				alert("This game needs a calculation backend, and none is configured.");
 			} else {
 				this.prepareNextLevel();
 			}
