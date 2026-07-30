@@ -121,11 +121,19 @@ PY
     fail=0
     while IFS=: read -r name _ctx; do
       ref="${REG}/${name}:local"
-      local_digest=$(docker image inspect "${ref}" --format '{{index .RepoDigests 0}}' 2>/dev/null | sed 's/.*@//')
+      # Guarded inside the substitution: `docker image inspect` on an image that is not present
+      # exits non-zero, and under pipefail that aborts the whole script — before the graceful
+      # "could not pull back" on the next line ever runs. `verify` before `push` is exactly that
+      # case, and it died silently instead of reporting FAIL.
+      local_digest=$( (docker image inspect "${ref}" --format '{{index .RepoDigests 0}}' 2>/dev/null || true) | sed 's/.*@//')
       docker rmi "${ref}" >/dev/null 2>&1 || true
       docker pull -q "${ref}" >/dev/null 2>&1 || { echo "  FAIL ${name}: could not pull back"; fail=1; continue; }
-      pulled_digest=$(docker image inspect "${ref}" --format '{{index .RepoDigests 0}}' 2>/dev/null | sed 's/.*@//')
-      if [ -n "${local_digest}" ] && [ "${local_digest}" = "${pulled_digest}" ]; then
+      pulled_digest=$( (docker image inspect "${ref}" --format '{{index .RepoDigests 0}}' 2>/dev/null || true) | sed 's/.*@//')
+      if [ -z "${local_digest}" ]; then
+        # Nothing local to compare against — `verify` was run without a preceding `push`, so it
+        # can confirm the registry serves something but not that it serves what was built.
+        echo "  FAIL ${name}: no local image to compare against; run 'push' first"; fail=1
+      elif [ "${local_digest}" = "${pulled_digest}" ]; then
         echo "  ok   ${name}  ${pulled_digest:0:19}…"
       else
         echo "  FAIL ${name}: pushed ${local_digest:0:19}… != pulled ${pulled_digest:0:19}…"; fail=1
