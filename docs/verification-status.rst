@@ -205,8 +205,11 @@ The checks were audited for vacuity
 
 A check that cannot fail is worse than no check: it reports success and stops anyone
 looking. On 2026-07-30 every check added that day was re-read for that shape — an
-assertion that also holds when the thing being examined is absent — and **six were
-found, all written the same day**:
+assertion that also holds when the thing being examined is absent — and **seven were
+found, all written the same day**. Six in the first pass; the seventh turned up afterwards
+in :file:`deploy/k8s/ingress-test.sh`, which the first pass had skipped because the inotify
+limit on this host means it cannot be run — a reminder that "not run" and "not audited" are
+easy to conflate:
 
 .. list-table::
    :header-rows: 1
@@ -233,6 +236,10 @@ found, all written the same day**:
      - no
    * - RFC 1123 hosts (CI)
      - same empty-loop shape, and nothing else asserted the Ingresses existed
+     - **no**
+   * - coverage URLs use an ingress host (``deploy/k8s/ingress-test.sh``)
+     - same ``! grep -q`` over a possibly-empty list — found *after* this audit was
+       written, in the one file the audit had skipped because it cannot be run here
      - **no**
 
 None produced a false green — the ones with siblings were caught, and the others happened
