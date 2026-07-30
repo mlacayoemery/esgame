@@ -59,8 +59,8 @@ jobs:
           retention-days: 7
 
       # Bundle-size + Core Web Vitals gate. The Angular `initial` budget only warns,
-      # so this is what actually fails a regression. Reuses e2e/serve.mjs (same SPA
-      # fallback as the container's nginx) and the build produced above.
+      # so this is what actually fails a regression. Reuses e2e/serve.mjs, which matches
+      # the container's nginx: SPA fallback for routes, a real 404 for a missing asset.
       - name: Lighthouse CI
         env:
           CHROME_PATH: /usr/bin/google-chrome
