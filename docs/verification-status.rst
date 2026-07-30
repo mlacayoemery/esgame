@@ -96,6 +96,13 @@ Verified working
        returned 200. Split into ``GEOSERVER_PUBLIC_URL``; measured 6/6 coverages
        fetchable from outside the network in the places stack. Gated in CI, with all
        four failure modes checked by mutation.
+   * - …and its backward compatibility
+     - The split was claimed to leave an existing single-address deployment unchanged.
+       That was an assertion until it was run: ``tools/R`` with ``GEOSERVER`` set and
+       ``GEOSERVER_PUBLIC_URL`` deliberately **unset** returns 200, five finite scores,
+       logs ``GEOSERVER_PUBLIC_URL is unset …`` and falls back to the ``GEOSERVER``
+       address for its coverage URLs — which a client inside the network still fetches
+       as ``image/geotiff``. Exactly the pre-split behaviour, now measured.
 
 
 Known incomplete
