@@ -70,3 +70,23 @@ jobs:
             exit 1
           fi
           echo "Dockerfile installs geosapi at build time"
+
+      - name: Ingress hosts must be valid RFC 1123 subdomains
+        run: |
+          # kubeconform does not check this: a host is just a string in the schema, so
+          # CHANGE-ME-esgame.example.com passed strict validation and was then rejected by
+          # the API server ("must be a lowercase RFC 1123 subdomain"), making
+          # `kubectl apply -k deploy/k8s/base` fail on all three ingresses. Uppercase in a
+          # placeholder is enough to break it, and the error talks about regexes rather
+          # than about setting your host.
+          hosts=$(grep -oP '^\s+- host:\s*\K\S+' rendered.yaml)
+          echo "$hosts"
+          bad=0
+          for h in $hosts; do
+            if ! printf '%s' "$h" | grep -qE '^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$'; then
+              echo "::error::ingress host '$h' is not a valid RFC 1123 subdomain; the API server will reject it"
+              bad=1
+            fi
+          done
+          [ "$bad" = 0 ] && echo "all ingress hosts are RFC 1123 valid"
+          exit $bad

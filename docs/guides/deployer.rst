@@ -546,7 +546,7 @@ ConfigMap, services and ingresses. The overlay does four things:
    with the real loader** that pulls from your object storage / data release.
 #. **Sets ingress hosts** via JSON-patch ``replace`` ops on the three base
    ingresses (``esgame-angular-ingress``, ``esgame-calculation-ingress``,
-   ``esgame-geoserver-ingress``), replacing the ``CHANGE-ME-*.example.com``
+   ``esgame-geoserver-ingress``), replacing the ``change-me-*.example.com``
    placeholders.
 
 Apply with Kustomize:
@@ -555,7 +555,7 @@ Apply with Kustomize:
 
    $ kubectl apply -k places/deploy/k8s
 
-Before applying, you must replace every ``CHANGE-ME-*`` placeholder: the two
+Before applying, you must replace every placeholder: the two
 image ``newName`` registries and the three ingress hosts, and swap the
 placeholder ``load-geodata`` init container for the real loader.
 

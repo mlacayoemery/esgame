@@ -26,7 +26,10 @@ deploy/k8s/base/          # this Kustomize base (angular + calculation + geoserv
 1. **Images** — in `base/kustomization.yaml` set the `images:` entries:
    - `esgame-angular` → your published frontend tag (defaults to `ghcr.io/mlacayoemery/esgame:master`).
    - `esgame-calculation` → build [`../../tools/R`](../../tools/R) and push it, then point here (or override in an overlay).
-2. **Hosts** — replace the `CHANGE-ME-*.example.com` hosts in the three `*-ingress.yaml` files.
+2. **Hosts** — replace the `change-me-*.example.com` hosts in the three `*-ingress.yaml` files,
+   and the matching `CALC_URL` in `base/configmap.yaml`. Keep them lowercase: an Ingress host
+   must be a valid RFC 1123 subdomain, so a single uppercase letter makes the API server
+   reject the whole apply — with a message about regexes rather than about the host.
    **Ingress class** — check `kubectl get ingressclass`. If none is marked default, uncomment
    `ingressClassName` in all three files and set your controller's class. An Ingress with neither
    applies without error and is then silently ignored: nothing routes, and nothing says why.

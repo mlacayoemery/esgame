@@ -17,7 +17,7 @@ spec:
   # ingressClassName: nginx
   rules:
     # Must match CALC_URL in configmap.yaml (this is the public URL the browser posts to).
-    - host: CHANGE-ME-esgame-calculation.example.com
+    - host: change-me-esgame-calculation.example.com
       http:
         paths:
           - path: /

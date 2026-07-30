@@ -16,7 +16,7 @@ spec:
   # class if `kubectl get ingressclass` shows no default.
   # ingressClassName: nginx
   rules:
-    - host: CHANGE-ME-esgame-geoserver.example.com
+    - host: change-me-esgame-geoserver.example.com
       http:
         paths:
           - path: /geoserver
