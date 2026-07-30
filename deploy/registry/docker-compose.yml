@@ -1,0 +1,73 @@
+# A local Docker registry for the esgame images, so a cluster can PULL them.
+#
+# This exists because `esgame-calculation` is published nowhere. Kubernetes has no build step —
+# a Deployment only pulls an `image:`, and Kustomize cannot build either — so "just build from
+# the Dockerfile" works for compose and cannot work for k8s. Something has to serve the image.
+# Until it is on a public registry, this is that something, and it makes `kubectl apply -k`
+# testable end to end with no external dependency at all.
+#
+#   deploy/registry/registry.sh up          # start, wait for /v2/, print the endpoint
+#   deploy/registry/registry.sh push        # build + push everything the manifests reference
+#   deploy/registry/registry.sh ls          # what is in it
+#   deploy/registry/registry.sh down        # stop (images survive)
+#   deploy/registry/registry.sh purge       # stop AND drop the volume
+#
+#   registry  http://localhost:5001        UI  http://localhost:8184
+#
+# Modeled on ord-x's deploy/build/build-docker-registry.yml. Two deliberate differences:
+#
+#   * Port 5001, not 5000. ord-x's own registry already holds 0.0.0.0:5000 on this host, and
+#     the two are separate stores — esgame images have no business in ord-x's volume.
+#   * distribution v3, not registry:2. v3 reads /etc/distribution/config.yml; mounting a config
+#     at v2's /etc/docker/registry/config.yml is silently ignored (see registry-config.yml).
+#
+# Plain HTTP, no auth. Docker treats localhost as insecure-by-default, so pushing from this host
+# needs no daemon.json change. Anything NOT on this host would — which is the point at which you
+# should be using a real registry instead of this.
+name: esgame-registry
+
+volumes:
+  esgame_registry_data:   # survives `down`; only `purge` drops it
+
+services:
+  registry:
+    image: registry:3.1.1
+    container_name: esgame-registry
+    restart: unless-stopped
+    ports:
+      - "${ESGAME_REGISTRY_PORT:-5001}:5000"
+    volumes:
+      # v3 path. See the warning in registry-config.yml.
+      - ./registry-config.yml:/etc/distribution/config.yml:ro
+      - esgame_registry_data:/var/lib/registry
+    healthcheck:
+      # /v2/ is the API root and returns 200 once the registry is actually serving. Waiting on
+      # this rather than a sleep is what makes `registry.sh push` safe to run straight after up.
+      test: ["CMD", "wget", "-qO-", "http://localhost:5000/v2/"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # Browsable view of what was pushed — handy for confirming a 3.35 GB push actually landed,
+  # and for deleting tags to reclaim the space.
+  ui:
+    image: joxit/docker-registry-ui:2.6.0
+    container_name: esgame-registry-ui
+    restart: unless-stopped
+    ports:
+      - "${ESGAME_REGISTRY_UI_PORT:-8184}:80"
+    environment:
+      SINGLE_REGISTRY: "true"
+      REGISTRY_TITLE: esgame local registry
+      # The UI is an nginx reverse proxy in front of the registry, so the browser talks to the
+      # UI's own origin and the registry needs no CORS config. Both containers are on this
+      # compose network, so it can address the registry by service name.
+      NGINX_PROXY_PASS_URL: http://registry:5000
+      PULL_URL: localhost:${ESGAME_REGISTRY_PORT:-5001}
+      DELETE_IMAGES: "true"
+      SHOW_CONTENT_DIGEST: "true"
+      SHOW_CATALOG_NB_TAGS: "true"
+      SHOW_TAG_HISTORY: "true"
+    depends_on:
+      registry:
+        condition: service_healthy

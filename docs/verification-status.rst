@@ -50,9 +50,18 @@ Verified working
        the calculator emits only pygeoapi coverage URLs with no WCS anywhere — which is
        the evidence for the "true drop-in" claim.
    * - ``tools/R`` calculator
-     - A real round: 465-hexagon allocation POSTed to ``/esgame`` → HTTP 200 in 15s,
-       five real scores, workspace created in GeoServer, five coverages published, WCS
-       5/5 GeoTIFFs, spider plot served. Also starts with ``--network none``.
+     - The **plumbing**: 465-hexagon allocation POSTed to ``/esgame`` → HTTP 200,
+       workspace created in GeoServer, five coverages published, WCS 5/5 GeoTIFFs,
+       spider plot served. Also starts with ``--network none``. The *scores* are a
+       different matter — see "the committed base raster" under Known incomplete. This
+       row previously claimed "five real scores"; they were real numbers that did not
+       depend on the allocation.
+   * - Local registry + published images
+     - ``deploy/registry`` serves all four images the manifests reference; each was
+       pulled back and its digest compared against what was pushed. A round was then
+       driven through the ``esgame-calculation`` image **pulled from the registry**
+       (image ID confirmed identical): 200 in 58s, five finite scores, WCS 5/5, spider
+       plot PNG, and no run-time package installation.
    * - places overlay
      - Renders 11 resources, all valid under ``kubeconform -strict``; ingress-host
        patches apply; the GeoServer pin flows through from this base. 19 checks in
@@ -88,6 +97,19 @@ Placeholders must be replaced
    ``CHANGE-ME-registry/…`` image names. Keep hosts lowercase: an Ingress host must be a
    valid RFC 1123 subdomain, and the API server rejects the whole apply otherwise.
 
+The committed base raster makes the game inert
+   :file:`v2/src/assets/images/LU_and_NEW_hexa.tif` numbers its hexagons ``10``–``474``
+   while the board (``New_hexagons.tif``) numbers its own ``100``–``46500`` in hundreds.
+   **4 ids overlap out of 465.** So ``reclassify`` is very nearly a no-op and the round
+   returns the same five scores — ``42 / 45 / 48 / 50 / 44`` — for *any* allocation.
+   Verified by POSTing three different land-use patterns and getting identical output;
+   the release copy of the raster gives three different answers to the same three.
+
+   Nothing is broken in the code: a deployment is supposed to supply the real geodata,
+   and the release copy shares the board's id space. But the committed asset is only good
+   for exercising the plumbing, and a green round against it says nothing about the model.
+   See :ref:`allocation-id-space`.
+
 No default IngressClass is assumed
    The three Ingresses set no ``ingressClassName``. If the cluster has no default
    ``IngressClass`` they apply cleanly and route nothing, with no error. Check
@@ -122,6 +144,13 @@ Honest gaps, so nobody assumes otherwise.
 * **Allocations were synthetic.** Generated from the raster's id set, not produced by a
   player. They satisfy the id-space contract (see :doc:`reference/calculator`) but are
   not real play.
+* **No cluster ingress traffic yet, and now for a concrete reason.** The tooling is in
+  place — :file:`deploy/k8s/kind.sh` builds a cluster wired to the local registry and
+  installs ingress-nginx, and :file:`deploy/k8s/ingress-test.sh` drives a round through
+  it by ``Host`` header. It has not been *run* green: this host's
+  ``fs.inotify.max_user_instances`` is 128 where kind needs 512, which crash-loops
+  ``kube-proxy`` and cascades into an ingress controller that never gets its certificate.
+  Raising it needs root. ``kind.sh up`` now checks and says so up front.
 * **Timing numbers move.** Lighthouse timings swing with machine load — 57 to 90 for
   identical code on one host. Only the byte budgets are stable; compare timings A/B in
   one sitting or not at all.

@@ -72,6 +72,34 @@ The frontend image reads `CALC_URL` at container start and substitutes it into
 over `/usr/share/nginx/html/assets/` (nginx serves those files `no-store`, so changes apply on
 reload). See [../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
 
+## Running it locally, for real
+
+`esgame-calculation` is published nowhere, so the base cannot come up as-is (step 1). To exercise
+the whole stack — including an actual ingress controller rather than `port-forward`:
+
+```sh
+deploy/registry/registry.sh up && deploy/registry/registry.sh push   # build + serve the images
+deploy/k8s/kind.sh up          # cluster wired to that registry + ingress-nginx
+deploy/k8s/kind.sh deploy      # apply overlays/local-registry, wait for rollout
+deploy/k8s/ingress-test.sh     # a real round through the ingress, by Host header
+```
+
+`overlays/local-registry` is where everything local lives — the images, `.local` hosts,
+`ingressClassName: nginx`, and the two public URLs. The base's ghcr defaults and `change-me` hosts
+are what a real deployment wants and are left alone.
+
+Two things `kind.sh` does that a bare `kind create cluster` does not, both of which fail silently
+otherwise:
+
+- **Registry access.** `localhost:5001` inside a node means *the node*, so a plain kind cluster
+  cannot pull these images at all. It writes a containerd `hosts.toml` and joins the registry to
+  kind's docker network.
+- **inotify preflight.** On a busy host `fs.inotify.max_user_instances` (default 128, kind wants
+  512) runs out, and the way that surfaces is four unrelated-looking symptoms about eight minutes
+  in — `kube-proxy` crash-looping on "too many open files", no Service routing, the ingress
+  admission Job unable to reach the API server, and the controller stuck on a missing cert Secret.
+  `kind.sh up` checks first and prints the `sysctl` to run.
+
 ## Overlays (how a downstream like `places` reuses this)
 
 Create an overlay `kustomization.yaml` with `resources: [../esgame/deploy/k8s/base]` (or a vendored

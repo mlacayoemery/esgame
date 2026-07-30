@@ -549,33 +549,82 @@ the difference matters.
      - Role
    * - ``New_hexagons.tif`` (the ``Drawing`` map)
      - 465
-     - The playable board. These are the ids the frontend sends.
-   * - ``LU_and_NEW_hexa.tif`` (calculator input)
+     - The playable board: ``100``, ``200`` … ``46500``, in hundreds. These are the
+       ids the frontend sends.
+   * - ``LU_and_NEW_hexa.tif`` — **data release**
      - 472
      - The same 465, **plus 7** low values (``2``–``8``).
+   * - ``LU_and_NEW_hexa.tif`` — **committed in the repos**
+     - 462
+     - ``10``–``474`` consecutive, plus the same 7. A **different id space** — see below.
 
 Those seven extra values are fixed landscape features, not playable hexagons. The
 frontend never allocates them, and neither should anything else calling this endpoint:
 reclassifying them to a production-type code overwrites the features the model scores
 against.
 
+.. warning::
+
+   **There are two different rasters called** ``LU_and_NEW_hexa.tif``, and only one of them
+   shares an id space with the board.
+
+   The copy committed at :file:`v2/src/assets/images/LU_and_NEW_hexa.tif` (and identically at
+   places' ``frontend/assets/images/``) numbers its hexagons ``10``–``474`` consecutively.
+   The board numbers its own ``100``–``46500`` in hundreds. **Exactly 4 ids overlap**
+   (``100``, ``200``, ``300``, ``400``) out of 465 — the two rasters share an extent and a
+   100 m resolution, and nothing else.
+
+   Only the copy in the **data release** (the one ``places/scripts/fetch-geodata.sh``
+   fetches) uses the board's numbering, and it is the one a deployment must supply.
+
+   Feeding the committed copy a real frontend allocation therefore does not fail — the
+   request returns ``200``, the rasters are produced and published, the scores are finite —
+   it just reclassifies 4 hexagons out of 465 and silently leaves the rest untouched. Measured
+   on 2026-07-30 against ``tools/R``. The committed copy is fine for exercising the plumbing
+   and useless for a real game; do not read a green round against it as the model working.
+
 Doing so does not fail — the request still returns ``200``, the rasters are still
-produced, published and served. **Every score comes back ``NaN``.** Verified both ways
-against ``tools/R``:
+produced, published and served. **Every score comes back ``NaN``.**
+
+Measured against ``tools/R`` on 2026-07-30, the same 465 board ids under three different
+land-use patterns, against each raster in turn:
 
 .. list-table::
    :header-rows: 1
-   :widths: 46 16 38
+   :widths: 22 22 56
 
-   * - Allocation
-     - Scores
-     - Runtime
-   * - all 472 ids, including ``2``–``8``
-     - 5 of 5 ``NaN``
-     - 29 s
-   * - the 465 board ids only
-     - HH 42, NP 45, WA 48, HC 50, RV 44
-     - 15 s
+   * - ``LU_and_NEW_hexa.tif``
+     - Allocation
+     - HH / NP / WA / HC / RV
+   * - committed (462)
+     - mixed 6 types
+     - 42 / 45 / 48 / 50 / 44
+   * - committed (462)
+     - all ``10`` (arable)
+     - 42 / 45 / 48 / 50 / 44
+   * - committed (462)
+     - all ``60`` (nature)
+     - 42 / 45 / 48 / 50 / 44
+   * - release (472)
+     - mixed 6 types
+     - 14 / 14 / 20 / 16 / 14
+   * - release (472)
+     - all ``10`` (arable)
+     - 49 / 53 / 73 / 50 / 48
+   * - release (472)
+     - all ``60`` (nature)
+     - ``NaN`` × 5
 
-So a silently unscored round looks exactly like a successful one from the outside. If
-scores arrive as ``NaN``, suspect the allocation's id set before the model.
+Read the top three rows carefully. Against the committed raster the scores are **identical
+under every allocation** — the player's choices change nothing, because only 4 of their 465
+ids exist in that raster. ``42 / 45 / 48 / 50 / 44`` is not a result; it is that raster's
+constant. Earlier revisions of this page quoted it as evidence of a working round.
+
+Against the release raster the same three allocations give three different answers, which is
+what a responsive model looks like. Note also that an all-``60`` (Extra Nature everywhere)
+allocation — a legal move — returns ``NaN`` there; the agricultural indicators have no
+agriculture left to score.
+
+So a round that ignores its input looks exactly like one that worked, and so does a silently
+unscored one. **Two checks are worth more than reading the scores:** vary the allocation and
+confirm the numbers move, and confirm they are numbers at all.
