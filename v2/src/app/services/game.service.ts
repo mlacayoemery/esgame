@@ -212,7 +212,7 @@ export class GameService {
 				this.currentLevel.next(level);
 				this.selectedFields.next(this.selectedFields.value);
 				this.loading(false);
-			});
+			}, (err) => this.failLevel(err));
 		} else if (this.settings.value.mode == 'SVG') {
 			const overlay = this.currentLevel.value!.gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
 			const backgroundMap = settings.maps.find(o => o.gameBoardType == GameBoardType.BackgroundMap)!;
@@ -253,7 +253,7 @@ export class GameService {
 					this.currentLevel.next(level);
 					this.selectedFields.next(this.selectedFields.value);
 					this.loading(false);
-				});
+				}, (err) => this.failLevel(err));
 		}
 	}
 
@@ -308,7 +308,7 @@ export class GameService {
 			this.currentLevel.next(level);
 			this.focusedGameBoard.next(gameBoards.find(o => o.gameBoardType == GameBoardType.DrawingMap)!);
 			this.loading(false);
-		});
+		}, (err) => this.failLevel(err));
 
 	}
 
@@ -342,7 +342,7 @@ export class GameService {
 			this.currentLevel.next(level);
 			this.focusedGameBoard.next(gameBoards[0]);
 			this.loading(false);
-		});
+		}, (err) => this.failLevel(err));
 
 	}
 
@@ -354,6 +354,31 @@ export class GameService {
 	}
 
 	openHelp(close = false) { this.helpWindow.next(!close); }
+
+	/**
+	 * A level failed to build. Without this the loading spinner ran forever: prepareNextLevel
+	 * fetches every consequence map, and if one of them fails — a 404 for a raster that is not
+	 * in the build, say — the combineLatest errors, the subscribe body never runs, and nothing
+	 * ever calls loading(false). The board stayed on the old level behind a spinner that could
+	 * not be dismissed, with no indication that anything had gone wrong.
+	 *
+	 * Same shape as the POST failure path above, which already did this.
+	 */
+	private failLevel(err: unknown) {
+		console.error(err);
+		// Clear the counter rather than popping one entry: loading() is a push/pop stack and a
+		// failed build is terminal, so nothing is loading any more whatever else had been pushed.
+		//
+		// NOTE: this makes the state correct, and the alert below means the player is told. It
+		// does NOT currently make the spinner disappear — the LoadingIndicatorComponent receives
+		// the cleared value (its subscriber runs with length 0) but its @HostBinding('class.show')
+		// never reaches the DOM, because the error arrives from outside Angular's zone and a host
+		// binding is evaluated by the PARENT view. detectChanges() on the component's own view
+		// and NgZone.run() in the subscriber were both tried and neither updated it. Left for a
+		// separate change rather than shipping a guess; see docs/verification-status.rst.
+		this.loadingIndicator.next([]);
+		alert("Something went wrong, please try again later");
+	}
 
 	loading(show = true) {
 		if (show) {
