@@ -1,0 +1,29 @@
+# Registry config for distribution v3.
+#
+# NOTE THE MOUNT PATH. v2 read /etc/docker/registry/config.yml; v3 reads
+# /etc/distribution/config.yml, and its entrypoint passes that path explicitly. Mount a config
+# at the v2 path against a v3 image and it is silently ignored — the registry starts happily on
+# its built-in defaults, so `delete.enabled` quietly goes away and nothing says so.
+version: 0.1
+
+log:
+  level: info
+
+storage:
+  filesystem:
+    rootdirectory: /var/lib/registry
+  delete:
+    # Needed by the UI's delete button, and to reclaim space from an image this size:
+    # esgame-calculation is ~3.35 GB per tag.
+    enabled: true
+
+http:
+  addr: :5000
+  headers:
+    X-Content-Type-Options: [nosniff]
+
+health:
+  storagedriver:
+    enabled: true
+    interval: 10s
+    threshold: 3
