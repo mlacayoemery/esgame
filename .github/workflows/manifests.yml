@@ -155,6 +155,13 @@ jobs:
           # than about setting your host.
           hosts=$(grep -oP '^\s+- host:\s*\K\S+' rendered.yaml)
           echo "$hosts"
+          # The loop below examines whatever it is given, so with no hosts it examines nothing
+          # and reports success — the same shape as the pin check. The base renders three
+          # Ingresses; if it stops rendering them, that is the failure, not a clean run.
+          n=$(printf '%s\n' "$hosts" | grep -c . || true)
+          if [ "$n" -ne 3 ]; then
+            echo "::error::expected 3 ingress hosts in the render, found $n"; exit 1
+          fi
           bad=0
           for h in $hosts; do
             if ! printf '%s' "$h" | grep -qE '^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$'; then
