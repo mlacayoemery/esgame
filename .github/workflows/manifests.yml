@@ -77,6 +77,37 @@ jobs:
           fi
           echo "Dockerfile installs geosapi at build time"
 
+      - name: GeoServer has a separate public URL for the browser
+        run: |
+          # The calculator publishes coverages over GeoServer's REST API from inside the cluster
+          # (GEOSERVER = the Service name) but returns WCS GetCoverage URLs that the BROWSER
+          # fetches. Building those from the Service name renders, applies, and returns 200 with
+          # URLs no client can resolve — which is why the geoserver Ingress exists. Verified in
+          # the places stack: with the split, 6/6 coverages fetch from outside the network.
+          # kustomize strips the quotes it finds in the source, so tolerate both forms.
+          internal=$(grep -oP '^\s+GEOSERVER_URL:\s*"?\K[^"[:space:]]+' rendered.yaml)
+          public=$(grep -oP '^\s+GEOSERVER_PUBLIC_URL:\s*"?\K[^"[:space:]]+' rendered.yaml)
+          echo "internal=$internal"
+          echo "public=$public"
+          if [ -z "$public" ]; then
+            echo "::error::GEOSERVER_PUBLIC_URL is missing from the ConfigMap"; exit 1
+          fi
+          if [ "$internal" = "$public" ]; then
+            echo "::error::GEOSERVER_PUBLIC_URL equals the in-cluster GEOSERVER_URL; the browser cannot resolve a Service name"; exit 1
+          fi
+          if grep -q 'esgame-geoserver-service' <<<"$public"; then
+            echo "::error::GEOSERVER_PUBLIC_URL points at the Service; use the geoserver ingress host"; exit 1
+          fi
+          # And the calculator container must actually receive it, or the ConfigMap value is inert.
+          if ! grep -q 'GEOSERVER_PUBLIC_URL' deploy/k8s/base/calculation-deployment.yaml; then
+            echo "::error file=deploy/k8s/base/calculation-deployment.yaml::GEOSERVER_PUBLIC_URL is not wired into the calculation container"; exit 1
+          fi
+          # The R calculator must build its URLs from it rather than from GEOSERVER.
+          if ! grep -qE '^\s*raster_url\s*<-\s*paste0\(\s*gs_public' tools/R/calculator.r; then
+            echo "::error file=tools/R/calculator.r::raster_url must be built from gs_public (GEOSERVER_PUBLIC_URL), not gs_url"; exit 1
+          fi
+          echo "GeoServer public URL is separate, wired through, and used for coverage URLs"
+
       - name: Ingress hosts must be valid RFC 1123 subdomains
         run: |
           # kubeconform does not check this: a host is just a string in the schema, so
