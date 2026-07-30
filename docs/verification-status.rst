@@ -270,13 +270,26 @@ Honest gaps, so nobody assumes otherwise.
 * **Allocations were synthetic.** Generated from the raster's id set, not produced by a
   player. They satisfy the id-space contract (see :doc:`reference/calculator`) but are
   not real play.
-* **No cluster ingress traffic yet, and now for a concrete reason.** The tooling is in
-  place — :file:`deploy/k8s/kind.sh` builds a cluster wired to the local registry and
-  installs ingress-nginx, and :file:`deploy/k8s/ingress-test.sh` drives a round through
-  it by ``Host`` header. It has not been *run* green: this host's
+* **No cluster ingress traffic yet.** :file:`deploy/k8s/kind.sh` builds a cluster wired to
+  the local registry and installs ingress-nginx, and :file:`deploy/k8s/ingress-test.sh`
+  drives a round through it by ``Host`` header. Neither has been run green: this host's
   ``fs.inotify.max_user_instances`` is 128 where kind needs 512, which crash-loops
   ``kube-proxy`` and cascades into an ingress controller that never gets its certificate.
-  Raising it needs root. ``kind.sh up`` now checks and says so up front.
+  ``kind.sh up`` preflights that and prints the ``sysctl``.
+
+  **What has been established about those scripts, and what has not.** They were written but
+  unrunnable, so they were reviewed instead — which found four structural defects that would
+  have made ``ingress-test.sh`` useless the first time anyone ran it. Chief among them: under
+  ``set -euo pipefail`` a failed ``kubectl`` in a command substitution aborts the script, so a
+  missing Ingress produced silence rather than a ``FAIL`` line and a summary. Eight such sites,
+  plus a retry loop in ``kind.sh`` that died on the first transient error and a ``verify`` in
+  ``registry.sh`` that aborted before its own error handler.
+
+  So their **failure** behaviour is now verified — run against a cluster that does not exist,
+  ``ingress-test.sh`` reports 15/15 ``FAIL`` and exits 1, where before it died after ten lines
+  with two checks reporting ``ok``. Their **passing** behaviour against a real cluster is still
+  entirely untested, and no amount of review substitutes for that.
+
 * **Timing numbers move.** Lighthouse timings swing with machine load — 57 to 90 for
   identical code on one host. Only the byte budgets are stable; compare timings A/B in
   one sitting or not at all.
