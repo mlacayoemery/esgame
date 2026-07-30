@@ -121,9 +121,12 @@ EOF
     "${K[@]}" -n ingress-nginx wait --for=condition=complete job/ingress-nginx-admission-patch --timeout=180s 2>/dev/null || true
     echo ">> waiting for the admission webhook to have endpoints"
     for _ in $(seq 1 60); do
-      n=$("${K[@]}" -n ingress-nginx get endpointslice \
+      # `|| true` inside the substitution, not after it: with pipefail a transient kubectl
+      # failure makes the whole pipeline non-zero, `set -e` fires, and the script dies inside
+      # the very loop whose job is to tolerate the resource not being ready yet.
+      n=$( ("${K[@]}" -n ingress-nginx get endpointslice \
             -l kubernetes.io/service-name=ingress-nginx-controller-admission \
-            -o jsonpath='{.items[*].endpoints[*].addresses[*]}' 2>/dev/null | wc -w)
+            -o jsonpath='{.items[*].endpoints[*].addresses[*]}' 2>/dev/null || true) | wc -w)
       [ "${n}" -ge 1 ] && break
       sleep 3
     done
@@ -147,8 +150,8 @@ EOF
     done
     # A Service whose selector matches nothing still applies without error, so assert endpoints.
     for s in esgame-angular-service esgame-geoserver-service esgame-calculation-service; do
-      n=$("${K[@]}" get endpointslice -l "kubernetes.io/service-name=${s}" \
-            -o jsonpath='{.items[*].endpoints[*].addresses[*]}' | wc -w)
+      n=$( ("${K[@]}" get endpointslice -l "kubernetes.io/service-name=${s}" \
+            -o jsonpath='{.items[*].endpoints[*].addresses[*]}' 2>/dev/null || true) | wc -w)
       [ "${n}" -ge 1 ] || { echo "!! ${s} has no endpoints"; exit 1; }
       echo "  ${s} -> ${n} endpoint(s)"
     done
