@@ -19,7 +19,8 @@
 #   * Port 5001, not 5000. ord-x's own registry already holds 0.0.0.0:5000 on this host, and
 #     the two are separate stores — esgame images have no business in ord-x's volume.
 #   * distribution v3, not registry:2. v3 reads /etc/distribution/config.yml; mounting a config
-#     at v2's /etc/docker/registry/config.yml is silently ignored (see registry-config.yml).
+#     at v2's /etc/docker/registry/config.yml is silently ignored — measured, see
+#     registry-config.yml for the three-way comparison that shows it.
 #
 # Plain HTTP, no auth. Docker treats localhost as insecure-by-default, so pushing from this host
 # needs no daemon.json change. Anything NOT on this host would — which is the point at which you

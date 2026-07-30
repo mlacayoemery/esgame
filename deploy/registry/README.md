@@ -44,7 +44,13 @@ Modeled on ord-x's `deploy/build/build-docker-registry.yml`, with two deliberate
   two are separate stores — esgame images have no business in ord-x's volume.
 - **distribution v3, not `registry:2`.** v3 reads `/etc/distribution/config.yml`. Mounting a config
   at v2's `/etc/docker/registry/config.yml` against a v3 image is **silently ignored**: the registry
-  starts happily on its built-in defaults, `delete.enabled` quietly goes away, and nothing says so.
+  starts happily on its built-in defaults and nothing says so. Measured by counting the
+  `X-Content-Type-Options` header this config sets — 0 with no config, 0 with the config at the v2
+  path, 1 at the v3 path.
+
+  An earlier version of this note used `delete.enabled` as the example casualty. That was wrong:
+  v3 enables delete by default, so it survives either way and proves nothing about whether your
+  config was read.
 
 Plain HTTP, no auth. Docker treats `localhost` as insecure-by-default, so pushing from this host
 needs no `daemon.json` change. Anything *not* on this host would — and that is the point at which
