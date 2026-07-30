@@ -5,6 +5,12 @@
 #   deploy/registry/registry.sh push    # build + push everything the manifests reference
 #   deploy/registry/registry.sh ls      # catalog + tags + sizes
 #   deploy/registry/registry.sh verify  # pull each tag back and compare digests
+#
+# NOTE WHAT verify DOES NOT DO. It compares what the registry serves against the LOCAL image of
+# the same name — so it proves the round-trip, not that either matches your source tree. This
+# registry served a stale esgame-calculation for a whole evening, from before an image-slimming
+# change, and verify reported PASS the entire time because the local copy was equally stale.
+# Re-run `push` after changing anything the images are built from; it always rebuilds.
 #   deploy/registry/registry.sh down    # stop (images survive)
 #   deploy/registry/registry.sh purge   # stop AND drop the volume
 #
@@ -139,7 +145,11 @@ PY
         echo "  FAIL ${name}: pushed ${local_digest:0:19}… != pulled ${pulled_digest:0:19}…"; fail=1
       fi
     done < <(images)
-    [ "${fail}" = 0 ] && echo "registry verify: PASS" || { echo "registry verify: FAIL"; exit 1; }
+    if [ "${fail}" = 0 ]; then
+      echo "registry verify: PASS  (round-trip only — run 'push' to make these match your tree)"
+    else
+      echo "registry verify: FAIL"; exit 1
+    fi
     ;;
 
   down)  "${DC[@]}" down ;;

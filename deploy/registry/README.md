@@ -60,6 +60,11 @@ you want a real registry instead of this one.
 pulls each tag back and compares repo digests, so what the registry serves is confirmed to be what
 was built.
 
+> **It does not check that the images are current.** The comparison is registry-vs-local, so if the
+> local copy is stale the two agree and `verify` says PASS. This registry served a pre-slimming
+> `esgame-calculation` for an entire evening while `verify` passed every time. Re-run `push` after
+> changing anything the images are built from — it always rebuilds.
+
 ## Pointing a cluster at it
 
 Do **not** repoint `deploy/k8s/base` — its ghcr defaults are what a real deployment wants. Use the
