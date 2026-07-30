@@ -9,7 +9,7 @@ The working rule is: **take the newest release, and only stay back when another
 dependency forces it.** "That's what was there" is not a reason. Everything on
 this page is either already at its newest version or has a named blocker below.
 
-Last reviewed: **2026-07-29**.
+Last reviewed: **2026-07-30**.
 
 
 Current state
@@ -30,9 +30,9 @@ Current state
      - **0**
      - Nothing shipped to the browser has an outstanding advisory.
    * - ``npm outdated``
-     - **2 entries**
-     - Only ``typescript`` (capped, see `TypeScript`_). Nothing else is behind, and
-       no package in the tree is deprecated.
+     - **1 entry**
+     - Only ``typescript`` (capped, see `TypeScript`_). Angular is on 22.1.0 across
+       the board; nothing else is behind, and no package in the tree is deprecated.
 
 
 Blocked upgrades
@@ -68,11 +68,22 @@ range, then bump both together. Check with::
 Nothing in this repository selects those versions; ``@angular/cli`` does, and it
 is already at its newest release.
 
-**Blocker:** Angular CLI's own dependency pin.
+**Blocker:** Angular CLI's own dependency pin — ``@angular/cli`` depends on
+``@modelcontextprotocol/sdk`` at an exact ``1.29.0``, and that release declares
+``@hono/node-server: ^1.19.9``, which cannot resolve the patched 2.0.5.
 
-**To unblock:** it clears itself when Angular CLI ships a bumped
-``@modelcontextprotocol/sdk``. An ``overrides`` entry would be the fallback if it
-lingers, but overriding an MCP SDK under the CLI is riskier than waiting.
+**To unblock:** the upstream half is already done. ``@modelcontextprotocol/sdk``
+1.30.0 widened its range to ``^1.19.9 || ^2.0.5``, so this clears by itself as soon
+as Angular CLI bumps to it — checked at 22.1.0, which still pins 1.29.0. Watch::
+
+   npm view @angular/cli@latest dependencies.@modelcontextprotocol/sdk
+
+An ``overrides`` entry forcing ``@hono/node-server@^2.0.5`` remains the fallback,
+but it would resolve a package outside its parent's declared range to silence a
+Windows-only path traversal in a ``serve-static`` path this repository never
+invokes — the CLI's MCP server is not part of any build, test or deploy step here.
+Waiting is the smaller risk. Nothing shipped to the browser is affected:
+``npm audit --omit=dev`` is 0.
 
 
 Held-forward with overrides
