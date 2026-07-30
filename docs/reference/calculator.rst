@@ -242,12 +242,24 @@ GitHub (``remotes::install_github('eblondel/geosapi')``) and defines:
   * ``score_PD`` ← ``score``
   * ``map_AG``   ← ``allocation``
 
-* **GeoServer URL source:**
+* **GeoServer URL source:** two addresses, and they are not interchangeable.
 
-  * ``calculator.r``:
+  * ``GEOSERVER`` — server-to-server. Coverages are published over GeoServer's REST
+    API from inside the cluster, so this is the in-cluster Service name.
+    ``calculator.r`` reads
     ``Sys.getenv("GEOSERVER", "https://esgame-geoserver.azurewebsites.net/geoserver")``
-    (env with a hard default).
-  * ``calculation.r``: ``Sys.getenv("GEOSERVER")`` (no default).
+    (env with a hard default); ``calculation.r`` reads ``Sys.getenv("GEOSERVER")``
+    (no default).
+  * ``GEOSERVER_PUBLIC_URL`` — browser-facing. The WCS ``GetCoverage`` URLs in the
+    response are built from this and fetched by the **client**, which cannot resolve
+    a Service name. Both R engines default it to ``GEOSERVER`` and log a warning, so
+    an existing single-address deployment is unchanged; set it to the geoserver
+    ingress host. Leave it equal and every round still returns ``200`` — with
+    coverage URLs nothing outside the cluster can load.
+
+  Enforced by :file:`.github/workflows/manifests.yml`, which fails a PR if the two
+  ConfigMap values are equal, if the public one names the Service, if the calculation
+  container does not receive it, or if ``raster_url`` is built from ``gs_url`` again.
 
 * **Output:** delegates to and returns
   ``calculate(req, geoserver_url, game_id, round_id, score_PD, map_AG)``.

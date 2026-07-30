@@ -31,6 +31,13 @@ spec:
                 configMapKeyRef:
                   name: esgame-config
                   key: GEOSERVER_URL
+            # The WCS URLs the calculator returns are fetched by the browser, not by the cluster,
+            # so they are built from the public host rather than the Service name above.
+            - name: GEOSERVER_PUBLIC_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: esgame-config
+                  key: GEOSERVER_PUBLIC_URL
             # calculator.r creates a workspace and uploads coverages per game/round through
             # GeoServer's REST API, so it needs the same admin credentials.
             - name: GEOSERVER_USER

@@ -304,6 +304,17 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   #connect to GeoServer
   ## Geoserver
   gs_url <- geoserver_url
+  # Two addresses, because this one variable was doing two incompatible jobs. gs_url is
+  # server-to-server: coverages are published over the REST API from inside the cluster, so it
+  # must be the in-cluster name — deploy/k8s sets GEOSERVER to esgame-geoserver-service. But the
+  # WCS URLs built from it further down are fetched by the BROWSER, which cannot resolve a
+  # Service name. That is what the geoserver Ingress is for. The FastAPI example calculator
+  # already made this split; this brings the R calculator in line with it.
+  # Defaults to gs_url, so an existing single-address deployment behaves exactly as before.
+  gs_public <- Sys.getenv("GEOSERVER_PUBLIC_URL", geoserver_url)
+  if (gs_public == gs_url) {
+    log_warn("GEOSERVER_PUBLIC_URL is unset, so coverage URLs will use the internal GeoServer address ({gs_url}). A browser probably cannot resolve it.")
+  }
   # Credentials come from the environment. They used to be hardcoded as admin/geoserver —
   # the image's defaults — on a GeoServer whose REST API is published through an ingress.
   # The fallbacks keep an already-running deployment working, and warn loudly, rather than
@@ -386,7 +397,7 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   
   created <- gsman$createCoverage(ws = ws_name, cs = short_name, coverage = cov)
   
-  raster_url <- paste0(gs_url , "/wcs?service=WCS&version=2.0.0&request=GetCoverage" ,
+  raster_url <- paste0(gs_public , "/wcs?service=WCS&version=2.0.0&request=GetCoverage" ,
                            "&coverageId=" , ws_name , ":" , short_name ,
                            "&format=image%2Fgeotiff" )
   

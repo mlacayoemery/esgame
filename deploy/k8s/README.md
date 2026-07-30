@@ -17,7 +17,7 @@ A generalized Kustomize base for deploying the **full esgame stack** (dynamic mo
 ```
 deploy/k8s/base/          # this Kustomize base (angular + calculation + geoserver)
   kustomization.yaml      # resources + image name→registry mapping
-  configmap.yaml          # CALC_URL (public backend URL) + GEOSERVER_URL
+  configmap.yaml          # CALC_URL + GEOSERVER_PUBLIC_URL (public) + GEOSERVER_URL (in-cluster)
   *-deployment.yaml *-service.yaml *-ingress.yaml
 ```
 
@@ -46,9 +46,14 @@ deploy/k8s/base/          # this Kustomize base (angular + calculation + geoserv
 
    Both `esgame-geoserver` and `esgame-calculation` read it, so they always agree.
 
-4. **Backend URL** — in `base/configmap.yaml` set `CALC_URL` to the **public** calculation ingress
-   host from step 2 (the browser posts there client-side, so it must be externally reachable, not the
-   in-cluster service name). Set `CALC_URL: ""` for a client-side-only (grid) deployment.
+4. **Public URLs** — in `base/configmap.yaml`, two values must be externally reachable hosts from
+   step 2, because the **browser** fetches both:
+   - `CALC_URL` — the calculation ingress host; the browser posts game state there client-side.
+     Set `CALC_URL: ""` for a client-side-only (grid) deployment.
+   - `GEOSERVER_PUBLIC_URL` — the geoserver ingress host. The calculation returns WCS
+     `GetCoverage` URLs built from this. `GEOSERVER_URL` (the in-cluster Service) stays as it is —
+     that one is only used server-to-server, to publish the coverages. Setting the public value to
+     the Service name applies cleanly and returns `200` with URLs no browser can resolve.
 5. Apply:
    ```sh
    kubectl apply -k deploy/k8s/base

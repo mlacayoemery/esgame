@@ -55,8 +55,21 @@ Verified working
        5/5 GeoTIFFs, spider plot served. Also starts with ``--network none``.
    * - places overlay
      - Renders 11 resources, all valid under ``kubeconform -strict``; ingress-host
-       patches apply; the GeoServer pin flows through from this base. Its calculation
-       completes a round: 200, six indicators, six coverages, WCS 6/6.
+       patches apply; the GeoServer pin flows through from this base. 19 checks in
+       places' ``test/k8s.sh``, three of them confirmed able to fail by mutation.
+   * - places local stack
+     - The full compose stack up from a clean slate and a real round played through
+       it: ``POST /esgame`` → 200 in 71s, six finite scores (HH 64, NP 34, WE 25,
+       WA 25, HC 46, RV 47), six coverages fetched as GeoTIFFs **from outside the
+       compose network**, spider plot served as a PNG. 21 checks in places'
+       ``test/stack.sh``. That repo's geodata now loads for real in both paths —
+       a loader service in compose, the ``load-geodata`` init container in k8s.
+   * - Browser-facing GeoServer URL
+     - The R calculators built their WCS URLs from ``GEOSERVER`` — the in-cluster
+       Service name — so the browser got URLs it could not resolve while everything
+       returned 200. Split into ``GEOSERVER_PUBLIC_URL``; measured 6/6 coverages
+       fetchable from outside the network in the places stack. Gated in CI, with all
+       four failure modes checked by mutation.
 
 
 Known incomplete
@@ -82,10 +95,12 @@ No default IngressClass is assumed
 
 The places geodata is not in its working tree
    places' ``calculation.r`` reads 13 files from ``/app/data``; its repository contains
-   one. The other twelve were deleted from ``kubernetes_deployment/assets`` by commit
-   ``310fd46`` and exist only in git history, while ``deploy/k8s``'s ``load-geodata``
-   init container is still an ``echo 'TODO: fetch places geodata'``. Nothing in the tree
-   provides them at deploy time.
+   one, deliberately — the rest are a data release. That is now *handled* rather than
+   merely true: ``scripts/fetch-geodata.sh`` caches them (from a tarball URL, or from
+   places' own git history when no URL is set), the compose stack copies that cache into
+   the calculation's writable volume, and ``deploy/k8s``'s ``load-geodata`` init
+   container fetches the tarball from a ``places-geodata-source`` Secret. Both verify
+   all 13 arrived and fail loudly otherwise. A deployment still has to supply the URL.
 
 
 Not verified
@@ -94,7 +109,13 @@ Not verified
 Honest gaps, so nobody assumes otherwise.
 
 * **No cluster ingress traffic.** Everything k8s was reached by ``port-forward``. No
-  request has gone through an actual ingress controller with a real host and TLS.
+  request has gone through an actual ingress controller with a real host and TLS. So
+  ``GEOSERVER_PUBLIC_URL`` was proved end to end in *compose* (6/6 coverages fetched from
+  outside the network) and only statically in k8s — rendered, wired, and gated in CI, but
+  no browser has followed one of those URLs through a real geoserver ingress.
+* **``tools/R`` was not re-run after the URL split.** The change is the same one verified
+  in places' ``calculation.r``, and it defaults to the previous single-address behaviour,
+  but esgame's own image has not played a round with ``GEOSERVER_PUBLIC_URL`` set.
 * **No multi-round game.** Each round-trip was a single ``POST /esgame``. Level
   progression, score accumulation across rounds, and the frontend consuming the returned
   coverage URLs back into the board were not exercised together.
