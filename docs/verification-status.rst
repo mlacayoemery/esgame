@@ -31,7 +31,11 @@ Verified working
    * - Published container image
      - ``ghcr.io/mlacayoemery/esgame:master`` pulled and run. Byte-identical to a local
        production build (same filenames, same md5 sums), and renders with the network
-       blocked.
+       blocked. **Re-checked after this session's frontend changes** (2026-07-30, image
+       for ``379545a``): pulled fresh, ``CALC_URL`` injected at start, grid board decodes
+       2,436 fields and the SVG board 466 hexagons from real GeoTIFFs, no page errors.
+       Also confirms nginx's asset handling first-hand — a missing ``.tif`` returns 404,
+       a real one 200 ``image/tiff``, and an unknown route falls back to the app.
    * - ``deploy/k8s`` base
      - Applied to a throwaway kind cluster. ``--dry-run=server`` clean;
        ``esgame-angular`` and ``esgame-geoserver`` reach ready; Services have endpoints
