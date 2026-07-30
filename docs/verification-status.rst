@@ -22,7 +22,7 @@ Verified working
    * - Path
      - How it was checked
    * - Static / grid game
-     - 124 unit tests, 7 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
+     - 135 unit tests, 11 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
        SEO 100. The board renders 2,436 fields; the e2e suite asserts that rather than
        just asserting the component mounted.
    * - No external runtime deps
@@ -73,6 +73,13 @@ Verified working
        compose network**, spider plot served as a PNG. 21 checks in places'
        ``test/stack.sh``. That repo's geodata now loads for real in both paths —
        a loader service in compose, the ``load-geodata`` init container in k8s.
+   * - Multi-round game
+     - Three consecutive rounds against the real ``tools/R``: three distinct GeoServer
+       workspaces, scores that moved with each allocation, and 15/15 coverages still
+       fetchable — including round 1's after rounds 2 and 3 had run. In the browser,
+       :file:`v2/e2e/round-trip.spec.ts` plays two rounds against an intercepted
+       calculator whose coverage URLs point at real GeoTIFFs, and asserts the board
+       fetches round 2's URLs rather than re-rendering round 1's.
    * - Browser-facing GeoServer URL
      - The R calculators built their WCS URLs from ``GEOSERVER`` — the in-cluster
        Service name — so the browser got URLs it could not resolve while everything
@@ -96,6 +103,20 @@ Placeholders must be replaced
    ``change-me-*.example.com`` hosts, ``CALC_URL``, and — in the places overlay —
    ``CHANGE-ME-registry/…`` image names. Keep hosts lowercase: an Ingress host must be a
    valid RFC 1123 subdomain, and the API server rejects the whole apply otherwise.
+
+The dynamic game's consequence rasters are not in the repository
+   :file:`v2/src/assets/data.json` names five consequence maps —
+   ``Consequence_1_Clip.tif`` … ``Consequence_4_Clip.tif`` — and **none of those files exists**,
+   in ``src`` or in a build. In dynamic mode with no calculator configured (``calcUrl: ""``,
+   which is the default), submitting a round fetches all five, and a static server's SPA
+   fallback answers each with ``index.html`` — **status 200, ``text/html``**. geotiff.js then
+   dies on ``Invalid byte order value`` having read ``<!`` as the byte order, the level never
+   advances, and no consequence board renders. A 404 wearing a 200.
+
+   A deployment with a real calculator is unaffected: the URLs in ``data.json`` are placeholders
+   that ``prepareNextLevel`` overwrites with whatever the calculator returns. So this only bites
+   the backend-less dynamic build. :file:`v2/e2e/serve.mjs` now returns a real 404 for a missing
+   ``/assets/*`` rather than masking it, which is what surfaced this.
 
 The committed base raster makes the game inert
    :file:`v2/src/assets/images/LU_and_NEW_hexa.tif` numbers its hexagons ``10``–``474``
@@ -138,9 +159,6 @@ Honest gaps, so nobody assumes otherwise.
 * **``tools/R`` was not re-run after the URL split.** The change is the same one verified
   in places' ``calculation.r``, and it defaults to the previous single-address behaviour,
   but esgame's own image has not played a round with ``GEOSERVER_PUBLIC_URL`` set.
-* **No multi-round game.** Each round-trip was a single ``POST /esgame``. Level
-  progression, score accumulation across rounds, and the frontend consuming the returned
-  coverage URLs back into the board were not exercised together.
 * **Allocations were synthetic.** Generated from the raster's id set, not produced by a
   player. They satisfy the id-space contract (see :doc:`reference/calculator`) but are
   not real play.

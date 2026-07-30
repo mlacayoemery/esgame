@@ -48,7 +48,16 @@ http.createServer(async (req, res) => {
 	try {
 		if ((await stat(file)).isDirectory()) file = join(file, 'index.html');
 	} catch {
-		file = join(ROOT, 'index.html'); // SPA fallback
+		// SPA fallback — but NOT for assets. Serving index.html for a missing .tif returns
+		// 200 text/html, and geotiff.js then dies on "Invalid byte order value" having read
+		// "<!" as the byte order. That is a 404 wearing a 200, and it hid five missing
+		// consequence rasters referenced by src/assets/data.json. A real 404 says what is wrong.
+		if (pathname.startsWith('/assets/')) {
+			res.writeHead(404, { 'Content-Type': 'text/plain' });
+			res.end(`not found: ${pathname}`);
+			return;
+		}
+		file = join(ROOT, 'index.html');
 	}
 	try {
 		const body = await readFile(file);
