@@ -272,7 +272,11 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
       axis.text = element_blank(),
       axis.title = element_blank(),
       panel.grid = element_blank(),
-      plot.margin = unit(rep(1,5), "cm") 
+      # A margin has four sides. rep(1,5) supplies five; ggplot2 tolerated the extra
+      # silently until 4.x, which now errors with "The `plot.margin` theme element must
+      # be a <unit> vector of length 4" — losing the whole round at plot(p) below, after
+      # the model has already done all its work.
+      plot.margin = unit(rep(1,4), "cm") 
     ) +
     coord_polar()
   
