@@ -77,6 +77,12 @@ Verified working
        compose network**, spider plot served as a PNG. 21 checks in places'
        ``test/stack.sh``. That repo's geodata now loads for real in both paths —
        a loader service in compose, the ``load-geodata`` init container in k8s.
+   * - Published GitHub Pages site
+     - The canonical grid game, checked live rather than by a green workflow
+       (2026-07-30, ``f391875``): <https://mlacayoemery.github.io/esgame/> renders
+       **2,436 fields** from real GeoTIFFs with no page errors, ``assets/config.json``
+       serves ``defaultMode: static`` / ``calcUrl: ""``, and the published docs resolve —
+       including the links places' README points at.
    * - Multi-round game
      - Three consecutive rounds against the real ``tools/R``: three distinct GeoServer
        workspaces, scores that moved with each allocation, and 15/15 coverages still
@@ -108,7 +114,7 @@ Placeholders must be replaced
    ``CHANGE-ME-registry/…`` image names. Keep hosts lowercase: an Ingress host must be a
    valid RFC 1123 subdomain, and the API server rejects the whole apply otherwise.
 
-The dynamic game's consequence rasters are not in the repository
+The dynamic game's consequence rasters are not in the repository — **and this is reachable in production**
    :file:`v2/src/assets/data.json` names five consequence maps —
    ``Consequence_1_Clip.tif`` … ``Consequence_4_Clip.tif`` — and **none of those files exists**,
    in ``src`` or in a build. In dynamic mode with no calculator configured (``calcUrl: ""``,
@@ -125,7 +131,15 @@ The dynamic game's consequence rasters are not in the repository
 
    A deployment with a real calculator is unaffected: the URLs in ``data.json`` are placeholders
    that ``prepareNextLevel`` overwrites with whatever the calculator returns. So this only bites
-   the backend-less dynamic build.
+   the backend-less dynamic build — which is exactly what GitHub Pages serves.
+
+   **Measured on the live site, not inferred.** ``/dynamic-game`` is reachable on Pages via the
+   ``404.html`` SPA redirect, and the SVG board renders its 466 hexagons there. Placing hexagons
+   and pressing *Next Level* on https://mlacayoemery.github.io/esgame/dynamic-game produces five
+   ``404``\ s, a level that stays at 1, and a spinner that does not clear. Any visitor can reach
+   it. Since the level-failure handler shipped they are at least told — one "Something went
+   wrong" alert now appears where previously nothing did — but the round still cannot complete,
+   and the spinner remains the unresolved half of that fix.
 
 The committed base raster makes the game inert
    :file:`v2/src/assets/images/LU_and_NEW_hexa.tif` numbers its hexagons ``10``–``474``
