@@ -46,10 +46,19 @@ jobs:
         run: |
           # One version of GeoServer across k8s and both compose files, and never a
           # rolling tag — the drift this workflow exists to catch.
+          for f in deploy/k8s/base v2/docker-compose.dynamic.yml examples/esgame-dynamic/docker-compose.yml; do
+            [ -e "$f" ] || { echo "::error::$f is gone; this check no longer covers what it claims"; exit 1; }
+          done
           pins=$(grep -rhoE 'docker\.osgeo\.org/geoserver:[0-9.x]+' \
                    deploy/k8s/base v2/docker-compose.dynamic.yml \
                    examples/esgame-dynamic/docker-compose.yml | sort -u)
           echo "$pins"
+          # Without this the check passes on nothing: `echo "" | wc -l` is 1, so an empty match
+          # set looks exactly like one agreed pin, and `grep -q 'x$'` finds no rolling tag in it
+          # either. A rename that stopped the grep matching would have reported success.
+          if [ -z "$pins" ]; then
+            echo "::error::no GeoServer pin found in any of those files; the check matched nothing"; exit 1
+          fi
           if [ "$(echo "$pins" | wc -l)" -ne 1 ]; then
             echo "::error::GeoServer pins disagree across k8s and the compose stacks"; exit 1
           fi
@@ -64,6 +73,10 @@ jobs:
           # pinned nothing (@HEAD), and made the container unable to start at all without
           # GitHub reachable — it died on `library(remotes)`. Dependencies belong in the
           # Dockerfile, which is where geosapi is installed now.
+          # Absence assertions have to prove the file exists first, or a rename turns "nothing
+          # found" into a pass. grep on a missing path exits non-zero, which reads as "clean".
+          test -f tools/R/calculator.r || { echo "::error::tools/R/calculator.r is missing"; exit 1; }
+          test -f tools/R/Dockerfile   || { echo "::error::tools/R/Dockerfile is missing"; exit 1; }
           if grep -nE '^[^#]*(install_github|install\.packages|install_version|install_cran)' tools/R/calculator.r; then
             echo "::error file=tools/R/calculator.r::installs a package at run time; add it to tools/R/Dockerfile instead"
             exit 1
@@ -110,6 +123,9 @@ jobs:
           public=$(grep -oP '^\s+GEOSERVER_PUBLIC_URL:\s*"?\K[^"[:space:]]+' rendered.yaml)
           echo "internal=$internal"
           echo "public=$public"
+          if [ -z "$internal" ]; then
+            echo "::error::GEOSERVER_URL is missing from the ConfigMap"; exit 1
+          fi
           if [ -z "$public" ]; then
             echo "::error::GEOSERVER_PUBLIC_URL is missing from the ConfigMap"; exit 1
           fi
