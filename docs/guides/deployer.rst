@@ -321,6 +321,7 @@ base image; it defaults to ``ghcr.io/mlacayoemery/esgame:master``):
 
 .. code-block:: console
 
+   $ docker build -t local/esgame-core:latest v2
    $ ESGAME_IMAGE=local/esgame-core:latest \
        docker compose -p esgame-dynamic-example up -d --build
 

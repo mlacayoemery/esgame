@@ -9,8 +9,14 @@
 # the calculator's RASTER_URL_TEMPLATE and the raster backend differ. Run EITHER this or the GeoServer
 # compose (they share the 81/8000 ports) — not both at once.
 #
+# `make esgame-dynamic-pygeoapi-up` from the repo root does the whole thing. Directly:
+#
+#   docker build -t local/esgame-core:latest v2          # ESGAME_IMAGE must already exist
 #   ESGAME_IMAGE=local/esgame-core:latest \
 #     docker compose -p esgame-dynamic-pygeoapi -f docker-compose.pygeoapi.yml up -d --build
+#
+# Or omit ESGAME_IMAGE entirely to build against the published
+# ghcr.io/mlacayoemery/esgame:master instead of a local build.
 #
 # READ-ONLY caveat: pygeoapi publishes the rasters from a static config; there is no run-time
 # publish/REST API. Fine here because the example rasters never change. A deployment that must add or
