@@ -45,7 +45,35 @@ jobs:
         run: npm run build -- --configuration production
 
       - name: Unit tests
-        run: npm test -- --watch=false
+        run: |
+          # set -o pipefail, or `| tee` masks a failing suite: the pipeline's status would be
+          # tee's. That is the same shape as the vacuous checks fixed in #111-#115.
+          set -o pipefail
+          npm test -- --watch=false 2>&1 | tee /tmp/unit.log
+
+      - name: The documented test count is current
+        run: |
+          # docs/verification-status.rst claims a unit-test count as evidence of coverage. It
+          # said 135 while the suite was at 255 — true when written, never re-derived. A claim
+          # nothing re-measures drifts, so this re-measures it.
+          actual=$(sed 's/\x1b\[[0-9;]*m//g' /tmp/unit.log | grep -oE 'Tests +[0-9]+ passed' | grep -oE '[0-9]+' | head -1)
+          # Anchored to the table row, not any mention: the prose above it discusses a stale
+          # "135 unit tests" and an unanchored grep matched THAT, so the first version of this
+          # check compared the suite against a number quoted in a story about staleness.
+          claimed=$(grep -oE '^\s+- [0-9]+ unit tests,' ../docs/verification-status.rst | grep -oE '[0-9]+' | head -1)
+          echo "suite reports: ${actual:-<none>}   docs claim: ${claimed:-<none>}"
+          # Both must be found, or the check is measuring nothing.
+          if [ -z "$actual" ]; then
+            echo "::error::could not read the test count from the suite output"; exit 1
+          fi
+          if [ -z "$claimed" ]; then
+            echo "::error file=docs/verification-status.rst::no '<n> unit tests' claim found to check"; exit 1
+          fi
+          if [ "$actual" != "$claimed" ]; then
+            echo "::error file=docs/verification-status.rst::says $claimed unit tests, the suite runs $actual — update it"
+            exit 1
+          fi
+          echo "documented count matches the suite"
 
       - name: E2E (Playwright)
         run: npm run e2e
