@@ -11,6 +11,13 @@ never rendered, a schema check reporting 10/10 valid on manifests the API server
 
 Last updated: **2026-07-30**.
 
+.. note::
+
+   The counts below drift. "135 unit tests" sat here while the suite grew to 255, because it
+   was written mid-session and never revisited — the same shape as the stale registry images
+   recorded further down: a number that was true when written and is not re-derived when read.
+   Re-measure before trusting one.
+
 
 Verified working
 ----------------
@@ -22,7 +29,7 @@ Verified working
    * - Path
      - How it was checked
    * - Static / grid game
-     - 135 unit tests, 11 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
+     - 255 unit tests, 11 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
        SEO 100. The board renders 2,436 fields; the e2e suite asserts that rather than
        just asserting the component mounted.
    * - No external runtime deps
@@ -68,7 +75,7 @@ Verified working
        plot PNG, and no run-time package installation.
    * - places overlay
      - Renders 11 resources, all valid under ``kubeconform -strict``; ingress-host
-       patches apply; the GeoServer pin flows through from this base. 19 checks in
+       patches apply; the GeoServer pin flows through from this base. 20 checks in
        places' ``test/k8s.sh``, three of them confirmed able to fail by mutation.
    * - places local stack
      - The full compose stack up from a clean slate and a real round played through
