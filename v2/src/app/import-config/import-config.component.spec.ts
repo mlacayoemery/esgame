@@ -24,6 +24,13 @@ const changeEventWith = (text: string): Event => ({
 const flushFileReader = () => new Promise(resolve => setTimeout(resolve, 20));
 
 describe('ImportConfigComponent', () => {
+	// alert() is not implemented in jsdom.
+	let alertSpy: any;
+	beforeEach(() => {
+		alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => { });
+		vi.spyOn(console, 'error').mockImplementation(() => { });
+	});
+	afterEach(() => vi.restoreAllMocks());
 
 	describe('onImport', () => {
 		it('loads the parsed file into the game', async () => {
@@ -53,19 +60,34 @@ describe('ImportConfigComponent', () => {
 			expect(loaded).toEqual([]);
 		});
 
-		// JSON.parse is unguarded, inside FileReader.onload. A malformed file therefore throws
-		// asynchronously, where no caller can catch it: nothing loads, nothing navigates, and the
-		// user gets no indication beyond a console error. Recorded as current behaviour.
+		// JSON.parse used to be unguarded here, and because this runs inside FileReader.onload
+		// the throw was asynchronous — no caller could catch it, so a wrong file was silently
+		// indistinguishable from no file.
 		it('loads nothing when the file is not valid JSON', async () => {
 			const { component, loaded } = setup();
-			const onError = vi.fn();
-			window.addEventListener('error', onError);
 
 			component.onImport(changeEventWith('this is not json'));
 			await flushFileReader();
 
-			window.removeEventListener('error', onError);
 			expect(loaded).toEqual([]);
+		});
+
+		it('tells the user when the file cannot be parsed', async () => {
+			const { component } = setup();
+
+			component.onImport(changeEventWith('{ broken'));
+			await flushFileReader();
+
+			expect(alertSpy).toHaveBeenCalled();
+		});
+
+		it('says nothing when the file parses fine', async () => {
+			const { component } = setup();
+
+			component.onImport(changeEventWith('{"mode":"GRID"}'));
+			await flushFileReader();
+
+			expect(alertSpy).not.toHaveBeenCalled();
 		});
 	});
 
@@ -86,27 +108,26 @@ describe('ImportConfigComponent', () => {
 			expect(navigated).toEqual(['dynamic-game']);
 		});
 
-		// start() subscribes to settingsObs and never unsubscribes, so the subscription outlives
-		// the navigation. Every later loadSettings — and the level components call it on init —
-		// re-runs this and navigates again. Recorded rather than fixed here.
-		it('keeps navigating on later settings changes', () => {
+		// start() used to subscribe for the component's lifetime, so the subscription outlived the
+		// navigation and every later loadSettings navigated again — and the level components call
+		// loadSettings on init, immediately after arriving.
+		it('does not navigate again when the settings change later', () => {
 			const { component, settings, navigated } = setup({ mode: 'GRID' });
 
 			component.start();
 			settings.next({ mode: 'SVG' });
 
-			expect(navigated).toEqual(['static-game', 'dynamic-game']);
+			expect(navigated).toEqual(['static-game']);
 		});
 
-		it('adds another live subscription every time it is called', () => {
+		it('navigates once per call, with nothing left listening', () => {
 			const { component, settings, navigated } = setup({ mode: 'GRID' });
 
 			component.start();
 			component.start();
 			settings.next({ mode: 'GRID' });
 
-			// Two from the calls, then two more because both subscriptions are still listening.
-			expect(navigated).toHaveLength(4);
+			expect(navigated).toEqual(['static-game', 'static-game']);
 		});
 	});
 });
