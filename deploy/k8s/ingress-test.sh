@@ -118,7 +118,11 @@ for u in ${urls}; do
   case "${ct}" in *tiff*) ok=$((ok + 1));; *) echo "     unfetchable via ingress: ${host} (${ct:-none})";; esac
 done
 echo "     WCS GetCoverage through the ingress: ${ok}/${tot}"
-check "coverage URLs use an ingress host"  "! grep -q 'esgame-geoserver-service' <<<'${urls}'"
+# The -n guard is load-bearing: `! grep -q` over an EMPTY list finds nothing and inverts to
+# true, so a round that returned no URLs at all would report this as green — and this is the
+# check that proves GEOSERVER_PUBLIC_URL reached the client. Seventh instance of that shape
+# found on 2026-07-30; see docs/verification-status.rst, "The checks were audited for vacuity".
+check "coverage URLs use an ingress host"  "[ -n '${urls}' ] && ! grep -q 'esgame-geoserver-service' <<<'${urls}'"
 check "coverage URLs return GeoTIFFs"      "[ ${tot} -gt 0 ] && [ ${ok} = ${tot} ]"
 
 echo
