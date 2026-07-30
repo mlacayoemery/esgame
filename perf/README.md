@@ -28,7 +28,7 @@ The production build is **within** its `initial` budget. Measured on Angular 22.
 | `main-*.js` | 610,307 B |
 | `styles-*.css` | 105,750 B |
 | `polyfills-*.js` | 35,784 B |
-| **initial total** | **751,841 B** |
+| **initial total** | **751,842 B** |
 
 The budgets in `v2/angular.json` are `maximumWarning: 1mb` / `maximumError: 2mb`, and
 Angular reports them in decimal units (1 mb = 1,000,000 bytes). The build emitted the
@@ -39,9 +39,9 @@ warning on every run until the two non-game routes were made lazy:
 | (before) | 1,106,956 B |
 | `/configurator` lazy | 976,723 B |
 | `/config` lazy | 817,134 B |
-| `@angular/animations` dropped | **751,841 B** |
+| `@angular/animations` dropped | **751,842 B** |
 
-a 355,115 B reduction (−32%). There is now ~248 kB of headroom under the warning.
+a 355,114 B reduction (−32%). There is now ~248 kB of headroom under the warning.
 
 The heavy client op is GeoTIFF decode → SVG.
 

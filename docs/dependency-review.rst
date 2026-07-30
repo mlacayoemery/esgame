@@ -150,8 +150,14 @@ All of it is vendored now:
   :file:`src/assets/images`.
 
 :file:`v2/lighthouserc.json` asserts ``resource-summary:third-party:size <= 0``, so any
-new external asset fails CI. Verified by loading the container with every non-localhost
-origin blocked: no request is even attempted, and icons, fonts and images all render.
+new external asset fails CI.
+
+Verified against the **published** image, not just a local build: pulling
+``ghcr.io/mlacayoemery/esgame:master`` and loading it with every non-localhost origin
+blocked renders the full 2,436-field board, with Roboto 400/500 and the icon font loaded,
+both production-type images present, ``mat-icon`` measuring 18x18, no console errors, and
+**no external request even attempted**. The published bundle is byte-identical to a local
+production build (same filenames, same md5 sums).
 
 **Vendored font licensing:** Roboto and Material Icons are both Apache-2.0.
 :file:`src/assets/fonts/Roboto/LICENSE.txt` is retained.
