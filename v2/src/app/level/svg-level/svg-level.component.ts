@@ -23,9 +23,27 @@ export class SvgLevelComponent extends LevelBaseComponent {
 	/** From settings.visualOptions; default off so esgame's look is unchanged. */
 	highlightFocusedBoard = false;
 	@HostBinding('class.neutral-scores') neutralScoreColors = false;
+	/**
+	 * Which level the instructions have already been auto-opened for.
+	 *
+	 * `level` is consumed by seven `| async` pipes in the template (plus `rightGameBoards`),
+	 * and every one of them is a separate subscription to the same BehaviorSubject — so this
+	 * tap runs once per subscriber, not once per level. Without the guard the dialog re-opened
+	 * itself a few seconds after the player closed it, when the board finished decoding and the
+	 * resulting change detection subscribed the remaining pipes. Reproduced in e2e/round-trip.
+	 */
+	private helpShownForLevel: number | null = null;
+
 	override level = this.gameService.currentLevelObs.pipe(tap(o => {
 		this.readOnly = o?.isReadOnly ?? false;
-		if ((!o || o.levelNumber <= 2) && !this.readOnly) this.openHelp();
+		// Only once an actual level exists. currentLevelObs is a BehaviorSubject that starts at
+		// null and emits level 1 a few seconds later, when the board's GeoTIFFs finish decoding —
+		// so opening on the null emission too meant the dialog appeared before the board, and then
+		// appeared AGAIN, on top of whatever the player had just clicked.
+		if (o && o.levelNumber <= 2 && !this.readOnly && this.helpShownForLevel !== o.levelNumber) {
+			this.helpShownForLevel = o.levelNumber;
+			this.openHelp();
+		}
 	}));
 
 	constructor(gameService: GameService, configService: ConfigService) {
