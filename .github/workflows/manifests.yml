@@ -4,6 +4,12 @@ name: Validate deploy artifacts
 # (GeoServer stayed on a rolling 2.24.x tag while both compose stacks moved to 2.28.4).
 # This renders the Kustomize base and schema-checks the result, so drift and typos fail
 # a PR instead of waiting for someone to apply them to a real cluster.
+#
+# Schema validation is not sufficient on its own. `kubeconform -strict` passed all ten
+# resources while the API server rejected three of them: an Ingress host is just a string
+# in the OpenAPI schema, so an uppercase placeholder validated cleanly and then failed
+# `kubectl apply` with an RFC 1123 error. The dry-run job below exists for that whole class
+# — anything the API server enforces but the schema does not.
 on:
   pull_request:
     paths: ['deploy/**', 'tools/R/**', '.github/workflows/manifests.yml']
@@ -90,3 +96,55 @@ jobs:
           done
           [ "$bad" = 0 ] && echo "all ingress hosts are RFC 1123 valid"
           exit $bad
+
+  # Separate job so the fast checks above are not held up by cluster startup (~40s).
+  server-dryrun:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Start a throwaway cluster
+        run: |
+          curl -sSfL -o kind https://kind.sigs.k8s.io/dl/v0.30.0/kind-linux-amd64
+          chmod +x kind
+          ./kind create cluster --name validate --wait 120s
+
+      - name: kubectl apply --dry-run=server
+        run: |
+          # The real API server, so admission and field validation both apply. This is what
+          # catches what the schema cannot — see the note at the top of this file.
+          kubectl apply --dry-run=server -k deploy/k8s/base
+
+      - name: Apply for real, and check what should actually come up
+        run: |
+          kubectl apply -k deploy/k8s/base
+          # esgame-angular and esgame-geoserver use published images and must become ready.
+          # esgame-calculation is deliberately excluded: its image is documented as
+          # build-it-yourself, so it will never pull here.
+          for d in esgame-angular esgame-geoserver; do
+            kubectl rollout status "deploy/$d" --timeout=180s
+          done
+          # A Service with a selector that matches nothing still creates cleanly, so assert
+          # the endpoints actually populated.
+          for s in esgame-angular-service esgame-geoserver-service; do
+            n=$(kubectl get endpointslice -l "kubernetes.io/service-name=$s" \
+                  -o jsonpath='{.items[*].endpoints[*].addresses[*]}' | wc -w)
+            [ "$n" -ge 1 ] || { echo "::error::$s has no endpoints; its selector matches no pod"; exit 1; }
+            echo "$s -> $n endpoint(s)"
+          done
+
+      - name: The runtime config substitution reaches the container
+        run: |
+          # The deployment's premise is that one image serves any backend by env var alone:
+          # the entrypoint injects CALC_URL into assets/config.json at start. Assert it,
+          # rather than trusting the ConfigMap was merely mounted.
+          want=$(kubectl get cm esgame-config -o jsonpath='{.data.CALC_URL}')
+          got=$(kubectl exec deploy/esgame-angular -- sh -c 'cat /usr/share/nginx/html/assets/config.json' \
+                  | sed -n 's/.*"calcUrl"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+          echo "ConfigMap CALC_URL: $want"
+          echo "config.json calcUrl: $got"
+          [ "$want" = "$got" ] || { echo "::error::CALC_URL was not substituted into assets/config.json"; exit 1; }
+
+      - name: Tear down
+        if: always()
+        run: ./kind delete cluster --name validate || true

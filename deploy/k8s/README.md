@@ -41,6 +41,12 @@ deploy/k8s/base/          # this Kustomize base (angular + calculation + geoserv
    kubectl apply -k deploy/k8s/base
    ```
 
+   CI does this too, on a throwaway kind cluster: `kubectl apply --dry-run=server`, then a real
+   apply that waits for `esgame-angular` and `esgame-geoserver` to become ready, checks their
+   Services actually have endpoints, and asserts `CALC_URL` was substituted into
+   `assets/config.json` inside the running container. Schema validation alone missed a bug that
+   made this very command fail — see `.github/workflows/manifests.yml`.
+
 ### Runtime configuration (no rebuild)
 The frontend image reads `CALC_URL` at container start and substitutes it into
 `assets/config.json` — so the same image targets any backend by env var alone. To override the game
