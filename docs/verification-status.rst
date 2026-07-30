@@ -103,6 +103,11 @@ Verified working
        returned 200. Split into ``GEOSERVER_PUBLIC_URL``; measured 6/6 coverages
        fetchable from outside the network in the places stack. Gated in CI, with all
        four failure modes checked by mutation.
+   * - ``tools/R`` after the URL split
+     - Listed under "Not verified" until 2026-07-30 as "esgame's own image has not played a
+       round with ``GEOSERVER_PUBLIC_URL`` set". It has now, repeatedly: through the image
+       pulled from the local registry (200 in 58s, five finite scores, WCS 5/5) and in the
+       single-address configuration below.
    * - …and its backward compatibility
      - The split was claimed to leave an existing single-address deployment unchanged.
        That was an assertion until it was run: ``tools/R`` with ``GEOSERVER`` set and
@@ -266,14 +271,6 @@ Not verified
 
 Honest gaps, so nobody assumes otherwise.
 
-* **No cluster ingress traffic.** Everything k8s was reached by ``port-forward``. No
-  request has gone through an actual ingress controller with a real host and TLS. So
-  ``GEOSERVER_PUBLIC_URL`` was proved end to end in *compose* (6/6 coverages fetched from
-  outside the network) and only statically in k8s — rendered, wired, and gated in CI, but
-  no browser has followed one of those URLs through a real geoserver ingress.
-* **``tools/R`` was not re-run after the URL split.** The change is the same one verified
-  in places' ``calculation.r``, and it defaults to the previous single-address behaviour,
-  but esgame's own image has not played a round with ``GEOSERVER_PUBLIC_URL`` set.
 * **Allocations were synthetic.** Generated from the raster's id set, not produced by a
   player. They satisfy the id-space contract (see :doc:`reference/calculator`) but are
   not real play.
@@ -282,7 +279,11 @@ Honest gaps, so nobody assumes otherwise.
   drives a round through it by ``Host`` header. Neither has been run green: this host's
   ``fs.inotify.max_user_instances`` is 128 where kind needs 512, which crash-loops
   ``kube-proxy`` and cascades into an ingress controller that never gets its certificate.
-  ``kind.sh up`` preflights that and prints the ``sysctl``.
+  ``kind.sh up`` preflights that and prints the ``sysctl``. Everything k8s in this repository
+  has therefore been reached by ``port-forward`` only: ``GEOSERVER_PUBLIC_URL`` is proved end
+  to end in *compose* (6/6 coverages fetched from outside the network) and only statically in
+  k8s — rendered, wired and gated in CI, but no browser has followed one of those URLs through
+  a real geoserver ingress.
 
   Retested on 2026-07-30 at 21:40 with the preflight overridden
   (``KIND_SKIP_SYSCTL_CHECK=1``), several hours and many torn-down containers after the
