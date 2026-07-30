@@ -143,8 +143,11 @@ The dynamic game's consequence rasters are not in the repository — **and this 
    calculator — the ``urlToData`` in ``data.json`` are placeholders it overwrites — so with no
    ``calcUrl`` there is nothing to compute and nothing to fetch. ``goToNextLevel`` says so
    instead of going ahead: *"This game needs a calculation backend, and none is configured."*
-   Measured in a browser afterwards — **zero 404s, no spinner**, level unchanged. The missing
-   rasters are still missing; nothing now walks into them.
+
+   Confirmed **on the published site**, not just locally — the same round that produced five
+   ``404``\ s and a stuck spinner an hour earlier now gives that message, **zero 404s and no
+   spinner** on https://mlacayoemery.github.io/esgame/dynamic-game. The missing rasters are
+   still missing; nothing now walks into them.
 
    That also removes the only reachable trigger for the spinner that would not clear (see
    below). The host-binding problem underneath it is still unfixed.
