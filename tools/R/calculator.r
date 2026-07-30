@@ -1,5 +1,6 @@
-library(remotes)
-remotes::install_github('eblondel/geosapi')	
+# geosapi is installed at image build time (see Dockerfile). It was installed here,
+# from GitHub @HEAD, on every container start — which made startup depend on GitHub
+# being reachable and made two deployments of the same image differ.
 
 #NEW CODE --> ALLOW CORS REQUESTS
 #* @filter cors
