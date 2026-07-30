@@ -1,4 +1,4 @@
-name: Validate manifests
+name: Validate deploy artifacts
 
 # deploy/k8s had one commit and no gate: it was added, never re-run, and drifted
 # (GeoServer stayed on a rolling 2.24.x tag while both compose stacks moved to 2.28.4).
@@ -6,10 +6,10 @@ name: Validate manifests
 # a PR instead of waiting for someone to apply them to a real cluster.
 on:
   pull_request:
-    paths: ['deploy/**', '.github/workflows/manifests.yml']
+    paths: ['deploy/**', 'tools/R/**', '.github/workflows/manifests.yml']
   push:
     branches: [master]
-    paths: ['deploy/**', '.github/workflows/manifests.yml']
+    paths: ['deploy/**', 'tools/R/**', '.github/workflows/manifests.yml']
   schedule:
     # Mondays 06:20 UTC, offset from the CI job so both do not start at once.
     - cron: '20 6 * * 1'
@@ -50,3 +50,23 @@ jobs:
           if echo "$pins" | grep -q 'x$'; then
             echo "::error::GeoServer is on a rolling tag; pin a specific patch"; exit 1
           fi
+
+      - name: No run-time package installation in the R calculator
+        run: |
+          # calculator.r is what plumber executes on boot. It used to call
+          # remotes::install_github('eblondel/geosapi') there, which cost ~31s per start,
+          # pinned nothing (@HEAD), and made the container unable to start at all without
+          # GitHub reachable — it died on `library(remotes)`. Dependencies belong in the
+          # Dockerfile, which is where geosapi is installed now.
+          if grep -nE '^[^#]*(install_github|install\.packages|install_version|install_cran)' tools/R/calculator.r; then
+            echo "::error file=tools/R/calculator.r::installs a package at run time; add it to tools/R/Dockerfile instead"
+            exit 1
+          fi
+          echo "calculator.r installs nothing at run time"
+
+          # And the Dockerfile must actually provide geosapi, which calculator.r library()-s.
+          if ! grep -qE "^[^#]*install\.packages\('geosapi'\)" tools/R/Dockerfile; then
+            echo "::error file=tools/R/Dockerfile::calculator.r needs geosapi; install it here"
+            exit 1
+          fi
+          echo "Dockerfile installs geosapi at build time"

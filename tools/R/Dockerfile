@@ -15,7 +15,10 @@ RUN R -e "install.packages('ggpubr')"
 RUN R -e "install.packages('tidyverse')"
 RUN R -e "install.packages('tidyr')"
 RUN R -e "install.packages('jsonlite')"
-#RUN R -e "install.packages('geosapi')"
+# geosapi is on CRAN (0.8-1). It used to be installed at container START via
+# remotes::install_github in calculator.r, which cost ~31s per boot, needed GitHub
+# reachable at run time, and pulled whatever @HEAD happened to be.
+RUN R -e "install.packages('geosapi')"
 RUN R -e "install.packages('logger')"
 RUN R -e "install.packages('devtools')"
 
