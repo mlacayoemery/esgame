@@ -300,9 +300,18 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   #connect to GeoServer
   ## Geoserver
   gs_url <- geoserver_url
+  # Credentials come from the environment. They used to be hardcoded as admin/geoserver —
+  # the image's defaults — on a GeoServer whose REST API is published through an ingress.
+  # The fallbacks keep an already-running deployment working, and warn loudly, rather than
+  # breaking it on upgrade; deploy/k8s injects real values from a Secret.
+  gs_user <- Sys.getenv("GEOSERVER_USER", "admin")
+  gs_pwd  <- Sys.getenv("GEOSERVER_PASSWORD", "geoserver")
+  if (gs_pwd == "geoserver") {
+    log_warn("GEOSERVER_PASSWORD is unset, so the GeoServer default password is in use. Set GEOSERVER_USER/GEOSERVER_PASSWORD.")
+  }
   gsman <-GSManager$new(
     url = gs_url, #baseUrl of the Geoserver
-    user = "admin", pwd = "geoserver", #credentials
+    user = gs_user, pwd = gs_pwd,
     logger = NULL #logger, for info or debugging purpose
   )
   

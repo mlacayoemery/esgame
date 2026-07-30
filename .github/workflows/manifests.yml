@@ -117,6 +117,12 @@ jobs:
 
       - name: Apply for real, and check what should actually come up
         run: |
+          # The base intentionally has no default GeoServer password: the deployments
+          # reference a Secret that does not exist in-repo, so a missing one fails the
+          # rollout instead of quietly shipping admin/geoserver. Create a throwaway here.
+          kubectl create secret generic esgame-geoserver-admin \
+            --from-literal=username=admin \
+            --from-literal=password="ci-only-$(head -c 16 /dev/urandom | base64 | tr -dc 'A-Za-z0-9')"
           kubectl apply -k deploy/k8s/base
           # esgame-angular and esgame-geoserver use published images and must become ready.
           # esgame-calculation is deliberately excluded: its image is documented as

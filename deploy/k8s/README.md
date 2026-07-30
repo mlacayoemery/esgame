@@ -33,10 +33,23 @@ deploy/k8s/base/          # this Kustomize base (angular + calculation + geoserv
    **Ingress class** — check `kubectl get ingressclass`. If none is marked default, uncomment
    `ingressClassName` in all three files and set your controller's class. An Ingress with neither
    applies without error and is then silently ignored: nothing routes, and nothing says why.
-3. **Backend URL** — in `base/configmap.yaml` set `CALC_URL` to the **public** calculation ingress
+3. **GeoServer admin Secret** — required; there is no default, so the rollout fails without it.
+   The image would otherwise keep its built-in `admin` / `geoserver` login, on a GeoServer whose
+   REST API is published through `geoserver-ingress` and which the calculation backend uses to
+   create workspaces and upload coverages:
+
+   ```sh
+   kubectl create secret generic esgame-geoserver-admin \
+     --from-literal=username=admin \
+     --from-literal=password='<a real password>'
+   ```
+
+   Both `esgame-geoserver` and `esgame-calculation` read it, so they always agree.
+
+4. **Backend URL** — in `base/configmap.yaml` set `CALC_URL` to the **public** calculation ingress
    host from step 2 (the browser posts there client-side, so it must be externally reachable, not the
    in-cluster service name). Set `CALC_URL: ""` for a client-side-only (grid) deployment.
-4. Apply:
+5. Apply:
    ```sh
    kubectl apply -k deploy/k8s/base
    ```

@@ -31,6 +31,18 @@ spec:
                 configMapKeyRef:
                   name: esgame-config
                   key: GEOSERVER_URL
+            # calculator.r creates a workspace and uploads coverages per game/round through
+            # GeoServer's REST API, so it needs the same admin credentials.
+            - name: GEOSERVER_USER
+              valueFrom:
+                secretKeyRef:
+                  name: esgame-geoserver-admin
+                  key: username
+            - name: GEOSERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: esgame-geoserver-admin
+                  key: password
           ports:
             - containerPort: 8000
               protocol: TCP
