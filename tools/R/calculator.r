@@ -53,7 +53,7 @@ library(grid)
 #library(jsonlite)
 library(geosapi)
 library(logger)
-library(devtools)
+# library(devtools) was here — nothing in this file calls anything from it. See the Dockerfile.
 # Allocation-vs-raster coverage check. The Dockerfile puts this next to calculator.r in /app;
 # the plain relative path covers running it from a checkout. stopifnot rather than a silent skip:
 # a guard that quietly fails to load is worse than no guard.
