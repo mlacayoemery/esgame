@@ -54,6 +54,11 @@ library(grid)
 library(geosapi)
 library(logger)
 library(devtools)
+# Allocation-vs-raster coverage check. The Dockerfile puts this next to calculator.r in /app;
+# the plain relative path covers running it from a checkout. stopifnot rather than a silent skip:
+# a guard that quietly fails to load is worse than no guard.
+for (.p in c("coverage.R", "/app/coverage.R")) if (file.exists(.p)) { source(.p); break }
+stopifnot("coverage.R must be alongside calculator.r" = exists("esgame_report_coverage"))
 
 
 calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
@@ -64,6 +69,14 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   
   ##### 1) Create Land use map #####
   LU_hexa<- raster("LU_and_NEW_hexa.tif")
+  # How much of the allocation actually lands on this raster? reclassify() silently ignores any
+  # id that is not present, so a caller whose ids belong to a different id space gets a 200, a
+  # published set of coverages, and five finite scores that are the SAME whatever they allocate.
+  # That happened: the copy of LU_and_NEW_hexa.tif committed under v2/src/assets/images numbers
+  # its hexagons 10-474 while the board numbers its own 100-46500 in hundreds — 4 ids in common
+  # out of 465 — and the constant it returns was quoted in the docs as a working round.
+  # Cheap to check, and the only thing that distinguishes "scored" from "ignored".
+  esgame_report_coverage(LU_hexa, map_AG)
   LU_complete<-reclassify(LU_hexa, map_AG, right=F) # no value can be 1!!!!
 
   #### Set parameters ####

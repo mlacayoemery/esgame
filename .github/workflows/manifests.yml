@@ -77,6 +77,27 @@ jobs:
           fi
           echo "Dockerfile installs geosapi at build time"
 
+      - name: The calculator reports how much of the allocation it actually used
+        run: |
+          # reclassify() ignores ids that are not in the base raster. Silently. The committed
+          # copy of LU_and_NEW_hexa.tif shares 4 of 465 ids with the board, so a round against
+          # it returns 200, publishes every coverage, and yields the SAME five scores for any
+          # allocation — a constant this repo's own docs once quoted as a working round.
+          # coverage.R turns that into a log line, so the check is that it is still wired in.
+          test -f tools/R/coverage.R || { echo "::error::tools/R/coverage.R is missing"; exit 1; }
+          if ! grep -q 'esgame_report_coverage(LU_hexa, map_AG)' tools/R/calculator.r; then
+            echo "::error file=tools/R/calculator.r::coverage check is not called before reclassify()"; exit 1
+          fi
+          # And it must be sourced, or the call above is an undefined-function error at run time.
+          if ! grep -q 'coverage.R' tools/R/calculator.r; then
+            echo "::error file=tools/R/calculator.r::coverage.R is never sourced"; exit 1
+          fi
+          # The Dockerfile ships /app by COPY . . — assert coverage.R is not excluded.
+          if [ -f tools/R/.dockerignore ] && grep -qE '^\s*coverage\.R\s*$' tools/R/.dockerignore; then
+            echo "::error::coverage.R is excluded from the image by .dockerignore"; exit 1
+          fi
+          echo "allocation coverage check is wired into the calculator"
+
       - name: GeoServer has a separate public URL for the browser
         run: |
           # The calculator publishes coverages over GeoServer's REST API from inside the cluster
