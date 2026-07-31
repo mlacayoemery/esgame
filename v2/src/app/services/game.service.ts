@@ -173,25 +173,38 @@ export class GameService {
 	private rebuildConsequenceMaps(level: Level, productionTypes: ProductionType[]) {
 		productionTypes.forEach(pt => { pt.consequenceMaps = []; });
 
-		level.gameBoards.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap).forEach(map => {
-			const mapSettings = this.settings.value.maps.find(c => c.id == map.id);
-			if (!mapSettings) {
+		level.gameBoards
+			.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap)
+			.forEach(map => this.attachConsequenceMap(map, productionTypes, level.levelNumber));
+	}
+
+	/**
+	 * Attach one consequence board to every production type the game data says shows it.
+	 *
+	 * Both ids are deployment-supplied and neither used to be checked; see
+	 * rebuildConsequenceMaps above for what that cost. An unresolved id means one board is
+	 * missing from one production type's list, which is worth reporting and not worth taking the
+	 * rest of the level down for — so this returns rather than throws.
+	 */
+	private attachConsequenceMap(map: GameBoard, productionTypes = this.productionTypes.value, levelNumber?: number) {
+		const mapSettings = this.settings.value.maps.find(c => c.id == map.id);
+		if (!mapSettings) {
+			console.error(
+				`The game data has no map with id "${map.id}", but ` +
+				`${levelNumber === undefined ? 'a level' : `level ${levelNumber}`} is showing a ` +
+				`consequence board with that id. Its production types cannot be resolved; the ` +
+				`board will not appear under any of them.`);
+			return;
+		}
+		mapSettings.productionTypes.forEach(ptId => {
+			const pt = productionTypes.find(c => c.id == ptId);
+			if (!pt) {
 				console.error(
-					`The game data has no map with id "${map.id}", but level ${level.levelNumber} ` +
-					`is showing a consequence board with that id. Its production types cannot be ` +
-					`resolved; the board will not appear under any of them.`);
+					`Map "${map.id}" lists production type ${ptId}, which the game data does ` +
+					`not define. Known ids: [${productionTypes.map(p => p.id).join(', ') || 'none'}].`);
 				return;
 			}
-			mapSettings.productionTypes.forEach(ptId => {
-				const pt = productionTypes.find(c => c.id == ptId);
-				if (!pt) {
-					console.error(
-						`Map "${map.id}" lists production type ${ptId}, which the game data does ` +
-						`not define. Known ids: [${productionTypes.map(p => p.id).join(', ') || 'none'}].`);
-					return;
-				}
-				pt.consequenceMaps.push(map);
-			});
+			pt.consequenceMaps.push(map);
 		});
 	}
 
@@ -235,13 +248,12 @@ export class GameService {
 
 			combineLatest(maps.map(m => this.getGridGameBoard(m))).subscribe((gameBoards) => {
 				level.gameBoards.push(...gameBoards);
-				gameBoards.forEach(c => {
-					let map = settings.maps.find(o => o.id == c.id);
-					map!.productionTypes.forEach(p => {
-						let productionType = this.productionTypes.value.find(o => o.id == p);
-						productionType!.consequenceMaps.push(c);
-					});
-				});
+				// Same two lookups, and the same lie, as the level-navigation path — both ids
+				// come out of the deployment's data.json and neither is checked. This one runs
+				// while BUILDING the level, inside a subscribe, so an unresolved id aborts the
+				// loop and rxjs rethrows asynchronously: the remaining boards never get attached
+				// to any production type and nothing reports why.
+				gameBoards.forEach(c => this.attachConsequenceMap(c));
 
 				this.selectedFields.value.forEach(o => o.updateScore());
 
