@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
-# Checks a rendered Kustomize directory for URLs the browser is given but nothing serves.
+# Checks each rendered Kustomize directory for two things kustomize itself is happy to get wrong.
 #
 #   deploy/k8s/render-test.sh                     # base and every overlay
 #   deploy/k8s/render-test.sh deploy/k8s/base     # just one
 #
+# 1. URLs the browser is given that nothing serves.
+# 2. `images:` entries that matched nothing and therefore did nothing.
+#
+# Both render cleanly, apply cleanly, and fail somewhere else entirely.
+#
+# --- 1 ---
 # Two env vars in the ConfigMap are fetched by the BROWSER rather than from inside the cluster:
 #
 #   CALC_URL              the app POSTs the allocation here
@@ -14,6 +20,12 @@
 # weaker question — and the places overlay, which inherits this base, shipped a CALC_URL
 # pointing at a host from an entirely different deployment while every check passed. It renders,
 # it applies, and it fails only in a browser.
+#
+# --- 2 ---
+# An overlay's `images:` entries must key on the name the PREVIOUS transformer rewrote to, since
+# the base's logical names are gone by then. An entry that matches nothing is not an error —
+# kustomize renders cleanly and leaves the earlier image deployed. That is how the places overlay
+# shipped upstream esgame images while every check there passed.
 #
 # Needs kustomize and python3. Requires no cluster.
 set -euo pipefail
@@ -90,10 +102,45 @@ PY
   if [ "${n}" -lt 2 ]; then
     echo "  FAIL expected 2 URL checks for ${d}, got ${n}"; fail=1
   fi
+
+  # Every `images:` entry must actually have taken effect.
+  #
+  # Kustomize applies each overlay's images transformer in turn, so an overlay has to key on the
+  # name the PREVIOUS one rewrote to — not on the base's logical name, which no longer appears by
+  # then. An entry that matches nothing is not an error: kustomize renders cleanly, says nothing,
+  # and leaves the earlier image in place. That is how the places overlay deployed upstream esgame
+  # images while every check passed, and the same trap is one edit away in overlays/published.
+  #
+  # So rather than trusting the entries, check the result: whatever each entry claims to produce
+  # has to be in the render.
+  imgout=$(python3 - "${d}/kustomization.yaml" "${rendered}" <<'PY'
+import sys, yaml
+k = yaml.safe_load(open(sys.argv[1])) or {}
+entries = k.get('images') or []
+if not entries:
+    print('skip\t-\tno images: entries'); raise SystemExit
+used = {l.split('image:', 1)[1].strip()
+        for l in open(sys.argv[2]) if l.lstrip().startswith('image:')}
+for e in entries:
+    name = e.get('newName', e.get('name', ''))
+    tag = e.get('newTag')
+    want = f"{name}:{tag}" if tag else name
+    # Without newTag the entry only rewrites the name, so match on the name alone.
+    hit = want in used if tag else any(u.split(':')[0] == name for u in used)
+    print(f"{'ok' if hit else 'FAIL'}\t{e.get('name','?')}\t-> {want}"
+          + ('' if hit else '  (matched nothing; the earlier image is still deployed)'))
+PY
+)
+  while IFS=$'\t' read -r status name detail; do
+    [ -n "${status}" ] || continue
+    printf '  %-4s %-22s %s\n' "${status}" "${name}" "${detail}"
+    [ "${status}" = FAIL ] && fail=1
+  done <<<"${imgout}"
+  [ -n "${imgout}" ] || { echo "  FAIL the images check for ${d} produced nothing"; fail=1; }
 done
 
 if [ "${fail}" = 0 ]; then
-  echo "public URLs name a host an Ingress serves: PASS"
+  echo "renders are consistent (public URLs + images): PASS"
 else
-  echo "public URLs name a host an Ingress serves: FAIL"; exit 1
+  echo "renders are consistent (public URLs + images): FAIL"; exit 1
 fi

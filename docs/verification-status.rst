@@ -176,6 +176,11 @@ None of these are defects to fix here — they are things a deployment must supp
    both referenced an image that existed nowhere and the calculation pod was a permanent
    ``ErrImagePull`` — which is why every local test had to stand up its own registry first.
 
+   Verified as a cluster uses it, not only as CI built it: pulled anonymously from ghcr, then
+   deployed to the kind cluster through the new ``overlays/published`` and put through a full
+   round — 16/16 in ``ingress-test.sh`` and both browser specs in ``v2/e2e-cluster`` (465
+   hexagons, 5 coverages, two rounds in separate workspaces), with nothing built locally.
+
    The workflow does not stop at pushing. A push proves bytes were uploaded, not that the
    thing runs, so it starts the published image and requires it to answer on ``:8000`` and
    to survive a ``POST /esgame``. Measured against the same image locally: plumber binds

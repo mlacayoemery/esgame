@@ -1,0 +1,34 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# The local-registry overlay, but pulling the images from ghcr instead of a registry you run.
+#
+# Until esgame-calculation was published there was no such option: the calculation image existed
+# nowhere, so exercising the stack meant building ~2.6 GB of R and standing up deploy/registry
+# first. Both images are published now, so this brings the whole thing up with nothing built:
+#
+#   deploy/k8s/kind.sh up
+#   ESGAME_OVERLAY=published deploy/k8s/kind.sh deploy
+#   deploy/k8s/ingress-test.sh
+#
+# Use local-registry instead when you want to run a build you have not pushed — which is still
+# the only way to test a change to tools/R or v2 before it is on master.
+resources:
+  - ../local-registry
+
+# THESE KEY ON THE NAME local-registry REWROTE THE IMAGES TO, not on the base's logical names.
+#
+# Kustomize applies each overlay's images transformer in turn, so by the time this one runs
+# `esgame-angular` no longer appears anywhere and neither does `ghcr.io/mlacayoemery/esgame` —
+# what is in the manifests is `localhost:5001/esgame`. An entry keyed on anything else matches
+# nothing, does not warn, and silently leaves the local-registry images in place. That exact
+# mistake shipped once in the places overlay against this same base.
+#
+# Check with: kustomize build deploy/k8s/overlays/published | grep 'image:'
+images:
+  - name: localhost:5001/esgame
+    newName: ghcr.io/mlacayoemery/esgame
+    newTag: master
+  - name: localhost:5001/esgame-calculation
+    newName: ghcr.io/mlacayoemery/esgame-calculation
+    newTag: master
