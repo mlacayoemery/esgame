@@ -410,6 +410,29 @@ Container security context — *added 2026-07-31*, partial on purpose
    :file:`/app/data`. Those need changes to the images — one of which is upstream — rather than
    to a manifest, so a deployment that needs them should expect image work.
 
+The layout needs about 620px, and scrolls sideways below that
+   Measured against the live cluster at four widths, on ``/dynamic-game``:
+
+   .. code-block:: text
+
+      phone          390px viewport | content 619px | overflow 229px | 3/6 production buttons clipped | Next Level clipped
+      small tablet   600px viewport | content 619px | overflow  19px | 0/6 clipped                    | Next Level visible
+      iPad           768px viewport | content 768px | overflow   0px | 0/6 clipped                    | Next Level visible
+      laptop        1024px viewport | content 1024px| overflow   0px | 0/6 clipped                    | Next Level visible
+
+   Nothing is unreachable. ``tro-svg-level`` sets ``overflow: auto``, so on a phone the content
+   scrolls horizontally and every control can be scrolled to — confirmed by clicking *Next
+   Level* at 390px, which succeeds once the browser scrolls it into view. It is the document
+   that does not scroll (``scrollWidth == clientWidth``), which is easy to mistake for the
+   button being clipped away entirely; it is the component that scrolls, not the page.
+
+   But a player on a phone has to discover that sideways scroll to advance a level, and three of
+   the six production types are off-screen until they do. Whether that matters is a product
+   decision — this is a 466-hexagon board built for workshops — so it is recorded rather than
+   redesigned. The three panels are ``flex: 0 1 25% / 0 0 50% / 0 1 25%``
+   (:file:`v2/src/app/level/level-base.component.scss`); making it reflow below ~620px means
+   choosing what the narrow layout should look like, not adjusting a number.
+
 No default IngressClass is assumed
    The three Ingresses set no ``ingressClassName``. If the cluster has no default
    ``IngressClass`` they apply cleanly and route nothing, with no error. Check
