@@ -176,7 +176,28 @@ PROBE
       --from-file=LU_and_NEW_hexa.tif="${REPO}/v2/src/assets/images/LU_and_NEW_hexa.tif" \
       --dry-run=client -o yaml | "${K[@]}" apply -f -
 
+    # The overlay hard-codes the ingress port into the browser-facing URLs, because a browser
+    # cannot infer it. If someone moves KIND_HTTP_PORT without moving those, the cluster comes
+    # up fine and only a real browser notices — say so now instead.
+    for v in CALC_URL GEOSERVER_PUBLIC_URL; do
+      want=$(grep -oE "^      - ${v}=.*" overlays/local-registry/kustomization.yaml | head -1)
+      case "${want}" in
+        *":${HTTP_PORT}/"*) ;;
+        "") echo "!! ${v} not found in the overlay"; exit 1 ;;
+        *) echo "!! ${v} in the overlay does not use KIND_HTTP_PORT=${HTTP_PORT}:"
+           echo "   ${want}"
+           echo "   a browser would post to the wrong port; curl with a Host header would not notice"
+           exit 1 ;;
+      esac
+    done
+
     "${K[@]}" apply -k overlays/local-registry
+    # esgame-config is consumed as environment variables, which are fixed when a container
+    # starts, and the ConfigMap's name is stable — so `apply` updates it while every running pod
+    # keeps the old value. Nothing reports a problem: the apply succeeds, the pods stay ready,
+    # and the app serves a stale CALC_URL. Restart so what runs matches what was applied.
+    "${K[@]}" rollout restart deploy/esgame-angular deploy/esgame-calculation >/dev/null
+
     for d in esgame-angular esgame-geoserver esgame-calculation; do
       "${K[@]}" rollout status "deploy/${d}" --timeout=300s
     done
