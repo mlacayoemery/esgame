@@ -128,16 +128,35 @@ export class CustomColors {
 		return this.colorToRgb(this.colors.get(i));
 	}
 
+	/**
+	 * Deployment-supplied colour to RGBA, for painting a raster into a canvas.
+	 *
+	 * This used to slice by index, assuming #RRGGBB or #RRGGBBAA. Every other CSS colour form is
+	 * then read from the wrong offsets and produces a colour rather than an error, which the
+	 * canvas paints. Measured, since the offsets do not misbehave in the way one would guess —
+	 * "#FFF".slice(3, 5) is "F", not "":
+	 *
+	 *   #FFF            [255, 15, NaN, 255]     white paints as near-pure red
+	 *   #f0fa           [240, 250, NaN, 255]
+	 *   rebeccapurple   [235, 236, 202, NaN]    a valid CSS colour, read as nonsense
+	 *
+	 * NaN then enters a Uint8ClampedArray as 0, so nothing downstream notices either.
+	 *
+	 * Now: 3, 4, 6 and 8 digit hex are all parsed, and anything else returns the same
+	 * transparent default an unknown value already did. Named colours and rgb() cannot be
+	 * resolved without a DOM, so refusing them is the honest answer — and it is a better one
+	 * than painting 235,236,202.
+	 */
 	colorToRgb(hex: string | undefined) {
-		if (!hex) return [255, 255, 255, 0];
-		const r = hex.slice(1, 3);
-		const g = hex.slice(3, 5);
-		const b = hex.slice(5, 7);
-		const a = hex.slice(7, 9);
-		if (a) {
-			return [parseInt(r, 16), parseInt(g, 16), parseInt(b, 16), parseInt(a, 16)];
-		}
-
-		return [parseInt(r, 16), parseInt(g, 16), parseInt(b, 16), 255];
+		const transparent = [255, 255, 255, 0];
+		if (!hex) return transparent;
+		const m = /^#([0-9a-fA-F]{3,8})$/.exec(hex.trim());
+		if (!m) return transparent;
+		let digits = m[1];
+		// #RGB and #RGBA are shorthand for each digit doubled.
+		if (digits.length === 3 || digits.length === 4) digits = digits.split('').map(c => c + c).join('');
+		if (digits.length !== 6 && digits.length !== 8) return transparent;   // 5 or 7: not a colour
+		const pair = (i: number) => parseInt(digits.slice(i, i + 2), 16);
+		return [pair(0), pair(2), pair(4), digits.length === 8 ? pair(6) : 255];
 	}
 }

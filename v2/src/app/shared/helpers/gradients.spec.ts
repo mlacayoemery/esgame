@@ -1,4 +1,4 @@
-import gradients, { Gradient, applyGradientOverrides } from './gradients';
+import gradients, { CustomColors, Gradient, applyGradientOverrides } from './gradients';
 
 describe('Gradient.calculateColor', () => {
 	it('returns the start color at ratio 1 and the end color at ratio 0', () => {
@@ -80,5 +80,53 @@ describe('applyGradientOverrides with colours a deployment might reasonably writ
 		applyGradientOverrides({ red: { start: 'AABBCC', end: '#DDEEFF' } });
 
 		expect(errors).toEqual([]);
+	});
+});
+
+// colorToRgb turns a deployment-supplied colour into the pixels of the background map. It used
+// to slice by index assuming #RRGGBB, so every other CSS form was read from the wrong offsets
+// and produced a colour rather than an error — which the canvas then painted. NaN enters a
+// Uint8ClampedArray as 0, so nothing downstream noticed either.
+describe('CustomColors.colorToRgb', () => {
+	const c = new CustomColors('x');
+
+	it('reads #RRGGBB', () => {
+		expect(c.colorToRgb('#40916c')).toEqual([64, 145, 108, 255]);
+	});
+
+	it('reads #RRGGBBAA', () => {
+		expect(c.colorToRgb('#b2b2b2c0')).toEqual([178, 178, 178, 192]);
+	});
+
+	// The regression. #FFF is white; the old code read [255, 15, NaN, 255] — near-pure red.
+	it('expands #RGB shorthand instead of reading it from the wrong offsets', () => {
+		expect(c.colorToRgb('#FFF')).toEqual([255, 255, 255, 255]);
+		expect(c.colorToRgb('#f0f')).toEqual([255, 0, 255, 255]);
+	});
+
+	it('expands #RGBA shorthand', () => {
+		expect(c.colorToRgb('#f0fa')).toEqual([255, 0, 255, 170]);
+	});
+
+	// Every channel of every accepted form must be a real byte. This is the property that
+	// actually matters: a NaN here is silently painted as 0.
+	for (const v of ['#40916c', '#b2b2b2c0', '#FFF', '#f0fa', '#FFFFFF']) {
+		it(`gives four real bytes for ${v}`, () => {
+			const rgba = c.colorToRgb(v);
+			expect(rgba).toHaveLength(4);
+			expect(rgba.every((x: number) => Number.isInteger(x) && x >= 0 && x <= 255)).toBe(true);
+		});
+	}
+
+	// A named colour is valid CSS but cannot be resolved without a DOM. Refusing is honest;
+	// reading it by offset gave [235, 236, 202, NaN].
+	for (const v of ['rebeccapurple', '#12345', 'rgb(1,2,3)', '', 'not a colour']) {
+		it(`returns the transparent default rather than nonsense for ${JSON.stringify(v)}`, () => {
+			expect(c.colorToRgb(v)).toEqual([255, 255, 255, 0]);
+		});
+	}
+
+	it('returns the transparent default when the colour is unset', () => {
+		expect(c.colorToRgb(undefined)).toEqual([255, 255, 255, 0]);
 	});
 });
