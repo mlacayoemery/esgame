@@ -243,6 +243,24 @@ The committed base raster makes the game inert
    Nothing is broken in the code: a deployment is supposed to supply the real geodata,
    and the release copy shares the board's id space. But the committed asset is only good
    for exercising the plumbing, and a green round against it says nothing about the model.
+
+   **The synthetic allocation was hiding this, not merely failing to exercise it.**
+   :file:`deploy/k8s/ingress-test.sh` builds its payload from ids it reads out of the
+   *deployed raster*, so it matches by construction. Measured on one cluster, minutes apart:
+
+   .. code-block:: text
+
+      ingress-test.sh (ids taken from the raster)   455 of 455  (100%)
+      a browser playing a round (real board ids)      4 of 465  (1%)
+
+   Both runs are green, both return five finite scores, and one of them is a game that
+   ignored 99% of what the player did. Neither number was surfaced anywhere until
+   2026-07-31 — ``tools/R/coverage.R`` logged it and nothing read the log.
+
+   Both now report it. ``ingress-test.sh`` fails if the reporter is not wired in at all —
+   nothing else there would notice its removal — and says in the output that its own
+   percentage is circular. :file:`v2/e2e-cluster` prints the honest figure, since the
+   browser sends the ids the board actually uses.
    See :ref:`allocation-id-space`.
 
 The loading spinner does not clear when a level fails to build — *fixed 2026-07-31*

@@ -175,9 +175,47 @@ echo "     WCS GetCoverage through the ingress: ${ok}/${tot}"
 check "coverage URLs use an ingress host"  "[ -n '${urls}' ] && ! grep -q 'esgame-geoserver-service' <<<'${urls}'"
 check "coverage URLs return GeoTIFFs"      "[ ${tot} -gt 0 ] && [ ${ok} = ${tot} ]"
 
+echo "==> how much of the allocation the calculator could actually use"
+# Everything above can pass on a round that ignored the allocation entirely. The committed
+# LU_and_NEW_hexa.tif numbers its hexagons 10-474 while the board numbers its own 100-46500, so
+# only 4 of 465 ids overlap: reclassify is very nearly a no-op and the same five scores come back
+# for ANY allocation. tools/R/coverage.R detects this and logs it — and nothing ever read that
+# log, so this script printed "PASS (455 ids, 5 scores, 5/5 coverages)" over a game that was
+# inert. See docs/verification-status.rst, "The committed base raster makes the game inert".
+cov=$("${K[@]}" logs deploy/esgame-calculation --tail=400 2>/dev/null \
+      | grep -F 'Allocation coverage:' | tail -1 || true)
+echo "     ${cov:-<no coverage line in the calculation log>}"
+# Presence first: the reporter being wired in at all is the thing worth failing on. If someone
+# removes the source() of coverage.R, every other check here still passes.
+check "the calculator reported coverage"   "[ -n '${cov}' ]"
+
+pct=$(sed -nE 's/.*\(([0-9]+)%\).*/\1/p' <<<"${cov}")
+# ...and this number is CIRCULAR here, so do not read it as evidence about the data. The payload
+# above is built from ids this script read out of the deployed raster, so it matches by
+# construction and reports ~100% however wrong the raster is for the actual game board.
+#
+# A real player does not do that. Measured on this same cluster, minutes apart:
+#
+#   ingress-test.sh (ids taken from the raster)   455 of 455  (100%)
+#   a browser playing a round (real board ids)      4 of 465  (1%)
+#
+# So the honest figure comes from v2/e2e-cluster, not from here. What this proves is that the
+# reporter is wired in and runs — which is worth proving, because nothing else here would notice
+# if it were removed.
+if [ -n "${pct}" ] && [ "${pct}" -lt 50 ]; then
+  echo "     !! ${pct}% of the allocation matched the base raster."
+  echo "     !! The scores above are very nearly independent of what was allocated."
+  echo "     !! This is EXPECTED with the raster committed to this repository, which is only"
+  echo "     !! good for exercising the plumbing. A deployment supplies the data-release raster."
+  inert=" — but only ${pct}% of the allocation was used"
+elif [ -n "${pct}" ]; then
+  echo "     (${pct}% — circular: this payload's ids came from that raster. See v2/e2e-cluster"
+  echo "      for the figure a real browser produces, which on this data is 1%.)"
+fi
+
 echo
 if [ "${fail}" = 0 ]; then
-  echo "ingress round-trip: PASS   (${n} ids, ${scored} scores, ${ok}/${tot} coverages, all via http://localhost:${PORT})"
+  echo "ingress round-trip: PASS   (${n} ids, ${scored} scores, ${ok}/${tot} coverages, all via http://localhost:${PORT})${inert:-}"
 else
   echo "ingress round-trip: FAIL"; exit 1
 fi
