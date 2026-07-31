@@ -13,9 +13,18 @@ export class GridLevelComponent extends LevelBaseComponent {
 	settings = this.gameService.settingsObs;
 	constructor(gameService: GameService, configService: ConfigService) {
 		super(gameService);
-		configService.getGameData('static').subscribe(data => {
-			this.gameService.loadSettings(data);
-			this.gameService.initialiseGridMode();
+		configService.getGameData('static').subscribe({
+			next: data => {
+				this.gameService.loadSettings(data);
+				this.gameService.initialiseGridMode();
+			},
+			error: (err) => {
+				// Without the game data there is no board at all, so this is terminal. It used to
+				// have no error handler: the observable errored, Angular's ErrorHandler logged it,
+				// and the player got a blank page with nothing to read.
+				console.error(err);
+				alert("The game could not be loaded. Its configuration data is missing or unreadable.");
+			}
 		});
 	}
 }
