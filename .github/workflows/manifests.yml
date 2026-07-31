@@ -35,6 +35,12 @@ jobs:
           ./kustomize build deploy/k8s/base > rendered.yaml
           echo "rendered $(grep -c '^kind:' rendered.yaml) resources"
 
+      # ubuntu-latest ships no R. install-r must stay true — `install-r: false` tells setup-r to
+      # use a pre-installed one, which gives "Rscript: command not found" and exit 127.
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+
       - name: Schema-check against the Kubernetes API
         run: |
           curl -sSfL -o kubeconform.tar.gz \
@@ -89,6 +95,28 @@ jobs:
             exit 1
           fi
           echo "Dockerfile installs geosapi at build time"
+
+      - name: The R sources must parse
+        run: |
+          # Everything else here greps calculator.r — for run-time installs, for the coverage
+          # reporter, for raster_url coming from gs_public. None of that notices a syntax error,
+          # so one would have surfaced only when someone built the 2.6 GB image and ran it.
+          #
+          # Parsing is not running: this catches a syntax error, not a wrong reclassify. That is
+          # the right trade when the alternative is no gate at all. The same job exists in
+          # s-gebhardt/places for its copy of this file.
+          shopt -s nullglob
+          files=(tools/R/*.r tools/R/*.R)
+          echo "${#files[@]} R files: ${files[*]}"
+          # Presence first: a rename or a moved directory would otherwise parse nothing and pass.
+          if [ "${#files[@]}" -lt 2 ]; then
+            echo "::error::found ${#files[@]} R files under tools/R; this check is not looking at the right place"
+            exit 1
+          fi
+          Rscript -e '
+            files <- commandArgs(trailingOnly = TRUE)
+            for (f in files) { invisible(parse(f)); cat("  parses:", f, "\n") }
+          ' "${files[@]}"
 
       - name: The calculator reports how much of the allocation it actually used
         run: |
