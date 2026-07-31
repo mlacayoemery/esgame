@@ -130,3 +130,44 @@ describe('CustomColors.colorToRgb', () => {
 		expect(c.colorToRgb(undefined)).toEqual([255, 255, 255, 0]);
 	});
 });
+
+// game.service calls this on every SVG level build, to render the background map at 25%
+// opacity. It sliced by index like colorToRgb did, so a shorthand colour came out with five
+// hex digits — not a colour at all, and the intended one lost.
+describe('CustomColors.addTransparencyToColors', () => {
+	const withColor = (v: string) => {
+		const c = new CustomColors('x');
+		c.set(1, v);
+		c.addTransparencyToColors('3F');   // the 25% opacity game.service asks for
+		return c;
+	};
+
+	it('appends the alpha to #RRGGBB', () => {
+		expect(withColor('#40916c').get(1)).toBe('#40916c3F');
+	});
+
+	it('replaces an alpha that is already there', () => {
+		expect(withColor('#b2b2b2c0').get(1)).toBe('#b2b2b23F');
+	});
+
+	// The regression: this used to give #FFF3F, which colorToRgb reads as fully transparent.
+	// Compared case-insensitively — hex colours are, and the expansion keeps the input's case.
+	it('expands shorthand rather than producing five hex digits', () => {
+		expect(withColor('#FFF').get(1).toLowerCase()).toBe('#ffffff3f');
+		expect(withColor('#f0fa').get(1).toLowerCase()).toBe('#ff00ff3f');
+	});
+
+	// The property that matters: whatever comes out has to survive the trip to pixels with the
+	// requested alpha, for every form the data files use.
+	for (const v of ['#40916c', '#b2b2b2c0', '#FFF', '#f0fa']) {
+		it(`${v} still paints with the requested alpha`, () => {
+			const rgba = withColor(v).getRgb(1)!;
+			expect(rgba.every((x: number) => Number.isInteger(x))).toBe(true);
+			expect(rgba[3]).toBe(0x3F);
+		});
+	}
+
+	it('leaves a colour it cannot parse alone rather than mangling it', () => {
+		expect(withColor('rebeccapurple').get(1)).toBe('rebeccapurple');
+	});
+});

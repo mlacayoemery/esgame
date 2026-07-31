@@ -100,6 +100,21 @@ export enum DefaultGradients {
 	Yellow = 'yellow'
 }
 
+/**
+ * Expand a CSS hex colour to its 6- or 8-digit form, or null if it is not one.
+ *
+ * Shared because this class slices hex by index in two places, and both got it wrong for the
+ * shorthand forms. #RGB and #RGBA mean each digit doubled; 5 and 7 digits are not colours.
+ */
+export function expandHexColor(value: string | undefined): string | null {
+	const m = /^#([0-9a-fA-F]{3,8})$/.exec(value?.trim() ?? '');
+	if (!m) return null;
+	const digits = m[1].length === 3 || m[1].length === 4
+		? m[1].split('').map(c => c + c).join('')
+		: m[1];
+	return digits.length === 6 || digits.length === 8 ? digits : null;
+}
+
 export class CustomColors {
 	private colors = new Map<number, string>();
 	id: string;
@@ -118,9 +133,23 @@ export class CustomColors {
 		this.colors.set(key, value);
 	}
 
+	/**
+	 * Replace every colour's alpha with the given one, for the semi-transparent background map.
+	 *
+	 * This was `value.slice(0, 7) + transparencyHex`, which is right only for #RRGGBB and
+	 * #RRGGBBAA. Measured with "3F", the 25% opacity game.service asks for:
+	 *
+	 *   #40916c     #40916c3F   [64, 145, 108, 63]
+	 *   #b2b2b2c0   #b2b2b23F   [178, 178, 178, 63]    existing alpha correctly replaced
+	 *   #FFF        #FFF3F      [255, 255, 255, 0]     5 digits: the colour is lost entirely
+	 *
+	 * A colour that cannot be parsed is left alone rather than turned into something that is
+	 * not a colour at all.
+	 */
 	addTransparencyToColors(transparencyHex: string) {
 		this.colors.forEach((value, key) => {
-			this.colors.set(key, value.slice(0, 7) + transparencyHex);
+			const digits = expandHexColor(value);
+			if (digits) this.colors.set(key, `#${digits.slice(0, 6)}${transparencyHex}`);
 		});
 	}
 
@@ -149,13 +178,8 @@ export class CustomColors {
 	 */
 	colorToRgb(hex: string | undefined) {
 		const transparent = [255, 255, 255, 0];
-		if (!hex) return transparent;
-		const m = /^#([0-9a-fA-F]{3,8})$/.exec(hex.trim());
-		if (!m) return transparent;
-		let digits = m[1];
-		// #RGB and #RGBA are shorthand for each digit doubled.
-		if (digits.length === 3 || digits.length === 4) digits = digits.split('').map(c => c + c).join('');
-		if (digits.length !== 6 && digits.length !== 8) return transparent;   // 5 or 7: not a colour
+		const digits = expandHexColor(hex);
+		if (!digits) return transparent;
 		const pair = (i: number) => parseInt(digits.slice(i, i + 2), 16);
 		return [pair(0), pair(2), pair(4), digits.length === 8 ? pair(6) : 255];
 	}
