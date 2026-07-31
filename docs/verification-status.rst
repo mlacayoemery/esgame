@@ -29,7 +29,7 @@ Verified working
    * - Path
      - How it was checked
    * - Static / grid game
-     - 255 unit tests, 11 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
+     - 258 unit tests, 12 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
        SEO 100. The board renders 2,436 fields; the e2e suite asserts that rather than
        just asserting the component mounted.
    * - No external runtime deps
@@ -240,18 +240,37 @@ The committed base raster makes the game inert
    for exercising the plumbing, and a green round against it says nothing about the model.
    See :ref:`allocation-id-space`.
 
-The loading spinner does not clear when a level fails to build
-   ``prepareNextLevel`` now handles the error, clears the loading counter and tells the player
-   (:file:`v2/src/app/services/game.service.ts`, ``failLevel``) — before, a failed raster fetch
-   left the counter pushed, the level unchanged and nothing said at all. The **spinner itself
-   still does not disappear.** ``LoadingIndicatorComponent``'s subscriber does receive the
-   cleared value — verified in a browser, it runs with ``length 0`` — but its
-   ``@HostBinding('class.show')`` never reaches the DOM: the error arrives from outside Angular's
-   zone, and a host binding is evaluated by the *parent* view, not the component's own. Both
-   ``cdRef.detectChanges()`` in the component and ``NgZone.run()`` in its subscriber were tried
-   and neither updated it. Reachable today only in offline dynamic mode, which cannot finish a
-   round anyway (see above); a deployment with a working calculator does not hit it unless a
-   returned coverage URL fails.
+The loading spinner does not clear when a level fails to build — *fixed 2026-07-31*
+   The spinner covers the whole screen — ``:host.show`` gives it a white background over the
+   board — so this was not cosmetic: the game became unusable with no way out but a reload.
+   And it was reachable in any deployment, not only offline: ``prepareNextLevel`` builds the
+   level from the coverage URLs the calculator returns, so one URL GeoServer could not serve
+   was enough.
+
+   The earlier diagnosis was right about the mechanism and wrong about the remedy.
+   ``LoadingIndicatorComponent`` wrote to a plain field behind ``@HostBinding('class.show')``,
+   and a host binding is evaluated by the view that *declares* the component — assigning a
+   field tells Angular nothing about which view that is. Inside the zone something else
+   happened along to check it; from an error callback outside the zone nothing did.
+   ``cdRef.detectChanges()`` cannot help, because that ref is the component's own template
+   view and its host bindings live in the parent's.
+
+   The component now reads a **signal**. A signal read inside a host binding registers the
+   binding as a consumer, so a write marks exactly the right view — no zone involved, which
+   is why it holds on the path the old code could not reach.
+
+   Both levels were checked by mutation, not assertion. In a unit test the old implementation
+   fails two of three specs and the new one passes all three; in a real browser, with one
+   coverage URL forced to 404, the old build leaves ``class="show"`` on the element for 123
+   consecutive polls and the new build clears it. Getting there also corrected a false
+   negative of my own: the first browser run failed against a **stale ``dist``**, which is the
+   old component — evidence about the previous code, not about the fix.
+
+   One trap worth recording: a ``ComponentFixture`` is detached from ``ApplicationRef`` unless
+   ``autoDetectChanges()`` is called, and while detached *nothing* refreshes it — not
+   ``ApplicationRef.tick()``, not a scheduled task, only an explicit ``detectChanges()``. A
+   test written without it measures the harness rather than the component, and would have
+   reported this bug as unfixable a second time.
 
 No default IngressClass is assumed
    The three Ingresses set no ``ingressClassName``. If the cluster has no default
