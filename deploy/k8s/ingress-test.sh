@@ -46,7 +46,11 @@ check "esgame.local serves the app"        "[ \"\$(code esgame.local /)\" = 200 
 # so the check failed precisely BECAUSE the pattern matched. Whether it bites depends on whether
 # curl finishes writing before grep exits, which is why it looked intermittent.
 body=$(ing esgame.local / || true)
-check "index.html is really the app"       "grep -qi '<app-root\|<title' <<<\"\${body}\""
+# `<app-root` only. The pattern used to be '<app-root\|<title', and ingress-nginx's own 404
+# page is "<html><head><title>404 Not Found</title>...", so the <title> alternative matched it:
+# with nothing serving esgame.local at all, this check reported the app was really being served.
+# Found by running the whole script against a deleted deployment.
+check "index.html is really the app"       "grep -qi '<app-root' <<<\"\${body}\""
 check "assets/config.json served"          "[ \"\$(code esgame.local /assets/config.json)\" = 200 ]"
 # The premise of the whole deployment: one image, retargeted by env var at container start.
 want=$("${K[@]}" get cm esgame-config -o jsonpath='{.data.CALC_URL}' 2>/dev/null || true)

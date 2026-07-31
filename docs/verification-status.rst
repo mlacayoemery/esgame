@@ -452,7 +452,26 @@ The checks were audited for vacuity
 -----------------------------------
 
 A check that cannot fail is worse than no check: it reports success and stops anyone
-looking. On 2026-07-30 every check added that day was re-read for that shape — an
+looking.
+
+**2026-07-31, found by running a whole suite against a deleted deployment rather than one check
+against a missing file.** Two more of this shape, one in each repository:
+
+.. code-block:: text
+
+   grep -qi '<app-root\|<title'   ingress-nginx's 404 page is
+                                  "<html><head><title>404 Not Found</title>..." — the <title>
+                                  alternative matched it, so with NOTHING serving the host the
+                                  check reported the app was really being served
+   [ -n "$res" ]                  with nothing serving, the POST returns 145 bytes of nginx 404
+                                  HTML, which is very much "something"
+
+Both now require what only the real thing produces: ``<app-root``, and a response that parses as
+JSON with a non-empty results list. An earlier attempt at this test measured nothing — pointing
+the namespace variable at an empty namespace redirects the ``kubectl`` checks but not the HTTP
+ones, because ingress hosts are cluster-wide, so seven checks appeared to "pass on nothing"
+while in fact passing on the still-running real deployment. Deleting it is the only version of
+the test that means anything. On 2026-07-30 every check added that day was re-read for that shape — an
 assertion that also holds when the thing being examined is absent — and **seven were
 found, all written the same day**. Six in the first pass; the seventh turned up afterwards
 in :file:`deploy/k8s/ingress-test.sh`, which the first pass had skipped because the inotify
