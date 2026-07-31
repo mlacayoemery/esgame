@@ -89,6 +89,22 @@ describe('ImportConfigComponent', () => {
 
 			expect(alertSpy).not.toHaveBeenCalled();
 		});
+
+		// Parsing is not the same as being a configuration, and the try/catch only covers
+		// parsing. `null` in particular gets all the way through: new Settings(ts, null) does
+		// not throw — measured — it builds a game with no maps, no production types and an
+		// undefined board width. The player gets an empty board and no explanation.
+		for (const body of ['null', '[1,2,3]', '"a string"', '42']) {
+			it(`refuses ${body}, which parses but is not a configuration`, async () => {
+				const { component, loaded } = setup();
+
+				component.onImport(changeEventWith(body));
+				await flushFileReader();
+
+				expect(loaded).toEqual([]);
+				expect(alertSpy).toHaveBeenCalled();
+			});
+		}
 	});
 
 	describe('start', () => {

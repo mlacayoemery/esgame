@@ -26,8 +26,20 @@ export class ImportConfigComponent {
 					// JSON.parse was unguarded here. Because this runs in FileReader.onload the
 					// throw is asynchronous, so no caller could catch it: choosing the wrong file
 					// looked exactly like choosing no file at all — nothing loaded, nothing said.
+					//
+					// Parsing successfully is not the same as being a configuration, and the
+					// catch below only covered parsing. Anything else that got through was
+					// stopped by `new Settings(...)` happening to throw, which is incidental —
+					// and `null` does not throw at all: it builds a game with no maps, no
+					// production types and an undefined board width. Measured, not assumed.
 					try {
-						this.gameService.loadSettings(JSON.parse(result.toString()));
+						const parsed = JSON.parse(result.toString());
+						if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+							throw new Error(
+								`a game configuration must be a JSON object, got ` +
+								`${Array.isArray(parsed) ? 'an array' : typeof parsed}`);
+						}
+						this.gameService.loadSettings(parsed);
 					} catch (err) {
 						console.error(err);
 						alert("That file could not be read as a game configuration.");
