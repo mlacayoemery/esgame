@@ -75,8 +75,53 @@ jobs:
           fi
           echo "documented count matches the suite"
 
+      - name: Every file the verification doc points at must exist
+        run: |
+          # Same failure mode as the test count, different shape: verification-status.rst names
+          # ~16 files as evidence, and a rename leaves the doc pointing at nothing while every
+          # other check stays green. Nothing re-derived these, so this does.
+          cd "${GITHUB_WORKSPACE}"
+          paths=$(grep -oE ':file:`[^`]+`' docs/verification-status.rst \
+                  | sed -E 's/^:file:`//; s/`$//' | sort -u)
+          # Presence first: an empty list would validate nothing and report success.
+          n=$(printf '%s\n' "$paths" | grep -c . || true)
+          echo "$n paths referenced"
+          if [ "$n" -lt 5 ]; then
+            echo "::error file=docs/verification-status.rst::found only $n :file: references; this check is not looking at the right thing"
+            exit 1
+          fi
+          bad=0
+          for p in $paths; do
+            # Absolute paths are system files being described (/etc/hosts), not repo paths.
+            case "$p" in /*) continue ;; esac
+            if [ ! -e "$p" ]; then
+              echo "::error file=docs/verification-status.rst::references $p, which does not exist"
+              bad=1
+            fi
+          done
+          [ "$bad" = 0 ] && echo "every referenced path exists"
+          exit $bad
+
       - name: E2E (Playwright)
-        run: npm run e2e
+        run: |
+          set -o pipefail
+          npm run e2e 2>&1 | tee /tmp/e2e.log
+
+      - name: The documented e2e count is current
+        run: |
+          # The doc claims an e2e count beside the unit one, and only the unit one was checked.
+          actual=$(sed 's/\x1b\[[0-9;]*m//g' /tmp/e2e.log | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+' | tail -1)
+          claimed=$(grep -oE '^\s+- [0-9]+ unit tests, [0-9]+ Playwright e2e' "${GITHUB_WORKSPACE}/docs/verification-status.rst" \
+                    | grep -oE '[0-9]+ Playwright' | grep -oE '[0-9]+')
+          echo "suite reports: ${actual:-<none>}   docs claim: ${claimed:-<none>}"
+          if [ -z "$actual" ] || [ -z "$claimed" ]; then
+            echo "::error::could not read one of the e2e counts (suite='${actual}', docs='${claimed}')"; exit 1
+          fi
+          if [ "$actual" != "$claimed" ]; then
+            echo "::error file=docs/verification-status.rst::says $claimed Playwright e2e, the suite runs $actual — update it"
+            exit 1
+          fi
+          echo "documented e2e count matches the suite"
 
       - name: Upload Playwright report on failure
         if: failure()

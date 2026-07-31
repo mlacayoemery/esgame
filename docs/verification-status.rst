@@ -182,7 +182,7 @@ None of these are defects to fix here — they are things a deployment must supp
    cluster served a frontend image seven merges old while every check passed, because the pod
    had been started before those merges. ``kind.sh deploy`` does ``rollout restart``, which
    re-pulls under ``imagePullPolicy: Always``, and re-deploying moved the running digest from
-   ``45f92893`` to ``e1fd8573``. :file:`ingress-test.sh` now prints the spec image and the
+   ``45f92893`` to ``e1fd8573``. :file:`deploy/k8s/ingress-test.sh` now prints the spec image and the
    running **digest** for both deployments, so its output records what it tested.
 
    Verified from a **cold start**, which is the claim :file:`deploy/k8s/README.md` makes: the
