@@ -56,6 +56,21 @@ spec:
           volumeMounts:
             - name: app-data
               mountPath: /app/data
+          # Without this the pod is "ready" the instant the container starts, and the Service
+          # sends it traffic while plumber is still binding — about 12 seconds. That is not
+          # hypothetical: a POST straight after a rollout returned 503 from the ingress, and it
+          # looked exactly like a broken endpoint.
+          #
+          # tcpSocket, not httpGet, because nothing here answers 2xx-3xx: measured from inside
+          # the cluster, / is 404 and /esgame is 405 (it is POST-only). Only /__docs__/ returns
+          # 200, and depending on swagger being enabled would be a worse probe than checking the
+          # port accepts connections — which is precisely what was missing.
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12
           resources:
             limits:
               cpu: "2"
