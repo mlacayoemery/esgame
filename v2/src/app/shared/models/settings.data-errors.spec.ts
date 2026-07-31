@@ -1,4 +1,5 @@
 import { Settings } from './settings';
+import gradients from '../helpers/gradients';
 
 // Every deployment writes its own data.json by hand, so a field being absent is an ordinary
 // mistake. What it used to produce was "Cannot read properties of undefined (reading 'map')" —
@@ -80,6 +81,63 @@ describe('Settings with missing text', () => {
 
 	it('says nothing when every label is present', () => {
 		new Settings(translateStub(), full());
+
+		expect(errors).toEqual([]);
+	});
+});
+
+// gameBoardType and gradient are strings a deployment types by hand, and both converters used
+// to accept anything: the switch defaulted every typo to a Suitability map, and the gradient
+// converter was a bare cast. Measured before the fix — "Consequense" and "Backgrund" both came
+// back as SuitabilityMap(0), and "blu"/"BLUE" were stored unchanged and looked up as undefined.
+describe('Settings with an unrecognised gameBoardType or gradient', () => {
+	let errors: string[];
+	beforeEach(() => {
+		errors = [];
+		vi.spyOn(console, 'error').mockImplementation((...a: any[]) => { errors.push(a.map(String).join(' ')); });
+	});
+	afterEach(() => vi.restoreAllMocks());
+
+	const withMap = (gameBoardType: string, gradient?: string) => new Settings(translateStub([]), {
+		title: { en: 'T' }, mapMode: 'svg', elementSize: 1, gameBoardColumns: 4, gameBoardRows: 4,
+		productionTypes: [], customColors: [],
+		maps: [{ id: 'm', name: { en: 'M' }, gameBoardType, gradient, urlToData: 'x.tif', productionTypes: [] }],
+	});
+
+	// Controls: the four real values must stay silent, or every deployment gets noise.
+	for (const t of ['Suitability', 'Consequence', 'Drawing', 'Background']) {
+		it(`accepts ${t} without comment`, () => {
+			withMap(t, 'blue');
+			expect(errors).toEqual([]);
+		});
+	}
+
+	for (const t of ['Consequense', 'Backgrund', 'suitability', '']) {
+		it(`names ${JSON.stringify(t)} rather than silently calling it a Suitability map`, () => {
+			withMap(t, 'blue');
+			expect(errors.join(' ')).toContain('gameBoardType');
+			expect(errors.join(' ')).toContain(JSON.stringify(t));
+		});
+	}
+
+	it('names an unknown gradient and falls back to one that exists', () => {
+		const s = withMap('Suitability', 'blu');
+
+		expect(errors.join(' ')).toContain('"blu"');
+		// The fallback has to be real: gradients.get() is dereferenced without a guard, so
+		// passing the bad name on would crash rather than merely look wrong.
+		expect(gradients.get(s.maps[0].gradient as any)).toBeTruthy();
+	});
+
+	it('is case sensitive about gradients, and says so', () => {
+		const s = withMap('Suitability', 'BLUE');
+
+		expect(errors.join(' ')).toContain('lower case');
+		expect(gradients.get(s.maps[0].gradient as any)).toBeTruthy();
+	});
+
+	it('says nothing when a map simply has no gradient', () => {
+		withMap('Suitability', undefined);
 
 		expect(errors).toEqual([]);
 	});

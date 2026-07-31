@@ -152,13 +152,49 @@ export class Settings {
 	}
 }
 
+/**
+ * A deployment writes these strings by hand, and both converters used to accept anything.
+ *
+ * convertGameBoardType's `default` turned every typo into a Suitability map — measured:
+ * "Consequense" and "Backgrund" both became SuitabilityMap, so a mistyped consequence map
+ * rendered as a suitability one and a mistyped background left the game with none.
+ * convertGradient was a bare cast, so "blu" and "BLUE" were stored unchanged and then looked up
+ * as undefined, giving a blank board or "Cannot read properties of undefined (reading 'colors')".
+ *
+ * The fallbacks stay — refusing to start over one mistyped map would be worse — but they no
+ * longer happen in silence.
+ */
 const convertGameBoardType = (type: string) => {
 	switch (type) {
 		case "Suitability": return GameBoardType.SuitabilityMap;
 		case "Consequence": return GameBoardType.ConsequenceMap;
 		case "Drawing": return GameBoardType.DrawingMap;
 		case "Background": return GameBoardType.BackgroundMap;
-		default: return GameBoardType.SuitabilityMap;
+		default:
+			console.error(
+				`The game data has a map with gameBoardType ${JSON.stringify(type)}, which is not ` +
+				`one of Suitability, Consequence, Drawing, Background. Treating it as a ` +
+				`Suitability map, which is very likely not what was meant.`);
+			return GameBoardType.SuitabilityMap;
 	}
 };
-const convertGradient = (gradientName: string) => gradientName as unknown as DefaultGradients;
+
+const convertGradient = (gradientName: string) => {
+	const known = Object.values(DefaultGradients) as string[];
+	if (known.includes(gradientName)) return gradientName as DefaultGradients;
+	// An absent gradient is normal — a map may use customColors instead — so only a value that
+	// was given and is wrong is worth reporting.
+	if (gradientName !== undefined && gradientName !== null && gradientName !== '') {
+		console.error(
+			`The game data asks for gradient ${JSON.stringify(gradientName)}, which does not ` +
+			`exist. Known gradients: ${known.join(', ')} (lower case). Falling back to ` +
+			`${DefaultGradients.Blue}.`);
+		// Actually fall back, rather than passing the bad name on. gradients.get() would return
+		// undefined, and getGridGameBoard dereferences it — `gradients.get(x)!.colors[i]` — so
+		// the alternative to a wrong-but-working gradient is a crash.
+		return DefaultGradients.Blue;
+	}
+	// Absent: left as-is. A map may legitimately have no gradient and use customColors instead,
+	// and arrayToImage branches on that.
+	return gradientName as unknown as DefaultGradients;
+};
