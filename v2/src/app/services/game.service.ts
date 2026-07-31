@@ -377,13 +377,12 @@ export class GameService {
 		// Clear the counter rather than popping one entry: loading() is a push/pop stack and a
 		// failed build is terminal, so nothing is loading any more whatever else had been pushed.
 		//
-		// NOTE: this makes the state correct, and the alert below means the player is told. It
-		// does NOT currently make the spinner disappear — the LoadingIndicatorComponent receives
-		// the cleared value (its subscriber runs with length 0) but its @HostBinding('class.show')
-		// never reaches the DOM, because the error arrives from outside Angular's zone and a host
-		// binding is evaluated by the PARENT view. detectChanges() on the component's own view
-		// and NgZone.run() in the subscriber were both tried and neither updated it. Left for a
-		// separate change rather than shipping a guess; see docs/verification-status.rst.
+		// This used to leave the spinner up for good, covering the board with nothing to
+		// dismiss. The value arrived (the subscriber ran with length 0) but the component wrote
+		// it to a plain field behind an @HostBinding, and a host binding is evaluated by the
+		// view that DECLARES the component — so nothing marked that view dirty. From an error
+		// callback, outside the zone, nothing else came along to check it either.
+		// LoadingIndicatorComponent now reads a signal, which does carry that information.
 		this.loadingIndicator.next([]);
 		alert("Something went wrong, please try again later");
 	}

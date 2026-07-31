@@ -132,6 +132,50 @@ test.describe('dynamic game round trip', () => {
 		expect(errors).toEqual([]);
 	});
 
+	// The spinner is the whole screen when it is up — `:host.show` gives it a white background
+	// over the board — so failing to clear it is not cosmetic: the game is unusable and the only
+	// way out is a reload.
+	//
+	// Reachable in any deployment. prepareNextLevel builds the level from the coverage URLs the
+	// calculator returns, so one URL GeoServer cannot serve is enough; the fetch rejects, the
+	// error arrives outside Angular's zone, and failLevel() clears the counter.
+	test('the spinner clears when a level fails to build', async ({ page }) => {
+		const errors: string[] = [];
+		page.on('pageerror', e => errors.push(e.message));
+		// failLevel alerts. Playwright dismisses dialogs by default, but be explicit — an
+		// unhandled dialog would block the page and this test would pass for the wrong reason,
+		// having never got as far as rendering anything.
+		const alerts: string[] = [];
+		page.on('dialog', d => { alerts.push(d.message()); d.dismiss(); });
+
+		const posted: any[] = [];
+		const coverageRequests: string[] = [];
+		await useDynamicGameWithCalculator(page, posted, coverageRequests);
+		// Break exactly one coverage the calculator hands back. Everything else is untouched, so
+		// the round genuinely reaches level-building and fails there rather than earlier.
+		await page.route('**/esgame_img_ag_habitat.tif*', route => route.fulfill({ status: 404 }));
+
+		await page.goto('/dynamic-game');
+		await expect(page.locator('tro-svg-game-board').first()).toBeVisible();
+		await placeFields(page, 12);
+		await dismissHelp(page);
+
+		const spinner = page.locator('tro-loading-indicator');
+		await page.locator('button.btn-next').click();
+
+		// It has to have come up, or "it is gone" proves nothing.
+		await expect(spinner).toHaveClass(/show/, { timeout: 30_000 });
+		// ...and then go away. Before the fix this class stayed for good: the subscriber ran with
+		// length 0, but a host binding is evaluated by the declaring view and assigning a plain
+		// field told Angular nothing about which view that was.
+		await expect(spinner).not.toHaveClass(/show/, { timeout: 60_000 });
+
+		// The player was told, and the board is usable again rather than behind a white sheet.
+		expect(alerts.length).toBeGreaterThan(0);
+		await expect(page.locator('tro-svg-game-board').first()).toBeVisible();
+		expect(errors).toEqual([]);
+	});
+
 	test('a second round replaces the first round\'s maps', async ({ page }) => {
 		const posted: any[] = [];
 		const coverageRequests: string[] = [];
