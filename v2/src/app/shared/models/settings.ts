@@ -179,9 +179,24 @@ const convertGameBoardType = (type: string) => {
 	}
 };
 
+/**
+ * "custom" is not a gradient and not a mistake: it is the marker a map uses to say its colours
+ * come from `customColorId` instead. src/assets/data.json's Background map is written that way,
+ * and getSvgBackground passes `undefined` for the gradient and the CustomColors separately, so
+ * nothing ever looks it up.
+ *
+ * Reporting it was a false alarm on the game's own shipped data — every load of the dynamic
+ * game logged an error about a correct configuration. A guard that cries wolf on the common
+ * case is worse than no guard, because it teaches people to ignore the ones that matter.
+ */
+const CUSTOM_COLOURS_MARKER = 'custom';
+
 const convertGradient = (gradientName: string) => {
 	const known = Object.values(DefaultGradients) as string[];
 	if (known.includes(gradientName)) return gradientName as DefaultGradients;
+	// Passed through unchanged, not defaulted: a map marked `custom` must NOT end up looking
+	// like it asked for blue.
+	if (gradientName === CUSTOM_COLOURS_MARKER) return gradientName as unknown as DefaultGradients;
 	// An absent gradient is normal — a map may use customColors instead — so only a value that
 	// was given and is wrong is worth reporting.
 	if (gradientName !== undefined && gradientName !== null && gradientName !== '') {
