@@ -9,6 +9,19 @@ metadata:
     nginx.ingress.kubernetes.io/backend-protocol: HTTP
     # The browser posts here cross-origin, so CORS must allow the frontend origin.
     nginx.ingress.kubernetes.io/enable-cors: "true"
+    # A round is a long-running computation, not a web request. ingress-nginx defaults
+    # proxy_read_timeout and proxy_send_timeout to 60s, and one POST /esgame with real geodata
+    # takes longer than that — measured at 60-75s in the PLACES stack. The calculator finishes,
+    # publishes every coverage to GeoServer and builds the URLs, and the client gets
+    #
+    #   504 Gateway Time-out ... <center>nginx</center>
+    #
+    # so the work is done and thrown away, and the log shows a completely successful round. Only
+    # a real ingress in front of a real round finds this: the compose stacks publish host ports
+    # with no proxy, and esgame's own committed raster makes rounds fast enough (~26s) to stay
+    # under the default.
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "900"
 spec:
   # An Ingress with no ingressClassName is only picked up if the cluster has an
   # IngressClass marked as default. Without one, this Ingress is silently ignored —

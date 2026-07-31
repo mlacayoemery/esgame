@@ -347,6 +347,26 @@ The committed base raster makes the game inert
    browser sends the ids the board actually uses.
    See :ref:`allocation-id-space`.
 
+The calculation Ingress had a 60-second timeout — *fixed 2026-07-31*
+   ingress-nginx defaults ``proxy_read_timeout`` and ``proxy_send_timeout`` to 60 seconds, and
+   the base set neither. A round is a long-running computation, not a web request: one
+   ``POST /esgame`` against real geodata takes 60-75 seconds, measured.
+
+   What the client got was
+
+   .. code-block:: text
+
+      504 Gateway Time-out ... <center>nginx</center>
+
+   while the calculator finished the round, published all six coverages to GeoServer and built
+   every URL. The work was done and thrown away, and the calculation log showed a completely
+   successful round — the failure was visible only to the client.
+
+   Only a real ingress in front of a real round finds this. The compose stacks publish host
+   ports with no proxy in the way, and esgame's own committed raster makes rounds fast enough
+   (~26s) to stay under the default, so it was PLACES that hit it: 62-66s, 504 every time.
+   With the annotations, the same round returns six real scores and 6/6 fetchable coverages.
+
 Readiness probes — *added 2026-07-31*
    ``esgame-calculation`` and ``esgame-geoserver`` had none, so Kubernetes called a pod ready
    the instant its container started and the Service routed to it while plumber was still
