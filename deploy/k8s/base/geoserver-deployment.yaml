@@ -41,6 +41,28 @@ spec:
           ports:
             - containerPort: 8080
               protocol: TCP
+          # GeoServer reports the container up long before the web app and REST API are
+          # serving, so the Deployment went "available" while requests still failed —
+          # deploy/k8s/kind.sh carries a poll loop for exactly this.
+          #
+          # /geoserver/index.html, because it answers 200 directly. The other candidates were
+          # measured against a running pod and all fail as probes:
+          #
+          #   /geoserver/web/                302 -> Location: ./?0   relative, and it LOOPS
+          #   /geoserver/rest/about/...      401                     needs credentials
+          #   /                              404
+          #
+          # A Kubernetes httpGet probe FOLLOWS redirects and gives up after ten, so /geoserver/web/
+          # never succeeded — "Readiness probe failed: Get \"./\": stopped after 10 redirects", and
+          # the rollout timed out. Reading only the first response and seeing 302 in the 200-399
+          # success range is what made that look correct.
+          readinessProbe:
+            httpGet:
+              path: /geoserver/index.html
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 30
           resources:
             limits:
               cpu: "1"

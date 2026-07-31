@@ -347,6 +347,30 @@ The committed base raster makes the game inert
    browser sends the ids the board actually uses.
    See :ref:`allocation-id-space`.
 
+Readiness probes — *added 2026-07-31*
+   ``esgame-calculation`` and ``esgame-geoserver`` had none, so Kubernetes called a pod ready
+   the instant its container started and the Service routed to it while plumber was still
+   binding — about 12 seconds for the calculator, 30 for GeoServer.
+
+   Measured on the live cluster, timing from ``kubectl rollout status`` returning to the first
+   correct answer through the ingress:
+
+   .. code-block:: text
+
+      without a probe   8s   codes seen: 503, 502, 400
+      with a probe      2s   codes seen: 503, 400
+
+   The 502 is the one that matters: traffic reaching a pod that is not serving. The residual
+   ~1s of 503 is ingress-nginx's own endpoint sync and no probe removes it, so this is a
+   smaller claim than "the 503 window is gone".
+
+   Both probe targets were chosen by measurement rather than by convention. The calculator
+   answers 404 on ``/`` and 405 on ``/esgame`` (it is POST-only), so nothing there is a 2xx —
+   hence ``tcpSocket``. GeoServer's ``/geoserver/web/`` looked right at 302, but a Kubernetes
+   httpGet probe **follows** redirects and that one is relative (``Location: ./?0``) and loops:
+   the first attempt failed with *"stopped after 10 redirects"* and timed the rollout out.
+   ``/geoserver/index.html`` answers 200 directly.
+
 No default IngressClass is assumed
    The three Ingresses set no ``ingressClassName``. If the cluster has no default
    ``IngressClass`` they apply cleanly and route nothing, with no error. Check
