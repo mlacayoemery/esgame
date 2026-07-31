@@ -144,19 +144,55 @@ export class GameService {
 			let lvl = this.levels.find(o => o.levelNumber == (this.currentLevel.value!.levelNumber + 1))!;
 			const currentPt = this.productionTypes.value;
 
-			currentPt.forEach(pt => { pt.consequenceMaps = []; });
-
-			lvl.gameBoards.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap).forEach(map => {
-				const mapSettings = this.settings.value.maps.find(c => c.id == map.id)!;
-				mapSettings.productionTypes.forEach(ptId => {
-					currentPt.find(c => c.id == ptId)!.consequenceMaps.push(map);
-				});
-			});
+			this.rebuildConsequenceMaps(lvl, currentPt);
 
 			this.currentLevel.next(lvl);
 			this.productionTypes.next(currentPt);
 			this.selectedFields.next(lvl.selectedFields);
 		}
+	}
+
+	/**
+	 * Rebuild each production type's consequence-map list for the level being shown.
+	 *
+	 * Both call sites used to assert their lookups non-null:
+	 *
+	 *     const mapSettings = this.settings.value.maps.find(c => c.id == map.id)!;
+	 *     mapSettings.productionTypes.forEach(ptId =>
+	 *         currentPt.find(c => c.id == ptId)!.consequenceMaps.push(map));
+	 *
+	 * Both ids come out of the deployment's own data.json, where a map's `productionTypes`
+	 * cross-references the top-level `productionTypes` and nothing checks that they line up. An
+	 * id that does not resolve threw "Cannot read properties of undefined (reading
+	 * 'consequenceMaps')" — and not at load, but the first time the player stepped back a level
+	 * and forward again, on a board that had been working until then.
+	 *
+	 * An unresolved id means one board is missing from one production type's list. That is worth
+	 * saying, and it is not worth taking the game down for.
+	 */
+	private rebuildConsequenceMaps(level: Level, productionTypes: ProductionType[]) {
+		productionTypes.forEach(pt => { pt.consequenceMaps = []; });
+
+		level.gameBoards.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap).forEach(map => {
+			const mapSettings = this.settings.value.maps.find(c => c.id == map.id);
+			if (!mapSettings) {
+				console.error(
+					`The game data has no map with id "${map.id}", but level ${level.levelNumber} ` +
+					`is showing a consequence board with that id. Its production types cannot be ` +
+					`resolved; the board will not appear under any of them.`);
+				return;
+			}
+			mapSettings.productionTypes.forEach(ptId => {
+				const pt = productionTypes.find(c => c.id == ptId);
+				if (!pt) {
+					console.error(
+						`Map "${map.id}" lists production type ${ptId}, which the game data does ` +
+						`not define. Known ids: [${productionTypes.map(p => p.id).join(', ') || 'none'}].`);
+					return;
+				}
+				pt.consequenceMaps.push(map);
+			});
+		});
 	}
 
 	goToPreviousLevel() {
@@ -167,15 +203,7 @@ export class GameService {
 			let lvl = this.levels.find(o => o.levelNumber == this.currentLevel.value!.levelNumber - 1)!;
 			const currentPt = this.productionTypes.value;
 
-			currentPt.forEach(pt => { pt.consequenceMaps = []; });
-
-			lvl.gameBoards.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap).forEach(map => {
-				const mapSettings = this.settings.value.maps.find(c => c.id == map.id)!;
-				mapSettings.productionTypes.forEach(ptId => {
-					const pt = currentPt.find(c => c.id == ptId)!;
-					pt.consequenceMaps.push(map);
-				});
-			});
+			this.rebuildConsequenceMaps(lvl, currentPt);
 
 			this.currentLevel.next(lvl);
 			this.selectedFields.next(lvl.selectedFields);
