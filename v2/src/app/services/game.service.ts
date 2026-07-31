@@ -345,9 +345,27 @@ export class GameService {
 				o.background2 = background;
 			});
 
+			// Each production type is shown against the suitability map that lists it, found by a
+			// doubly-asserted lookup:
+			//
+			//   gameBoards.find(g => g.id == otherMaps.find(m => m.productionTypes.includes(current.id))!.id)!
+			//
+			// A production type that NO suitability map lists — an ordinary data.json mistake —
+			// made the inner find() undefined and reading `.id` threw. This runs inside a
+			// subscribe, so rxjs rethrows asynchronously: nothing here caught it, the caller saw
+			// no error, and the loop simply stopped. The palette silently lost that production
+			// type AND every one after it. Measured: 1 of 2 created, plus an unhandled error.
 			for (let i = 0; i < settings.productionTypes.length; i++) {
 				const current = settings.productionTypes[i];
-				const gameBoard = gameBoards.find(g => g.id == otherMaps.find(m => m.productionTypes.includes(current.id))!.id)!;
+				const mapForType = otherMaps.find(m => m.productionTypes.includes(current.id));
+				const gameBoard = mapForType && gameBoards.find(g => g.id == mapForType.id);
+				if (!gameBoard) {
+					console.error(
+						`Production type ${current.id} is not listed by any ${GameBoardType[GameBoardType.SuitabilityMap]}, ` +
+						`so it has no board to be shown against and is being left out of the game. ` +
+						`Add its id to a map's "productionTypes" in the game data.`);
+					continue;   // keep going: one bad entry must not take the rest of the palette with it
+				}
 				const productionType = new ProductionType(current.id, current.fieldColor, gameBoard, current.urlToIcon, current.maxElements);
 				this.productionTypes.value.push(productionType);
 			}

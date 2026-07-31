@@ -27,6 +27,10 @@ const settingsWith = (consequenceProductionTypes: number[]) => ({
 	maps: [
 		{ id: '-3', gameBoardType: 'Drawing', urlToData: 'drawing.tif', productionTypes: [] },
 		{ id: '-2', gameBoardType: 'Background', urlToData: 'bg.tif', customColorId: 'cc', productionTypes: [] },
+		// Every production type is listed by a Suitability map — that is the board it is drawn
+		// against, and src/assets/data.json holds to it for all six of its types. Without this
+		// the fixture describes a data.json that cannot exist.
+		{ id: 's1', gameBoardType: 'Suitability', urlToData: 's1.tif', productionTypes: [1] },
 		{ id: '11', gameBoardType: 'Consequence', urlToData: 'c11.tif', productionTypes: consequenceProductionTypes },
 	],
 });
