@@ -54,8 +54,43 @@ export class Settings {
 		this.mapData(data);
 	}
 
+	/**
+	 * Fields this class dereferences, and therefore cannot do without.
+	 *
+	 * Omitting any of them used to give "Cannot read properties of undefined (reading 'map')" —
+	 * which names neither the field nor the file, and a deployment writes this file by hand. They
+	 * are collected and reported together rather than one per attempt, because a data.json being
+	 * written from scratch is usually missing more than one.
+	 *
+	 * `visualOptions` and `gradientOverrides` are deliberately absent: they already default via
+	 * `?? {}` just below, and are genuinely optional.
+	 */
+	private static missingRequired(data: any): string[] {
+		const missing: string[] = [];
+		const isArray = (v: any) => Array.isArray(v);
+		if (!isArray(data.productionTypes)) missing.push('productionTypes (an array)');
+		if (!isArray(data.maps)) missing.push('maps (an array)');
+		if (isArray(data.maps)) {
+			data.maps.forEach((m: any, i: number) => {
+				if (!isArray(m?.productionTypes)) {
+					missing.push(`maps[${i}]${m?.id ? ` (id "${m.id}")` : ''}.productionTypes (an array)`);
+				}
+			});
+		}
+		return missing;
+	}
+
 	mapData(data: any) {
 		if (!data) return;
+
+		const missing = Settings.missingRequired(data);
+		if (missing.length) {
+			throw new Error(
+				`The game data is missing ${missing.length === 1 ? 'a required field' : 'required fields'}: ` +
+				`${missing.join(', ')}. Every deployment supplies its own data file, so this is a ` +
+				`problem with that file rather than with the game.`);
+		}
+
 		this.elementSize = data.elementSize;
 		this.gameBoardColumns = data.gameBoardColumns;
 		this.gameBoardRows = data.gameBoardRows;
@@ -81,23 +116,39 @@ export class Settings {
 		this.visualOptions = { ...DEFAULT_VISUAL_OPTIONS, ...(data.visualOptions ?? {}) };
 		applyGradientOverrides(data.gradientOverrides ?? {});
 
-		this.translate.getLangs().forEach((lang) => {
+		// Every one of these was an unguarded index into an object the data file may not have,
+		// so a data.json with no `title` — or a map with no `name` — took the whole game down
+		// with "Cannot read properties of undefined (reading 'en')". A missing label is a missing
+		// label: report it and render the rest.
+		const langs = this.translate.getLangs();
+		const missingText: string[] = [];
+		const text = (obj: any, lang: string, what: string) => {
+			const v = obj?.[lang];
+			if (v === undefined) missingText.push(`${what} (${lang})`);
+			return v;
+		};
+		langs.forEach((lang) => {
 			this.maps.forEach(o => {
 				let translation = {} as any;
-				translation["map_name_" + o.id] = o.name[lang];
+				translation["map_name_" + o.id] = text(o.name, lang, `maps["${o.id}"].name`);
 				this.translate.setTranslation(lang, translation, true);
 			});
 			this.productionTypes.forEach(o => {
 				let translation = {} as any;
-				translation["production_type_" + o.id] = o.name[lang];
+				translation["production_type_" + o.id] = text(o.name, lang, `productionTypes[${o.id}].name`);
 				this.translate.setTranslation(lang, translation, true);
 			});
 			let translation = {} as any;
-			translation["basic_instructions"] = this.basicInstructions[lang];
-			translation["advanced_instructions"] = this.advancedInstructions[lang];
-			translation["title"] = data.title[lang];
+			translation["basic_instructions"] = text(this.basicInstructions, lang, 'basicInstructions');
+			translation["advanced_instructions"] = text(this.advancedInstructions, lang, 'advancedInstructions');
+			translation["title"] = text(data.title, lang, 'title');
 			this.translate.setTranslation(lang, translation, true);
 		});
+		if (missingText.length) {
+			console.error(
+				`The game data has no text for: ${missingText.join(', ')}. ` +
+				`Those labels will be blank.`);
+		}
 	}
 }
 
