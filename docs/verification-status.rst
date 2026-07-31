@@ -169,11 +169,20 @@ Known incomplete
 
 None of these are defects to fix here — they are things a deployment must supply.
 
-``esgame-calculation`` is not published
-   No workflow builds or pushes it, and the registry has no such image. The k8s base and
-   the places overlay both reference it, so the calculation pod is ``ErrImagePull`` until
-   someone builds :file:`tools/R` and pushes it. Documented in
-   :file:`deploy/k8s/README.md` step 1.
+``esgame-calculation`` is not published — *closed 2026-07-31*
+   It is now, by :file:`.github/workflows/image-calculation.yml`, to
+   ``ghcr.io/mlacayoemery/esgame-calculation`` on pushes to master that touch
+   :file:`tools/R`. Before that no workflow built it, so the k8s base and the places overlay
+   both referenced an image that existed nowhere and the calculation pod was a permanent
+   ``ErrImagePull`` — which is why every local test had to stand up its own registry first.
+
+   The workflow does not stop at pushing. A push proves bytes were uploaded, not that the
+   thing runs, so it starts the published image and requires it to answer on ``:8000`` and
+   to survive a ``POST /esgame``. Measured against the same image locally: plumber binds
+   after ~12s and returns 404 for an unrouted path, and an empty allocation comes back
+   ``500 {"error":"500 - Internal server error"}`` — a structured refusal with no geodata
+   mounted, rather than a dead process. A connection that is refused (``000``) is the
+   failure the probe exists to catch.
 
 Placeholders must be replaced
    ``change-me-*.example.com`` hosts, ``CALC_URL``, and — in the places overlay —

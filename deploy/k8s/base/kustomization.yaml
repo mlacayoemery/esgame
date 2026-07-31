@@ -33,6 +33,10 @@ images:
     newName: ghcr.io/mlacayoemery/esgame
     newTag: master
   - name: esgame-calculation
-    # Build from ../../../tools/R and publish, or override in your overlay.
+    # Published by .github/workflows/image-calculation.yml from ../../../tools/R.
+    # `master`, not `latest`: that workflow tags with the branch, the semver and the sha, so
+    # `latest` was a tag nothing ever pushed — an ErrImagePull that no amount of green CI
+    # would have shown, since CI never pulls these. Same rolling tag as the frontend above;
+    # the "images match a tag some workflow publishes" step in manifests.yml now checks it.
     newName: ghcr.io/mlacayoemery/esgame-calculation
-    newTag: latest
+    newTag: master
