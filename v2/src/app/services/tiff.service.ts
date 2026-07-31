@@ -87,9 +87,53 @@ export class TiffService {
 		return from(this.tiffToPaths(url));
 	}
 
+	/**
+	 * Fetch a raster, failing with a message that names what actually went wrong.
+	 *
+	 * `fetch` only rejects on network errors, so a 404 resolves and its HTML body flows
+	 * happily into `blob()`. geotiff.js then reads `<!` as the byte order and throws
+	 * "Invalid byte order value." — which names neither the status nor the file, and is
+	 * indistinguishable from a genuinely corrupt raster.
+	 *
+	 * That is not hypothetical: it is how the missing `Consequence_*_Clip.tif` files went
+	 * unnoticed (see docs/verification-status.rst), because the e2e server answered every
+	 * path with index.html.
+	 */
+	private async fetchRaster(url: string): Promise<Blob> {
+		let response: Response;
+		try {
+			response = await fetch(url);
+		} catch (cause) {
+			// A genuine network error. Re-thrown with the URL, which the original does not carry.
+			throw new Error(`Could not reach ${url}: ${(cause as Error)?.message ?? cause}`, { cause });
+		}
+		if (!response.ok) {
+			throw new Error(`Could not load raster ${url}: ${response.status} ${response.statusText}`);
+		}
+		const blob = await response.blob();
+		// A 200 is not proof of a raster. An SPA fallback serving index.html is the common case,
+		// and it is worth naming here rather than leaving it to the decoder — checked by sniffing
+		// the content rather than trusting Content-Type, which servers get wrong for .tif.
+		const head = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+		// Byte order, then the version word read in that order. 42 is TIFF; 43 is BigTIFF, which
+		// geotiff.js also reads — rejecting it here would break files the decoder handles fine.
+		const littleEndian = head[0] === 0x49 && head[1] === 0x49;
+		const bigEndian = head[0] === 0x4d && head[1] === 0x4d;
+		const version = littleEndian ? head[2] | (head[3] << 8)
+			: bigEndian ? (head[2] << 8) | head[3]
+				: -1;
+		const isTiff = head.length >= 4 && (littleEndian || bigEndian) && (version === 42 || version === 43);
+		if (!isTiff) {
+			throw new Error(
+				`${url} returned ${response.status} but the body is not a GeoTIFF `
+				+ `(starts with ${JSON.stringify(await blob.slice(0, 16).text())}). `
+				+ `A server answering every path with index.html does exactly this.`);
+		}
+		return blob;
+	}
+
 	private async prepareDataUrl(url: string, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors) {
-		//fromURL throws error
-		const tmp = await fetch(url).then(r => r.blob());
+		const tmp = await this.fetchRaster(url);
 		const tiff = await fromBlob(tmp);
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
@@ -102,8 +146,22 @@ export class TiffService {
 		return { width, height, dataUrl, nodata, numRaster };
 	}
 
+	/**
+	 * geotiff's own fetcher, used where the whole file is not wanted up front. Its failures say
+	 * "Error fetching data." and nothing else — not the status, not which raster — so they are
+	 * re-thrown carrying the URL. The magic-byte check in fetchRaster does not apply here:
+	 * fromUrl issues range requests and never holds the whole body.
+	 */
+	private async openRemote(url: string) {
+		try {
+			return await fromUrl(url);
+		} catch (cause) {
+			throw new Error(`Could not load raster ${url}: ${(cause as Error)?.message ?? cause}`, { cause });
+		}
+	}
+
 	private async tiffToPaths(url: string) {
-		const tiff = await fromUrl(url);
+		const tiff = await this.openRemote(url);
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
 		const numRaster = Array.from(raster.map(c => Number.parseFloat(c.toString())));
@@ -120,7 +178,7 @@ export class TiffService {
 	}
 
 	private async tiffToArray(url: string): Promise<number[]> {
-		const tiff = await fromUrl(url);
+		const tiff = await this.openRemote(url);
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
 		return Array.from(raster.map(c => Number.parseFloat(c.toString())));
