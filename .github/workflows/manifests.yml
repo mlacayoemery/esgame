@@ -145,6 +145,24 @@ jobs:
           fi
           echo "GeoServer public URL is separate, wired through, and used for coverage URLs"
 
+      - name: Browser-facing URLs must name a host an Ingress serves
+        run: |
+          # The check above asks whether GEOSERVER_PUBLIC_URL differs from the in-cluster
+          # Service URL. That is weaker than the question that matters: does it name a host an
+          # Ingress in the same render actually answers for? And CALC_URL — where the browser
+          # POSTs the allocation — was not checked at all.
+          #
+          # The places overlay, which consumes this base, shipped a CALC_URL pointing at a host
+          # from a different deployment while every check there passed. It rendered, it would
+          # have applied, and it would have failed only in a browser.
+          #
+          # This also renders the local-registry overlay, which nothing in CI rendered before.
+          #
+          # The render step above extracts kustomize into the workspace root rather than onto
+          # PATH; the script looks it up by name so it works the same way when run by hand.
+          export PATH="${GITHUB_WORKSPACE}:${PATH}"
+          ./deploy/k8s/render-test.sh
+
       - name: Ingress hosts must be valid RFC 1123 subdomains
         run: |
           # kubeconform does not check this: a host is just a string in the schema, so
