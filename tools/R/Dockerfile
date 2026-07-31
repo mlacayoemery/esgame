@@ -79,6 +79,23 @@ WORKDIR /app
 
 COPY . .
 
+# Run as a normal user, so the Deployment can set runAsNonRoot and the kubelet can enforce it.
+#
+# Two things make this container the tractable one of the three. It listens on 8000, above the
+# privileged range, so nothing needs CAP_NET_BIND_SERVICE to bind. And the only path it writes
+# is /app/data — calculator.r does setwd() there and writes seven rasters plus the spider plot —
+# which is an emptyDir in the base and a PVC in the places overlay, so it is a mount, not image
+# content: the directory has to exist and be owned here, and the volume inherits that ownership
+# via fsGroup.
+#
+# 10001 rather than a name so the manifests can assert runAsUser numerically. A named user alone
+# would leave runAsNonRoot unable to tell what the image resolves to in some runtimes.
+RUN useradd --system --uid 10001 --gid 0 --no-create-home --shell /usr/sbin/nologin esgame \
+ && mkdir -p /app/data \
+ && chown -R 10001:0 /app \
+ && chmod -R g=u /app
+USER 10001
+
 EXPOSE 8000
 
 CMD ["/app/calculator.r"]
