@@ -251,3 +251,49 @@ describe('SvgFieldComponent subscription lifetime', () => {
 		expect(observers()).toBe(before);
 	});
 });
+
+// hasOpacity renders a placed field semi-transparently on a consequence map. The colour came
+// from `fieldColor + '7D'`, which only works for exactly #RRGGBB — and this repository's own
+// data files use two of the forms it breaks. An invalid CSS colour is not an error: the browser
+// drops the declaration and the field renders with no fill at all.
+describe('SvgFieldComponent consequence-map opacity', () => {
+	// A real browser is the authority on which hex forms are valid, so this asserts against the
+	// same jsdom CSS parser the app runs against rather than against my reading of the spec.
+	const acceptedByCss = (value: string) => {
+		const el = document.createElement('div');
+		el.style.fill = '';
+		el.style.fill = value;
+		return el.style.fill !== '';
+	};
+
+	const place = (fieldColor: string, hasOpacity: boolean) => {
+		const { c } = build();
+		c.hasOpacity = hasOpacity;
+		c.field = { id: 1, editable: true, assigned: false } as any;
+		c.clickable = true;
+		c.setColor({ id: 1, fieldColor } as any);
+		return c.fillColor;
+	};
+
+	// Every form that appears in src/assets/data.json or dataGridExample.json.
+	for (const fieldColor of ['#40916c', '#FFF', '#b2b2b2c0', '#f0f']) {
+		it(`produces a colour a browser accepts for ${fieldColor}`, () => {
+			const withAlpha = place(fieldColor, true);
+
+			expect(acceptedByCss(withAlpha)).toBe(true);
+			// ...and it must actually be translucent, not merely valid.
+			const el = document.createElement('div');
+			el.style.fill = withAlpha;
+			expect(el.style.fill).toContain('rgba');
+		});
+	}
+
+	it('leaves the colour alone when opacity is off', () => {
+		expect(place('#40916c', false)).toBe('#40916c');
+	});
+
+	it('does not mangle a colour that is not hex', () => {
+		// Named colours and rgb() are valid CSS a deployment may legitimately use.
+		expect(place('rebeccapurple', true)).toBe('rebeccapurple');
+	});
+});

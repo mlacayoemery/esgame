@@ -39,10 +39,38 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 		});
 	}
 
+	/**
+	 * Apply the consequence-map alpha to a deployment-supplied colour.
+	 *
+	 * This used to be `fieldColor + '7D'`, which only works for exactly `#RRGGBB`. CSS hex
+	 * colours are 3, 4, 6 or 8 digits, so concatenation produces an invalid one for the other
+	 * forms and the browser drops the declaration — the field renders with no fill at all.
+	 * Measured, and both broken forms are in this repository's own data files:
+	 *
+	 *   #40916c   + 7D = #40916c7D     rgba(64, 145, 108, 0.49)   data.json
+	 *   #FFF      + 7D = #FFF7D        REJECTED                   dataGridExample.json
+	 *   #b2b2b2c0 + 7D = #b2b2b2c07D   REJECTED                   data.json customColors
+	 *
+	 * So expand shorthand and replace any alpha already there, rather than appending to it.
+	 * Anything that is not a hex colour is returned untouched: named colours and rgb() are valid
+	 * CSS the game may legitimately be given, and mangling them would be worse than not applying
+	 * the alpha.
+	 */
+	private withConsequenceAlpha(color: string): string {
+		const m = /^#([0-9a-fA-F]{3,8})$/.exec(color?.trim() ?? '');
+		if (!m) return color;
+		let hex = m[1];
+		if (hex.length === 3 || hex.length === 4) hex = hex.split('').map(c => c + c).join('');
+		if (hex.length !== 6 && hex.length !== 8) return color;   // 5 or 7 digits: not a colour
+		return `#${hex.slice(0, 6)}7D`;
+	}
+
 	setColor(productionType: ProductionType | null = null) {
 		if (!this._field) return;
 		if (productionType && this.clickable) {
-			this.fillColor = `${productionType.fieldColor}${this.hasOpacity ? '7D' : ''}`;
+			this.fillColor = this.hasOpacity
+				? this.withConsequenceAlpha(productionType.fieldColor)
+				: productionType.fieldColor;
 		} else if(productionType) {
 			this.fillColor = `url(#pattern_${productionType.id}_${this.gameBoardId})`;
 		} else {
