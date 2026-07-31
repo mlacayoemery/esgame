@@ -176,6 +176,15 @@ None of these are defects to fix here — they are things a deployment must supp
    both referenced an image that existed nowhere and the calculation pod was a permanent
    ``ErrImagePull`` — which is why every local test had to stand up its own registry first.
 
+   **A green cluster run does not say which build was green.** Both images roll on ``:master``,
+   so a pod started before the last publish keeps serving the old one — ``kubectl apply`` sees
+   no change in a rolling tag and does nothing. That happened here: for several hours the
+   cluster served a frontend image seven merges old while every check passed, because the pod
+   had been started before those merges. ``kind.sh deploy`` does ``rollout restart``, which
+   re-pulls under ``imagePullPolicy: Always``, and re-deploying moved the running digest from
+   ``45f92893`` to ``e1fd8573``. :file:`ingress-test.sh` now prints the spec image and the
+   running **digest** for both deployments, so its output records what it tested.
+
    Verified as a cluster uses it, not only as CI built it: pulled anonymously from ghcr, then
    deployed to the kind cluster through the new ``overlays/published`` and put through a full
    round — 16/16 in ``ingress-test.sh`` and both browser specs in ``v2/e2e-cluster`` (465

@@ -213,6 +213,28 @@ elif [ -n "${pct}" ]; then
   echo "      for the figure a real browser produces, which on this data is 1%.)"
 fi
 
+echo "==> what was actually under test"
+# A green run says nothing about WHICH build was green. Both images roll on :master, so a pod
+# that started before the last publish keeps serving the old one — `kubectl apply` sees no change
+# in a rolling tag and does nothing. That happened during this script's own development: the
+# cluster served a frontend image seven merges old while every check here passed.
+#
+# kind.sh deploy does `rollout restart`, which re-pulls under imagePullPolicy: Always. This just
+# records the result, so the output says what it tested rather than leaving it to be assumed.
+for d in esgame-angular esgame-calculation; do
+  app=$("${K[@]}" get deploy "${d}" -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)
+  running=$("${K[@]}" get pod -l "app=${d}" -o jsonpath='{.items[0].status.containerStatuses[0].imageID}' 2>/dev/null || true)
+  echo "     ${d}"
+  echo "       spec:    ${app:-<unknown>}"
+  echo "       running: ${running:-<unknown>}"
+done
+# Presence, not a comparison: the digest a rolling tag resolves to is only knowable by pulling,
+# which this script should not do. Asserting it is non-empty keeps the record honest — an empty
+# line here would mean the pod is not reporting an image at all.
+digests=$("${K[@]}" get pod -l 'app in (esgame-angular,esgame-calculation)' \
+  -o jsonpath='{range .items[*]}{.status.containerStatuses[0].imageID}{"\n"}{end}' 2>/dev/null | grep -c '@sha256:' || true)
+check "both pods report an image digest"    "[ '${digests}' = '2' ]"
+
 echo
 if [ "${fail}" = 0 ]; then
   echo "ingress round-trip: PASS   (${n} ids, ${scored} scores, ${ok}/${tot} coverages, all via http://localhost:${PORT})${inert:-}"
