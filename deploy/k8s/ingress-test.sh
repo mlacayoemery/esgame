@@ -55,6 +55,26 @@ echo "     ConfigMap CALC_URL=${want}"
 echo "     served    calcUrl =${got}"
 check "CALC_URL reached the served config" "[ -n '${want}' ] && [ '${want}' = '${got}' ]"
 
+# ...but agreeing with the ConfigMap only proves the env var was plumbed. It says nothing about
+# whether the URL WORKS, and the rest of this script never finds out: every other request here is
+# built from ${BASE} plus a Host header, so it reaches the ingress no matter what the served config
+# says. A CALC_URL with no port passed every check in this file while no browser could play a
+# round — the browser resolves the host and posts to :80, where nothing listens.
+#
+# So take the served URL at its word: resolve ITS host and ITS port the way a client would.
+calc_host=$(sed -E 's|^https?://([^:/]+).*|\1|' <<<"${got}")
+calc_port=$(sed -nE 's|^https?://[^:/]+:([0-9]+).*|\1|p' <<<"${got}")
+[ -n "${calc_port}" ] || calc_port=$(grep -q '^https' <<<"${got}" && echo 443 || echo 80)
+calc_path=$(sed -E 's|^https?://[^/]+||' <<<"${got}")
+echo "     as a client reads it: host=${calc_host} port=${calc_port} path=${calc_path}"
+# --resolve is what a browser's DNS would do; the port is the one the URL actually names.
+calc_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+  --resolve "${calc_host}:${calc_port}:127.0.0.1" \
+  "http://${calc_host}:${calc_port}${calc_path}" -X POST \
+  -H 'Content-Type: application/json' -d '{"allocation":[]}' 2>/dev/null || true)
+# Any HTTP response proves something is listening and routing there; 000 means it is not.
+check "CALC_URL is reachable as written"    "[ -n '${calc_code}' ] && [ '${calc_code}' != 000 ]"
+
 echo "==> a wrong Host must NOT be served by our app"
 # If this returns the app, the Ingress is matching everything and host routing is not working.
 # Only meaningful once the ingress is serving SOMETHING: with nothing listening every request

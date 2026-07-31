@@ -108,5 +108,10 @@ configMapGenerator:
     literals:
       # Both of these are fetched by the BROWSER, so they must be the ingress hosts above — not
       # Service names. Plain http: no TLS on a .local cluster.
-      - CALC_URL=http://esgame-calculation.local/esgame
-      - GEOSERVER_PUBLIC_URL=http://esgame-geoserver.local/geoserver
+      #
+      # The :8880 is load-bearing. kind publishes the ingress controller on a host port, not on
+      # 80, so a browser given a portless URL posts to port 80 where nothing listens — the round
+      # fails with a connection error while every Host-header curl in ingress-test.sh passes.
+      # Keep in step with KIND_HTTP_PORT; kind.sh checks that they agree and refuses otherwise.
+      - CALC_URL=http://esgame-calculation.local:8880/esgame
+      - GEOSERVER_PUBLIC_URL=http://esgame-geoserver.local:8880/geoserver

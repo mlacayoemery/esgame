@@ -111,6 +111,28 @@ Verified working
        The host's ``fs.inotify.max_user_instances`` had to be raised from 128 to 512 first;
        below that ``kube-proxy`` crash-loops and the ingress controller never gets its
        certificate.
+   * - .. _A browser plays a round:
+
+       A browser plays a round
+     - **Closed 2026-07-31.** :file:`v2/e2e-cluster/browser-round.spec.ts` — real Chrome,
+       nothing intercepted, against the live cluster. It loads ``http://esgame.local:8880``
+       through the ingress, clicks 12 hexagons on the board, and presses *Next Level*; the
+       app builds its own allocation and POSTs it to the calculation ingress. Measured:
+       **465 hexagons sent by the browser** (not constructed by the test), 5 WCS coverages
+       fetched from the geoserver ingress, 7 score-board rows, the spider plot rendered, and
+       no page errors. The only accommodation is DNS — Chrome's ``--host-resolver-rules``
+       maps the three ``.local`` hosts to 127.0.0.1, so :file:`/etc/hosts` need not be edited.
+
+       This is the check that made ``CALC_URL`` honest. It was portless, which no test in
+       the repository could see: ``ingress-test.sh`` builds every request from ``BASE`` plus
+       a ``Host`` header, so it reaches the ingress whatever the served config says, and its
+       ``CALC_URL`` check compared the ConfigMap to the served file — consistency, not
+       usability. Both agreed on a URL that pointed at port 80, where nothing listens.
+       Confirmed by mutation: with the portless value restored, ``ingress-test.sh`` reported
+       ``PASS`` on a cluster where a browser could not finish a round, and this spec failed.
+       ``ingress-test.sh`` now also resolves ``CALC_URL``'s own host and port and posts to
+       it, so it no longer passes on that (16 checks, verified failing under the mutation
+       and under an absent config).
    * - Browser-facing GeoServer URL
      - The R calculators built their WCS URLs from ``GEOSERVER`` — the in-cluster
        Service name — so the browser got URLs it could not resolve while everything
@@ -285,9 +307,10 @@ Not verified
 
 Honest gaps, so nobody assumes otherwise.
 
-* **Allocations were synthetic.** Generated from the raster's id set, not produced by a
-  player. They satisfy the id-space contract (see :doc:`reference/calculator`) but are
-  not real play.
+* **Allocations were synthetic** — *closed 2026-07-31*. They were generated from the
+  raster's id set rather than produced by a player: they satisfied the id-space contract
+  (see :doc:`reference/calculator`) but were not real play. ``v2/e2e-cluster`` now closes
+  this. See `A browser plays a round`_.
 * **Timing numbers move.** Lighthouse timings swing with machine load — 57 to 90 for
   identical code on one host. Only the byte budgets are stable; compare timings A/B in
   one sitting or not at all.
