@@ -29,7 +29,7 @@ Verified working
    * - Path
      - How it was checked
    * - Static / grid game
-     - 323 unit tests, 12 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
+     - 327 unit tests, 12 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
        SEO 100. The board renders 2,436 fields; the e2e suite asserts that rather than
        just asserting the component mounted.
    * - No external runtime deps

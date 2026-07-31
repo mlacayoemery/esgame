@@ -50,6 +50,30 @@ export interface GradientOverride { start?: string; end?: string; }
  * Always resets to the built-in defaults first, so loading a config without overrides restores them
  * and one config's override never leaks into the next.
  */
+/**
+ * Normalise a deployment-supplied stop colour to the bare 6-hex-digit form the maths expects.
+ *
+ * calculateColor slices the string by index and parseInt's each pair, so anything else produces
+ * a colour rather than an error. "#F8F27D" — the form every other colour in this file and in
+ * data.json's fieldColor uses — gives calculateColor(0.5) = "NaN8814" and
+ * calculateColorRGB(0.5) = [null, 136, 20]: not a failure, a plausible-looking wrong colour,
+ * because only the first channel lands on the "#" while the other two read shifted pairs.
+ * Junk gives "NaNNaNNaN". Measured, both of them.
+ *
+ * Returns null for anything that is not a colour, so the caller can keep the built-in default.
+ */
+function normaliseStop(value: string, gradient: string, which: 'start' | 'end'): string | null {
+	const bare = value.trim().replace(/^#/, '');
+	if (/^[0-9a-fA-F]{6}$/.test(bare)) return bare;
+	// Three-digit shorthand is valid CSS and an easy thing to write; expand rather than reject.
+	if (/^[0-9a-fA-F]{3}$/.test(bare)) return bare.split('').map(c => c + c).join('');
+	console.error(
+		`gradientOverrides.${gradient}.${which} is ${JSON.stringify(value)}, which is not a ` +
+		`6-digit hex colour. Keeping the built-in ${gradient} ${which} colour. ` +
+		`Both "#RRGGBB" and "RRGGBB" are accepted.`);
+	return null;
+}
+
 export function applyGradientOverrides(overrides: { [name: string]: GradientOverride } = {}) {
 	defaultGradientStops.forEach((d, name) => {
 		const g = gradients.get(name);
@@ -59,8 +83,8 @@ export function applyGradientOverrides(overrides: { [name: string]: GradientOver
 		const g = gradients.get(name);
 		const o = overrides[name];
 		if (g && o) {
-			if (o.start) g.startingColor = o.start;
-			if (o.end) g.endingColor = o.end;
+			if (o.start) g.startingColor = normaliseStop(o.start, name, 'start') ?? g.startingColor;
+			if (o.end) g.endingColor = normaliseStop(o.end, name, 'end') ?? g.endingColor;
 		}
 	});
 }
