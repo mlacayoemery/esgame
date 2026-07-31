@@ -109,3 +109,57 @@ describe('GameService with a map referencing an unknown production type', () => 
 		expect(errors.join(' ')).toContain('no map with id "11"');
 	});
 });
+
+// The grid game builds its levels through a different branch of prepareNextLevel, with the same
+// two unchecked lookups — and there they run while the level is being BUILT, inside a subscribe.
+// An unresolved id aborted the loop and rxjs rethrew it asynchronously, so the boards after it
+// were never attached to any production type and nothing said why.
+describe('GameService grid levels with unresolvable ids', () => {
+	let errors: string[];
+	beforeEach(() => {
+		errors = [];
+		vi.spyOn(window, 'alert').mockImplementation(() => { });
+		vi.spyOn(console, 'error').mockImplementation((...a: any[]) => { errors.push(a.map(String).join(' ')); });
+	});
+	afterEach(() => vi.restoreAllMocks());
+
+	const gridSettings = (consequenceProductionTypes: number[]) => ({
+		title: { en: 'T' }, mapMode: 'grid', elementSize: 1,
+		gameBoardColumns: 2, gameBoardRows: 2, infiniteLevels: true,
+		productionTypes: [{ id: 1, name: { en: 'A' }, fieldColor: '#f00', urlToIcon: '', maxElements: 0 }],
+		customColors: [{ id: 'cc', colors: [{ number: 0, color: '#000000' }] }],
+		maps: [
+			{ id: 's1', gameBoardType: 'Suitability', urlToData: 's1.tif', productionTypes: [1] },
+			{ id: 'c1', gameBoardType: 'Consequence', urlToData: 'c1.tif', productionTypes: consequenceProductionTypes },
+		],
+	});
+
+	const gridTiff: any = {
+		getGridGameBoard: (id: any, u: string, t: any) => of({ id, gameBoardType: t, urlToData: u, fields: [] }),
+		getOverlayGameBoard: (id: any, u: string, t: any) => of({ id, gameBoardType: t, urlToData: u, fields: [] }),
+		getSvgBackground: () => of('data:'),
+		getSvgGameBoard: (id: any, u: string, t: any) => of({ id, gameBoardType: t, urlToData: u, fields: [] }),
+	};
+
+	const gridService = (ptIds: number[]) => {
+		const service = new GameService(gridTiff, scoreStub, translateStub, {} as any);
+		service.loadSettings(JSON.parse(JSON.stringify(gridSettings(ptIds))));
+		service.initialiseGridMode();
+		return service;
+	};
+
+	it('builds a grid level normally when the ids resolve', () => {
+		const service = gridService([1]);
+
+		service.prepareNextLevel();
+
+		expect(errors).toEqual([]);
+	});
+
+	it('does not abort the level when a consequence map lists an unknown production type', () => {
+		const service = gridService([99]);
+
+		expect(() => service.prepareNextLevel()).not.toThrow();
+		expect(errors.join(' ')).toContain('99');
+	});
+});
