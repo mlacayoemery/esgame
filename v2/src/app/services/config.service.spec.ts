@@ -42,3 +42,73 @@ describe('ConfigService', () => {
 		expect((await data).foo).toBe(1);
 	});
 });
+
+// assets/config.json IS the deployment mechanism — one image retargeted by mounting a file over
+// it. So the difference between "there is no config here" and "the config is broken" matters a
+// great deal, and load() collapsed both into a silent fallback to defaults.
+//
+// The dangerous case is not a 404. It is a config.json that is served but unusable: a typo'd
+// mount, a 500, or a server answering every path with index.html. The app then boots pointing at
+// a different backend than intended, and says nothing at all.
+describe('ConfigService load() failure reporting', () => {
+	let service: ConfigService;
+	let http: HttpTestingController;
+	let errors: string[];
+	let originalError: typeof console.error;
+
+	beforeEach(() => {
+		TestBed.configureTestingModule({ imports: [HttpClientTestingModule] });
+		service = TestBed.inject(ConfigService);
+		http = TestBed.inject(HttpTestingController);
+		errors = [];
+		originalError = console.error;
+		console.error = (...a: any[]) => errors.push(a.map(String).join(' '));
+	});
+	afterEach(() => { console.error = originalError; http.verify(); });
+
+	it('is quiet when config.json is simply absent — that is a supported deployment', async () => {
+		const done = service.load();
+		http.expectOne('assets/config.json').flush('', { status: 404, statusText: 'Not Found' });
+		await done;
+
+		expect(service.appConfig.defaultMode).toBe('static');
+		expect(errors).toEqual([]);
+	});
+
+	it('says so when the server fails, and still boots', async () => {
+		const done = service.load();
+		http.expectOne('assets/config.json').flush('', { status: 500, statusText: 'Server Error' });
+		await done;
+
+		// Booting on defaults is right — refusing to start would be worse. Being silent is not.
+		expect(service.appConfig.defaultMode).toBe('static');
+		expect(errors.join(' ')).toContain('assets/config.json');
+		expect(errors.join(' ')).toContain('500');
+	});
+
+	// The SPA-fallback case: 200, but the body is index.html. This one was worse than silent —
+	// the string was spread CHARACTER BY CHARACTER into the config, so Object.keys() came back
+	// as "0", "1", "2", … and nothing anywhere objected.
+	it('says so when config.json is served but is not a JSON object', async () => {
+		const done = service.load();
+		http.expectOne('assets/config.json').flush('<!doctype html><html></html>',
+			{ status: 200, statusText: 'OK' });
+		await done;
+
+		expect(service.appConfig.defaultMode).toBe('static');
+		expect(errors.join(' ')).toContain('assets/config.json');
+		// The config must be the defaults, not the defaults plus 28 numbered properties.
+		expect(Object.keys(service.appConfig)).toEqual(['staticDataUrl', 'dynamicDataUrl', 'defaultMode']);
+	});
+
+	for (const [name, body] of [['an array', []], ['null', null], ['a number', 7]] as const) {
+		it(`says so when config.json contains ${name}`, async () => {
+			const done = service.load();
+			http.expectOne('assets/config.json').flush(body as any, { status: 200, statusText: 'OK' });
+			await done;
+
+			expect(service.appConfig.defaultMode).toBe('static');
+			expect(errors.join(' ')).toContain('assets/config.json');
+		});
+	}
+});
