@@ -281,15 +281,33 @@ export class GameService {
 			this.customColors.push(customColor);
 		});
 
-		const drawingMap = settings.maps.find(o => o.gameBoardType == GameBoardType.DrawingMap)!;
-		const backgroundMap = settings.maps.find(o => o.gameBoardType == GameBoardType.BackgroundMap)!;
+		const drawingMap = settings.maps.find(o => o.gameBoardType == GameBoardType.DrawingMap);
+		const backgroundMap = settings.maps.find(o => o.gameBoardType == GameBoardType.BackgroundMap);
 		const otherMaps = settings.maps.filter(m => m.gameBoardType == GameBoardType.SuitabilityMap);
 
-		this.tiffService.getOverlayGameBoard(drawingMap.id, drawingMap.urlToData, GameBoardType.DrawingMap).pipe(
+		// These two were asserted non-null. The whole point of this app is that a deployment
+		// supplies its own data.json, so a data.json missing one of them is a mistake someone
+		// will make — and what they got was "Cannot read properties of undefined (reading
+		// 'urlToData')" on the next line, which names neither the map nor the file to fix.
+		// GameBoardType is a numeric enum, so interpolating a value gives "no 2 map". Name it.
+		const typeName = (t: GameBoardType) => GameBoardType[t];
+		const missing = [
+			drawingMap ? null : GameBoardType.DrawingMap,
+			backgroundMap ? null : GameBoardType.BackgroundMap,
+		].filter(t => t !== null).map(t => typeName(t as GameBoardType));
+		if (missing.length) {
+			this.failLevel(new Error(
+				`The game data defines no ${missing.join(' and no ')}. ` +
+				`SVG mode needs one of each in "maps"; it has ` +
+				`[${settings.maps.map(m => typeName(m.gameBoardType)).join(', ') || 'no maps at all'}].`));
+			return;
+		}
+
+		this.tiffService.getOverlayGameBoard(drawingMap!.id, drawingMap!.urlToData, GameBoardType.DrawingMap).pipe(
 			switchMap(overlay => {
 				level.gameBoards.push(overlay);
 				return combineLatest(
-					[this.tiffService.getSvgBackground(backgroundMap.urlToData, settings.minValue, settings.maxValue, this.customColors.find(o => o.id == backgroundMap.customColorId)!),
+					[this.tiffService.getSvgBackground(backgroundMap!.urlToData, settings.minValue, settings.maxValue, this.customColors.find(o => o.id == backgroundMap!.customColorId)!),
 					...otherMaps.map(m => { return this.getSvg(m, overlay, settings) }),]
 				);
 			})
