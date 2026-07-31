@@ -396,19 +396,33 @@ Container security context — *added 2026-07-31*, partial on purpose
    ``seccompProfile: RuntimeDefault``. Verified on a live cluster: all three roll out, 16/16 in
    :file:`deploy/k8s/ingress-test.sh`, both browser rounds pass.
 
-   ``runAsNonRoot`` and ``readOnlyRootFilesystem`` are deliberately **not** set. All three
-   images run as uid 0 — measured, not assumed:
+   **The calculation container now runs as uid 10001** (*2026-07-31*). It was the tractable one
+   of the three: it listens on 8000, above the privileged range, so nothing needs
+   ``CAP_NET_BIND_SERVICE``, and the only path it writes is ``/app/data`` — a mount, so its
+   ownership comes from ``fsGroup`` rather than from the image. ``tools/R/Dockerfile`` adds the
+   user; the Deployment asserts ``runAsNonRoot`` with ``runAsUser: 10001``, which is what the
+   kubelet enforces at admission.
+
+   Verified on both consumers, including the paths that would have failed silently: an esgame
+   round and both browser specs; a PLACES round through its ingress with a **PVC** rather than
+   an emptyDir; and PLACES' ``load-geodata`` init container on its **fetch** path — the first
+   attempt took the "geodata already present" branch and never ran ``apk add curl``, which is
+   the step that needs root. The init container has no ``securityContext`` of its own, so it
+   still runs as root and that step still works.
+
+   ``runAsNonRoot`` for the other two, and ``readOnlyRootFilesystem`` anywhere, are deliberately
+   **not** set. Both remaining images run as uid 0 — measured, not assumed:
 
    .. code-block:: text
 
-      localhost:5001/esgame:local               runs as uid 0
-      localhost:5001/esgame-calculation:local   runs as uid 0
-      docker.osgeo.org/geoserver:2.28.4         runs as uid 0
+      localhost:5001/esgame:local               runs as uid 0   binds :80, needs a different base image
+      docker.osgeo.org/geoserver:2.28.4         runs as uid 0   upstream
 
-   so ``runAsNonRoot`` would break every one of them, and a read-only root filesystem would
-   break nginx's cache directory, GeoServer's data directory and the calculator's
-   :file:`/app/data`. Those need changes to the images — one of which is upstream — rather than
-   to a manifest, so a deployment that needs them should expect image work.
+   The frontend binds :80, which a non-root process cannot do without ``CAP_NET_BIND_SERVICE``,
+   so it needs an unprivileged base image and a port move that carries the Service ``targetPort``
+   and the readiness probe with it. GeoServer is upstream. A read-only root filesystem would
+   additionally break nginx's cache directory and GeoServer's data directory. Those are image
+   changes, not manifest changes, so a deployment that needs them should expect image work.
 
 The layout needs about 620px, and scrolls sideways below that
    Measured against the live cluster at four widths, on ``/dynamic-game``:

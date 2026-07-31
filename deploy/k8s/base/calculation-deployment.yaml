@@ -21,6 +21,13 @@ spec:
       volumes:
         - name: app-data
           emptyDir: {}
+      securityContext:
+        # /app/data is a mount, so its ownership comes from the volume, not the image.
+        # calculator.r does setwd() there and writes seven rasters plus the spider plot, and a
+        # bare emptyDir is created root-owned — the calculation would start and then fail on its
+        # first write. fsGroup 0 matches the image's `useradd --gid 0` and makes the kubelet set
+        # group ownership on the volume.
+        fsGroup: 0
       containers:
         - name: esgame-calculation
           image: esgame-calculation # rewritten by kustomization.yaml images:
@@ -84,6 +91,17 @@ spec:
             allowPrivilegeEscalation: false
             seccompProfile:
               type: RuntimeDefault
+            # tools/R/Dockerfile now runs as uid 10001. runAsNonRoot is the assertion the
+            # kubelet enforces at admission — it does not change the user, it refuses to start a
+            # container whose image resolves to uid 0, so it only means anything once the image
+            # cooperates. runAsUser repeats the number so the manifest is explicit rather than
+            # relying on whatever the image happens to say.
+            #
+            # Only this container. The frontend binds :80 and would need CAP_NET_BIND_SERVICE or
+            # a different base image; GeoServer is upstream. Both measured as uid 0 and left
+            # alone deliberately — see docs/verification-status.rst.
+            runAsNonRoot: true
+            runAsUser: 10001
           resources:
             limits:
               cpu: "2"
