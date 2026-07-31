@@ -81,9 +81,17 @@ To exercise the whole stack — with an actual ingress controller rather than `p
 **Nothing to build.** Both images are published, so this pulls everything from ghcr:
 
 ```sh
-deploy/k8s/kind.sh up                                # cluster + ingress-nginx
-ESGAME_OVERLAY=published deploy/k8s/kind.sh deploy   # pull both images from ghcr
-deploy/k8s/ingress-test.sh                           # a real round through the ingress, by Host header
+deploy/k8s/kind.sh up                                # cluster + ingress-nginx        ~65s
+ESGAME_OVERLAY=published deploy/k8s/kind.sh deploy   # pull both images from ghcr     ~95s
+deploy/k8s/ingress-test.sh                           # a real round via Host header   ~35s
+```
+
+Measured 2026-07-31 from **no cluster and no local registry running** — the registry container
+was deliberately stopped first, so nothing local could satisfy a pull that is meant to come from
+ghcr. About three minutes from nothing to a stack serving real ingress traffic. Then, optionally:
+
+```sh
+cd v2 && npx playwright test --config e2e-cluster/browser-round.config.ts   # ~85s, two rounds
 ```
 
 That was not possible until `esgame-calculation` was published — the image existed nowhere, so

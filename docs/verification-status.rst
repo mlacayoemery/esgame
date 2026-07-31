@@ -185,6 +185,13 @@ None of these are defects to fix here — they are things a deployment must supp
    ``45f92893`` to ``e1fd8573``. :file:`ingress-test.sh` now prints the spec image and the
    running **digest** for both deployments, so its output records what it tested.
 
+   Verified from a **cold start**, which is the claim :file:`deploy/k8s/README.md` makes: the
+   cluster deleted and the local registry container stopped first, so nothing local could satisfy
+   a pull meant to come from ghcr. ``kind.sh up`` 65s, ``ESGAME_OVERLAY=published kind.sh deploy``
+   95s, ``ingress-test.sh`` 35s — about three minutes from nothing to a stack serving real
+   ingress traffic, followed by both browser specs in 85s. The earlier check had only ever run
+   the published overlay against an already-running cluster.
+
    Verified as a cluster uses it, not only as CI built it: pulled anonymously from ghcr, then
    deployed to the kind cluster through the new ``overlays/published`` and put through a full
    round — 16/16 in ``ingress-test.sh`` and both browser specs in ``v2/e2e-cluster`` (465
