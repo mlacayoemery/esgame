@@ -21,7 +21,7 @@ list()
 
 #* @post /esgame
 #* @serializer unboxedJSON
-esgame <- function(req, json_in='{}') {
+esgame <- function(req, res, json_in='{}') {
   geoserver_url <- Sys.getenv("GEOSERVER", "https://esgame-geoserver.azurewebsites.net/geoserver")
   #NEW CODE --> ALLOW TO SEND DATA IN BODY OF Request
   if (!(json_in == '' || json_in == '{}')) { 
@@ -37,6 +37,42 @@ esgame <- function(req, json_in='{}') {
     score_PD <- req$body$score
     map_AG <- req$body$allocation
   }
+
+  # Refuse an allocation that cannot be scored, rather than letting it reach reclassify().
+  #
+  # An empty one used to warn "the round will score the base raster unchanged" and then die
+  # several frames later with
+  #
+  #   Not compatible with requested type: [type=list; target=double]
+  #
+  # an Rcpp type error the caller never sees: plumber turns it into a bare
+  # {"error":"500 - Internal server error"}. So the log said the round would proceed, it did not,
+  # and the status said the server was broken when the request was.
+  #
+  # 400 is what this is. The frontend already reports any error to the player, and the image
+  # probe in .github/workflows/image-calculation.yml accepts any HTTP status — it is a
+  # connection that fails (000) that means the process died.
+  bad <- NULL
+  if (is.null(map_AG)) {
+    bad <- "the request has no 'allocation' field"
+  } else if (length(map_AG) == 0) {
+    bad <- "'allocation' is empty"
+  } else if (is.data.frame(map_AG) && !all(c("id", "lulc") %in% names(map_AG))) {
+    bad <- paste0("'allocation' has columns [", paste(names(map_AG), collapse = ", "),
+                  "]; it needs id and lulc")
+  } else if (!is.data.frame(map_AG)) {
+    # jsonlite turns [{id, lulc}, ...] into a data.frame. Anything else — an object keyed by id,
+    # or a bare array — does not, and reclassify wants a two-column matrix.
+    bad <- paste0("'allocation' is a ", class(map_AG)[1],
+                  "; it must be an array of {id, lulc} objects")
+  }
+  if (!is.null(bad)) {
+    logger::log_error("Refusing the round: {bad}.")
+    res$status <- 400
+    return(list(error = paste0("Cannot score this round: ", bad,
+                               ". Expected {\"allocation\": [{\"id\": <number>, \"lulc\": <number>}, ...]}.")))
+  }
+
   return(calculate(req, geoserver_url, game_id, round_id, score_PD, map_AG))
 }
 
