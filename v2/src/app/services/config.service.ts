@@ -96,11 +96,26 @@ export class ConfigService {
 
 	get appConfig(): AppConfig { return this.config; }
 
-	/** Fetch the game settings JSON for the given mode, applying any overrides from config.json. */
+	/**
+	 * Fetch the game settings JSON for the given mode, applying any overrides from config.json.
+	 *
+	 * The shape is checked for the same reason it is in load(): `{ ...data }` on a string spreads
+	 * it character by character, so a data file served as index.html produced a Settings object
+	 * built from { "0": "<", "1": "!", … } — a board with no maps and no production types, and
+	 * nothing anywhere saying why. An HTTP failure already errors with a usable message; this
+	 * covers the 200 that is not what it claims to be.
+	 */
 	getGameData(mode: 'static' | 'dynamic'): Observable<any> {
 		const url = mode === 'static' ? this.config.staticDataUrl : this.config.dynamicDataUrl;
 		return this.http.get<any>(url).pipe(
 			map(data => {
+				if (!data || typeof data !== 'object' || Array.isArray(data)) {
+					throw new Error(
+						`${url} did not contain a JSON object (got ` +
+						`${Array.isArray(data) ? 'an array' : typeof data}: ` +
+						`${JSON.stringify(data)?.slice(0, 80) ?? String(data)}). ` +
+						`A server answering every path with index.html does exactly this.`);
+				}
 				const out = { ...data };
 				if (this.config.calcUrl !== undefined) out.calcUrl = this.config.calcUrl;
 				if (this.config.gridLineColor !== undefined) out.gridLineColor = this.config.gridLineColor;

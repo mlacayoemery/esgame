@@ -112,3 +112,42 @@ describe('ConfigService load() failure reporting', () => {
 		});
 	}
 });
+
+// The game data IS the game — the maps, the production types, the board dimensions. A data file
+// served as index.html used to spread character by character into Settings, exactly as
+// config.json did, and produced a board with nothing on it and no explanation.
+describe('ConfigService getGameData() shape', () => {
+	let service: ConfigService;
+	let http: HttpTestingController;
+
+	beforeEach(async () => {
+		TestBed.configureTestingModule({ imports: [HttpClientTestingModule] });
+		service = TestBed.inject(ConfigService);
+		http = TestBed.inject(HttpTestingController);
+		const loaded = service.load();
+		http.expectOne('assets/config.json').flush({});
+		await loaded;
+	});
+	afterEach(() => http.verify());
+
+	it('passes a real settings object through', async () => {
+		const p = firstValueFrom(service.getGameData('dynamic'));
+		http.expectOne('assets/data.json').flush({ minSelected: 1, maps: [] });
+		await expect(p).resolves.toMatchObject({ minSelected: 1 });
+	});
+
+	for (const [name, body] of [
+		['index.html', '<!doctype html><html></html>'],
+		['an array', []],
+		['null', null],
+	] as const) {
+		it(`rejects ${name} rather than building a board from it`, async () => {
+			const p = firstValueFrom(service.getGameData('dynamic'));
+			http.expectOne('assets/data.json').flush(body as any, { status: 200, statusText: 'OK' });
+
+			const err = await p.then(() => null, (e: Error) => e);
+			expect(err).toBeInstanceOf(Error);
+			expect(err!.message).toContain('assets/data.json');
+		});
+	}
+});

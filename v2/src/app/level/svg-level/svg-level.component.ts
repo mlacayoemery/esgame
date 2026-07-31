@@ -49,9 +49,18 @@ export class SvgLevelComponent extends LevelBaseComponent {
 
 	constructor(gameService: GameService, configService: ConfigService) {
 		super(gameService);
-		configService.getGameData('dynamic').subscribe(data => {
-			this.gameService.loadSettings(data);
-			gameService.initialiseSVGMode();
+		configService.getGameData('dynamic').subscribe({
+			next: data => {
+				this.gameService.loadSettings(data);
+				gameService.initialiseSVGMode();
+			},
+			error: (err) => {
+				// Without the game data there is no board at all, so this is terminal. It used to
+				// have no error handler: the observable errored, Angular's ErrorHandler logged it,
+				// and the player got a blank page with nothing to read.
+				console.error(err);
+				alert("The game could not be loaded. Its configuration data is missing or unreadable.");
+			}
 		});
 		this.settings.pipe(takeUntilDestroyed()).subscribe(o => {
 			this.minSelected = o?.minSelected ?? 0;
