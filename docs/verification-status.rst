@@ -164,10 +164,19 @@ Verified working
        as ``image/geotiff``. Exactly the pre-split behaviour, now measured.
 
 
-Known incomplete
-----------------
+Closed here
+-----------
 
-None of these are defects to fix here — they are things a deployment must supply.
+Things that WERE defects or gaps in this repository and are not any more. They sit
+apart from "Known incomplete" above, which is for what a deployment must supply —
+three of these were filed under that heading and contradicted its opening sentence.
+
+Allocations were synthetic — *closed 2026-07-31*
+   Rounds were driven by an allocation generated from the raster's id set rather than
+   produced by a player. It satisfied the id-space contract (see
+   :doc:`reference/calculator`) but was not real play — and, as it turned out, was hiding
+   the id-space mismatch rather than merely failing to exercise it. See
+   `A browser plays a round`_ and "The committed base raster makes the game inert" below.
 
 ``esgame-calculation`` is not published — *closed 2026-07-31*
    It is now, by :file:`.github/workflows/image-calculation.yml`, to
@@ -225,6 +234,44 @@ The calculator refuses a round it cannot score — *added 2026-07-31*
 
    A real round is unaffected: 16/16 in :file:`deploy/k8s/ingress-test.sh` and both browser
    specs against the same rebuilt image.
+
+The loading spinner does not clear when a level fails to build — *fixed 2026-07-31*
+   The spinner covers the whole screen — ``:host.show`` gives it a white background over the
+   board — so this was not cosmetic: the game became unusable with no way out but a reload.
+   And it was reachable in any deployment, not only offline: ``prepareNextLevel`` builds the
+   level from the coverage URLs the calculator returns, so one URL GeoServer could not serve
+   was enough.
+
+   The earlier diagnosis was right about the mechanism and wrong about the remedy.
+   ``LoadingIndicatorComponent`` wrote to a plain field behind ``@HostBinding('class.show')``,
+   and a host binding is evaluated by the view that *declares* the component — assigning a
+   field tells Angular nothing about which view that is. Inside the zone something else
+   happened along to check it; from an error callback outside the zone nothing did.
+   ``cdRef.detectChanges()`` cannot help, because that ref is the component's own template
+   view and its host bindings live in the parent's.
+
+   The component now reads a **signal**. A signal read inside a host binding registers the
+   binding as a consumer, so a write marks exactly the right view — no zone involved, which
+   is why it holds on the path the old code could not reach.
+
+   Both levels were checked by mutation, not assertion. In a unit test the old implementation
+   fails two of three specs and the new one passes all three; in a real browser, with one
+   coverage URL forced to 404, the old build leaves ``class="show"`` on the element for 123
+   consecutive polls and the new build clears it. Getting there also corrected a false
+   negative of my own: the first browser run failed against a **stale ``dist``**, which is the
+   old component — evidence about the previous code, not about the fix.
+
+   One trap worth recording: a ``ComponentFixture`` is detached from ``ApplicationRef`` unless
+   ``autoDetectChanges()`` is called, and while detached *nothing* refreshes it — not
+   ``ApplicationRef.tick()``, not a scheduled task, only an explicit ``detectChanges()``. A
+   test written without it measures the harness rather than the component, and would have
+   reported this bug as unfixable a second time.
+
+
+Known incomplete
+----------------
+
+None of these are defects to fix here — they are things a deployment must supply.
 
 Placeholders must be replaced
    ``change-me-*.example.com`` hosts, ``CALC_URL``, and — in the places overlay —
@@ -300,38 +347,6 @@ The committed base raster makes the game inert
    browser sends the ids the board actually uses.
    See :ref:`allocation-id-space`.
 
-The loading spinner does not clear when a level fails to build — *fixed 2026-07-31*
-   The spinner covers the whole screen — ``:host.show`` gives it a white background over the
-   board — so this was not cosmetic: the game became unusable with no way out but a reload.
-   And it was reachable in any deployment, not only offline: ``prepareNextLevel`` builds the
-   level from the coverage URLs the calculator returns, so one URL GeoServer could not serve
-   was enough.
-
-   The earlier diagnosis was right about the mechanism and wrong about the remedy.
-   ``LoadingIndicatorComponent`` wrote to a plain field behind ``@HostBinding('class.show')``,
-   and a host binding is evaluated by the view that *declares* the component — assigning a
-   field tells Angular nothing about which view that is. Inside the zone something else
-   happened along to check it; from an error callback outside the zone nothing did.
-   ``cdRef.detectChanges()`` cannot help, because that ref is the component's own template
-   view and its host bindings live in the parent's.
-
-   The component now reads a **signal**. A signal read inside a host binding registers the
-   binding as a consumer, so a write marks exactly the right view — no zone involved, which
-   is why it holds on the path the old code could not reach.
-
-   Both levels were checked by mutation, not assertion. In a unit test the old implementation
-   fails two of three specs and the new one passes all three; in a real browser, with one
-   coverage URL forced to 404, the old build leaves ``class="show"`` on the element for 123
-   consecutive polls and the new build clears it. Getting there also corrected a false
-   negative of my own: the first browser run failed against a **stale ``dist``**, which is the
-   old component — evidence about the previous code, not about the fix.
-
-   One trap worth recording: a ``ComponentFixture`` is detached from ``ApplicationRef`` unless
-   ``autoDetectChanges()`` is called, and while detached *nothing* refreshes it — not
-   ``ApplicationRef.tick()``, not a scheduled task, only an explicit ``detectChanges()``. A
-   test written without it measures the harness rather than the component, and would have
-   reported this bug as unfixable a second time.
-
 No default IngressClass is assumed
    The three Ingresses set no ``ingressClassName``. If the cluster has no default
    ``IngressClass`` they apply cleanly and route nothing, with no error. Check
@@ -406,10 +421,6 @@ Not verified
 
 Honest gaps, so nobody assumes otherwise.
 
-* **Allocations were synthetic** — *closed 2026-07-31*. They were generated from the
-  raster's id set rather than produced by a player: they satisfied the id-space contract
-  (see :doc:`reference/calculator`) but were not real play. ``v2/e2e-cluster`` now closes
-  this. See `A browser plays a round`_.
 * **Timing numbers move.** Lighthouse timings swing with machine load — 57 to 90 for
   identical code on one host. Only the byte budgets are stable; compare timings A/B in
   one sitting or not at all.

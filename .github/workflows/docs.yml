@@ -1,0 +1,63 @@
+name: Docs
+
+# The docs had no gate at all.
+#
+# ci.yml is path-filtered to v2/**, manifests.yml to deploy/** and tools/R/**, so a
+# documentation-only pull request ran nothing — `gh pr checks` reported "no checks reported on
+# the branch". The only build was deploy.yml's, on push to master, and it runs sphinx-build
+# WITHOUT -W, so any warning it did emit went unread.
+#
+# This builds with -W, so a warning fails the pull request. deploy.yml is deliberately left
+# lenient — a warning should stop a change being merged, not stop the site being published.
+#
+# -W is not enough on its own. An undefined `Text`_ reference produces NO warning at all — not
+# with -W, not with -n — and Sphinx renders it as plain text, so a moved section silently stops
+# linking while the build stays green. Measured: renaming a live reference gave "build
+# succeeded" and no output. docs/_checks/check-references.py covers that specifically.
+
+on:
+  push:
+    branches: [master]
+    paths: ['docs/**', '.github/workflows/docs.yml']
+  pull_request:
+    paths: ['docs/**', '.github/workflows/docs.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Install Sphinx
+        # docs/requirements.txt is unpinned, matching deploy.yml — so this also catches a new
+        # Sphinx release breaking the build, on a pull request rather than on the deploy.
+        run: pip install -r docs/requirements.txt
+
+      - name: Build with warnings as errors
+        run: |
+          set -euo pipefail
+          # --keep-going so one broken reference does not hide the rest.
+          sphinx-build -b html -W --keep-going docs /tmp/docs-html
+
+      - name: Every `Text`_ reference must have a target
+        # Sphinx will not tell you about these; see the note at the top of this file.
+        run: python3 docs/_checks/check-references.py docs
+
+      - name: The build must have produced pages
+        run: |
+          # -W turns warnings into a non-zero exit, but a build that silently produced nothing
+          # would still be "successful". Count what came out.
+          n=$(find /tmp/docs-html -name '*.html' | wc -l)
+          echo "${n} HTML pages"
+          if [ "${n}" -lt 5 ]; then
+            echo "::error::sphinx produced ${n} pages; it is not building the docs it should be"
+            exit 1
+          fi
