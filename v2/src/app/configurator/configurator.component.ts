@@ -165,7 +165,27 @@ export class ConfiguratorComponent {
 			const reader = new FileReader();
 			reader.onload = (e: any) => {
 				const contents = e.target.result;
-				let value = JSON.parse(contents);
+				// JSON.parse here throws ASYNCHRONOUSLY — this runs in FileReader.onload, so no
+				// caller can catch it and picking the wrong file looked exactly like picking no
+				// file at all: nothing imported, nothing said. ImportConfigComponent already
+				// carries this fix and a comment about it; this half was missed.
+				//
+				// Parsing is not enough on its own. `[1,2,3]` and `null` parse cleanly and then
+				// read as a configuration with no maps and no production types, which is the same
+				// silent-empty-board outcome by a different route.
+				let value: any;
+				try {
+					value = JSON.parse(contents);
+				} catch (err) {
+					console.error(err);
+					alert("That file could not be read as a game configuration.");
+					return;
+				}
+				if (!value || typeof value !== 'object' || Array.isArray(value)) {
+					console.error(`imported configuration is not a JSON object:`, value);
+					alert("That file could not be read as a game configuration.");
+					return;
+				}
 				value.maps?.forEach((_: any) => {
 					this.addMap();
 				});

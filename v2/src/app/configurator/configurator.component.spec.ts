@@ -221,3 +221,56 @@ describe('ConfiguratorComponent formatLabel', () => {
 		expect(c.formatLabel(50)).toBe('50%');
 	});
 });
+
+// ImportConfigComponent already learned this lesson and carries a comment about it: JSON.parse
+// inside FileReader.onload throws ASYNCHRONOUSLY, so no caller can catch it, and picking the
+// wrong file looks exactly like picking no file at all. The same fix was never applied here.
+describe('ConfiguratorComponent import of a file that is not a configuration', () => {
+	// Bypasses the JSON.stringify in the helper above — the point is a body that is not JSON.
+	const importRaw = (c: ConfiguratorComponent, body: string) => {
+		const file = new File([body], 'configuration.json', { type: 'application/json' });
+		c.onFileSelected({ target: { files: [file] } } as unknown as Event);
+		return new Promise<void>(resolve => setTimeout(resolve, 250));
+	};
+
+	let alerts: string[];
+	let errors: string[];
+	let originalAlert: typeof window.alert;
+	let originalError: typeof console.error;
+	let unhandled: string[];
+
+	beforeEach(() => {
+		alerts = []; errors = []; unhandled = [];
+		originalAlert = window.alert;
+		originalError = console.error;
+		window.alert = (m?: any) => { alerts.push(String(m)); };
+		console.error = (...a: any[]) => errors.push(a.map(String).join(' '));
+	});
+	afterEach(() => { window.alert = originalAlert; console.error = originalError; });
+
+	it('tells the user when the file is not JSON at all', async () => {
+		const c = newComponent();
+
+		await importRaw(c, '<!doctype html><html>not a configuration</html>');
+
+		expect(alerts.length).toBeGreaterThan(0);
+		expect(errors.length).toBeGreaterThan(0);
+	});
+
+	it('tells the user when the file is JSON but not a configuration object', async () => {
+		const c = newComponent();
+
+		// Parses cleanly, so a try/catch around JSON.parse alone would not notice.
+		await importRaw(c, '[1, 2, 3]');
+
+		expect(alerts.length).toBeGreaterThan(0);
+	});
+
+	it('still imports a real configuration', async () => {
+		const c = newComponent();
+
+		await importRaw(c, JSON.stringify({ maps: [], productionTypes: [], customColors: [] }));
+
+		expect(alerts).toEqual([]);
+	});
+});
