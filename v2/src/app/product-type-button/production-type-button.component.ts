@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, HostBinding, HostListener, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, HostBinding, HostListener, Input, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ProductionType } from '../shared/models/production-type';
 import { GameService } from '../services/game.service';
 
@@ -16,15 +17,17 @@ export class ProductionTypeButtonComponent implements OnInit {
 	@HostBinding('class.--image-mode') isImageMode = false;
 	backgroundColor = '';
 
+	private readonly destroyRef = inject(DestroyRef);
+
 	constructor(private gameService: GameService) {
 	}
 
 	ngOnInit(): void {
-		this.gameService.settingsObs.subscribe(o => {
+		this.gameService.settingsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(o => {
 			this.isImageMode = o.imageMode;
 			this.backgroundColor = this.productionType.fieldColor;
 		});
-		this.gameService.selectedProductionTypeObs.subscribe(o => {
+		this.gameService.selectedProductionTypeObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(o => {
 			this.isActive = o == this.productionType;
 		});
 	}

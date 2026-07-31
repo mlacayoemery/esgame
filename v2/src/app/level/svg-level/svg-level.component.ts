@@ -1,4 +1,5 @@
 import { Component, HostBinding } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LevelBaseComponent } from '../level-base.component';
 import { GameService } from 'src/app/services/game.service';
 import { map, tap } from 'rxjs';
@@ -52,7 +53,7 @@ export class SvgLevelComponent extends LevelBaseComponent {
 			this.gameService.loadSettings(data);
 			gameService.initialiseSVGMode();
 		});
-		this.settings.subscribe(o => {
+		this.settings.pipe(takeUntilDestroyed()).subscribe(o => {
 			this.minSelected = o?.minSelected ?? 0;
 			this.highlightFocusedBoard = o?.visualOptions?.highlightFocusedBoard ?? false;
 			this.neutralScoreColors = o?.visualOptions?.neutralScoreColors ?? false;

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GameService } from '../services/game.service';
 import { map } from 'rxjs';
 
@@ -18,12 +19,12 @@ export class HelpComponent {
 		private gameService: GameService,
 		private cdRef: ChangeDetectorRef,
 	) {
-		this.gameService.helpWindowObs.subscribe(o => {
+		this.gameService.helpWindowObs.pipe(takeUntilDestroyed()).subscribe(o => {
 			this.isOpen = o;
 			this.cdRef.markForCheck();
 		});
 
-		this.gameService.currentLevelObs.subscribe(o => {
+		this.gameService.currentLevelObs.pipe(takeUntilDestroyed()).subscribe(o => {
 			if (!o || o.levelNumber == 1) {
 				this.helpText = 'basic_instructions';
 				this.imageUrl = this.gameService.settingsObs.pipe(map(o => o.basicInstructionsImageUrl));

@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, Input, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GameService } from '../services/game.service';
 import { ScoreEntry, ScoreService } from '../services/score.service';
 import { TranslateService } from '@ngx-translate/core';
@@ -37,6 +38,9 @@ export class ScoreBoardComponent implements OnInit {
 		this._isStatic = value !== false;
 	}
 
+	// ngOnInit is outside the implicit injection context, so takeUntilDestroyed needs this.
+	private readonly destroyRef = inject(DestroyRef);
+
 	constructor(
 		private gameService: GameService,
 		private cdRef: ChangeDetectorRef,
@@ -46,12 +50,12 @@ export class ScoreBoardComponent implements OnInit {
 
 	ngOnInit() {
 		if (!this._isStatic) {
-			this.gameService.currentLevelObs.subscribe(level => {
+			this.gameService.currentLevelObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(level => {
 				this._scores = this.scoreService.createEmptyScoreEntry(level);
 				this.cdRef.markForCheck();
 			});
 
-			this.gameService.selectedFieldsObs.subscribe(fields => {
+			this.gameService.selectedFieldsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(fields => {
 				this.scoreService.calculateScore(this._scores, fields);
 				this.calculateTotalScore();
 				this.cdRef.markForCheck();

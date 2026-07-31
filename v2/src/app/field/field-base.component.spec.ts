@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { ChangeDetectorRef, ElementRef, Renderer2 } from '@angular/core';
 import { FieldBaseComponent } from './field-base.component';
 import { Field, HighlightSide } from '../shared/models/field';
@@ -60,7 +61,10 @@ function setup() {
 	const r = fakeRenderer();
 	const g = makeGameService();
 	const cd = { markForCheck: () => { } } as ChangeDetectorRef;
-	const c = new TestField(g.service, r.renderer, new ElementRef({}), cd);
+	// FieldBaseComponent injects DestroyRef so subclasses can use takeUntilDestroyed from a
+	// lifecycle hook, and inject() needs a context — same as GridFieldComponent's spec.
+	const c = TestBed.runInInjectionContext(
+		() => new TestField(g.service, r.renderer, new ElementRef({}), cd));
 	return { c, r, g };
 }
 

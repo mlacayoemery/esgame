@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GameService } from '../services/game.service';
 
 @Component({
@@ -12,7 +13,7 @@ export class ScoreIndicatorComponent {
 	score: number | null = null;
 
 	constructor(private gameService: GameService, private cdRef: ChangeDetectorRef) {
-		this.gameService.currentlySelectedFieldObs.subscribe(o => {
+		this.gameService.currentlySelectedFieldObs.pipe(takeUntilDestroyed()).subscribe(o => {
 			if (o) {
 				this.score = o.scores.reduce((a, b) => a + b.score, 0);
 			} else {

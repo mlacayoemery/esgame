@@ -226,3 +226,28 @@ describe('SvgFieldComponent grid-line settings', () => {
 		expect(c.highlightColor).toBe('#ff0000');
 	});
 });
+
+// There are 466 of these on the default board, and the dynamic game builds a fresh set of
+// boards every round — so anything a field subscribes to without tearing down is leaked 466
+// times per board per round, and each leaked subscription keeps the destroyed component and
+// its DOM element alive for the lifetime of the app.
+//
+// settingsObs comes from a BehaviorSubject on the root-provided GameService, so it outlives
+// every field by definition. Counting the subject's subscribers is the only way to see this:
+// a leaked subscription is invisible from the DOM and from every other assertion here.
+describe('SvgFieldComponent subscription lifetime', () => {
+	it('unsubscribes from the service when destroyed', () => {
+		const { c, g } = build();
+		const observers = () => (g.settings as any).observers?.length
+			?? (g.settings as any).currentObservers?.length ?? 0;
+
+		const before = observers();
+		c.ngOnInit();
+
+		// Presence first: if the field never subscribed, "it unsubscribed" proves nothing.
+		expect(observers()).toBe(before + 1);
+
+		TestBed.resetTestingModule();   // runs the DestroyRef callbacks for the injection context
+		expect(observers()).toBe(before);
+	});
+});

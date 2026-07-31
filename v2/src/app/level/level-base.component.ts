@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GameService } from '../services/game.service';
 import { GameBoardClickMode } from '../shared/models/game-board';
 import { ProductionType } from '../shared/models/production-type';
@@ -30,11 +31,11 @@ export abstract class LevelBaseComponent {
 	clickMode = GameBoardClickMode;
 
 	protected constructor(protected gameService: GameService) {
-		this.gameService.productionTypesObs.subscribe(productionTypes => {
+		this.gameService.productionTypesObs.pipe(takeUntilDestroyed()).subscribe(productionTypes => {
 			this.productionTypes = productionTypes;
 		});
 
-		this.gameService.selectedProductionTypeObs.subscribe(productionType => {
+		this.gameService.selectedProductionTypeObs.pipe(takeUntilDestroyed()).subscribe(productionType => {
 			if (productionType) this.gameService.selectGameBoard(productionType.suitabilityMap);
 		})
 	}

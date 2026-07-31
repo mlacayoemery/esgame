@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { LevelBaseComponent } from './level-base.component';
 import { GameBoardType } from '../shared/models/game-board-type';
@@ -31,7 +32,8 @@ const setup = () => {
 	};
 	return {
 		level, selectedProductionType, focusedGameBoard, productionTypes, selectedBoards, calls,
-		make: () => new TestLevel(gameStub)
+		// LevelBaseComponent's constructor now uses takeUntilDestroyed, which needs a context.
+		make: () => TestBed.runInInjectionContext(() => new TestLevel(gameStub))
 	};
 };
 
