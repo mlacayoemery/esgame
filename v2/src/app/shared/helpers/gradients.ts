@@ -1,3 +1,18 @@
+/**
+ * Expand a CSS hex colour to its 6- or 8-digit form, or null if it is not one.
+ *
+ * Shared because this class slices hex by index in two places, and both got it wrong for the
+ * shorthand forms. #RGB and #RGBA mean each digit doubled; 5 and 7 digits are not colours.
+ */
+export function expandHexColor(value: string | undefined): string | null {
+	const m = /^#([0-9a-fA-F]{3,8})$/.exec(value?.trim() ?? '');
+	if (!m) return null;
+	const digits = m[1].length === 3 || m[1].length === 4
+		? m[1].split('').map(c => c + c).join('')
+		: m[1];
+	return digits.length === 6 || digits.length === 8 ? digits : null;
+}
+
 export class Gradient {
 	constructor(startingColor: string, endingColor: string, colors: string[]) {
 		this.startingColor = startingColor;
@@ -9,25 +24,45 @@ export class Gradient {
 	startingColor: string;
 	endingColor: string;
 
+	/**
+	 * The two stops, as bare 6-digit hex whatever form they were assigned in.
+	 *
+	 * Both are public fields, so "they are always bare hex" was true only by inspecting every
+	 * assignment: six built-ins written that way, and applyGradientOverrides normalising the
+	 * config path. Nothing enforced it, and the same mistake — reading hex from fixed offsets —
+	 * was found in four places in this codebase on one day. A seventh gradient written "#abcdef",
+	 * or a Gradient built anywhere else, would silently produce "NaN8814" again.
+	 *
+	 * Doing it here makes every assignment path safe, including ones not written yet.
+	 * applyGradientOverrides still validates, because it can say WHICH override was wrong.
+	 */
+	private stops(): { start: string, end: string } {
+		return {
+			start: expandHexColor(`#${this.startingColor.replace(/^#/, '')}`)?.slice(0, 6) ?? '000000',
+			end: expandHexColor(`#${this.endingColor.replace(/^#/, '')}`)?.slice(0, 6) ?? '000000',
+		};
+	}
+
+	private mix(ratio: number): number[] {
+		const { start, end } = this.stops();
+		const at = (i: number) => Math.ceil(
+			parseInt(start.substring(i, i + 2), 16) * ratio +
+			parseInt(end.substring(i, i + 2), 16) * (1 - ratio));
+		return [at(0), at(2), at(4)];
+	}
+
 	calculateColor(ratio: number) : string {
 		const hex = (x: number) => {
 			const strValue = x.toString(16);
 			return (strValue.length == 1) ? '0' + strValue : strValue;
 		};
 
-		let r = Math.ceil(parseInt(this.startingColor.substring(0, 2), 16) * ratio + parseInt(this.endingColor.substring(0, 2), 16) * (1 - ratio));
-		let g = Math.ceil(parseInt(this.startingColor.substring(2, 4), 16) * ratio + parseInt(this.endingColor.substring(2, 4), 16) * (1 - ratio));
-		let b = Math.ceil(parseInt(this.startingColor.substring(4, 6), 16) * ratio + parseInt(this.endingColor.substring(4, 6), 16) * (1 - ratio));
-
+		const [r, g, b] = this.mix(ratio);
 		return hex(r) + hex(g) + hex(b);
 	}
 
 	calculateColorRGB(ratio: number) : number[] {
-		let r = Math.ceil(parseInt(this.startingColor.substring(0, 2), 16) * ratio + parseInt(this.endingColor.substring(0, 2), 16) * (1 - ratio));
-		let g = Math.ceil(parseInt(this.startingColor.substring(2, 4), 16) * ratio + parseInt(this.endingColor.substring(2, 4), 16) * (1 - ratio));
-		let b = Math.ceil(parseInt(this.startingColor.substring(4, 6), 16) * ratio + parseInt(this.endingColor.substring(4, 6), 16) * (1 - ratio));
-
-		return [r, g, b];
+		return this.mix(ratio);
 	}
 }
 
@@ -98,21 +133,6 @@ export enum DefaultGradients {
 	Purple = 'purple',
 	Red = 'red',
 	Yellow = 'yellow'
-}
-
-/**
- * Expand a CSS hex colour to its 6- or 8-digit form, or null if it is not one.
- *
- * Shared because this class slices hex by index in two places, and both got it wrong for the
- * shorthand forms. #RGB and #RGBA mean each digit doubled; 5 and 7 digits are not colours.
- */
-export function expandHexColor(value: string | undefined): string | null {
-	const m = /^#([0-9a-fA-F]{3,8})$/.exec(value?.trim() ?? '');
-	if (!m) return null;
-	const digits = m[1].length === 3 || m[1].length === 4
-		? m[1].split('').map(c => c + c).join('')
-		: m[1];
-	return digits.length === 6 || digits.length === 8 ? digits : null;
 }
 
 export class CustomColors {

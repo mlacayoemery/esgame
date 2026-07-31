@@ -171,3 +171,46 @@ describe('CustomColors.addTransparencyToColors', () => {
 		expect(withColor('rebeccapurple').get(1)).toBe('rebeccapurple');
 	});
 });
+
+// startingColor and endingColor are public fields, so "they are always bare 6-digit hex" was
+// true only by inspecting every assignment. Nothing enforced it — and reading hex from fixed
+// offsets was the same mistake found in four separate places in this codebase on one day.
+// These drive Gradient directly, the way a seventh built-in or another caller would.
+describe('Gradient stops assigned in any hex form', () => {
+	const forms = [
+		['bare 6-digit', 'F8F27D', 'A80000'],
+		['#-prefixed', '#F8F27D', '#A80000'],
+		['#RGB shorthand', '#ff0', '#a00'],
+		['lower case', 'f8f27d', 'a80000'],
+	] as const;
+
+	// The reference: the form the built-ins are written in.
+	const reference = new Gradient('F8F27D', 'A80000', []).calculateColor(0.5);
+
+	for (const [name, start, end] of forms) {
+		it(`${name} produces a real colour`, () => {
+			const g = new Gradient(start, end, []);
+
+			expect(g.calculateColor(0.5)).not.toContain('NaN');
+			expect(g.calculateColorRGB(0.5).every((c: number) => Number.isInteger(c))).toBe(true);
+		});
+	}
+
+	it('#-prefixed gives the same colour as the bare form', () => {
+		expect(new Gradient('#F8F27D', '#A80000', []).calculateColor(0.5)).toBe(reference);
+	});
+
+	it('lower case gives the same colour as upper', () => {
+		expect(new Gradient('f8f27d', 'a80000', []).calculateColor(0.5)).toBe(reference);
+	});
+
+	// A stop assigned after construction is the applyGradientOverrides path, and any future one.
+	it('survives a stop assigned after construction', () => {
+		const g = new Gradient('F8F27D', 'A80000', []);
+
+		g.startingColor = '#0f0';
+
+		expect(g.calculateColor(0.5)).not.toContain('NaN');
+		expect(g.calculateColorRGB(0.5).every((c: number) => Number.isInteger(c))).toBe(true);
+	});
+});
