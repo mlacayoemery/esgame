@@ -371,6 +371,25 @@ Readiness probes — *added 2026-07-31*
    the first attempt failed with *"stopped after 10 redirects"* and timed the rollout out.
    ``/geoserver/index.html`` answers 200 directly.
 
+Container security context — *added 2026-07-31*, partial on purpose
+   All three containers now set ``allowPrivilegeEscalation: false`` and
+   ``seccompProfile: RuntimeDefault``. Verified on a live cluster: all three roll out, 16/16 in
+   :file:`deploy/k8s/ingress-test.sh`, both browser rounds pass.
+
+   ``runAsNonRoot`` and ``readOnlyRootFilesystem`` are deliberately **not** set. All three
+   images run as uid 0 — measured, not assumed:
+
+   .. code-block:: text
+
+      localhost:5001/esgame:local               runs as uid 0
+      localhost:5001/esgame-calculation:local   runs as uid 0
+      docker.osgeo.org/geoserver:2.28.4         runs as uid 0
+
+   so ``runAsNonRoot`` would break every one of them, and a read-only root filesystem would
+   break nginx's cache directory, GeoServer's data directory and the calculator's
+   :file:`/app/data`. Those need changes to the images — one of which is upstream — rather than
+   to a manifest, so a deployment that needs them should expect image work.
+
 No default IngressClass is assumed
    The three Ingresses set no ``ingressClassName``. If the cluster has no default
    ``IngressClass`` they apply cleanly and route nothing, with no error. Check
