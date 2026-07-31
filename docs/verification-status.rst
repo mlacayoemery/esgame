@@ -205,6 +205,27 @@ None of these are defects to fix here — they are things a deployment must supp
    mounted, rather than a dead process. A connection that is refused (``000``) is the
    failure the probe exists to catch.
 
+The calculator refuses a round it cannot score — *added 2026-07-31*
+   An allocation the calculator cannot use produced ``500
+   {"error":"500 - Internal server error"}`` — plumber's rendering of an Rcpp type error
+   several frames down (``Not compatible with requested type: [type=list; target=double]``).
+   ``coverage.R`` had already logged *"Allocation is empty; the round will score the base
+   raster unchanged"*, so the log said the round would proceed, it did not, and the status
+   said the server was broken when the request was.
+
+   Four shapes are now refused with **400** and a message naming the problem, measured against
+   the live cluster:
+
+   .. code-block:: text
+
+      no allocation field   400  Cannot score this round: the request has no 'allocation' field.
+      empty allocation      400  Cannot score this round: 'allocation' is empty.
+      id-keyed object       400  ...'allocation' is a list; it must be an array of {id, lulc} objects.
+      missing lulc column   400  ...'allocation' has columns [id]; it needs id and lulc.
+
+   A real round is unaffected: 16/16 in :file:`deploy/k8s/ingress-test.sh` and both browser
+   specs against the same rebuilt image.
+
 Placeholders must be replaced
    ``change-me-*.example.com`` hosts, ``CALC_URL``, and — in the places overlay —
    ``CHANGE-ME-registry/…`` image names. Keep hosts lowercase: an Ingress host must be a
