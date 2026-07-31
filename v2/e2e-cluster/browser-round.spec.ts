@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { execFileSync } from 'node:child_process';
 
 // A real browser playing real rounds against the live cluster.
 //
@@ -67,6 +68,34 @@ async function placeAndSubmit(page: Page, count: number, offset = 0) {
 	await page.locator('button.btn-next').click();
 }
 
+/**
+ * How much of the allocation the calculator could actually use, from its own log.
+ *
+ * This is the honest version of a number ingress-test.sh also reports. That script builds its
+ * payload from ids it reads out of the deployed raster, so it matches by construction and says
+ * ~100% however wrong the raster is. The browser sends the ids the BOARD uses, which is the
+ * comparison that means something — and on the raster committed to this repository the two
+ * differ enormously: 100% there, 1% here.
+ *
+ * Returns null when kubectl is unavailable, so the spec still runs without it.
+ */
+function allocationCoverage(): { line: string, percent: number } | null {
+	let logs: string;
+	try {
+		logs = execFileSync('kubectl',
+			['--context', process.env.KIND_CONTEXT ?? 'kind-esgame',
+				'logs', 'deploy/esgame-calculation', '--tail=400'],
+			{ encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+	} catch {
+		return null;
+	}
+	const lines = logs.split('\n').filter(l => l.includes('Allocation coverage:'));
+	if (!lines.length) return null;
+	const line = lines[lines.length - 1];
+	const m = /\((\d+)%\)/.exec(line);
+	return { line, percent: m ? Number(m[1]) : NaN };
+}
+
 /** The coverage each WCS URL asks for — this is what changes between rounds. */
 function coverageIds(urls: string[]): string[] {
 	return urls.map(u => new URL(u).searchParams.get('coverageId') ?? u);
@@ -101,6 +130,23 @@ test('a browser plays a round end to end against the cluster', async ({ page }) 
 	const rows = await page.locator('tro-score-board table tr').count();
 	console.log(`  score board rows: ${rows}`);
 	expect(rows).toBeGreaterThan(1);
+
+	// How much of what the browser sent the calculator could use. Everything above passes on a
+	// round that ignored the allocation entirely — five finite scores come back either way.
+	const coverage = allocationCoverage();
+	if (coverage) {
+		console.log(`  ${coverage.line.trim()}`);
+		if (coverage.percent < 50) {
+			console.log(`  !! only ${coverage.percent}% of what the browser allocated was used, so`);
+			console.log(`  !! those scores barely depend on it. Expected with the raster committed`);
+			console.log(`  !! here; a deployment supplies the data-release one.`);
+		}
+		// The reporter must be running. Nothing else in this file would notice if it were not,
+		// and it is the only signal that a round was inert.
+		expect(Number.isNaN(coverage.percent)).toBe(false);
+	} else {
+		console.log('  (allocation coverage unavailable — kubectl not on PATH, or no log line)');
+	}
 
 	expect(t.errors).toEqual([]);
 });
