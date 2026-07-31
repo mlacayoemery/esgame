@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject, of } from 'rxjs';
 import { SvgLevelComponent } from './svg-level.component';
 
@@ -35,7 +36,7 @@ const setup = (opts: { minSelected?: number, percentage?: number } = {}) => {
 	document.getElementById = ((id: string) =>
 		id === 'svg-level-dialog' ? dialog : originalGetElementById.call(document, id)) as any;
 
-	const component = new SvgLevelComponent(gameStub, configStub);
+	const component = TestBed.runInInjectionContext(() => new SvgLevelComponent(gameStub, configStub));
 	return {
 		component, level, settings, calls, dialog,
 		setPercentage: (p: number) => { percentage = p; },

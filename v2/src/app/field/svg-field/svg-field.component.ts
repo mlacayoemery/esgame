@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, HostBinding, Input, OnInit, RendererStyleFlags2 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HighlightSide } from '../../shared/models/field';
 import { ProductionType } from '../../shared/models/production-type';
 import { FieldBaseComponent } from '../field-base.component';
@@ -29,7 +30,7 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 	@Input() hasOpacity = false;
 
 	ngOnInit(): void {
-		this.gameService.settingsObs.subscribe(o => {
+		this.gameService.settingsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(o => {
 			this.highlightColor = o.highlightColor;
 			// Optional per-deployment cell-border (grid line) styling; CSS falls back to the default.
 			if (o.gridLineColor) this.renderer.setStyle(this.elementRef.nativeElement, '--cell-stroke', o.gridLineColor, RendererStyleFlags2.DashCase);

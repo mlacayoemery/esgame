@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 import { ScoreBoardComponent } from './score-board.component';
 import { ScoreEntry } from '../services/score.service';
@@ -37,7 +38,7 @@ const newComponent = (opts: {
 		createEmptyScoreEntry: () => [],
 		calculateScore: () => { }
 	};
-	return new ScoreBoardComponent(gameStub, cdRefStub, scoreStub, translateStub);
+	return TestBed.runInInjectionContext(() => new ScoreBoardComponent(gameStub, cdRefStub, scoreStub, translateStub));
 };
 
 describe('ScoreBoardComponent', () => {

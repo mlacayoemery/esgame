@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { HelpComponent } from './help.component';
 
@@ -20,7 +21,7 @@ const setup = (settingsValue: any = {
 		settingsObs: settings,
 		openHelp: (close = false) => closed.push(close)
 	};
-	return { helpWindow, level, settings, closed, component: new HelpComponent(gameStub, cdRefStub) };
+	return { helpWindow, level, settings, closed, component: TestBed.runInInjectionContext(() => new HelpComponent(gameStub, cdRefStub)) };
 };
 
 describe('HelpComponent', () => {

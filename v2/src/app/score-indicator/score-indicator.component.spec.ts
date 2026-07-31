@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 import { ScoreIndicatorComponent } from './score-indicator.component';
 
@@ -12,7 +13,7 @@ const field = (...scores: number[]) => ({ scores: scores.map((score, i) => ({ id
 const setup = () => {
 	const selected = new BehaviorSubject<any>(null);
 	const gameStub: any = { currentlySelectedFieldObs: selected };
-	return { selected, make: () => new ScoreIndicatorComponent(gameStub, cdRefStub) };
+	return { selected, make: () => TestBed.runInInjectionContext(() => new ScoreIndicatorComponent(gameStub, cdRefStub)) };
 };
 
 describe('ScoreIndicatorComponent', () => {

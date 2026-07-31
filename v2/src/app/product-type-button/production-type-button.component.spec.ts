@@ -1,3 +1,4 @@
+import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 import { ProductionTypeButtonComponent } from './production-type-button.component';
 import { ProductionType } from '../shared/models/production-type';
@@ -18,7 +19,7 @@ const setup = (opts: { imageMode?: boolean } = {}) => {
 		selectedProductionTypeObs: selected,
 		setSelectedProductionType: (pt: ProductionType) => chosen.push(pt)
 	};
-	return { settings, selected, chosen, make: () => new ProductionTypeButtonComponent(gameStub) };
+	return { settings, selected, chosen, make: () => TestBed.runInInjectionContext(() => new ProductionTypeButtonComponent(gameStub)) };
 };
 
 describe('ProductionTypeButtonComponent', () => {

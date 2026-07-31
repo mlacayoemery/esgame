@@ -1,7 +1,7 @@
 import { GameService } from "src/app/services/game.service";
 import { Field, HighlightSide } from "../shared/models/field";
 import { ProductionType } from "../shared/models/production-type";
-import { ChangeDetectorRef, Component, ElementRef, HostBinding, Input, OnDestroy, Renderer2 } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostBinding, Input, OnDestroy, Renderer2, inject } from '@angular/core';
 
 @Component({
     template: '',
@@ -12,6 +12,9 @@ export abstract class FieldBaseComponent implements OnDestroy {
 	@HostBinding('class.--is-assigned') public isAssigned = false;
 	@HostBinding('class.--missing-selection') public isMissingSelection = false;
 	@HostBinding('class.--is-editable') public isEditable = false;
+	// Explicit ref so subclasses can use takeUntilDestroyed(this.destroyRef) from lifecycle
+	// hooks, where the implicit injection context is gone. Mirrors GameBoardBaseComponent.
+	protected readonly destroyRef = inject(DestroyRef);
 	protected _field: Field;
 	private _listeners: (() => void)[] = [];
 	private _clickable = false;
