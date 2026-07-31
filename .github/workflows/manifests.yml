@@ -12,10 +12,10 @@ name: Validate deploy artifacts
 # — anything the API server enforces but the schema does not.
 on:
   pull_request:
-    paths: ['deploy/**', 'tools/R/**', '.github/workflows/manifests.yml']
+    paths: ['deploy/**', 'tools/R/**', 'examples/**', 'v2/docker-compose*.yml', 'Makefile', '.github/workflows/manifests.yml']
   push:
     branches: [master]
-    paths: ['deploy/**', 'tools/R/**', '.github/workflows/manifests.yml']
+    paths: ['deploy/**', 'tools/R/**', 'examples/**', 'v2/docker-compose*.yml', 'Makefile', '.github/workflows/manifests.yml']
   schedule:
     # Mondays 06:20 UTC, offset from the CI job so both do not start at once.
     - cron: '20 6 * * 1'
@@ -47,6 +47,38 @@ jobs:
             https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz
           tar -xzf kubeconform.tar.gz
           ./kubeconform -strict -summary -kubernetes-version 1.31.0 rendered.yaml
+
+      - name: The compose stacks must be valid
+        run: |
+          # `docker compose config` parses, interpolates and schema-checks without running
+          # anything. Nothing validated these: examples/ matched no workflow at all, so a broken
+          # compose file in a stack the README tells people to run would surface only when
+          # somebody ran it.
+          #
+          # The stacks come FROM THE MAKEFILE rather than from a glob, because two of these
+          # files are overlays. v2/docker-compose.dynamic.yml has a service with no image — the
+          # base supplies it — so validating it alone reports "service esgame-core has neither
+          # an image nor a build context", which is a defect in the check rather than the file.
+          # Reading the Makefile also means a stack added there is covered the day it is added.
+          set -euo pipefail
+          mapfile -t stacks < <(grep -oE 'docker compose( -[a-z] [^ ]+)*( -f [^ ]+)+' Makefile | sort -u)
+          echo "${#stacks[@]} stacks found in the Makefile"
+          # Presence first: a Makefile rewrite would otherwise validate nothing and pass.
+          if [ "${#stacks[@]}" -lt 3 ]; then
+            echo "::error file=Makefile::found ${#stacks[@]} compose stacks; this check is not looking at the right place"
+            exit 1
+          fi
+          bad=0
+          for cmd in "${stacks[@]}"; do
+            files=$(grep -oE '\-f [^ ]+' <<<"$cmd" | tr '\n' ' ')
+            if ${cmd} config -q 2>/tmp/err; then
+              echo "  ok   ${files}"
+            else
+              echo "::error::docker compose cannot parse ${files}: $(head -c 200 /tmp/err)"
+              bad=1
+            fi
+          done
+          exit $bad
 
       - name: Check the GeoServer pin matches the compose stacks
         run: |
