@@ -145,6 +145,36 @@ jobs:
           fi
           echo "GeoServer public URL is separate, wired through, and used for coverage URLs"
 
+      - name: ghcr images must use a tag some workflow actually publishes
+        run: |
+          # The base pointed at ghcr.io/mlacayoemery/esgame-calculation:latest while the
+          # publishing workflow tags with the branch, the semver and the sha — so `latest` was
+          # a tag nothing ever pushed. Nothing here pulls these images, so the mistake could
+          # only surface as ErrImagePull in someone's cluster.
+          #
+          # Both images roll on `master`. Assert that, and assert the workflows that produce
+          # them still emit a branch tag, so this does not quietly stop meaning anything.
+          bad=0
+          imgs=$(grep -oP '^\s+image:\s*\Kghcr\.io/\S+' rendered.yaml || true)
+          n=$(printf '%s\n' "$imgs" | grep -c . || true)
+          echo "$imgs"
+          if [ "$n" -ne 2 ]; then
+            echo "::error::expected 2 ghcr images in the render, found $n"; exit 1
+          fi
+          for i in $imgs; do
+            case "$i" in
+              *:master) ;;
+              *) echo "::error::$i does not use the :master tag the workflows publish"; bad=1 ;;
+            esac
+          done
+          for w in .github/workflows/image.yml .github/workflows/image-calculation.yml; do
+            [ -e "$w" ] || { echo "::error::$w is gone; nothing publishes that image"; bad=1; continue; }
+            grep -q 'type=ref,event=branch' "$w" \
+              || { echo "::error::$w no longer emits a branch tag, so :master is not published"; bad=1; }
+          done
+          [ "$bad" = 0 ] && echo "both ghcr images use a tag their workflow publishes"
+          exit $bad
+
       - name: Browser-facing URLs must name a host an Ingress serves
         run: |
           # The check above asks whether GEOSERVER_PUBLIC_URL differs from the in-cluster

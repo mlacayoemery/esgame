@@ -1,0 +1,130 @@
+name: Build & publish the calculation image
+
+# Publishes the R/Plumber calculation backend to GitHub Container Registry.
+# Image: ghcr.io/<owner>/esgame-calculation  (branch, semver and commit-sha tags)
+#
+# This is the image deploy/k8s/base already names. Until now nothing built it, so
+# `kubectl apply -k deploy/k8s/base` produced a permanent ErrImagePull on the calculation pod
+# and every local test had to run its own registry to have anything to pull. That was the
+# largest entry under "Known incomplete" in docs/verification-status.rst.
+#
+# Kept separate from image.yml rather than added as a second job:
+#   * different trigger paths — the frontend rebuilds on v2/**, this on tools/R/**
+#   * ~15 minutes against the frontend's ~2, so sharing a workflow would make every frontend
+#     publish look slow and would couple two unrelated failures
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+    paths:
+      - 'tools/R/**'
+      - '.github/workflows/image-calculation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    # The image installs eleven R packages from source against GDAL/PROJ/GEOS. 15 minutes is
+    # normal for a cold build; the default 360 is long enough to hide a hang for hours.
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Reclaim runner disk
+        # The image is ~2.6 GB and the build needs several times that in layers. A runner
+        # arrives with ~25 GB free, and "no space left on device" here surfaces as an
+        # unrelated-looking R compile error partway through.
+        run: |
+          df -h / | tail -1
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
+          df -h / | tail -1
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}-calculation
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha
+
+      - uses: docker/build-push-action@v7
+        id: build
+        with:
+          context: tools/R
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # No GHA layer cache on purpose. The image is ~2.6 GB, the repository-wide Actions
+          # cache is 10 GB, and mode=max would store every intermediate layer — evicting the
+          # caches other workflows depend on to save time on a build that only runs when
+          # tools/R changes, which is rarely.
+
+      - name: The published image must actually answer
+        # A push proves bytes were uploaded, not that the thing runs. The Dockerfile's own
+        # verification layers check that the R packages load at BUILD time; this checks the
+        # published artefact starts and serves, which is what the cluster will do with it.
+        run: |
+          set -euo pipefail
+          tag=$(printf '%s\n' '${{ steps.meta.outputs.tags }}' | head -1)
+          echo "probing ${tag}"
+          docker run -d --name calc -p 8000:8000 "${tag}"
+
+          # Plumber takes ~12s to bind. Poll rather than sleep-and-hope: a fixed sleep that is
+          # too short reads as "the image is broken". There is no /health route, so the test is
+          # simply whether anything answers — a refused connection gives 000, while a running
+          # plumber gives 404 for an unrouted path. Those are the two states worth telling
+          # apart; the next step decides whether what answered is really the calculator.
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/ || true)
+            if [ "${code}" != 000 ]; then ok=1; echo "answered ${code} after ${i} attempts"; break; fi
+            sleep 2
+          done
+
+          if [ "${ok:-0}" != 1 ]; then
+            echo "::error::the published image never accepted a connection on :8000"
+            docker logs calc || true
+            exit 1
+          fi
+
+          # It answered. Now check it is the calculator and not merely something listening:
+          # POST an empty allocation and require a structured refusal rather than a crash.
+          code=$(curl -s -o body.txt -w '%{http_code}' --max-time 60 \
+            -X POST http://127.0.0.1:8000/esgame \
+            -H 'Content-Type: application/json' -d '{"allocation":[]}' || true)
+          echo "POST /esgame -> ${code}"
+          head -c 400 body.txt || true
+          echo
+          # Any HTTP status is fine — with no geodata mounted it cannot score a real round. A
+          # 000 means the process died on the request, which is the failure worth catching.
+          if [ "${code}" = 000 ]; then
+            echo "::error::the calculator died handling a request"
+            docker logs calc || true
+            exit 1
+          fi
+          docker rm -f calc >/dev/null
+
+      - name: Say what was published
+        run: |
+          {
+            echo "### Published"
+            echo
+            echo '```'
+            printf '%s\n' '${{ steps.meta.outputs.tags }}'
+            echo '```'
+            echo
+            echo "digest: \`${{ steps.build.outputs.digest }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

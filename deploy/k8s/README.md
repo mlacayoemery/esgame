@@ -25,7 +25,9 @@ deploy/k8s/base/          # this Kustomize base (angular + calculation + geoserv
 
 1. **Images** — in `base/kustomization.yaml` set the `images:` entries:
    - `esgame-angular` → your published frontend tag (defaults to `ghcr.io/mlacayoemery/esgame:master`).
-   - `esgame-calculation` → build [`../../tools/R`](../../tools/R) and push it, then point here (or override in an overlay).
+   - `esgame-calculation` → defaults to `ghcr.io/mlacayoemery/esgame-calculation:master`, published by
+     [`image-calculation.yml`](../../.github/workflows/image-calculation.yml) from [`../../tools/R`](../../tools/R).
+     Point it elsewhere (or override in an overlay) to run your own build.
 2. **Hosts** — replace the `change-me-*.example.com` hosts in the three `*-ingress.yaml` files,
    and the matching `CALC_URL` in `base/configmap.yaml`. Keep them lowercase: an Ingress host
    must be a valid RFC 1123 subdomain, so a single uppercase letter makes the API server
@@ -74,8 +76,9 @@ reload). See [../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
 
 ## Running it locally, for real
 
-`esgame-calculation` is published nowhere, so the base cannot come up as-is (step 1). To exercise
-the whole stack — including an actual ingress controller rather than `port-forward`:
+To exercise the whole stack — including an actual ingress controller rather than `port-forward`.
+The local registry is not required now that both images are published, but it is still what
+lets you run a build you have not pushed:
 
 ```sh
 deploy/registry/registry.sh up && deploy/registry/registry.sh push   # build + serve the images
