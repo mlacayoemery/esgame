@@ -133,6 +133,17 @@ Verified working
        ``ingress-test.sh`` now also resolves ``CALC_URL``'s own host and port and posts to
        it, so it no longer passes on that (16 checks, verified failing under the mutation
        and under an absent config).
+
+       A second spec plays **two** rounds. :file:`v2/e2e/round-trip.spec.ts` already covered
+       this, but against an intercepted calculator whose two responses were query-string
+       variants of one another; here they are two coverages GeoServer really published, and
+       the calculator turns out to isolate each round in its **own workspace**
+       (``esgame_game<uuid>_round1`` / ``_round2``). Measured: rounds 1 and 2 posted with
+       distinct ``round`` values, zero overlap between the two sets of five coverage ids, and
+       round 1's five coverages still returning 200 after round 2 published — so the history
+       accumulates rather than being overwritten. Verified by mutation: replaying round 1's
+       response for round 2 (what a failed in-place swap of ``settings.maps`` looks like on
+       the wire) fails the overlap assertion, naming all five reused coverages.
    * - Browser-facing GeoServer URL
      - The R calculators built their WCS URLs from ``GEOSERVER`` — the in-cluster
        Service name — so the browser got URLs it could not resolve while everything

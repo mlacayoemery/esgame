@@ -1,7 +1,12 @@
 # Cluster end-to-end test
 
-One spec: a real Chrome plays a real round against a **live kind cluster**. Nothing is
-intercepted and nothing is stubbed.
+A real Chrome plays real rounds against a **live kind cluster**. Nothing is intercepted and
+nothing is stubbed.
+
+1. **one round end to end** — the app builds its own allocation from clicked hexagons, POSTs
+   it to the calculation ingress, and renders the coverages GeoServer publishes.
+2. **a second round replaces the first round's maps** — two rounds, zero overlap between
+   their coverage ids, and round 1's coverages still fetchable afterwards.
 
 Everything else that claims a round works stubs something:
 
