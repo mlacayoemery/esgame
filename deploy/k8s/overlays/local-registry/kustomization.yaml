@@ -60,6 +60,48 @@ patches:
       - op: remove
         path: /metadata/annotations/kubernetes.io~1tls-acme
 
+# The base gives esgame-calculation an emptyDir at /app/data and nothing that fills it, so the
+# deployed calculator has no base raster: `raster("LU_and_NEW_hexa.tif")` fails and every round
+# returns 500. A real deployment supplies the geodata (places does it with a PVC and an init
+# container); for a dev cluster the 111 KB raster the repo already ships is enough.
+#
+# The ConfigMap holding it is created by `kind.sh deploy`, not generated here: kustomize refuses
+# to read files outside the kustomization directory, and copying a binary into the overlay to
+# work around that is worse than one imperative create — which is how the GeoServer Secret is
+# handled too.
+  # Copy, do not mount onto /app/data. calculation.r does setwd("/app/data") and writes its
+  # output rasters and the spider plot back there, and a ConfigMap mount is read-only — the
+  # same constraint places hit. Stage the ConfigMap elsewhere and copy into the emptyDir.
+  - target: { kind: Deployment, name: esgame-calculation }
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: esgame-calculation
+      spec:
+        template:
+          spec:
+            volumes:
+              - name: geodata-src
+                configMap:
+                  name: esgame-calculation-geodata
+            initContainers:
+              - name: load-geodata
+                image: alpine:3.22
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    set -eu
+                    cp -n /srv/geodata/*.tif /data/ 2>/dev/null || true
+                    [ -s /data/LU_and_NEW_hexa.tif ] || { echo "!! base raster missing" >&2; exit 1; }
+                    echo ">> geodata ready: $(ls /data | wc -l) file(s)"
+                volumeMounts:
+                  - name: geodata-src
+                    mountPath: /srv/geodata
+                  - name: app-data
+                    mountPath: /data
+
 configMapGenerator:
   - name: esgame-config
     behavior: merge

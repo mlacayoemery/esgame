@@ -41,7 +41,12 @@ done
 
 echo "==> frontend through the ingress"
 check "esgame.local serves the app"        "[ \"\$(code esgame.local /)\" = 200 ]"
-check "index.html is really the app"       "ing esgame.local / | grep -qi '<app-root\|<title'"
+# Body captured first, NOT piped into `grep -q`. grep -q exits the moment it matches, curl then
+# fails writing the rest of the body with exit 23, and pipefail reports the pipeline as failed —
+# so the check failed precisely BECAUSE the pattern matched. Whether it bites depends on whether
+# curl finishes writing before grep exits, which is why it looked intermittent.
+body=$(ing esgame.local / || true)
+check "index.html is really the app"       "grep -qi '<app-root\|<title' <<<\"\${body}\""
 check "assets/config.json served"          "[ \"\$(code esgame.local /assets/config.json)\" = 200 ]"
 # The premise of the whole deployment: one image, retargeted by env var at container start.
 want=$("${K[@]}" get cm esgame-config -o jsonpath='{.data.CALC_URL}' 2>/dev/null || true)
@@ -54,12 +59,22 @@ echo "==> a wrong Host must NOT be served by our app"
 # If this returns the app, the Ingress is matching everything and host routing is not working.
 # Only meaningful once the ingress is serving SOMETHING: with nothing listening every request
 # is 000, which is != 200, and this passes without having tested host routing at all.
+# Same capture-then-match, same reason.
+other=$(ing no-such-host.local / || true)
 check "unknown host is not the esgame app" \
-  "[ \"\$(code esgame.local /)\" = 200 ] && { [ \"\$(code no-such-host.local /)\" != 200 ] || ! ing no-such-host.local / | grep -qi '<app-root'; }"
+  "[ \"\$(code esgame.local /)\" = 200 ] && { [ \"\$(code no-such-host.local /)\" != 200 ] || ! grep -qi '<app-root' <<<\"\${other}\"; }"
 
 echo "==> geoserver through the ingress"
 gs_user=$("${K[@]}" get secret esgame-geoserver-admin -o jsonpath='{.data.username}' 2>/dev/null | base64 -d 2>/dev/null || true)
 gs_pass=$("${K[@]}" get secret esgame-geoserver-admin -o jsonpath='{.data.password}' 2>/dev/null | base64 -d 2>/dev/null || true)
+# GeoServer answers its port well before its REST API is initialised, and the Deployment is
+# "available" in between. Without this the credential checks run too early and fail for the
+# wrong reason — which they did on the first clean run, then passed on a re-run against the
+# same cluster. places' test/stack.sh already waits like this; this one did not.
+for _ in $(seq 1 90); do
+  [ "$(code esgame-geoserver.local /geoserver/rest/about/version.json -u "${gs_user}:${gs_pass}")" = 200 ] && break
+  sleep 2
+done
 check "geoserver REST answers with the Secret creds" \
   "[ \"\$(code esgame-geoserver.local /geoserver/rest/about/version.json -u '${gs_user}:${gs_pass}')\" = 200 ]"
 # Same shape: with GeoServer unreachable the default login "fails" for the wrong reason. Require

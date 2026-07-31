@@ -97,6 +97,20 @@ Verified working
        :file:`v2/e2e/round-trip.spec.ts` plays two rounds against an intercepted
        calculator whose coverage URLs point at real GeoTIFFs, and asserts the board
        fetches round 2's URLs rather than re-rendering round 1's.
+   * - Cluster ingress traffic
+     - **Closed 2026-07-31.** A round driven through a real ingress-nginx controller by
+       ``Host`` header, never ``port-forward``: 15/15 checks in
+       :file:`deploy/k8s/ingress-test.sh`, against a **cold** cluster built by
+       :file:`deploy/k8s/kind.sh`, pulling every image from the local registry.
+       ``POST /esgame`` → 200 in 26s, five finite scores (HH 23, NP 22, WA 29, HC 33,
+       RV 23), **5/5 coverages fetched as GeoTIFFs through the geoserver ingress**, and
+       ``CALC_URL`` confirmed in the config the ingress actually served. ``esgame-calculation``
+       reached ready for the first time — its image is published nowhere, so the local
+       registry is what made it possible.
+
+       The host's ``fs.inotify.max_user_instances`` had to be raised from 128 to 512 first;
+       below that ``kube-proxy`` crash-loops and the ingress controller never gets its
+       certificate.
    * - Browser-facing GeoServer URL
      - The R calculators built their WCS URLs from ``GEOSERVER`` — the in-cluster
        Service name — so the browser got URLs it could not resolve while everything
@@ -274,45 +288,6 @@ Honest gaps, so nobody assumes otherwise.
 * **Allocations were synthetic.** Generated from the raster's id set, not produced by a
   player. They satisfy the id-space contract (see :doc:`reference/calculator`) but are
   not real play.
-* **No cluster ingress traffic yet.** :file:`deploy/k8s/kind.sh` builds a cluster wired to
-  the local registry and installs ingress-nginx, and :file:`deploy/k8s/ingress-test.sh`
-  drives a round through it by ``Host`` header. Neither has been run green: this host's
-  ``fs.inotify.max_user_instances`` is 128 where kind needs 512, which crash-loops
-  ``kube-proxy`` and cascades into an ingress controller that never gets its certificate.
-  ``kind.sh up`` preflights that and prints the ``sysctl``. Everything k8s in this repository
-  has therefore been reached by ``port-forward`` only: ``GEOSERVER_PUBLIC_URL`` is proved end
-  to end in *compose* (6/6 coverages fetched from outside the network) and only statically in
-  k8s — rendered, wired and gated in CI, but no browser has followed one of those URLs through
-  a real geoserver ingress.
-
-  Retested on 2026-07-30 at 21:40 with the preflight overridden
-  (``KIND_SKIP_SYSCTL_CHECK=1``), several hours and many torn-down containers after the
-  first attempt: identical failure. ``kube-proxy`` logs
-  ``"command failed" err="failed complete: too many open files"``, both
-  ``ingress-nginx-admission`` Jobs ``CrashLoopBackOff``, and the controller sits in
-  ``ContainerCreating`` waiting on a cert Secret that is never created. The host still runs
-  ~23 containers including another kind cluster. No alternative runtime is installed
-  (``k3d``, ``minikube``, ``k3s``, ``microk8s``, ``podman`` all absent), and k3s would hit
-  the same ceiling — ``kube-proxy`` is the consumer either way.
-
-  That run did establish one thing: ``kind.sh up`` failed *correctly*. It waited on the
-  admission webhook, reported ``!! admission webhook never got endpoints; Ingress applies
-  will fail`` and exited 1, rather than continuing into a half-deployed stack as it did on
-  the first attempt. The error handling added that morning works under a real failure.
-
-  **What has been established about those scripts, and what has not.** They were written but
-  unrunnable, so they were reviewed instead — which found four structural defects that would
-  have made ``ingress-test.sh`` useless the first time anyone ran it. Chief among them: under
-  ``set -euo pipefail`` a failed ``kubectl`` in a command substitution aborts the script, so a
-  missing Ingress produced silence rather than a ``FAIL`` line and a summary. Eight such sites,
-  plus a retry loop in ``kind.sh`` that died on the first transient error and a ``verify`` in
-  ``registry.sh`` that aborted before its own error handler.
-
-  So their **failure** behaviour is now verified — run against a cluster that does not exist,
-  ``ingress-test.sh`` reports 15/15 ``FAIL`` and exits 1, where before it died after ten lines
-  with two checks reporting ``ok``. Their **passing** behaviour against a real cluster is still
-  entirely untested, and no amount of review substitutes for that.
-
 * **Timing numbers move.** Lighthouse timings swing with machine load — 57 to 90 for
   identical code on one host. Only the byte budgets are stable; compare timings A/B in
   one sitting or not at all.
