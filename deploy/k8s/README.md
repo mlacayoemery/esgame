@@ -76,20 +76,34 @@ reload). See [../../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
 
 ## Running it locally, for real
 
-To exercise the whole stack — including an actual ingress controller rather than `port-forward`.
-The local registry is not required now that both images are published, but it is still what
-lets you run a build you have not pushed:
+To exercise the whole stack — with an actual ingress controller rather than `port-forward`.
+
+**Nothing to build.** Both images are published, so this pulls everything from ghcr:
+
+```sh
+deploy/k8s/kind.sh up                                # cluster + ingress-nginx
+ESGAME_OVERLAY=published deploy/k8s/kind.sh deploy   # pull both images from ghcr
+deploy/k8s/ingress-test.sh                           # a real round through the ingress, by Host header
+```
+
+That was not possible until `esgame-calculation` was published — the image existed nowhere, so
+the only way to have anything to pull was to build ~2.6 GB of R first.
+
+**To run a build you have not pushed** — still the only way to test a change to `v2` or `tools/R`
+before it is on master — use the local registry, which is the default:
 
 ```sh
 deploy/registry/registry.sh up && deploy/registry/registry.sh push   # build + serve the images
-deploy/k8s/kind.sh up          # cluster wired to that registry + ingress-nginx
-deploy/k8s/kind.sh deploy      # apply overlays/local-registry, wait for rollout
-deploy/k8s/ingress-test.sh     # a real round through the ingress, by Host header
+deploy/k8s/kind.sh up && deploy/k8s/kind.sh deploy                   # overlays/local-registry
 ```
 
-`overlays/local-registry` is where everything local lives — the images, `.local` hosts,
-`ingressClassName: nginx`, and the two public URLs. The base's ghcr defaults and `change-me` hosts
-are what a real deployment wants and are left alone.
+`overlays/local-registry` is where everything local lives — the `.local` hosts,
+`ingressClassName: nginx`, the geodata, and the two public URLs with the ingress port in them.
+`overlays/published` is that same overlay with only the images repointed at ghcr. The base's
+`change-me` hosts are what a real deployment wants and are left alone.
+
+Both are covered by [`render-test.sh`](render-test.sh), which finds kustomizations rather than
+listing them, so a new overlay is checked the day it is added.
 
 Two things `kind.sh` does that a bare `kind create cluster` does not, both of which fail silently
 otherwise:

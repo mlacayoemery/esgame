@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 # A local cluster that can actually pull the esgame images and route real ingress traffic.
 #
-#   deploy/registry/registry.sh up && deploy/registry/registry.sh push   # images first
-#   deploy/k8s/kind.sh up            # cluster + registry wiring + ingress-nginx
-#   deploy/k8s/kind.sh deploy        # apply the local-registry overlay, wait for rollout
-#   deploy/k8s/kind.sh test          # a real round THROUGH the ingress
+# Nothing to build — both images are published:
+#
+#   deploy/k8s/kind.sh up                              # cluster + ingress-nginx
+#   ESGAME_OVERLAY=published deploy/k8s/kind.sh deploy # pull esgame + esgame-calculation from ghcr
+#   deploy/k8s/kind.sh test                            # a real round THROUGH the ingress
 #   deploy/k8s/kind.sh down
+#
+# To run a build you have NOT pushed, use the local registry instead (the default):
+#
+#   deploy/registry/registry.sh up && deploy/registry/registry.sh push
+#   deploy/k8s/kind.sh up && deploy/k8s/kind.sh deploy
 #
 # Two things this sets up that a bare `kind create cluster` does not:
 #
@@ -30,6 +36,10 @@ REG_PORT="${ESGAME_REGISTRY_PORT:-5001}"
 HTTP_PORT="${KIND_HTTP_PORT:-8880}"
 HTTPS_PORT="${KIND_HTTPS_PORT:-8843}"
 HOSTS=(esgame.local esgame-calculation.local esgame-geoserver.local)
+# Which overlay `deploy` applies. `local-registry` pulls from deploy/registry — use it to run a
+# build you have not pushed. `published` pulls both images from ghcr, so nothing has to be built
+# at all; that only became possible once esgame-calculation was published.
+OVERLAY="${ESGAME_OVERLAY:-local-registry}"
 
 need() { command -v "$1" >/dev/null || { echo "!! $1 not on PATH" >&2; exit 2; }; }
 
@@ -176,22 +186,30 @@ PROBE
       --from-file=LU_and_NEW_hexa.tif="${REPO}/v2/src/assets/images/LU_and_NEW_hexa.tif" \
       --dry-run=client -o yaml | "${K[@]}" apply -f -
 
+    echo "deploying overlays/${OVERLAY}"
+
     # The overlay hard-codes the ingress port into the browser-facing URLs, because a browser
     # cannot infer it. If someone moves KIND_HTTP_PORT without moving those, the cluster comes
     # up fine and only a real browser notices — say so now instead.
+    #
+    # Read from the RENDER, not from the overlay's own file: overlays/published sets no URLs of
+    # its own, it inherits them, so grepping its kustomization.yaml would find nothing and this
+    # would refuse a perfectly good overlay. What matters is the value that ends up deployed.
+    rendered_cfg=$(kubectl kustomize "overlays/${OVERLAY}" 2>/dev/null || true)
+    [ -n "${rendered_cfg}" ] || { echo "!! overlays/${OVERLAY} does not render"; exit 1; }
     for v in CALC_URL GEOSERVER_PUBLIC_URL; do
-      want=$(grep -oE "^      - ${v}=.*" overlays/local-registry/kustomization.yaml | head -1)
+      want=$(grep -oE "^  ${v}: .*" <<<"${rendered_cfg}" | head -1)
       case "${want}" in
         *":${HTTP_PORT}/"*) ;;
-        "") echo "!! ${v} not found in the overlay"; exit 1 ;;
-        *) echo "!! ${v} in the overlay does not use KIND_HTTP_PORT=${HTTP_PORT}:"
+        "") echo "!! ${v} is not in the render of overlays/${OVERLAY}"; exit 1 ;;
+        *) echo "!! ${v} does not use KIND_HTTP_PORT=${HTTP_PORT}:"
            echo "   ${want}"
            echo "   a browser would post to the wrong port; curl with a Host header would not notice"
            exit 1 ;;
       esac
     done
 
-    "${K[@]}" apply -k overlays/local-registry
+    "${K[@]}" apply -k "overlays/${OVERLAY}"
     # esgame-config is consumed as environment variables, which are fixed when a container
     # starts, and the ConfigMap's name is stable — so `apply` updates it while every running pod
     # keeps the old value. Nothing reports a problem: the apply succeeds, the pods stay ready,
