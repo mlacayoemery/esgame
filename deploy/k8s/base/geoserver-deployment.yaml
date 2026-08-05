@@ -63,15 +63,16 @@ spec:
             initialDelaySeconds: 15
             periodSeconds: 10
             failureThreshold: 30
-          # The safe subset only. All three images run as uid 0 — measured, not assumed — so
-          # runAsNonRoot would break every one of them and readOnlyRootFilesystem would break
-          # nginx's cache dir, GeoServer's data dir and the calculator's /app/data. Those need
-          # image changes, not a manifest change, and are deliberately not attempted here.
+          # The safe subset only, and this is now the one container it is still true of.
+          # docker.osgeo.org/geoserver runs as uid 0 — measured, not assumed — so runAsNonRoot
+          # would refuse to start it, and readOnlyRootFilesystem would break its data directory.
+          # Both are upstream image concerns, not manifest ones. The other two containers do set
+          # runAsNonRoot: the calculation image runs as uid 10001, the frontend as uid 101.
           #
-          # These two do not: allowPrivilegeEscalation stops a setuid binary gaining privileges
-          # the container did not start with, and RuntimeDefault applies the container runtime's
-          # seccomp filter. Verified on a live cluster — all three roll out, 16/16 in
-          # ingress-test.sh, and both browser rounds pass.
+          # These two need nothing from the image: allowPrivilegeEscalation stops a setuid binary
+          # gaining privileges the container did not start with, and RuntimeDefault applies the
+          # container runtime's seccomp filter. Verified on a live cluster — all three roll out,
+          # 16/16 in ingress-test.sh, and both browser rounds pass.
           securityContext:
             allowPrivilegeEscalation: false
             seccompProfile:

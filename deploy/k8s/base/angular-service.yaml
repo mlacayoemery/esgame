@@ -9,6 +9,8 @@ spec:
   selector:
     app: esgame-angular
   ports:
+    # The Service keeps port 80 so the Ingress backend reference does not move; only the
+    # container side did, when the image went unprivileged (v2/Dockerfile).
     - port: 80
-      targetPort: 80
+      targetPort: 8080
       protocol: TCP
