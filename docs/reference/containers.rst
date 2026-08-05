@@ -58,17 +58,41 @@ Runtime stage
 
 .. code-block:: dockerfile
 
-   FROM nginx:alpine
+   FROM nginxinc/nginx-unprivileged:alpine
    COPY nginx.conf /etc/nginx/conf.d/default.conf
-   COPY --from=build /app/dist/tradeoff-v2/ /usr/share/nginx/html
-   COPY docker-entrypoint.sh /docker-entrypoint.d/40-esgame-config.sh
+   COPY --from=build --chown=101:101 /app/dist/tradeoff-v2/ /usr/share/nginx/html
+   COPY --chown=101:101 docker-entrypoint.sh /docker-entrypoint.d/40-esgame-config.sh
    RUN chmod +x /docker-entrypoint.d/40-esgame-config.sh
-   EXPOSE 80
+   EXPOSE 8080
 
-The runtime is plain ``nginx:alpine``. The tuned server config replaces the stock
-``default.conf``, the flat ``dist`` tree is copied into nginx's document root
-(:file:`/usr/share/nginx/html`), and the runtime-config script is installed as a
-``/docker-entrypoint.d`` hook (see :ref:`container-entrypoint`).
+The runtime is ``nginxinc/nginx-unprivileged:alpine`` — the same nginx build as
+``nginx:alpine`` (1.31.3 at time of writing), packaged to run as **uid 101** with its pid file
+and temp paths under :file:`/tmp`. The tuned server config replaces the stock ``default.conf``,
+the flat ``dist`` tree is copied into nginx's document root (:file:`/usr/share/nginx/html`), and
+the runtime-config script is installed as a ``/docker-entrypoint.d`` hook (see
+:ref:`container-entrypoint`).
+
+.. _container-nonroot:
+
+Why 8080, and why ``--chown``
+-----------------------------
+
+A non-root process cannot bind a port below 1024 without ``CAP_NET_BIND_SERVICE``, and handing
+that capability back would undo the point of running unprivileged — so the server listens on
+**8080**. Callers keep the port they already published: the Kubernetes Service still listens on
+80 and only its ``targetPort`` moved, and compose still maps host ``81``.
+
+``--chown=101:101`` on the ``dist`` copy is load-bearing, not tidiness. The entrypoint rewrites
+:file:`assets/config.json` **in place**, which needs write permission on the directory holding
+it. Without the flag the tree lands root-owned and the container exits 1 on start with
+``mv: can't rename '/tmp/tmp.XXXXXX': Permission denied`` — confirmed by mutation, by chowning
+the tree back to root in a derived image.
+
+That failure is loud, but it is also **conditional**: the entrypoint only rewrites the file when
+``CALC_URL`` is set. A backend-less deployment (GitHub Pages, the static compose stack) never
+takes that branch, so a regression here would leave those green and break only the deployments
+that configure a calculator. This is why the probe in :file:`.github/workflows/image.yml` sets
+``CALC_URL`` — a probe without one never touches the write path.
 
 Healthcheck
 -----------
@@ -76,7 +100,7 @@ Healthcheck
 .. code-block:: dockerfile
 
    HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
-     CMD wget -q -O /dev/null http://127.0.0.1/ || exit 1
+     CMD wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1
 
 .. list-table:: Healthcheck parameters
    :header-rows: 1
@@ -98,7 +122,7 @@ Healthcheck
      - ``3``
      - Consecutive failures before the container is marked *unhealthy*.
 
-The probe deliberately uses ``http://127.0.0.1/`` rather than ``localhost`` so it does not
+The probe deliberately uses ``http://127.0.0.1:8080/`` rather than ``localhost`` so it does not
 resolve to IPv6 ``[::1]`` before nginx is reachable.
 
 
@@ -106,7 +130,7 @@ The nginx configuration
 =======================
 
 :file:`v2/nginx.conf` is installed as ``/etc/nginx/conf.d/default.conf``. It is a single
-``server`` block on port 80 (IPv4 and IPv6), with document root
+``server`` block on port 8080 (IPv4 and IPv6 — see :ref:`container-nonroot`), with document root
 :file:`/usr/share/nginx/html` and ``index index.html``.
 
 Compression
@@ -171,7 +195,8 @@ The runtime-config entrypoint hook
 
 :file:`v2/docker-entrypoint.sh` is installed into the image as
 ``/docker-entrypoint.d/40-esgame-config.sh``. The stock ``nginx`` entrypoint runs every
-executable script in ``/docker-entrypoint.d/`` (in lexical order, as root) **before** nginx
+executable script in ``/docker-entrypoint.d/`` (in lexical order, as uid 101 in this image)
+**before** nginx
 starts; the ``40-`` prefix slots this hook into that sequence.
 
 Its single job is to inject the calculation backend URL into the served
@@ -201,7 +226,7 @@ The exact mechanism:
      # '#' delimiter avoids clashing with the '/' in URLs.
      sed "s#\"calcUrl\"[[:space:]]*:[[:space:]]*\"[^\"]*\"#\"calcUrl\": \"${CALC_URL}\"#" "$CONFIG" > "$tmp"
      mv "$tmp" "$CONFIG"
-     # mktemp creates a 0600 root-owned file; restore world-read so the nginx worker can serve it.
+     # mktemp creates a 0600 file; restore world-read so the nginx worker can serve it.
      chmod 644 "$CONFIG"
      echo "[esgame] runtime config: calcUrl=\"${CALC_URL}\""
    fi
@@ -218,8 +243,9 @@ Step by step:
    whitespace around the colon.
 #. The edit is written to a ``mktemp`` file and then ``mv``-ed over the original (atomic
    replace).
-#. ``mktemp`` produces a ``0600`` root-owned file, so the hook explicitly ``chmod 644``\ s
-   the result; otherwise the unprivileged nginx worker could not read it.
+#. ``mktemp`` produces a ``0600`` file, so the hook explicitly ``chmod 644``\ s the result;
+   otherwise the nginx worker could not read it. The ``mv`` in the previous step is also what
+   needs the document root to be writable by uid 101 — see :ref:`container-nonroot`.
 #. A confirmation line is printed to the container log.
 
 Because ``calcUrl`` flows through ``ConfigService`` and ``getGameData()`` in the app, the
@@ -257,7 +283,7 @@ Services
      - depends_on
    * - ``frontend``
      - build ``./frontend`` (arg ``ESGAME_IMAGE``, default ``ghcr.io/mlacayoemery/esgame:master``) → ``esgame-dynamic-example-frontend``
-     - ``81:80``
+     - ``81:8080``
      - ``./frontend/config.json`` → :file:`/usr/share/nginx/html/assets/config.json` ``:ro``
      - ``calculator``
    * - ``calculator``
@@ -311,7 +337,7 @@ This file is **bind-mounted** read-only over the baked-in config so that ``calcU
 ``defaultMode``, ``gridLineWidth``, ``gridLineColor`` and ``highlightWidth`` can be tweaked
 without rebuilding the image. Because ``calcUrl`` is set here, the ``CALC_URL`` entrypoint
 injection (see :ref:`container-entrypoint`) is not exercised in this stack. Note the host
-port mapping is ``81:80``, so the frontend is reached at ``http://localhost:81/``.
+port mapping is ``81:8080``, so the frontend is reached at ``http://localhost:81/``.
 
 calculator
 ~~~~~~~~~~

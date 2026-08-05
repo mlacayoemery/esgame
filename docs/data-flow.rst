@@ -122,7 +122,7 @@ Example :file:`assets/config.json` (the dynamic example,
 ``CALC_URL`` injection (entrypoint)
 -----------------------------------
 
-:file:`v2/docker-entrypoint.sh` runs (as root) via nginx's
+:file:`v2/docker-entrypoint.sh` runs (as uid 101 — the image is unprivileged) via nginx's
 ``/docker-entrypoint.d/`` hook before nginx starts. If
 :file:`/usr/share/nginx/html/assets/config.json` exists **and** the environment
 variable ``CALC_URL`` is set (``-n "${CALC_URL+x}"``, so even an empty string counts),
@@ -605,7 +605,7 @@ Source: :file:`examples/esgame-dynamic/docker-compose.yml`
    * - ``frontend``
      - built from ``./frontend`` (``ESGAME_IMAGE``, default
        ``ghcr.io/mlacayoemery/esgame:master``)
-     - ``81:80``
+     - ``81:8080``
      - Bind-mounts ``./frontend/config.json`` →
        ``/usr/share/nginx/html/assets/config.json:ro``. ``depends_on: [calculator]``.
    * - ``calculator``

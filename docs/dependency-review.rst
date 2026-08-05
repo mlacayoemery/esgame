@@ -131,8 +131,13 @@ rule but means two builds a month apart are not the same build.
    * - ``geopython/pygeoapi:latest``
      - Same shape. The pygeoapi example is read-only and config-driven, so drift
        shows up as a startup failure rather than silent misbehaviour.
-   * - ``nginx:alpine``
-     - Low risk; the runtime stage only serves static files.
+   * - ``nginxinc/nginx-unprivileged:alpine``
+     - Low risk; the runtime stage only serves static files. The same nginx build as
+       ``nginx:alpine`` (1.31.3 at review time) from the nginx project's own Docker Hub
+       org, packaged to run as uid 101 — which is what lets the Deployment assert
+       ``runAsNonRoot``. Both tags are rolling, so a base-image regression to uid 0 would
+       arrive without a code change here; the probe in
+       :file:`.github/workflows/image.yml` fails the publish if it does.
    * - :file:`docs/requirements.txt` (``sphinx>=7``, ``furo``, ``myst-parser``)
      - Fully unpinned, so docs builds always take the newest Sphinx (9.1.0 at
        review time). Good for freshness, and a Sphinx major could break the build

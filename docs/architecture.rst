@@ -222,9 +222,9 @@ The shared image
 * **Build stage** — ``node:26-alpine``; ``npm ci`` from the lockfile, then
   ``npm run build -- --base-href / --configuration production``. The image serves from
   the domain root; a reverse proxy maps host/path to the container.
-* **Runtime stage** — ``nginx:alpine`` serving ``dist/tradeoff-v2/`` from
-  :file:`/usr/share/nginx/html`, with the tuned :file:`nginx.conf` and the config
-  entrypoint installed into :file:`/docker-entrypoint.d/`.
+* **Runtime stage** — ``nginxinc/nginx-unprivileged:alpine`` serving ``dist/tradeoff-v2/``
+  from :file:`/usr/share/nginx/html` on port 8080 as uid 101, with the tuned
+  :file:`nginx.conf` and the config entrypoint installed into :file:`/docker-entrypoint.d/`.
 
 This image is the single artifact that all three deployment shapes consume.
 
@@ -258,7 +258,7 @@ defines four services:
      - Port
      - Role
    * - ``frontend``
-     - ``81:80``
+     - ``81:8080``
      - A thin overlay built ``FROM`` the esgame image
        (``ESGAME_IMAGE``, default ``ghcr.io/mlacayoemery/esgame:master``), adding this
        example's SVG ``data.json`` (a generated 28×29 zone map + background).

@@ -4,7 +4,10 @@
 #
 #   CALC_URL  -> overrides "calcUrl" (the calculation backend; empty string = fully client-side)
 #
-# Runs automatically via nginx's /docker-entrypoint.d/ hook (as root, during container init).
+# Runs automatically via nginx's /docker-entrypoint.d/ hook during container init, as uid 101 —
+# the image is unprivileged, so this replaces a file it must already own. The Dockerfile's
+# `COPY --chown=101:101` of the dist tree is what makes that true; without it this fails here,
+# at start, rather than at build.
 set -e
 
 CONFIG=/usr/share/nginx/html/assets/config.json
@@ -14,7 +17,7 @@ if [ -f "$CONFIG" ] && [ -n "${CALC_URL+x}" ]; then
   # '#' delimiter avoids clashing with the '/' in URLs.
   sed "s#\"calcUrl\"[[:space:]]*:[[:space:]]*\"[^\"]*\"#\"calcUrl\": \"${CALC_URL}\"#" "$CONFIG" > "$tmp"
   mv "$tmp" "$CONFIG"
-  # mktemp creates a 0600 root-owned file; restore world-read so the nginx worker can serve it.
+  # mktemp creates a 0600 file; restore world-read so the nginx worker can serve it.
   chmod 644 "$CONFIG"
   echo "[esgame] runtime config: calcUrl=\"${CALC_URL}\""
 fi

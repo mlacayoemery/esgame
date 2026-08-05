@@ -216,15 +216,17 @@ Runtime stage
 
 .. code-block:: dockerfile
 
-   FROM nginx:alpine
+   FROM nginxinc/nginx-unprivileged:alpine
    COPY nginx.conf /etc/nginx/conf.d/default.conf
-   COPY --from=build /app/dist/tradeoff-v2/ /usr/share/nginx/html
-   COPY docker-entrypoint.sh /docker-entrypoint.d/40-esgame-config.sh
+   COPY --from=build --chown=101:101 /app/dist/tradeoff-v2/ /usr/share/nginx/html
+   COPY --chown=101:101 docker-entrypoint.sh /docker-entrypoint.d/40-esgame-config.sh
    RUN chmod +x /docker-entrypoint.d/40-esgame-config.sh
-   EXPOSE 80
+   EXPOSE 8080
 
 The build output is copied from the flat ``/app/dist/tradeoff-v2/`` directory into
-the nginx web root.
+the nginx web root. nginx runs as uid 101 here and listens on 8080; the ``--chown`` is what
+lets the entrypoint rewrite :file:`assets/config.json` in place. See
+:ref:`container-nonroot`.
 
 ``CALC_URL`` is runtime, not build
 ----------------------------------
@@ -502,7 +504,7 @@ same constraints are applied everywhere:
      - Angular 22 requires ``^22.22.3 || ^24.15.0 || >=26.0.0``. The image uses
        ``node:26-alpine``; CI and Pages both pin ``26.5.0``.
    * - Pinned image bases
-     - ``node:26-alpine``, ``nginx:alpine``, ``python:3.14-slim``, and
+     - ``node:26-alpine``, ``nginxinc/nginx-unprivileged:alpine``, ``python:3.14-slim``, and
        ``docker.osgeo.org/geoserver:2.28.4``; the example calculator pins
        ``fastapi==0.140.13`` and ``uvicorn[standard]==0.52.0``.
    * - Configuration-free build

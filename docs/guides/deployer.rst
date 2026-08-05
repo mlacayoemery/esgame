@@ -179,8 +179,9 @@ Path 2 — Single Docker container
 The production frontend image (built from :file:`esgame/v2/Dockerfile`) is a
 multi-stage build: it compiles the app with ``--base-href /`` (served from the
 domain root; a reverse proxy maps host/path to the container) and serves the
-output from ``nginx:alpine`` on port **80**. See :doc:`/reference/containers` for
-the full container reference.
+output from ``nginxinc/nginx-unprivileged:alpine`` on port **8080**, as uid 101. See
+:doc:`/reference/containers` for the full container reference — including why the port is 8080
+and not 80.
 
 Run the frontend
 ----------------
@@ -189,7 +190,7 @@ Pull or build the image, then run it. Assuming a published image:
 
 .. code-block:: console
 
-   $ docker run -d --name esgame -p 8080:80 ghcr.io/mlacayoemery/esgame:master
+   $ docker run -d --name esgame -p 8080:8080 ghcr.io/mlacayoemery/esgame:master
 
 The site is then reachable at ``http://localhost:8080/``. With no environment
 variables this serves the **grid** game (empty ``calcUrl``).
@@ -200,13 +201,13 @@ Pointing the frontend at a backend (``CALC_URL``)
 To run the **dynamic** mode you must inject a backend URL. The image's
 entrypoint :file:`esgame/v2/docker-entrypoint.sh` (installed as
 :file:`/docker-entrypoint.d/40-esgame-config.sh` and run by nginx's
-``/docker-entrypoint.d/`` hook as root before nginx starts) substitutes the
+``/docker-entrypoint.d/`` hook as uid 101 before nginx starts) substitutes the
 ``CALC_URL`` environment variable into ``calcUrl`` inside
 :file:`/usr/share/nginx/html/assets/config.json`:
 
 .. code-block:: console
 
-   $ docker run -d --name esgame -p 8080:80 \
+   $ docker run -d --name esgame -p 8080:8080 \
        -e CALC_URL=https://esgame-calculation.example.com \
        ghcr.io/mlacayoemery/esgame:master
 
@@ -289,7 +290,7 @@ make up the project ``esgame-dynamic-example``:
      - Host port
      - Role
    * - ``frontend``
-     - ``81:80``
+     - ``81:8080``
      - The esgame image ``+`` this example's SVG config and generated zone/
        background maps.
    * - ``calculator``

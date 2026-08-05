@@ -9,7 +9,7 @@ time precisely because nothing had ever run them, and the failures were silent �
 that logged ``done`` having registered nothing, an e2e suite passing against a board that
 never rendered, a schema check reporting 10/10 valid on manifests the API server rejected.
 
-Last updated: **2026-07-30**.
+Last updated: **2026-08-05**.
 
 .. note::
 
@@ -391,7 +391,7 @@ Readiness probes — *added 2026-07-31*
    the first attempt failed with *"stopped after 10 redirects"* and timed the rollout out.
    ``/geoserver/index.html`` answers 200 directly.
 
-Container security context — *added 2026-07-31*, partial on purpose
+Container security context — *added 2026-07-31*, *extended 2026-08-05*, still partial on purpose
    All three containers now set ``allowPrivilegeEscalation: false`` and
    ``seccompProfile: RuntimeDefault``. Verified on a live cluster: all three roll out, 16/16 in
    :file:`deploy/k8s/ingress-test.sh`, both browser rounds pass.
@@ -410,19 +410,60 @@ Container security context — *added 2026-07-31*, partial on purpose
    the step that needs root. The init container has no ``securityContext`` of its own, so it
    still runs as root and that step still works.
 
-   ``runAsNonRoot`` for the other two, and ``readOnlyRootFilesystem`` anywhere, are deliberately
-   **not** set. Both remaining images run as uid 0 — measured, not assumed:
+   **The frontend image now runs as uid 101** (*2026-08-05*) — the image half of it.
+   :file:`v2/Dockerfile` builds on ``nginxinc/nginx-unprivileged:alpine`` (the same nginx 1.31.3
+   as ``nginx:alpine``, packaged for uid 101 with its pid and temp paths in :file:`/tmp`) and the
+   server block listens on 8080, since a non-root process cannot bind a privileged port without
+   ``CAP_NET_BIND_SERVICE``. Measured on the built image: ``id`` reports ``uid=101(nginx)``, no
+   process in the container is root, it serves the app, a missing ``.tif`` still 404s and an
+   unknown route still falls back to the app.
+
+   The load-bearing part is not the port. The entrypoint rewrites ``assets/config.json``
+   **in place** and now does so as uid 101, so the document root must be owned by that uid —
+   ``COPY --chown=101:101`` in :file:`v2/Dockerfile`. **Confirmed by mutation**: a derived image
+   with the tree chowned back to root exits 1 on start with
+   ``mv: can't rename '/tmp/tmp.XXXXXX': Permission denied``.
+
+   That failure is loud but **conditional** — the entrypoint only touches the file when
+   ``CALC_URL`` is set, so a backend-less deployment (Pages, the static compose stack) would stay
+   green while every deployment with a calculator broke. :file:`.github/workflows/image.yml` had
+   been pushing this image without ever starting it, so nothing would have caught that. It now
+   runs what it publishes and requires the app on 8080, ``uid == 101``, and a ``CALC_URL`` it can
+   see injected into the served config.
+
+   .. note::
+
+      **The manifests deliberately lag by one merge.** :file:`deploy/k8s/base` still declares
+      ``containerPort: 80`` and no ``runAsNonRoot``, because both images roll on ``:master`` and
+      the new one is not published until this merge completes. Landing them together was tried
+      and is wrong: the new manifests against the currently published image ``CrashLoopBackOff``
+      on a real cluster, with ``runAsUser: 101`` forcing the old nginx to bind :80 and fail.
+      They follow immediately once ghcr has the new image.
+
+   ``runAsNonRoot`` for GeoServer, and ``readOnlyRootFilesystem`` anywhere, are still deliberately
+   **not** set:
 
    .. code-block:: text
 
-      localhost:5001/esgame:local               runs as uid 0   binds :80, needs a different base image
-      docker.osgeo.org/geoserver:2.28.4         runs as uid 0   upstream
+      esgame frontend image                     runs as uid 101     was uid 0 until 2026-08-05
+      localhost:5001/esgame-calculation:local   runs as uid 10001
+      docker.osgeo.org/geoserver:2.28.4         runs as uid 0       upstream
 
-   The frontend binds :80, which a non-root process cannot do without ``CAP_NET_BIND_SERVICE``,
-   so it needs an unprivileged base image and a port move that carries the Service ``targetPort``
-   and the readiness probe with it. GeoServer is upstream. A read-only root filesystem would
-   additionally break nginx's cache directory and GeoServer's data directory. Those are image
-   changes, not manifest changes, so a deployment that needs them should expect image work.
+   GeoServer is upstream. A read-only root filesystem would break its data directory, R's library
+   and temp paths, and — for the frontend — the ``assets/config.json`` rewrite above, which would
+   need an ``emptyDir`` and a copy-on-start. Those are image and manifest changes together, so a
+   deployment that needs them should expect work.
+
+   **This breaks anything that maps a host port to container :80, and PLACES is one.** Its
+   ``deploy/compose/docker-compose.places.yml`` publishes ``${PLACES_FRONTEND_PORT:-81}:80``
+   against a thin image built ``FROM ghcr.io/mlacayoemery/esgame:master``, so the next publish of
+   that rolling tag leaves it mapping a port nothing listens on. It needs ``:8080`` on that line
+   and in ``test/smoke.sh``'s ``docker run``. Its k8s overlay needs nothing — it inherits this
+   base, so the ``targetPort`` and probe move with it.
+
+   That is a break by design rather than a surprise: PLACES added ``test/smoke.sh`` precisely to
+   catch a change to the rolling esgame base, it runs the image and curls it, and it fails on
+   exactly this. The guard works; the fix belongs in that repository.
 
 The layout needs about 620px, and scrolls sideways below that
    Measured against the live cluster at four widths, on ``/dynamic-game``:

@@ -34,7 +34,8 @@ services:
     volumes:
       - ./frontend/config.json:/usr/share/nginx/html/assets/config.json:ro
     ports:
-      - "81:80"
+      # 8080 container-side: the upstream esgame image runs nginx unprivileged (v2/Dockerfile).
+      - "81:8080"
     depends_on: [calculator]
 
   calculator:
