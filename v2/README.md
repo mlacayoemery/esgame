@@ -32,9 +32,9 @@ $ docker build -t tradeoffv2 .
 
 **Run**
 
-In this example the url to access the game will be `http://localhost:81/`. If you want to be able to access it on a different port you can change the 81 in the command below to the desired port.
+In this example the url to access the game will be `http://localhost:81/`. If you want to be able to access it on a different port you can change the 81 in the command below to the desired port. The container side is `8080`, not `80` — nginx runs unprivileged inside, as uid 101.
 ```
-$ docker run -p 81:80 tradeoffv2
+$ docker run -p 81:8080 tradeoffv2
 ```
 
 ## Configuration

@@ -46,3 +46,58 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: The published image must actually serve the app
+        # This workflow used to stop at the push, which proves bytes were uploaded and nothing
+        # more — the calculation image's workflow has probed its own artefact since #155 and this
+        # one did not. Every failure mode below is one a build can pass through green:
+        #
+        #   * the runtime stage runs as root again      -> the kubelet refuses the pod at
+        #     admission (runAsNonRoot), on a cluster, nowhere near the change
+        #   * the listen port and EXPOSE drift apart    -> the Service's targetPort points at
+        #     nothing and the readiness probe never passes
+        #   * CALC_URL injection cannot write           -> the entrypoint exits and takes the
+        #     container with it, but ONLY when CALC_URL is set, which is why it is set here.
+        #     A probe without it never touches the write path at all.
+        run: |
+          set -euo pipefail
+          tag=$(printf '%s\n' '${{ steps.meta.outputs.tags }}' | head -1)
+          echo "probing ${tag}"
+          docker run -d --name esgame -p 8080:8080 -e CALC_URL=http://calc.example:8000 "${tag}"
+
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/ || true)
+            if [ "${code}" != 000 ]; then ok=1; echo "answered ${code} after ${i} attempts"; break; fi
+            sleep 2
+          done
+          if [ "${ok:-0}" != 1 ]; then
+            echo "::error::the published image never served on :8080"
+            docker logs esgame || true
+            exit 1
+          fi
+
+          # Not "some uid that isn't 0" — the number the Deployment asserts with runAsUser.
+          uid=$(docker exec esgame id -u)
+          echo "runs as uid ${uid}"
+          if [ "${uid}" != 101 ]; then
+            echo "::error::image runs as uid ${uid}; deploy/k8s/base/angular-deployment.yaml pins runAsUser: 101"
+            exit 1
+          fi
+
+          # 200 is not enough: nginx answers its own 404 page with one. Require the app.
+          curl -sf http://127.0.0.1:8080/ -o index.html
+          if ! grep -q '<app-root' index.html; then
+            echo "::error::served something on :8080, but it is not the app"
+            head -c 400 index.html; exit 1
+          fi
+
+          # The entrypoint rewrote this, as uid 101, in a directory it had to own.
+          got=$(curl -sf http://127.0.0.1:8080/assets/config.json | tr -d ' \n\t' | grep -o '"calcUrl":"[^"]*"')
+          echo "config.json -> ${got}"
+          if [ "${got}" != '"calcUrl":"http://calc.example:8000"' ]; then
+            echo "::error::CALC_URL was not injected into assets/config.json"
+            docker logs esgame || true
+            exit 1
+          fi
+          docker rm -f esgame >/dev/null
+          echo "published image serves the app on :8080 as uid ${uid}, with CALC_URL applied"
