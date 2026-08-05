@@ -418,7 +418,7 @@ Container security context — *added 2026-07-31*, *extended 2026-08-05*, still 
    process in the container is root, it serves the app, a missing ``.tif`` still 404s and an
    unknown route still falls back to the app.
 
-   The load-bearing part is not the port. The entrypoint rewrites :file:`assets/config.json`
+   The load-bearing part is not the port. The entrypoint rewrites ``assets/config.json``
    **in place** and now does so as uid 101, so the document root must be owned by that uid —
    ``COPY --chown=101:101`` in :file:`v2/Dockerfile`. **Confirmed by mutation**: a derived image
    with the tree chowned back to root exits 1 on start with
