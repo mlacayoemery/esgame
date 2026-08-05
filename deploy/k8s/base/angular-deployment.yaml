@@ -28,24 +28,25 @@ spec:
                   name: esgame-config
                   key: CALC_URL
           ports:
-            - containerPort: 80
+            - containerPort: 8080
               protocol: TCP
           readinessProbe:
             httpGet:
               path: /
-              port: 80
+              port: 8080
             initialDelaySeconds: 5
             periodSeconds: 15
-          # The safe subset only. All three images run as uid 0 — measured, not assumed — so
-          # runAsNonRoot would break every one of them and readOnlyRootFilesystem would break
-          # nginx's cache dir, GeoServer's data dir and the calculator's /app/data. Those need
-          # image changes, not a manifest change, and are deliberately not attempted here.
+          # runAsUser 101 is the `nginx` user in nginxinc/nginx-unprivileged, which v2/Dockerfile
+          # now builds on. runAsNonRoot is the half the kubelet enforces at admission: it refuses
+          # to start the pod if the image's uid is 0, so a base-image regression fails loudly here
+          # instead of quietly restoring root. That is why both are set and not just runAsUser.
           #
-          # These two do not: allowPrivilegeEscalation stops a setuid binary gaining privileges
-          # the container did not start with, and RuntimeDefault applies the container runtime's
-          # seccomp filter. Verified on a live cluster — all three roll out, 16/16 in
-          # ingress-test.sh, and both browser rounds pass.
+          # readOnlyRootFilesystem is still not set. nginx writes its pid and temp paths under
+          # /tmp in this image, but the entrypoint rewrites assets/config.json in place under
+          # /usr/share/nginx/html, so it would need an emptyDir there and a copy on start.
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 101
             allowPrivilegeEscalation: false
             seccompProfile:
               type: RuntimeDefault

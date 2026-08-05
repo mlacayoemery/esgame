@@ -78,15 +78,12 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
             failureThreshold: 12
-          # The safe subset only. All three images run as uid 0 — measured, not assumed — so
-          # runAsNonRoot would break every one of them and readOnlyRootFilesystem would break
-          # nginx's cache dir, GeoServer's data dir and the calculator's /app/data. Those need
-          # image changes, not a manifest change, and are deliberately not attempted here.
-          #
-          # These two do not: allowPrivilegeEscalation stops a setuid binary gaining privileges
-          # the container did not start with, and RuntimeDefault applies the container runtime's
-          # seccomp filter. Verified on a live cluster — all three roll out, 16/16 in
-          # ingress-test.sh, and both browser rounds pass.
+          # allowPrivilegeEscalation stops a setuid binary gaining privileges the container did
+          # not start with, and RuntimeDefault applies the container runtime's seccomp filter.
+          # Neither needs anything from the image. readOnlyRootFilesystem is still not set —
+          # R writes to its library and temp paths outside the /app/data mount. Verified on a
+          # live cluster — all three roll out, 16/16 in ingress-test.sh, and both browser rounds
+          # pass.
           securityContext:
             allowPrivilegeEscalation: false
             seccompProfile:
@@ -97,9 +94,9 @@ spec:
             # cooperates. runAsUser repeats the number so the manifest is explicit rather than
             # relying on whatever the image happens to say.
             #
-            # Only this container. The frontend binds :80 and would need CAP_NET_BIND_SERVICE or
-            # a different base image; GeoServer is upstream. Both measured as uid 0 and left
-            # alone deliberately — see docs/verification-status.rst.
+            # The frontend asserts the same thing with uid 101 since 2026-08-05, when its image
+            # moved to an unprivileged nginx on 8080. GeoServer is upstream and is now the only
+            # container here still measured as uid 0 — see docs/verification-status.rst.
             runAsNonRoot: true
             runAsUser: 10001
           resources:

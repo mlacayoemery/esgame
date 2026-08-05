@@ -410,7 +410,7 @@ Container security context — *added 2026-07-31*, *extended 2026-08-05*, still 
    the step that needs root. The init container has no ``securityContext`` of its own, so it
    still runs as root and that step still works.
 
-   **The frontend image now runs as uid 101** (*2026-08-05*) — the image half of it.
+   **The frontend now runs as uid 101** (*2026-08-05*), image and manifest.
    :file:`v2/Dockerfile` builds on ``nginxinc/nginx-unprivileged:alpine`` (the same nginx 1.31.3
    as ``nginx:alpine``, packaged for uid 101 with its pid and temp paths in :file:`/tmp`) and the
    server block listens on 8080, since a non-root process cannot bind a privileged port without
@@ -431,14 +431,29 @@ Container security context — *added 2026-07-31*, *extended 2026-08-05*, still 
    runs what it publishes and requires the app on 8080, ``uid == 101``, and a ``CALC_URL`` it can
    see injected into the served config.
 
+   :file:`deploy/k8s/base` carries the port move — ``containerPort`` and the readiness probe to
+   8080, the Service's ``targetPort`` to 8080 with ``port: 80`` left alone so no Ingress backend
+   reference moved — and asserts ``runAsNonRoot: true`` with ``runAsUser: 101``. ``runAsNonRoot``
+   is the half the kubelet enforces at admission: it refuses to start a pod whose image resolves
+   to uid 0, so a base-image regression fails there rather than quietly restoring root.
+
+   Measured against the **published** ghcr images through ``overlays/published``, which is what a
+   real deployment and :file:`.github/workflows/manifests.yml` both use — not a locally built
+   image: ``kubectl exec`` reports ``uid=101(nginx)``, 16/16 in
+   :file:`deploy/k8s/ingress-test.sh` (``POST /esgame`` → 200 in 16s, five finite scores, 5/5
+   coverages through the geoserver ingress), and both browser specs pass — 465 hexagons, 5
+   coverages, two rounds in separate workspaces.
+
    .. note::
 
-      **The manifests deliberately lag by one merge.** :file:`deploy/k8s/base` still declares
-      ``containerPort: 80`` and no ``runAsNonRoot``, because both images roll on ``:master`` and
-      the new one is not published until this merge completes. Landing them together was tried
-      and is wrong: the new manifests against the currently published image ``CrashLoopBackOff``
-      on a real cluster, with ``runAsUser: 101`` forcing the old nginx to bind :80 and fail.
-      They follow immediately once ghcr has the new image.
+      **The image and the manifests could not land together, and this is why.** Both roll on
+      ``:master``, so the new image does not exist until the image PR merges. Checked rather than
+      assumed: the new manifests applied against the *then-published* image put the pod into
+      ``CrashLoopBackOff`` — ``runAsUser: 101`` forces the old nginx to bind :80, and it fails
+      with ``mv: can't rename '/tmp/tmp.MOAofi': Permission denied`` before that. Since
+      :file:`.github/workflows/manifests.yml` deploys exactly that combination, one PR would have
+      gone red. They shipped as two, in that order. Any deployment tracking ``:master`` sees the
+      same ordering: pull the image, then apply the manifests.
 
    ``runAsNonRoot`` for GeoServer, and ``readOnlyRootFilesystem`` anywhere, are still deliberately
    **not** set:
