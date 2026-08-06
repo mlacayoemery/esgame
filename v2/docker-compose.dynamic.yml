@@ -9,14 +9,14 @@ services:
   esgame-core:
     environment:
       # The browser reaches the calculator via the published host port (it POSTs client-side).
-      CALC_URL: "http://localhost:8000"
+      CALC_URL: "http://localhost:${ESGAME_CALC_PORT:-8000}"
 
   esgame-calculator:
     build:
       context: ../tools/R
     image: local/esgame-calculator
     ports:
-      - "8000:8000"
+      - "${ESGAME_CALC_PORT:-8000}:8000"
     # url: http://localhost:8000/openapi.json
 
   esgame-geoserver:
@@ -26,5 +26,5 @@ services:
     environment:
       CORS_ENABLED: "true"
     ports:
-      - "8080:8080"
+      - "${ESGAME_GEOSERVER_PORT:-8080}:8080"
     # url: http://localhost:8080/geoserver

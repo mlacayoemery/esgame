@@ -13,7 +13,7 @@ services:
     container_name: esgame-core
     ports:
       # 8080 container-side: the image runs nginx unprivileged (v2/Dockerfile). Host port unchanged.
-      - "81:8080"
+      - "${ESGAME_FRONTEND_PORT:-81}:8080"
     # No CALC_URL set -> the image keeps its built-in assets/config.json (calcUrl ""),
     # i.e. the fully client-side grid game. The dynamic overlay sets CALC_URL.
     # url: http://localhost:81/

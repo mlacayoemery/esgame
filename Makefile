@@ -13,7 +13,11 @@
 #                                     FastAPI calculator + seeded GeoServer) - playable end to end
 #   make esgame-dynamic-example-down  stop + remove the example
 #
-# (All stacks publish the frontend on :81, so run one at a time on a given host.)
+# (All stacks publish the frontend on :81 by default, so run one at a time on a given host —
+# or move them: ESGAME_FRONTEND_PORT, ESGAME_GEOSERVER_PORT and ESGAME_PYGEOAPI_PORT override the
+# published ports, and the browser-facing URLs the calculator returns follow them. The example's
+# calculator port is deliberately fixed at 8000 because that example bakes calcUrl into
+# examples/esgame-dynamic/frontend/config.json — see the comment there.)
 
 COMPOSE_STATIC  := docker compose -p esgame -f v2/docker-compose.yml
 COMPOSE_DYNAMIC := docker compose -p esgame-dynamic -f v2/docker-compose.yml -f v2/docker-compose.dynamic.yml
@@ -35,7 +39,7 @@ esgame-build:
 esgame-up: esgame-build
 	$(COMPOSE_STATIC) up -d
 	@echo ""
-	@echo "esgame stack up:  http://localhost:81/   (static grid / Configuration 2)"
+	@echo "esgame stack up:  http://localhost:$(or $(ESGAME_FRONTEND_PORT),81)/   (static grid / Configuration 2)"
 
 ## Stop and remove the 'esgame' stack.
 esgame-down:
@@ -52,9 +56,9 @@ esgame-dynamic-up: esgame-dynamic-build
 	$(COMPOSE_DYNAMIC) up -d
 	@echo ""
 	@echo "esgame-dynamic stack up:"
-	@echo "  frontend    http://localhost:81/"
-	@echo "  calculator  http://localhost:8000/"
-	@echo "  geoserver   http://localhost:8080/geoserver"
+	@echo "  frontend    http://localhost:$(or $(ESGAME_FRONTEND_PORT),81)/"
+	@echo "  calculator  http://localhost:$(or $(ESGAME_CALC_PORT),8000)/"
+	@echo "  geoserver   http://localhost:$(or $(ESGAME_GEOSERVER_PORT),8080)/geoserver"
 
 ## Stop and remove the 'esgame-dynamic' stack.
 esgame-dynamic-down:
@@ -74,8 +78,8 @@ esgame-dynamic-example-build:
 esgame-dynamic-example-up: esgame-dynamic-example-build
 	$(COMPOSE_EXAMPLE) up -d
 	@echo ""
-	@echo "esgame-dynamic example up:  http://localhost:81/  (place fields, press Next Level)"
-	@echo "  calculator http://localhost:8000/   geoserver http://localhost:8080/geoserver"
+	@echo "esgame-dynamic example up:  http://localhost:$(or $(ESGAME_FRONTEND_PORT),81)/  (place fields, press Next Level)"
+	@echo "  calculator http://localhost:8000/   geoserver http://localhost:$(or $(ESGAME_GEOSERVER_PORT),8080)/geoserver"
 	@echo "  (GeoServer needs ~30-60s to start + be seeded before round 2 works)"
 
 ## Stop and remove the example (keeps the geoserver-data volume; add 'down -v' to wipe it).
@@ -96,8 +100,8 @@ esgame-dynamic-pygeoapi-build:
 esgame-dynamic-pygeoapi-up: esgame-dynamic-pygeoapi-build
 	$(COMPOSE_PYGEOAPI) up -d
 	@echo ""
-	@echo "esgame-dynamic (pygeoapi) up:  http://localhost:81/  (place fields, press Next Level)"
-	@echo "  calculator http://localhost:8000/   pygeoapi http://localhost:5005/"
+	@echo "esgame-dynamic (pygeoapi) up:  http://localhost:$(or $(ESGAME_FRONTEND_PORT),81)/  (place fields, press Next Level)"
+	@echo "  calculator http://localhost:8000/   pygeoapi http://localhost:$(or $(ESGAME_PYGEOAPI_PORT),5005)/"
 	@echo "  (pygeoapi starts in a few seconds; rasters are read-only, from its static config)"
 
 ## Stop and remove the pygeoapi variant.
