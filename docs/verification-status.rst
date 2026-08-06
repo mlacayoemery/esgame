@@ -837,18 +837,24 @@ took ten minutes, so it is written down.
 
    * - Not gated
      - What that means
-   * - :file:`v2/e2e-cluster`
-     - No workflow references it. The browser round against a real cluster, the two-round
-       workspace isolation, and the low-coverage warning shown to the player run **only when
-       someone runs them by hand**. They are the most convincing evidence on this page and the
-       least often executed.
-   * - :file:`deploy/k8s/ingress-test.sh`
-     - Same — 18 checks, no workflow. :file:`.github/workflows/manifests.yml` does stand up a
-       kind cluster, but without ingress-nginx or the calculation image, so it applies manifests
-       and checks the config substitution; it never drives a round through an Ingress.
-   * - :file:`deploy/k8s/kind.sh`
-     - Never referenced either. The cold-start path the README documents is a by-hand claim.
-       (:file:`deploy/k8s/render-test.sh` *is* run by ``manifests.yml``.)
+   * - :file:`v2/e2e-cluster`, :file:`deploy/k8s/ingress-test.sh`, :file:`deploy/k8s/kind.sh`
+     - **Weekly since 2026-08-06**, not on pull requests — see
+       :file:`.github/workflows/cluster.yml`. All three ran only by hand before that, which made
+       the most convincing evidence on this page the least often executed.
+
+       Scheduled rather than gating, on purpose. It stands up kind, installs ingress-nginx and
+       pulls a 2.6 GB image; both images roll on ``:master``, so what it tests is master's images
+       against master's manifests — a question about the deployed world, not about a diff. On a
+       PR it would answer a question the PR did not ask, and a ten-minute flaky required check is
+       a thing people learn to re-run until it passes. A red Monday run is a signal someone
+       reads.
+
+       So a change to :file:`deploy/k8s` still merges without this having run. That is the trade,
+       stated rather than glossed. ``workflow_dispatch`` is there to run it on demand when a
+       change ought to affect it.
+
+       (:file:`deploy/k8s/render-test.sh` is separate and *is* run by ``manifests.yml`` on every
+       relevant push.)
    * - ``tools/R`` behaviour
      - **Partly closed 2026-08-06.** :file:`tools/R/test-coverage.R` now runs in
        ``manifests.yml`` — 19 assertions over the coverage reporter, the one piece of R that

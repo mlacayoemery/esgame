@@ -1,0 +1,111 @@
+name: Cluster round-trip (scheduled)
+
+# The strongest checks in this repository are the ones nothing ran:
+# deploy/k8s/ingress-test.sh and v2/e2e-cluster both need a cluster with ingress-nginx, so they
+# only ever executed when someone executed them by hand. That gap is written up under
+# "Not verified" in docs/verification-status.rst.
+#
+# SCHEDULED ONLY, DELIBERATELY. This is not a PR gate and must not become one.
+#   - It stands up kind, installs ingress-nginx and pulls a 2.6 GB image; that is ~10 minutes.
+#   - Both images roll on :master, so what it tests is "master's images against master's
+#     manifests" — which is a question about the deployed world, not about a diff. Running it on
+#     a PR would answer a question the PR did not ask.
+#   - A flaky gate is worse than an honest gap. A red scheduled run is a signal someone reads on
+#     Monday; a red required check is a thing people learn to re-run until it passes.
+#
+# workflow_dispatch is here so it can be run on demand after a change that ought to affect it,
+# which is also how it was first verified.
+
+on:
+  schedule:
+    # Mondays, after ci.yml (06:00) and manifests.yml (06:20), so a failure here is read against
+    # a known-good build rather than alongside one.
+    - cron: '40 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  round-trip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Make room for the calculation image
+        # It is ~2.6 GB and the runner arrives with ~25 GB free; a kind node image plus
+        # ingress-nginx plus this does fit, but not with much to spare. "no space left on device"
+        # here surfaces as an unrelated-looking ErrImagePull.
+        run: |
+          df -h / | tail -1
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
+          df -h / | tail -1
+
+      - name: Raise the inotify limits kind needs
+        # Below these, kube-proxy crash-loops and ingress-nginx never gets its certificate — and
+        # it presents as a timeout waiting for a webhook, not as a resource problem. kind.sh
+        # checks and refuses to continue, so this has to happen first.
+        run: |
+          sudo sysctl -w fs.inotify.max_user_instances=512
+          sudo sysctl -w fs.inotify.max_user_watches=524288
+
+      - name: Install kind and kubectl
+        run: |
+          curl -sSfL -o kind https://kind.sigs.k8s.io/dl/v0.30.0/kind-linux-amd64
+          curl -sSfL -o kubectl https://dl.k8s.io/release/v1.34.0/bin/linux/amd64/kubectl
+          chmod +x kind kubectl
+          sudo mv kind kubectl /usr/local/bin/
+          kind --version && kubectl version --client=true | head -1
+
+      - name: Bring up the cluster
+        # kind.sh installs ingress-nginx and waits for it, and publishes the controller on 8880.
+        run: deploy/k8s/kind.sh up
+
+      - name: Deploy the published images
+        # overlays/published, so this tests what ghcr actually serves rather than anything built
+        # here. That is the point: it is the combination a real deployment gets.
+        env:
+          ESGAME_OVERLAY: published
+        run: deploy/k8s/kind.sh deploy
+
+      - name: A real round through the ingress
+        run: deploy/k8s/ingress-test.sh
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 26.5.0
+          cache: npm
+          cache-dependency-path: v2/package-lock.json
+
+      - name: Install the browser harness
+        working-directory: v2
+        run: npm ci
+
+      - name: A browser plays two rounds
+        # No interception: real Chrome against the live ingress. The only accommodation is
+        # host-resolver-rules, in browser-round.config.ts, so /etc/hosts is left alone.
+        working-directory: v2
+        run: npx playwright test --config e2e-cluster/browser-round.config.ts
+
+      - name: What the cluster looked like if any of that failed
+        if: failure()
+        run: |
+          kubectl get pods -A -o wide || true
+          for d in esgame-angular esgame-calculation esgame-geoserver; do
+            echo "=== $d ==="
+            kubectl describe deploy "$d" 2>/dev/null | tail -25 || true
+            kubectl logs "deploy/$d" --tail=60 2>/dev/null || true
+          done
+          kubectl -n ingress-nginx get pods 2>/dev/null || true
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: v2/playwright-report
+          retention-days: 7
+
+      - name: Tear down
+        if: always()
+        run: deploy/k8s/kind.sh down || true
