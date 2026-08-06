@@ -29,7 +29,7 @@ Verified working
    * - Path
      - How it was checked
    * - Static / grid game
-     - 385 unit tests, 12 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
+     - 385 unit tests, 18 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
        SEO 100. The board renders 2,436 fields; the e2e suite asserts that rather than
        just asserting the component mounted.
    * - No external runtime deps
@@ -568,8 +568,8 @@ Container security context — *added 2026-07-31*, extended *2026-08-05* and *20
    catch a change to the rolling esgame base, it runs the image and curls it, and it fails on
    exactly this. The guard works; the fix belongs in that repository.
 
-The layout needs about 620px, and scrolls sideways below that
-   Measured against the live cluster at four widths, on ``/dynamic-game``:
+The layout needed about 620px, and now stacks below it — *fixed 2026-08-06*
+   Measured against the live cluster at four widths, on ``/dynamic-game``, **before the fix**:
 
    .. code-block:: text
 
@@ -584,12 +584,40 @@ The layout needs about 620px, and scrolls sideways below that
    that does not scroll (``scrollWidth == clientWidth``), which is easy to mistake for the
    button being clipped away entirely; it is the component that scrolls, not the page.
 
-   But a player on a phone has to discover that sideways scroll to advance a level, and three of
-   the six production types are off-screen until they do. Whether that matters is a product
-   decision — this is a 466-hexagon board built for workshops — so it is recorded rather than
-   redesigned. The three panels are ``flex: 0 1 25% / 0 0 50% / 0 1 25%``
-   (:file:`v2/src/app/level/level-base.component.scss`); making it reflow below ~620px means
-   choosing what the narrow layout should look like, not adjusting a number.
+   But a player on a phone had to discover that sideways scroll to advance a level, with three of
+   the six production types off-screen until they did. That was recorded rather than redesigned
+   because it was a product decision — this is a 466-hexagon board built for workshops — and
+   making it reflow means choosing what the narrow layout should be, not adjusting a number.
+
+   **The decision was taken on 2026-08-06: below 620px the panels stop being a row.** Production
+   types, board, scores and *Next Level* in one column, with the side maps above and below. The
+   board keeps its size and scrolls inside its own wrapper rather than taking the page with it.
+   The wide layout is untouched — ``25% / 50% / 25%`` is what a projector or a tablet gets, and
+   that is what the game was designed around.
+
+   One thing was load-bearing and not obvious. ``.panel`` carries ``padding: 0 15px``, so with the
+   default ``content-box`` a panel at ``width: 100%`` is 100% **plus 30px** — measured at 420px in
+   a 390px viewport, which put *Next Level* past the right edge while every other control looked
+   fine. ``box-sizing: border-box`` on the stacked panels is the fix.
+
+   Asserted rather than re-measured by hand, at the same four widths plus the grid game:
+   :file:`v2/e2e/narrow-layout.spec.ts`. Each width checks that the document does not scroll
+   sideways, that **every** production type is fully on screen, and that *Next Level* is. A
+   separate spec asserts the ``flex-direction`` itself in both directions — 1024px and 620px must
+   still be a row, 390px a column — because "everything fits" alone would be satisfied by stacking
+   at every width, quietly throwing the wide layout away.
+
+   Confirmed by mutation: with the media query removed the suite fails with
+   ``3 of 6 production types are off-screen at 390px`` and ``the narrow layout should be a
+   column`` — reproducing the measurement in the table above exactly, at the width it was taken.
+
+   .. note::
+
+      The first run of that spec reported *"no production types rendered; this test would be
+      checking nothing"* and the second measured a stale build. Both are the presence-first rule
+      earning its keep: the spec waited on the board, which becomes visible a beat before the
+      types populate, and ``npx playwright test`` does not rebuild — so an early measurement was
+      of the previous ``dist``. Neither would have been visible as anything but a green run.
 
 No default IngressClass is assumed
    The three Ingresses set no ``ingressClassName``. If the cluster has no default
