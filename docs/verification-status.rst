@@ -757,6 +757,49 @@ Not verified
 
 Honest gaps, so nobody assumes otherwise.
 
+Until 2026-08-06 this section held one entry, about Lighthouse timings — which is a caveat, not a
+gap. Read beside a page this long, that implied nearly everything here is gated. It is not. The
+strongest checks on this page are the ones **no workflow runs**, and re-deriving which is which
+took ten minutes, so it is written down.
+
+**What CI does not run** — established by grepping the workflows for each, not from memory:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 34 66
+
+   * - Not gated
+     - What that means
+   * - :file:`v2/e2e-cluster`
+     - No workflow references it. The browser round against a real cluster, the two-round
+       workspace isolation, and the low-coverage warning shown to the player run **only when
+       someone runs them by hand**. They are the most convincing evidence on this page and the
+       least often executed.
+   * - :file:`deploy/k8s/ingress-test.sh`
+     - Same — 18 checks, no workflow. :file:`.github/workflows/manifests.yml` does stand up a
+       kind cluster, but without ingress-nginx or the calculation image, so it applies manifests
+       and checks the config substitution; it never drives a round through an Ingress.
+   * - :file:`deploy/k8s/kind.sh`
+     - Never referenced either. The cold-start path the README documents is a by-hand claim.
+       (:file:`deploy/k8s/render-test.sh` *is* run by ``manifests.yml``.)
+   * - ``tools/R`` behaviour
+     - There is no test directory and no ``testthat``. ``manifests.yml`` **parses**
+       :file:`tools/R/calculator.r` and :file:`tools/R/coverage.R` and nothing more, so a wrong
+       ``reclassify``, a wrong score or a wrong coverage URL is not something CI can catch. The
+       model is exercised only by the by-hand cluster runs — and, per "the committed base raster"
+       above, those run against data that makes the round nearly inert.
+   * - The compose stacks
+     - ``docker compose config`` parses and schema-checks all four; none is ever **started** in
+       CI. Every measurement of them on this page is by hand.
+   * - :file:`perf/calc-load.js`
+     - No workflow, and no measurement anywhere in this document. So the question it exists to
+       answer — how many concurrent players one calculation replica sustains, which is what
+       sizing a workshop deployment needs — has no recorded answer.
+
+None of this is an argument for gating all of it: a kind cluster with ingress-nginx and a 2.6 GB
+calculation image is a slow, fragile CI job, and a flaky gate is worse than an honest gap. It is
+an argument for knowing which green means which.
+
 * **Timing numbers move.** Lighthouse timings swing with machine load — 57 to 90 for
   identical code on one host. Only the byte budgets are stable; compare timings A/B in
   one sitting or not at all.
