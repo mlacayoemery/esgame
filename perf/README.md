@@ -8,15 +8,35 @@ replica sustains, then size the K8s `replicas` / HPA accordingly.
 
 ```sh
 # bring up the calculator (e.g. the esgame-dynamic stack), then:
-k6 run -e CALC_URL=http://localhost:8000 -e VUS=20 perf/calc-load.js
+k6 run -e CALC_URL=http://localhost:8000/esgame perf/calc-load.js
 ```
 
-- `CALC_URL` — the calculation endpoint (default `http://localhost:8000`).
-- `VUS` — concurrent students to ramp to (default `20`).
-- `FIELDS` — allocation size (default `812` = the 28×29 board).
+**Measured 2026-08-06, first run ever.** A round takes 12.9–28.2s and rounds do not overlap —
+Plumber is single-threaded, so a second concurrent submission queues. **One replica sustains
+about one concurrent player**, and a class of N students pressing *Next Level* together waits
+roughly N × 15s for the last of them. Size `replicas` from that, not from a latency target.
 
-Thresholds (fail the run if breached): error rate `< 1%`, p95 latency `< 3s`. Raise `VUS` until they
-break to find the per-replica ceiling. Install k6: https://k6.io/docs/get-started/installation/
+`VUS` now defaults to **2**, not 20. At 20 the queue alone is about five minutes and every
+request times out, which measures the queue rather than the server. Raise it deliberately, and
+raise `TIMEOUT` with it — it must exceed a *queued* round or a slow request is recorded as an
+error the server never saw. That was the original defect here: a 30s timeout and a `p(95)<3000`
+threshold, neither of which any real round has ever satisfied, so the test could not pass at any
+concurrency.
+
+Each iteration creates a GeoServer workspace by design (`game_id` is per-VU-per-iteration), so a
+long run leaves state behind — clean it up afterwards.
+
+- `CALC_URL` — the calculation endpoint (default `http://localhost:8000`). Note the **path**: the
+  route is `/esgame`, and posting to the bare origin gets a 404 that reads as a broken backend.
+- `VUS` — concurrent students to ramp to (default `2`).
+- `FIELDS` — allocation size (default `812` = the 28×29 board).
+- `TIMEOUT` — per-request timeout (default `180s`). Must exceed `VUS` × round time.
+- `P95_MS` — p95 latency ceiling (default `60000`).
+- `ERROR_RATE` — allowed error rate (default `0.01`).
+
+Thresholds fail the run if breached. They are a ceiling a real round can meet, not a target anyone
+has committed to. Raise `VUS` (and `TIMEOUT` with it) to find the per-replica ceiling.
+Install k6: https://k6.io/docs/get-started/installation/
 
 ## Frontend load — Lighthouse CI
 
