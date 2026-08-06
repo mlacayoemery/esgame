@@ -68,6 +68,19 @@ spec:
           # would refuse to start it. The other two containers do set it: the calculation image
           # runs as uid 10001, the frontend as uid 101.
           #
+          # Do not "just add runAsUser" on the strength of those two. Forcing this image to a
+          # non-root uid does not fail; it 404s. Measured 2026-08-06 with `--user 10001:0`:
+          # Tomcat logs `Server startup in [28806] milliseconds` and /geoserver/web returns 404,
+          # because the webapp never deployed — `Unable to create directory for deployment:
+          # /usr/local/tomcat/conf/Catalina/localhost`, plus `Cannot create logs` and a failed
+          # rewrite of its own server.xml. The readiness probe below does catch it — it requests
+          # /geoserver/index.html, which is part of that undeployed webapp and 404s, so the pod
+          # never goes Ready. Visible failure, but no reason to choose it.
+          #
+          # kartoza/geoserver is not an escape either: forced non-root it exits 10 with
+          # `groupadd: Permission denied` — its entrypoint needs root. 2.28.4 is the newest tag
+          # docker.osgeo.org publishes (2.28.5 and 2.29.0 are not). Checked, so nobody re-checks.
+          #
           # readOnlyRootFilesystem is refused here on evidence rather than caution. Run with
           # --read-only it does NOT fail; Tomcat binds and reports "Server startup in 6409 ms"
           # while:

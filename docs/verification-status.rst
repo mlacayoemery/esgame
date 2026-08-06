@@ -602,6 +602,31 @@ Container security context — *added 2026-07-31*, extended *2026-08-05* and *20
    upstream image whose next patch release can move them, with that same silent failure as the
    penalty. ``runAsNonRoot`` is out for the same upstream reason: it runs as uid 0.
 
+   **A rootless GeoServer was looked for on 2026-08-06, and there is not one.** Two findings worth
+   not re-deriving. First, forcing this image to a non-root uid does not fail — it **404s**. With
+   ``--user 10001:0`` Tomcat logs ``Server startup in [28806] milliseconds`` while
+   ``/geoserver/web`` returns 404, because the webapp never deployed:
+
+   .. code-block:: text
+
+      SEVERE [main] HostConfig.beforeStart Unable to create directory for deployment:
+             [/usr/local/tomcat/conf/Catalina/localhost]
+      java.lang.IllegalStateException: Cannot create logs
+      /opt/startup.sh: line 14: /usr/local/tomcat/conf/server.xml: Permission denied
+
+   So a ``runAsUser`` added here on the strength of the other two containers would give a
+   container that logs a successful startup and serves nothing.
+
+   **The readiness probe catches it, and that is worth stating because the first draft of this
+   entry said the opposite.** The probe requests ``/geoserver/index.html``, which is part of the
+   webapp that failed to deploy — measured at **404** on the same container — so the pod never
+   becomes Ready and the rollout fails visibly rather than going green and empty. The probe added
+   in #159 is doing real work here, on a failure mode it was not written for.
+
+   Second, ``kartoza/geoserver`` is not an escape: forced non-root it exits 10 with ``groupadd:
+   Permission denied``, because its entrypoint needs root. It at least fails loudly. 2.28.4 is the
+   newest tag ``docker.osgeo.org`` publishes — 2.28.5 and 2.29.0 are not.
+
    **This breaks anything that maps a host port to container :80, and PLACES is one.** Its
    ``deploy/compose/docker-compose.places.yml`` publishes ``${PLACES_FRONTEND_PORT:-81}:80``
    against a thin image built ``FROM ghcr.io/mlacayoemery/esgame:master``, so the next publish of
