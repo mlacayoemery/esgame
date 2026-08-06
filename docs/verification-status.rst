@@ -873,11 +873,29 @@ took ten minutes, so it is written down.
        ``unique()``, removing the empty-allocation guard, and reading the ``lulc`` column instead
        of ``id`` — each caught by the assertion written for it, with exit 1.
 
-       **The model itself is still only parsed.** ``manifests.yml`` checks that
-       :file:`tools/R/calculator.r` is syntactically valid and nothing more, so a wrong
-       ``reclassify``, a wrong score or a wrong coverage URL remains outside CI's reach. It is
-       exercised only by the by-hand cluster runs — and, per "the committed base raster" above,
-       those run against data that makes the round nearly inert.
+       **The model itself gets a characterization test** (*2026-08-06*), in the weekly cluster
+       job — the only place anything runs it. :file:`tools/R/golden-test.sh` POSTs one fixed
+       465-hexagon allocation and compares the five indicators against
+       :file:`tools/R/golden/scores.json`:
+
+       .. code-block:: text
+
+          {"HC": 16, "HH": 14, "NP": 14, "RV": 14, "WA": 20}
+
+       **It catches a change and says nothing about correctness.** Nobody has a reference answer
+       for this model, which is why this shape was chosen over asserting a correctness that
+       cannot be established. A failure means *find out why* — ``calculator.r``, the base raster,
+       or the R packages underneath, since ``tools/R/Dockerfile`` builds on ``rstudio/plumber``
+       untagged. Integer scores are what make it viable: numeric drift in ``raster``/``terra``
+       does not move an integer that was not already on a boundary.
+
+       The model was confirmed deterministic first — the same allocation POSTed twice returns
+       identical scores — and the check refuses to record or compare a NaN, so a broken round
+       cannot be frozen in as the expected answer. Confirmed able to fail: moving one recorded
+       score by a point gives exit 1 and prints both sets.
+
+       ``manifests.yml`` still only *parses* :file:`tools/R/calculator.r` on a push, so a wrong
+       ``reclassify`` is caught weekly, not per-change.
    * - The compose stacks
      - ``docker compose config`` parses and schema-checks all four; none is ever **started** in
        CI. Every measurement of them on this page is by hand.

@@ -72,6 +72,17 @@ jobs:
       - name: A real round through the ingress
         run: deploy/k8s/ingress-test.sh
 
+      - name: The scores have not moved
+        # A characterization test, not a correctness one: it POSTs one fixed allocation and
+        # compares the five indicators against numbers recorded from a previous run. Nobody has a
+        # reference answer for this model, so "did the output change" is the honest question to
+        # ask of it — and it is worth asking here, because this is the only job that runs the
+        # model at all. Everywhere else, tools/R is parsed.
+        #
+        # A failure means find out why, not "the model is wrong". calculator.r, the base raster,
+        # or the R packages underneath (rstudio/plumber is untagged) can all move it.
+        run: tools/R/golden-test.sh
+
       - uses: actions/setup-node@v6
         with:
           node-version: 26.5.0
