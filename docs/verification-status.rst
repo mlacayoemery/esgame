@@ -783,11 +783,20 @@ took ten minutes, so it is written down.
      - Never referenced either. The cold-start path the README documents is a by-hand claim.
        (:file:`deploy/k8s/render-test.sh` *is* run by ``manifests.yml``.)
    * - ``tools/R`` behaviour
-     - There is no test directory and no ``testthat``. ``manifests.yml`` **parses**
-       :file:`tools/R/calculator.r` and :file:`tools/R/coverage.R` and nothing more, so a wrong
-       ``reclassify``, a wrong score or a wrong coverage URL is not something CI can catch. The
-       model is exercised only by the by-hand cluster runs — and, per "the committed base raster"
-       above, those run against data that makes the round nearly inert.
+     - **Partly closed 2026-08-06.** :file:`tools/R/test-coverage.R` now runs in
+       ``manifests.yml`` — 19 assertions over the coverage reporter, the one piece of R that
+       distinguishes a round that was *scored* from one that was *ignored*. Base R and
+       ``stopifnot``: no ``testthat``, no ``raster``, no GDAL, because ``coverage.R``'s arithmetic
+       was split out of the raster read (``esgame_coverage_stats``) so it could run in a job that
+       installs nothing beyond R. Confirmed able to fail by three mutations — dropping the
+       ``unique()``, removing the empty-allocation guard, and reading the ``lulc`` column instead
+       of ``id`` — each caught by the assertion written for it, with exit 1.
+
+       **The model itself is still only parsed.** ``manifests.yml`` checks that
+       :file:`tools/R/calculator.r` is syntactically valid and nothing more, so a wrong
+       ``reclassify``, a wrong score or a wrong coverage URL remains outside CI's reach. It is
+       exercised only by the by-hand cluster runs — and, per "the committed base raster" above,
+       those run against data that makes the round nearly inert.
    * - The compose stacks
      - ``docker compose config`` parses and schema-checks all four; none is ever **started** in
        CI. Every measurement of them on this page is by hand.
