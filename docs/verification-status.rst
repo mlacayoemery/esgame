@@ -110,6 +110,15 @@ Verified working
        **2,436 fields** from real GeoTIFFs with no page errors, ``assets/config.json``
        serves ``defaultMode: static`` / ``calcUrl: ""``, and the published docs resolve —
        including the links places' README points at.
+
+       **Re-checked 2026-08-06** (``a7591c9``), after a day that rebuilt the image on an
+       unprivileged nginx, changed the level layout and added a dialog to the round. Still
+       2,436 fields, the same served config, **zero page errors and zero responses ≥ 400**.
+       The narrow layout is live: ``/dynamic-game`` renders its 466 hexagons at 390, 600, 768
+       and 1024px with **6/6 production types on screen and *Next Level* reachable at every
+       one** — against the 3/6 clipped that was measured there before. ``flex-direction`` is
+       ``column`` at 390 and 600, ``row`` at 768 and 1024, and the document never scrolls
+       sideways.
    * - Multi-round game
      - Three consecutive rounds against the real ``tools/R``: three distinct GeoServer
        workspaces, scores that moved with each allocation, and 15/15 coverages still
