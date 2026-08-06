@@ -87,3 +87,77 @@
 	gap: 15px;
 	margin-bottom: 15px;
 }
+
+
+// ---------------------------------------------------------------------------------------------
+// Narrow layout.
+//
+// The three panels are 25% / 50% / 25% of a row, and the row needs about 620px before the centre
+// column stops being usable. Measured against a live deployment at four widths, on /dynamic-game:
+//
+//   390px viewport | content 619px | overflow 229px | 3/6 production buttons clipped | Next clipped
+//   600px viewport | content 619px | overflow  19px | 0/6 clipped                    | Next visible
+//   768px viewport | content 768px | overflow   0px | 0/6 clipped                    | Next visible
+//
+// Nothing was unreachable — tro-svg-level sets overflow: auto, so the content scrolled sideways
+// and every control could be scrolled to. But a player on a phone had to discover that scroll to
+// advance a level, with half the production types off-screen until they did.
+//
+// So below the width the row needs, the panels stop being a row: production types, board, scores
+// and Next Level in one column, with the side maps above and below. The board keeps its size and
+// scrolls inside its own wrapper rather than taking the page with it.
+//
+// 619px, not 620px: the row is fine AT 620, and `max-width` is inclusive.
+// ---------------------------------------------------------------------------------------------
+@media (max-width: 619px) {
+	:host {
+		flex-direction: column;
+
+		.panel,
+		.left-panel,
+		.center-panel,
+		.right-panel {
+			// Not `flex: 1`: in a column that distributes the viewport height between the panels
+			// and squashes the board. Each panel takes the height its content needs.
+			flex: 0 0 auto;
+			// border-box is load-bearing, not tidiness. .panel carries `padding: 0 15px`, and with
+			// the default content-box `width: 100%` means 100% PLUS 30px — measured at 420px in a
+			// 390px viewport, which put Next Level 15px past the right edge while every other
+			// control looked fine. That is the same 30px in every panel.
+			box-sizing: border-box;
+			width: 100%;
+			align-self: stretch;
+		}
+
+		// Sticky is what keeps the board in view while the side columns scroll past it. In a
+		// single column there is nothing to scroll past — it would pin the board over the maps
+		// stacked below it instead.
+		.panel.center-panel {
+			position: static;
+		}
+
+		// The six buttons are a single flex row, which is what clipped three of them. Wrapping is
+		// the whole fix for that; centring keeps a part-full last row from hugging the left edge.
+		.production-type-buttons {
+			flex-wrap: wrap;
+			justify-content: center;
+			gap: 15px;
+		}
+
+		// flex-end lines the board up with the right-hand column in the wide layout. Centred here,
+		// and allowed to scroll itself: the board is a fixed-aspect hexagon grid built for a
+		// projector, so on a phone something has to give, and it should be the board's own box
+		// rather than the document.
+		.game-board-wrapper {
+			max-width: 100%;
+			align-items: center;
+			overflow-x: auto;
+		}
+
+		// Two equal columns put Previous and Next side by side at ~150px each. Stacked, each
+		// control gets the full width instead.
+		.score-board-wrapper {
+			grid-template-columns: 1fr;
+		}
+	}
+}
