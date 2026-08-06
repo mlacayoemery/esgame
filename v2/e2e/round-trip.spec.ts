@@ -73,14 +73,49 @@ async function dismissHelp(page: any) {
 	await expect(backdrop).toHaveCount(0, { timeout: 10_000 });
 }
 
+/**
+ * Click something the instructions dialog likes to open on top of.
+ *
+ * dismissHelp above is necessary and NOT sufficient. tro-help opens asynchronously, after the
+ * level observable emits, so there is a window between "no backdrop is visible" and the click
+ * landing in which it can appear and swallow it — and dismissHelp gives up silently after 4s,
+ * which is the right call when the dialog genuinely did not open and the wrong one when it was
+ * merely slow.
+ *
+ * Measured on clean master before this change: `npx playwright test e2e/round-trip.spec.ts`
+ * failed roughly one run in three on a loaded machine, always the same way —
+ *
+ *   <p class="text"> from <tro-help> subtree intercepts pointer events
+ *   327 x retrying click action
+ *
+ * — and passing the next run. That is a test-harness race, not a product defect: a real player
+ * simply closes the dialog that appeared. So dismiss, try, and if the dialog got in the way,
+ * dismiss again and retry.
+ *
+ * Deliberately NOT used by 'the instructions dialog stays closed once dismissed', which dismisses
+ * once and then clicks unaided on purpose. Retrying there would hide exactly what it tests.
+ */
+async function clickPastHelp(page: any, locator: any, attempts = 5) {
+	let lastError: unknown;
+	for (let i = 0; i < attempts; i++) {
+		await dismissHelp(page);
+		try {
+			await locator.click({ timeout: 10_000 });
+			return;
+		} catch (e) {
+			lastError = e;
+		}
+	}
+	throw lastError;
+}
+
 // minSelected is 1%, so a handful of hexagons is enough to submit.
 //
 // `offset` matters: a field already carrying a production type is refused by the placement rules,
 // so a second round that clicks the same indices places nothing at all. Rounds must touch
 // different hexagons, which is what a player does anyway.
 async function placeFields(page: any, count: number, offset = 0) {
-	await dismissHelp(page);
-	await page.locator('tro-production-type-button').first().click();
+	await clickPastHelp(page, page.locator('tro-production-type-button').first());
 	const fields = page.locator('tro-svg-game-board.main-board path[troSvgField]');
 	await expect.poll(() => fields.count(), { timeout: 60_000 }).toBeGreaterThan(offset + count * 3);
 	for (let i = 0; i < count; i++) {
@@ -107,8 +142,7 @@ test.describe('dynamic game round trip', () => {
 		await expect(page.locator('tro-svg-game-board').first()).toBeVisible();
 
 		await placeFields(page, 12);
-		await dismissHelp(page);
-		await page.locator('button.btn-next').click();
+		await clickPastHelp(page, page.locator('button.btn-next'));
 
 		// The response is consumed: the spider plot only renders when a result carried id -1.
 		await expect(page.locator('.expandable img')).toBeVisible({ timeout: 60_000 });
@@ -158,20 +192,41 @@ test.describe('dynamic game round trip', () => {
 		await page.goto('/dynamic-game');
 		await expect(page.locator('tro-svg-game-board').first()).toBeVisible();
 		await placeFields(page, 12);
-		await dismissHelp(page);
-
 		const spinner = page.locator('tro-loading-indicator');
-		await page.locator('button.btn-next').click();
 
-		// It has to have come up, or "it is gone" proves nothing.
-		await expect(spinner).toHaveClass(/show/, { timeout: 30_000 });
-		// ...and then go away. Before the fix this class stayed for good: the subscriber ran with
+		// Watch the class rather than trying to catch it in the act. "It has to have come up, or
+		// 'it is gone' proves nothing" is the right assertion and polling for it was the wrong
+		// way to make it: the spinner is up only while the round is in flight, and with every
+		// response served from the route interceptor that window can close inside a single poll
+		// interval — so `toHaveClass(/show/)` timed out on runs where the spinner had behaved
+		// perfectly. A MutationObserver installed before the click turns "it came up" into a fact
+		// about what happened instead of a state that has to still be true when we look.
+		await page.evaluate(() => {
+			const w = window as any;
+			w.__spinnerSawShow = false;
+			const el = document.querySelector('tro-loading-indicator');
+			if (!el) return;
+			const check = () => { if (el.classList.contains('show')) w.__spinnerSawShow = true; };
+			check();
+			new MutationObserver(check).observe(el, { attributes: true, attributeFilter: ['class'] });
+		});
+
+		await clickPastHelp(page, page.locator('button.btn-next'));
+
+		// failLevel is what alerts, so this is the round having finished failing — the ordering
+		// the two assertions below depend on.
+		await expect.poll(() => alerts.length, { timeout: 60_000 }).toBeGreaterThan(0);
+
+		// It went away. Before the fix this class stayed for good: the subscriber ran with
 		// length 0, but a host binding is evaluated by the declaring view and assigning a plain
 		// field told Angular nothing about which view that was.
 		await expect(spinner).not.toHaveClass(/show/, { timeout: 60_000 });
 
+		// And it had been up, so the line above is not passing on a spinner that never showed.
+		expect(await page.evaluate(() => (window as any).__spinnerSawShow),
+			'the spinner never came up, so "it cleared" proves nothing').toBe(true);
+
 		// The player was told, and the board is usable again rather than behind a white sheet.
-		expect(alerts.length).toBeGreaterThan(0);
 		await expect(page.locator('tro-svg-game-board').first()).toBeVisible();
 		expect(errors).toEqual([]);
 	});
@@ -185,13 +240,11 @@ test.describe('dynamic game round trip', () => {
 		await expect(page.locator('tro-svg-game-board').first()).toBeVisible();
 
 		await placeFields(page, 12);
-		await dismissHelp(page);
-		await page.locator('button.btn-next').click();
+		await clickPastHelp(page, page.locator('button.btn-next'));
 		await expect(page.locator('.expandable img')).toBeVisible({ timeout: 60_000 });
 
 		await placeFields(page, 8, 1);
-		await dismissHelp(page);
-		await page.locator('button.btn-next').click();
+		await clickPastHelp(page, page.locator('button.btn-next'));
 		// The plot src carries the round, so waiting on it proves round 2 was consumed rather
 		// than the round-1 image simply still being on screen.
 		await expect(page.locator('.expandable img')).toHaveAttribute('src', /round=2/, { timeout: 60_000 });
@@ -235,8 +288,7 @@ test.describe('dynamic game round trip', () => {
 		await expect(page.locator('tro-svg-game-board').first()).toBeVisible();
 
 		await placeFields(page, 12);
-		await dismissHelp(page);
-		await page.locator('button.btn-next').click();
+		await clickPastHelp(page, page.locator('button.btn-next'));
 		await expect(page.locator('.expandable img')).toBeVisible({ timeout: 60_000 });
 
 		// Five indicators plus the running total.
