@@ -9,7 +9,7 @@ The working rule is: **take the newest release, and only stay back when another
 dependency forces it.** "That's what was there" is not a reason. Everything on
 this page is either already at its newest version or has a named blocker below.
 
-Last reviewed: **2026-07-30**.
+Last reviewed: **2026-08-06**.
 
 
 Current state
@@ -23,16 +23,20 @@ Current state
      - State
      - Notes
    * - ``npm audit`` (all)
-     - **3 moderate**
-     - All three are inside ``@angular/cli``'s own tree — see
-       `@modelcontextprotocol/sdk`_ below.
+     - **0**
+     - First time including dev. See `Cleared 2026-08-06`_ for what the three
+       standing findings turned out to need, which was less than the entry they
+       replaced assumed.
    * - ``npm audit`` (production)
      - **0**
      - Nothing shipped to the browser has an outstanding advisory.
    * - ``npm outdated``
      - **1 entry**
-     - Only ``typescript`` (capped, see `TypeScript`_). Angular is on 22.1.0 across
-       the board; nothing else is behind, and no package in the tree is deprecated.
+     - Only ``typescript`` (capped, see `TypeScript`_). Framework packages are at
+       22.1.0, which *is* their newest; the tooling releases faster, so
+       ``@angular/build`` and ``@angular/cli`` are 22.1.3 and ``@angular/cdk`` /
+       ``@angular/material`` 22.1.1. Nothing else is behind and no package in the
+       tree is deprecated.
 
 
 Blocked upgrades
@@ -54,36 +58,48 @@ range, then bump both together. Check with::
 
    npm view @angular/compiler-cli@latest peerDependencies.typescript
 
-.. _@modelcontextprotocol/sdk:
+.. _Cleared 2026-08-06:
 
-@modelcontextprotocol/sdk → @hono/node-server
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Cleared 2026-08-06 — three dev advisories, none of which needed an override
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*Three moderate advisories, dev-only.*
+Three findings sat here, all dev-scope, all inside ``@angular/cli``'s or
+``@lhci/cli``'s tree:
 
-::
+.. list-table::
+   :header-rows: 1
+   :widths: 22 26 52
 
-   @angular/cli → @modelcontextprotocol/sdk → @hono/node-server (path traversal)
+   * - Package
+     - Path
+     - How it cleared
+   * - ``fast-uri``
+     - ``@angular/cli → @angular-devkit/core → ajv``
+     - ``ajv@8.20.0`` declares ``fast-uri: ^3.0.1`` and the fix is **3.1.5**, so the
+       patched version was inside the declared range the whole time — only the
+       lockfile pinned 3.1.4. ``npm update fast-uri``. No override, no CLI bump.
+   * - ``hono``
+     - ``@angular/cli → @modelcontextprotocol/sdk``
+     - Same shape: the ReDoS fix is 4.12.34, ``sdk`` declares ``hono: ^4.11.4``, and
+       it resolved to **4.13.0**. The ``@modelcontextprotocol/sdk`` and
+       ``@hono/node-server`` overrides had already done the structural half.
+   * - ``brace-expansion``
+     - ``@lhci/cli → chrome-launcher → … → minimatch``
+     - The held-forward override below was already there; it just named ``^5.0.8``
+       and the fix is **5.0.9**. One character.
 
-Nothing in this repository selects those versions; ``@angular/cli`` does, and it
-is already at its newest release.
+The entry this replaces assumed the blocker was Angular CLI's exact pin of
+``@modelcontextprotocol/sdk@1.29.0``, and said to wait for a CLI bump. That pin is
+real — ``@angular/cli@22.1.3`` still carries it, so the ``sdk`` override stays — but
+it was never what held ``fast-uri`` back, and waiting would not have cleared any of
+the three. **Check the range before concluding a transitive is blocked:** a range
+that already admits the patched version means the lockfile is stale, not that
+upstream is holding you.
 
-**Blocker:** Angular CLI's own dependency pin — ``@angular/cli`` depends on
-``@modelcontextprotocol/sdk`` at an exact ``1.29.0``, and that release declares
-``@hono/node-server: ^1.19.9``, which cannot resolve the patched 2.0.5.
-
-**To unblock:** the upstream half is already done. ``@modelcontextprotocol/sdk``
-1.30.0 widened its range to ``^1.19.9 || ^2.0.5``, so this clears by itself as soon
-as Angular CLI bumps to it — checked at 22.1.0, which still pins 1.29.0. Watch::
-
-   npm view @angular/cli@latest dependencies.@modelcontextprotocol/sdk
-
-An ``overrides`` entry forcing ``@hono/node-server@^2.0.5`` remains the fallback,
-but it would resolve a package outside its parent's declared range to silence a
-Windows-only path traversal in a ``serve-static`` path this repository never
-invokes — the CLI's MCP server is not part of any build, test or deploy step here.
-Waiting is the smaller risk. Nothing shipped to the browser is affected:
-``npm audit --omit=dev`` is 0.
+Verified after the change, because all three sit in the toolchain rather than in
+the app: ``npm audit`` **0 including dev** (production was already 0), 378 unit
+tests, 12 Playwright e2e, and Lighthouse CI green — that last one being the check
+that matters, since the ``brace-expansion`` chain is ``@lhci/cli``'s own.
 
 
 Held-forward with overrides
@@ -98,7 +114,7 @@ introduced. ``npm audit fix --force`` "solves" this by downgrading to
 Instead :file:`v2/package.json` pins those transitives forward::
 
    "overrides": {
-     "brace-expansion": "^5.0.8",
+     "brace-expansion": "^5.0.9",
      "minimatch":       "^10.2.6",
      "glob":            "^13.0.6",
      "rimraf":          "^6.1.3",
