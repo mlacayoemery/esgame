@@ -150,6 +150,20 @@ jobs:
             for (f in files) { invisible(parse(f)); cat("  parses:", f, "\n") }
           ' "${files[@]}"
 
+      - name: The coverage reporter must be right, not merely parseable
+        run: |
+          # Parsing is not running, and the step above says so. This runs the one piece of R that
+          # decides whether a round was SCORED or IGNORED — and that failure is silent by
+          # construction, since reclassify() drops ids it does not recognise without a word and
+          # the round returns 200 with finite scores either way.
+          #
+          # Base R, no testthat, no raster, no GDAL: coverage.R's arithmetic was split out of the
+          # raster read so these can run in this job, which installs nothing beyond R itself.
+          # Presence first — a rename would otherwise skip the whole thing and pass.
+          test -f tools/R/test-coverage.R \
+            || { echo "::error::tools/R/test-coverage.R is missing; the R behaviour is ungated again"; exit 1; }
+          Rscript tools/R/test-coverage.R
+
       - name: The calculator reports how much of the allocation it actually used
         run: |
           # reclassify() ignores ids that are not in the base raster. Silently. The committed
