@@ -855,6 +855,14 @@ took ten minutes, so it is written down.
 
        (:file:`deploy/k8s/render-test.sh` is separate and *is* run by ``manifests.yml`` on every
        relevant push.)
+
+       **Its first run failed, which is why it was dispatched rather than assumed.**
+       :file:`deploy/k8s/kind.sh` wired containerd at the local registry unconditionally, so
+       ``up`` died with ``No such container: esgame-registry`` on a host that has none — after
+       creating the cluster, so a retry hit "cluster already exists" and went straight back to the
+       same line. The registry is only needed by ``overlays/local-registry``; that wiring is now
+       skipped when the container is absent, which is what :file:`deploy/k8s/README.md` already
+       claimed of the published path.
    * - ``tools/R`` behaviour
      - **Partly closed 2026-08-06.** :file:`tools/R/test-coverage.R` now runs in
        ``manifests.yml`` — 19 assertions over the coverage reporter, the one piece of R that

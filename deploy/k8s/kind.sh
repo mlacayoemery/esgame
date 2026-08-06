@@ -98,22 +98,35 @@ nodes:
 EOF
     fi
 
-    echo ">> pointing containerd at the local registry"
-    for node in $(kind get nodes --name "${CLUSTER}"); do
-      docker exec "${node}" mkdir -p "/etc/containerd/certs.d/localhost:${REG_PORT}"
-      docker exec -i "${node}" cp /dev/stdin "/etc/containerd/certs.d/localhost:${REG_PORT}/hosts.toml" <<EOF
+    # The registry is only needed by overlays/local-registry, i.e. for images built here and not
+    # pushed anywhere. overlays/published pulls both from ghcr and needs none of this — which is
+    # what deploy/k8s/README.md already claims, and what .github/workflows/cluster.yml relies on.
+    # Wiring it up unconditionally made `kind.sh up` fail on any host without the registry
+    # running, with `Error response from daemon: No such container: esgame-registry` — after the
+    # cluster had already been created, so a retry hit "cluster already exists" and skipped
+    # straight back to the same line.
+    if docker inspect "${REG_NAME}" >/dev/null 2>&1; then
+      echo ">> pointing containerd at the local registry"
+      for node in $(kind get nodes --name "${CLUSTER}"); do
+        docker exec "${node}" mkdir -p "/etc/containerd/certs.d/localhost:${REG_PORT}"
+        docker exec -i "${node}" cp /dev/stdin "/etc/containerd/certs.d/localhost:${REG_PORT}/hosts.toml" <<EOF
 [host."http://${REG_NAME}:5000"]
   capabilities = ["pull", "resolve"]
   skip_verify = true
 EOF
-    done
+      done
 
-    # Without this the nodes cannot resolve the registry's name at all.
-    if ! docker network inspect kind --format '{{range .Containers}}{{.Name}} {{end}}' | grep -qw "${REG_NAME}"; then
-      docker network connect kind "${REG_NAME}"
-      echo ">> joined ${REG_NAME} to the kind network"
+      # Without this the nodes cannot resolve the registry's name at all.
+      if ! docker network inspect kind --format '{{range .Containers}}{{.Name}} {{end}}' | grep -qw "${REG_NAME}"; then
+        docker network connect kind "${REG_NAME}"
+        echo ">> joined ${REG_NAME} to the kind network"
+      else
+        echo ">> ${REG_NAME} already on the kind network"
+      fi
     else
-      echo ">> ${REG_NAME} already on the kind network"
+      echo ">> no ${REG_NAME} container, so containerd is not being redirected"
+      echo "   overlays/published works as is; for overlays/local-registry, run"
+      echo "   deploy/registry/registry.sh up && deploy/registry/registry.sh push, then this again"
     fi
 
     echo ">> installing ingress-nginx"
