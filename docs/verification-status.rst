@@ -88,6 +88,12 @@ Verified working
      - Same, via OGC API - Coverages: 8 collections advertised, 8/8 return GeoTIFFs, and
        the calculator emits only pygeoapi coverage URLs with no WCS anywhere — which is
        the evidence for the "true drop-in" claim.
+
+       **Re-run 2026-08-06 on non-default ports** (``ESGAME_FRONTEND_PORT=8193``,
+       ``ESGAME_PYGEOAPI_PORT=8194``): frontend 200, pygeoapi 200, 8 collections, and a round
+       returned **8/8 coverage URLs on :8194, none left on :5005, and 0 WCS URLs** — all eight
+       fetched back as ``application/x-geotiff``. ``RASTER_URL_TEMPLATE`` is browser-facing, so
+       the zero on :5005 is what says it followed its port rather than being left behind.
    * - ``tools/R`` calculator
      - The **plumbing**: 465-hexagon allocation POSTed to ``/esgame`` → HTTP 200,
        workspace created in GeoServer, five coverages published, WCS 5/5 GeoTIFFs,
