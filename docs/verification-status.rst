@@ -76,6 +76,14 @@ Verified working
    * - ``examples/esgame-dynamic`` (GeoServer)
      - Full stack up: seeder reports ``verified 8 coverage stores``, WCS ``GetCoverage``
        returns a GeoTIFF for 8/8, calculator healthy, frontend serves.
+
+       **Re-run 2026-08-06 on non-default ports**, after the frontend image moved to 8080 and
+       the published host ports became overridable. With ``ESGAME_FRONTEND_PORT=8191`` and
+       ``ESGAME_GEOSERVER_PORT=8192``: seeder ``verified 8 coverage stores``, frontend 200,
+       GeoServer 302, calculator 200, and a round returned **8/8 coverage URLs on :8192 and
+       none on :8080**, all fetched back as GeoTIFFs. That last count is the point — the URLs
+       are browser-facing, so a published port that moved without them would have returned 200
+       with URLs nothing could resolve.
    * - ``examples/esgame-dynamic`` (pygeoapi)
      - Same, via OGC API - Coverages: 8 collections advertised, 8/8 return GeoTIFFs, and
        the calculator emits only pygeoapi coverage URLs with no WCS anywhere — which is

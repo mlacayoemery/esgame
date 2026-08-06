@@ -35,7 +35,7 @@ services:
       - ./frontend/config.json:/usr/share/nginx/html/assets/config.json:ro
     ports:
       # 8080 container-side: the upstream esgame image runs nginx unprivileged (v2/Dockerfile).
-      - "81:8080"
+      - "${ESGAME_FRONTEND_PORT:-81}:8080"
     depends_on: [calculator]
 
   calculator:
@@ -46,7 +46,10 @@ services:
       # Point the calculator at pygeoapi's OGC API - Coverages instead of GeoServer's WCS. The
       # browser fetches this URL directly, so it is the host-facing pygeoapi address. {coverage} is
       # substituted with the coverage name (e.g. ag_carbon).
-      RASTER_URL_TEMPLATE: "http://localhost:5005/collections/{coverage}/coverage?f=GTiff"
+      # Browser-facing, so it must track the published port below. Left behind, the round
+      # returns 200 with coverage URLs nothing can fetch — the same shape as the portless
+      # CALC_URL in docs/verification-status.rst, which every server-side check passed.
+      RASTER_URL_TEMPLATE: "http://localhost:${ESGAME_PYGEOAPI_PORT:-5005}/collections/{coverage}/coverage?f=GTiff"
     ports:
       - "8000:8000"
 
@@ -59,4 +62,4 @@ services:
     volumes:
       - ./geoserver/rasters:/rasters:ro
     ports:
-      - "5005:80"
+      - "${ESGAME_PYGEOAPI_PORT:-5005}:80"

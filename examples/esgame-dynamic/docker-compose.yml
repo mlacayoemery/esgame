@@ -32,7 +32,7 @@ services:
       - ./frontend/config.json:/usr/share/nginx/html/assets/config.json:ro
     ports:
       # 8080 container-side: the upstream esgame image runs nginx unprivileged (v2/Dockerfile).
-      - "81:8080"
+      - "${ESGAME_FRONTEND_PORT:-81}:8080"
     depends_on: [calculator]
 
   calculator:
@@ -40,8 +40,16 @@ services:
     image: esgame-dynamic-example-calculator
     container_name: esgame-dynamic-calculator
     environment:
-      GEOSERVER_PUBLIC_URL: http://localhost:8080/geoserver    # browser-facing (the WCS URLs it returns)
+      # Browser-facing: these are the WCS URLs the calculator hands back, and the BROWSER
+      # fetches them. It must therefore be the published host port below, not the in-network
+      # name — and it has to move with it, or the round returns 200 with URLs nothing can
+      # resolve. That failure mode is documented in docs/verification-status.rst.
+      GEOSERVER_PUBLIC_URL: http://localhost:${ESGAME_GEOSERVER_PORT:-8080}/geoserver
     ports:
+      # Deliberately NOT parameterised. This example bakes calcUrl into ./frontend/config.json
+      # (that is the point it demonstrates), and the browser reads it from there — so a published
+      # port that did not match would leave the stack starting cleanly and the round failing only
+      # in the browser. Change both together or neither.
       - "8000:8000"
 
   geoserver:
@@ -50,7 +58,7 @@ services:
     environment:
       CORS_ENABLED: "true"
     ports:
-      - "8080:8080"
+      - "${ESGAME_GEOSERVER_PORT:-8080}:8080"
     volumes:
       - geoserver-data:/opt/geoserver_data    # persistent catalog: reloaded on every boot, no re-seed
       - ./geoserver/rasters:/rasters:ro        # the TIFF folder, referenced in place by external coverages
