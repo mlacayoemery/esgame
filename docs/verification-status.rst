@@ -9,7 +9,7 @@ time precisely because nothing had ever run them, and the failures were silent �
 that logged ``done`` having registered nothing, an e2e suite passing against a board that
 never rendered, a schema check reporting 10/10 valid on manifests the API server rejected.
 
-Last updated: **2026-08-05**.
+Last updated: **2026-08-06**.
 
 .. note::
 
@@ -391,7 +391,7 @@ Readiness probes — *added 2026-07-31*
    the first attempt failed with *"stopped after 10 redirects"* and timed the rollout out.
    ``/geoserver/index.html`` answers 200 directly.
 
-Container security context — *added 2026-07-31*, *extended 2026-08-05*, still partial on purpose
+Container security context — *added 2026-07-31*, extended *2026-08-05* and *2026-08-06*, still partial on purpose
    All three containers now set ``allowPrivilegeEscalation: false`` and
    ``seccompProfile: RuntimeDefault``. Verified on a live cluster: all three roll out, 16/16 in
    :file:`deploy/k8s/ingress-test.sh`, both browser rounds pass.
@@ -455,19 +455,68 @@ Container security context — *added 2026-07-31*, *extended 2026-08-05*, still 
       gone red. They shipped as two, in that order. Any deployment tracking ``:master`` sees the
       same ordering: pull the image, then apply the manifests.
 
-   ``runAsNonRoot`` for GeoServer, and ``readOnlyRootFilesystem`` anywhere, are still deliberately
-   **not** set:
+   **``readOnlyRootFilesystem`` on the frontend and the calculation** (*2026-08-06*). Neither
+   needed an image change — both are manifest-only, because every path either writes at run time
+   is now a mount:
 
    .. code-block:: text
 
-      esgame frontend image                     runs as uid 101     was uid 0 until 2026-08-05
-      localhost:5001/esgame-calculation:local   runs as uid 10001
-      docker.osgeo.org/geoserver:2.28.4         runs as uid 0       upstream
+      esgame frontend       uid 101     readOnlyRootFilesystem   /tmp + /usr/share/nginx/html/assets
+      esgame calculation    uid 10001   readOnlyRootFilesystem   /tmp + /app/data
+      geoserver 2.28.4      uid 0       (refused, see below)     upstream
 
-   GeoServer is upstream. A read-only root filesystem would break its data directory, R's library
-   and temp paths, and — for the frontend — the ``assets/config.json`` rewrite above, which would
-   need an ``emptyDir`` and a copy-on-start. Those are image and manifest changes together, so a
-   deployment that needs them should expect work.
+   The writable set was **measured, not guessed** — each image run with ``--read-only`` and the
+   first thing it failed on read off the log, then the mount added and the run repeated:
+
+   .. code-block:: text
+
+      frontend, nothing writable   mktemp: : Read-only file system
+      frontend, /tmp only          mv: can't remove '.../assets/config.json': Read-only file system
+      frontend, /tmp + assets      serves, CALC_URL injected, .tif 200
+      calculation, nothing         Fatal error: creating temporary file for '-e' failed   (exit 2)
+      calculation, /tmp + /app/data  starts, plumber binds
+
+   The frontend's second mount is the ``assets/config.json`` rewrite. An ``emptyDir`` starts
+   **empty**, so an init container seeds it from the image — the same image, which is how a
+   downstream overlay that bakes its own assets (PLACES does) keeps working without knowing this
+   exists. It copies with ``cp -R`` rather than ``cp -a``, which tries to preserve ownership on a
+   mount root uid 101 does not own and prints three "Operation not permitted" lines while
+   succeeding.
+
+   .. warning::
+
+      **Do not test this with docker named volumes.** A docker volume auto-populates from the
+      image when first mounted and empty; a Kubernetes ``emptyDir`` does not. Mounting one over
+      the assets directory therefore *looks* like it needs no seeding at all — it served the app,
+      the config and a real ``.tif`` — and the same manifest on a cluster would have served
+      nothing. The init container exists because of the difference.
+
+   That init container asserts ``[ -s /seed/config.json ]`` rather than trusting ``cp``'s exit
+   status, and the guard was confirmed able to fail: copying from an empty directory returns 0,
+   and the check then exits 1 naming the missing file. Without it a seed that copied nothing would
+   surface as a 404 from a pod reporting healthy.
+
+   Verified on the live cluster against the published images: both roll out, the root filesystem
+   really is read-only (``touch`` → ``Read-only file system``), the init container reports
+   ``seeded 54 asset file(s)``, 16/16 in :file:`deploy/k8s/ingress-test.sh` with a real round
+   (200 in 16s, five finite scores, 5/5 coverages), and both browser specs pass.
+
+   **GeoServer is refused on evidence, not caution.** Run with ``--read-only`` it does not fail —
+   Tomcat binds and logs ``Server startup in 6409 ms`` — while:
+
+   .. code-block:: text
+
+      /opt/startup.sh: line 14: /usr/local/tomcat/conf/server.xml: Read-only file system
+      /opt/startup.sh: line 44: .../conf/healthcheck_url.txt: Read-only file system
+      sed: couldn't open temporary file /usr/local/tomcat/conf/sedpbEUk0: Read-only file system
+      java.io.FileNotFoundException: /usr/local/tomcat/logs/catalina.<date>.log
+
+   The startup script rewrites its own ``server.xml``, and a read-only root drops those edits
+   silently. A server that starts having ignored its own configuration is worse than one that
+   refuses to start. Making it work means seeding ``emptyDir``\ s over ``/usr/local/tomcat/conf``,
+   ``/logs``, ``/work`` and ``/temp`` from the image — pinning the manifest to the internals of an
+   upstream image whose next patch release can move them, with that same silent failure as the
+   penalty. ``runAsNonRoot`` is out for the same upstream reason: it runs as uid 0.
 
    **This breaks anything that maps a host port to container :80, and PLACES is one.** Its
    ``deploy/compose/docker-compose.places.yml`` publishes ``${PLACES_FRONTEND_PORT:-81}:80``
