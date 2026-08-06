@@ -867,6 +867,38 @@ Why the scores go NaN, and it is not only all-nature — *diagnosed 2026-08-06*
    50. That property is worth a domain expert's attention in its own right, separately from the
    NaN.
 
+   **PLACES already normalises the other way, and that is the most useful thing found here.**
+   Its ``calculation/calculation.r`` is the same model family — the repository that carries the
+   real data release — and every indicator there is scaled against **fixed bounds** rather than
+   against the round:
+
+   .. code-block:: text
+
+      esgame  tools/R/calculator.r        places  calculation/calculation.r
+      ------------------------------      -------------------------------------------
+      (HH - cellStats(HH,min))            (HH - 0) / (4.2 - 0) * 100
+        / (cellStats(HH,max)              (NP - 0) / (180 - 0) * 100
+           - cellStats(HH,min)) * 100     (water_leach_focal - 0) / (180 - 0) * 100
+                                          (WA_vuln - 0) / (70 - 0) * 100
+      ...and the same for NP, WA,         (round_tot_HC - optimalHC_score)
+      HC and RV                             / (worstHC_score - optimalHC_score) * 100
+                                          (1 - RV_round) * 100
+
+   Two consequences follow directly, neither of which needs a domain opinion. **PLACES cannot
+   produce this NaN at all** — every denominator is a constant, so neither the empty-surface nor
+   the degenerate-surface case can divide by zero. And **PLACES' scores are comparable across
+   rounds**, because the scale does not move with the data; esgame's are not.
+
+   PLACES also scores **six** indicators to esgame's five, adding water leaching. Taken together
+   that reads like esgame's ``calculator.r`` being the earlier vintage and PLACES' being where the
+   model went — but that is an inference from the code, not something established here, and it is
+   the one part of this worth confirming with whoever wrote them.
+
+   It does change the shape of the question, though. "What should an empty surface score?" is no
+   longer an open modelling problem with no reference: there is a sibling implementation in the
+   same family that does not have the problem, and adopting its approach is a concrete option
+   rather than an invention.
+
 No default IngressClass is assumed
    The three Ingresses set no ``ingressClassName``. If the cluster has no default
    ``IngressClass`` they apply cleanly and route nothing, with no error. Check

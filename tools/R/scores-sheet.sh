@@ -130,4 +130,7 @@ say "2. **Is the direction right?** For each indicator, does the landscape you w
 say "   worst actually score worst? A sign error would be invisible to every test in this repository."
 say "3. **Is the spread usable?** If every landscape lands within a few points, players will not see"
 say "   their choices reflected, whatever the model does internally."
-say "4. **Is NaN acceptable for \`all-nature\`, or should it be a number?** See caveat 2."
+say "4. **Is NaN acceptable for \`all-nature\`, or should it be a number?** See caveat 2. Note that"
+say "   PLACES' \`calculation.r\` normalises every indicator against *fixed* bounds rather than"
+say "   against the round, so it cannot produce this NaN and its scores *are* comparable between"
+say "   rounds. Whether esgame should do the same is the question underneath all of the above."
