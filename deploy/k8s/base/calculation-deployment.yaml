@@ -5,6 +5,12 @@ metadata:
   labels:
     app: esgame-calculation
 spec:
+  # 1, and raising it is not a one-line change. Measured 2026-08-06: at two replicas the same
+  # spider-plot URL returns 404 about half the time, because calculator.r writes the plot into
+  # /app/data — an emptyDir, so per pod — and hands back a URL pointing at plumber's own @assets
+  # mount. The round still returns 200 with five correct scores, so the failure is quiet.
+  # Everything else shared goes to GeoServer; the plot is the exception. Options and their costs
+  # are in docs/verification-status.rst under "Adding calculation replicas breaks the spider plot".
   replicas: 1
   selector:
     matchLabels:

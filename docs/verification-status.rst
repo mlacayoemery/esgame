@@ -732,6 +732,72 @@ The layout needed about 620px, and now stacks below it — *fixed 2026-08-06*
       types populate, and ``npx playwright test`` does not rebuild — so an early measurement was
       of the previous ``dist``. Neither would have been visible as anything but a green run.
 
+.. _what-blocks-scaling-the-calculation:
+
+Adding calculation replicas breaks the spider plot — *measured 2026-08-06*
+   :file:`perf/calc-load.js` established that one replica sustains about one concurrent player,
+   which makes "add replicas" the obvious response. It does not work as the stack stands, and the
+   way it fails is quiet: the round still returns 200 and five correct scores.
+
+   Everything shared goes to GeoServer. The **spider plot does not** — ``calculator.r`` writes it
+   into ``/app/data`` and hands back a URL pointing at plumber's own ``@assets`` mount:
+
+   .. code-block:: r
+
+      calculated_rasters[[i]]['url'] <- paste0(req$rook.url_scheme, "://", req$HTTP_HOST,
+                                               "/images/", calculated_rasters[[i]]['name'])
+
+   ``/app/data`` is an ``emptyDir``, so it is **per pod**. A round is computed by whichever pod
+   the Service picked; the browser then fetches the plot through the same Service and has a
+   1-in-N chance of reaching the pod that wrote it.
+
+   Measured on the live cluster, scaling to two replicas and re-fetching one plot URL:
+
+   .. code-block:: text
+
+      1 replica,  6 fetches    6 x 200
+      2 replicas, 12 fetches   11 x 200, 1 x 404   (connection reuse kept most on one pod)
+      2 replicas, 30 fetches   16 x 200, 14 x 404  (Connection: close — the real ratio)
+
+   and the mechanism confirmed directly rather than inferred from status codes:
+
+   .. code-block:: text
+
+      esgame-calculation-...-ttsfd   has the plot: yes   109 files in /app/data
+      esgame-calculation-...-grq2b   has the plot: no      1 file  (just the init container's raster)
+
+   Rounds themselves are fine on either pod — the init container gives each one the base raster,
+   and the five coverages go to GeoServer, which is shared. The exposure is exactly the plot.
+
+   **What a fix costs**, in rough order of cheapness:
+
+   .. list-table::
+      :header-rows: 1
+      :widths: 30 70
+
+      * - Option
+        - Cost
+      * - Return the plot inline
+        - It is **11,992 bytes**; base64 in the JSON response is about 16 KB, and the frontend
+          binds ``<img [src]="scoreImage">`` so a ``data:`` URI needs no frontend change at all.
+          No shared storage, no affinity, nothing pod-local left. Changes the response contract,
+          so PLACES' ``calculation.r`` would want the same treatment.
+      * - Sticky sessions
+        - ``nginx.ingress.kubernetes.io/affinity: cookie`` on the calculation Ingress pins a
+          browser to a pod. One annotation, but it only holds while the cookie does, and it makes
+          the load balancing it is meant to enable partly ineffective.
+      * - Upload the plot to GeoServer
+        - Architecturally consistent — everything else shared already goes there — but it is the
+          largest change to ``calculator.r``, and a PNG is not a coverage.
+      * - Shared ``ReadWriteMany`` volume
+        - The heaviest. This cluster offers only ``standard`` (``rancher.io/local-path``), which
+          is ReadWriteOnce, so it would mean adding an RWX provisioner as a dependency of running
+          the game.
+
+   Nothing here changes yet: which of those is right is a decision about the response contract
+   and about what a deployment may depend on. The manifest still says ``replicas: 1``, and now
+   there is a reason written down for why raising it is not a one-line change.
+
 .. _why-the-scores-go-nan:
 
 Why the scores go NaN, and it is not only all-nature — *diagnosed 2026-08-06*
