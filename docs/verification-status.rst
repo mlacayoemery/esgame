@@ -732,6 +732,28 @@ The layout needed about 620px, and now stacks below it — *fixed 2026-08-06*
       types populate, and ``npx playwright test`` does not rebuild — so an early measurement was
       of the previous ``dist``. Neither would have been visible as anything but a green run.
 
+A scores sheet for domain review — *added 2026-08-06*
+   Nothing in this repository can say the model is *right*. :file:`tools/R/golden-test.sh` freezes
+   the current answers so a change is noticed, which is a different thing — it would freeze a
+   wrong answer just as happily. Only someone who knows the ecology can judge the numbers, and
+   asking that of them means handing over numbers, not an R prompt and a Docker daemon.
+
+   :file:`tools/R/scores-sheet.sh` runs eight contrasting landscapes — each production type
+   uniformly, plus two mixtures — and prints a markdown table.
+   :file:`tools/R/scores-sheet.example.md` is a committed sample so it can be read without
+   running anything.
+
+   It carries its own caveats rather than presenting bare numbers: that the scores are normalised
+   **within each round**, so a value near 50 means "average for this landscape" and not "moderate";
+   and that ``NaN`` for ``all-nature`` is a real result with a known cause
+   (:ref:`why-the-scores-go-nan`), not a crash. It ends with the questions the harness cannot
+   answer — whether the indicators move independently or together, whether the direction is right,
+   whether the spread is usable, and what ``all-nature`` ought to score.
+
+   The first run is worth a look on its own: across all eight landscapes the five indicators rise
+   and fall almost in step. Whether that is expected of a *tradeoff* game is exactly the sort of
+   question this exists to put in front of someone qualified to answer it.
+
 .. _what-blocks-scaling-the-calculation:
 
 Adding calculation replicas breaks the spider plot — *measured 2026-08-06*
