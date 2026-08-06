@@ -361,17 +361,56 @@ The dynamic game's consequence rasters are not in the repository — **and this 
    That also removes the only reachable trigger for the spinner that would not clear (see
    below). The host-binding problem underneath it is still unfixed.
 
-The committed base raster makes the game inert
-   :file:`v2/src/assets/images/LU_and_NEW_hexa.tif` numbers its hexagons ``10``–``474``
+The committed base raster made the game inert — *fixed 2026-08-06*
+   :file:`v2/src/assets/images/LU_and_NEW_hexa.tif` numbered its hexagons ``10``–``474``
    while the board (``New_hexagons.tif``) numbers its own ``100``–``46500`` in hundreds.
-   **4 ids overlap out of 465.** So ``reclassify`` is very nearly a no-op and the round
-   returns the same five scores — ``42 / 45 / 48 / 50 / 44`` — for *any* allocation.
-   Verified by POSTing three different land-use patterns and getting identical output;
-   the release copy of the raster gives three different answers to the same three.
+   **4 ids overlapped out of 465.** So ``reclassify`` was very nearly a no-op and the round
+   returned the same five scores — ``42 / 45 / 48 / 50 / 44`` — for *any* allocation.
+   Verified by POSTing three different land-use patterns and getting identical output.
 
-   Nothing is broken in the code: a deployment is supposed to supply the real geodata,
-   and the release copy shares the board's id space. But the committed asset is only good
-   for exercising the plumbing, and a green round against it says nothing about the model.
+   **A second defect, worse because it was not merely inert.** That raster reused
+   ``1,2,4,5,6,7,8`` as *both* hexagon ids and land-use codes. ``reclassify`` matches on value,
+   not on location, so allocating to hexagon 4 also rewrote every land-use-class-3 cell on the
+   map — silently changing terrain the player never touched. Nothing would have surfaced that;
+   the scores were constant anyway.
+
+   **Both are fixed by deriving the raster from the two files it is named after.** Their non-NA
+   masks are disjoint — 65,826 hexagon cells + 56,389 land-use cells = 122,215, exactly the
+   combined count — so it is a mosaic and nothing had to be invented:
+
+   .. code-block:: text
+
+      hexagon cells    <- New_hexagons.tif       ids 100..46500, the board's own numbering
+      remaining cells  <- New_Land_use_only.tif  land-use classes 2..8
+
+   Both inputs were already committed here. :file:`tools/R/make-base-raster.R` does it, asserts
+   every property it relies on (same grid, disjoint masks, ids survive, **no collision between
+   board ids and land-use codes**), and refuses to write a file that fails any of them. Board ids
+   start at 100 and land-use codes stop at 8, so the collision cannot recur.
+
+   Measured, three different land-use patterns over the same 465 board ids:
+
+   .. code-block:: text
+
+      before   pattern 1  42 48 50 45 44     coverage 4/465
+               pattern 2  42 48 50 45 44     identical
+               pattern 3  42 48 50 45 44     identical
+      after    pattern 1  49 73 50 53 48     coverage 465/465
+               pattern 2  NaN                all-nature, see below
+               pattern 3  43 63 46 48 44
+
+   and in a browser against the live cluster: **465 of 465 ids used (100%)**, against 4 of 465
+   before, with the low-coverage warning correctly not firing.
+
+   .. note::
+
+      **All-nature scores NaN, and a player cannot submit it.** ``lulc 60`` on every hexagon —
+      zero agricultural area — returns NaN for all five indicators, presumably a division by zero
+      in the model. It is reachable only by placing *nothing*, and ``svg-level.component.ts``
+      blocks submission below ``minSelected`` (1% here, about 5 hexagons). Measured across the
+      realistic range and all finite: 5 placed ``37 46 36 40 33``, 12 ``48 34 42 43 45``, 46
+      ``46 65 41 50 40``, 116 ``45 62 43 49 44``, 232 ``46 65 47 46 45``. The inert raster had
+      been hiding this too — every allocation returned the same constant, including that one.
 
    **The synthetic allocation was hiding this, not merely failing to exercise it.**
    :file:`deploy/k8s/ingress-test.sh` builds its payload from ids it reads out of the
@@ -382,8 +421,11 @@ The committed base raster makes the game inert
       ingress-test.sh (ids taken from the raster)   455 of 455  (100%)
       a browser playing a round (real board ids)      4 of 465  (1%)
 
-   Both runs are green, both return five finite scores, and one of them is a game that
-   ignored 99% of what the player did. Neither number was surfaced anywhere until
+   Both runs were green, both returned five finite scores, and one of them was a game that
+   ignored 99% of what the player did. They now read 465/465 and 465/465 — but note that
+   ``ingress-test.sh`` reaching 100% still proves nothing on its own, because it would reach
+   100% against any raster whatsoever. The browser's figure is the one that means something,
+   and it is only trustworthy because it is derived independently. Neither number was surfaced anywhere until
    2026-07-31 — ``tools/R/coverage.R`` logged it and nothing read the log.
 
    Both now report it. ``ingress-test.sh`` fails if the reporter is not wired in at all —
