@@ -32,6 +32,8 @@ export class GameService {
 	private levels: Level[] = [];
 	private gameId = uuid.v4();
 	private customColors: CustomColors[] = [];
+	// Once per game, not once per round — see warnIfAllocationWasIgnored.
+	private allocationWarningShown = false;
 
 	highlightFieldObs = this.highlightFields.asObservable();
 	currentLevelObs = this.currentLevel.asObservable();
@@ -119,6 +121,7 @@ export class GameService {
 				this.apiService.postRequest(this.settings.value.calcUrl, inputData).subscribe({
 					next: (res) => {
 						const convertedResult = res as CalculationResult;
+						this.warnIfAllocationWasIgnored(convertedResult);
 						this.prepareNextLevel(convertedResult, score);
 						this.loading(false);
 					},
@@ -440,6 +443,39 @@ export class GameService {
 	openHelp(close = false) { this.helpWindow.next(!close); }
 
 	/**
+	 * The round scored, and the scores may have almost nothing to do with what the player did.
+	 *
+	 * raster::reclassify() ignores any id that is not in the base raster — no warning, no error —
+	 * so an allocation in the wrong id space returns 200, a full set of consequence maps, and five
+	 * finite scores that are the SAME for every round. The raster committed to this repository is
+	 * exactly that case against the real board: 4 ids in common out of 465. The calculator has
+	 * measured this since 2026-07-31 and only ever logged it, which reaches whoever reads the
+	 * container's stdout and not the person running the workshop.
+	 *
+	 * Warn once per game, not once per round: this is a deployment mismatch that will not change
+	 * between rounds, so repeating it every time trains people to dismiss it.
+	 */
+	private warnIfAllocationWasIgnored(result: CalculationResult) {
+		// Absent means "this calculator does not report it", not "nothing matched" — only esgame's
+		// own tools/R sends the field. Saying a round was ignored because a backend is quiet would
+		// be worse than saying nothing.
+		const coverage = result?.allocationCoverage;
+		if (!coverage || this.allocationWarningShown) return;
+		if (typeof coverage.fraction !== 'number' || !isFinite(coverage.fraction)) return;
+		// Matches warn_below in tools/R/coverage.R. Both sides warn on the same round.
+		if (coverage.fraction >= 0.5) return;
+
+		this.allocationWarningShown = true;
+		const percent = Math.round(100 * coverage.fraction);
+		alert(
+			`Only ${percent}% of this round reached the model (${coverage.matched} of ${coverage.allocated} areas).\n\n` +
+			`The scores below barely depend on where things were placed, and will look much the ` +
+			`same every round. This usually means the calculation backend is using a different ` +
+			`base map than this board.`
+		);
+	}
+
+	/**
 	 * A level failed to build. Without this the loading spinner ran forever: prepareNextLevel
 	 * fetches every consequence map, and if one of them fails — a 404 for a raster that is not
 	 * in the build, say — the combineLatest errors, the subscribe body never runs, and nothing
@@ -474,6 +510,8 @@ export class GameService {
 
 
 	resetGame() {
+		// A new game may be a new backend, so the warning is owed again.
+		this.allocationWarningShown = false;
 		this.currentLevel.next(null);
 		this.highlightFields.next([]);
 		this.selectedFields.next([]);

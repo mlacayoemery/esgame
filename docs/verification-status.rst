@@ -29,7 +29,7 @@ Verified working
    * - Path
      - How it was checked
    * - Static / grid game
-     - 378 unit tests, 12 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
+     - 385 unit tests, 12 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
        SEO 100. The board renders 2,436 fields; the e2e suite asserts that rather than
        just asserting the component mounted.
    * - No external runtime deps
@@ -346,6 +346,45 @@ The committed base raster makes the game inert
    percentage is circular. :file:`v2/e2e-cluster` prints the honest figure, since the
    browser sends the ids the board actually uses.
    See :ref:`allocation-id-space`.
+
+   **And the player is now told** (*2026-08-06*). Every reader of that number so far has been a
+   test or a log. The person the round actually misleads — someone running a workshop, watching
+   five finite scores that will be the same next round — had no way to know, short of reading the
+   calculator's stdout. ``/esgame`` returns the numbers alongside ``results``:
+
+   .. code-block:: text
+
+      { "results": [ … ], "allocationCoverage": { "allocated": 465, "matched": 4, "fraction": 0.0086 } }
+
+   and below 50% the game says so once per game, naming the figures rather than showing a generic
+   failure: *"Only 1% of this round reached the model (4 of 465 areas)."* Once per game, not once
+   per round — it is a deployment mismatch that cannot change between rounds, and a dialog that
+   repeats is a dialog people learn to dismiss unread.
+
+   ``results`` is unchanged and the new field is **optional**, so a calculator that does not send
+   it (PLACES carries its own ``calculation.r``) is not treated as having ignored the round. That
+   is asserted, not just intended — absent, malformed and high-coverage responses must all stay
+   silent, and each has a spec.
+
+   Measured on the live cluster, where the committed raster makes this real rather than contrived:
+
+   .. code-block:: text
+
+      calculator reported: 4 of 465 ids used (1%)
+      warning shown to the player: yes
+
+   Confirmed able to fail four ways: dropping the call, warning every round instead of once, and
+   treating an absent field as zero coverage each fail exactly one unit spec; and pointing the
+   browser spec at a phrase the app never says fails it with *"the player was not told the round
+   had been ignored"*.
+
+   .. note::
+
+      The first version of that browser assertion **skipped silently.** It sat inside the block
+      that reads the pod log via ``kubectl``, which degrades to a console note when ``kubectl`` is
+      absent — as it was on the very run meant to prove the warning. It passed, printed
+      ``(allocation coverage unavailable …)``, and asserted nothing. It now reads the response the
+      browser itself received and needs nothing but the browser.
 
 The calculation Ingress had a 60-second timeout — *fixed 2026-07-31*
    ingress-nginx defaults ``proxy_read_timeout`` and ``proxy_send_timeout`` to 60 seconds, and

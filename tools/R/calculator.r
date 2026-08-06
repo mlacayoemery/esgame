@@ -112,7 +112,10 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   # its hexagons 10-474 while the board numbers its own 100-46500 in hundreds — 4 ids in common
   # out of 465 — and the constant it returns was quoted in the docs as a working round.
   # Cheap to check, and the only thing that distinguishes "scored" from "ignored".
-  esgame_report_coverage(LU_hexa, map_AG)
+  # Kept, not just logged. The log line below is inside the container; the person who needs it is
+  # the one running the workshop, and until now the only way to learn a round had been ignored was
+  # to read the calculator's stdout. It goes back in the response — see the end of this function.
+  coverage_stats <- esgame_report_coverage(LU_hexa, map_AG)
   LU_complete<-reclassify(LU_hexa, map_AG, right=F) # no value can be 1!!!!
 
   #### Set parameters ####
@@ -460,5 +463,23 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   
   #DELETED CODE
   
-  return(list(results = calculated_rasters))
+  # `results` is unchanged: every existing client keys off it and none of them know about the
+  # field below. allocationCoverage is additive and optional by design — a client that ignores it
+  # behaves exactly as before, which is what keeps other calculators (places carries its own
+  # calculation.r) from having to ship this at the same time.
+  #
+  # Omitted entirely rather than sent as nulls when the diagnostic itself failed:
+  # esgame_report_coverage returns NULL in that case, and a client cannot tell "0% matched" from
+  # "could not measure" if both arrive as zeroes.
+  if (is.null(coverage_stats)) {
+    return(list(results = calculated_rasters))
+  }
+  return(list(
+    results = calculated_rasters,
+    allocationCoverage = list(
+      allocated = coverage_stats$allocated,
+      matched   = coverage_stats$matched,
+      fraction  = coverage_stats$fraction
+    )
+  ))
 }

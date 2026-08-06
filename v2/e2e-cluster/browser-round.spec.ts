@@ -27,11 +27,22 @@ interface Traffic {
 	errors: string[];
 	posts: any[];
 	coverages: string[];
+	dialogs: string[];
+	replies: any[];
 }
 
 function watch(page: Page): Traffic {
-	const t: Traffic = { errors: [], posts: [], coverages: [] };
+	const t: Traffic = { errors: [], posts: [], coverages: [], dialogs: [], replies: [] };
 	page.on('pageerror', e => t.errors.push(e.message));
+	// Playwright dismisses dialogs automatically when nothing is listening, which is why the
+	// low-coverage warning could be added and every spec here still pass without seeing it.
+	// Record them, then dismiss exactly as the default would.
+	page.on('dialog', async d => { t.dialogs.push(d.message()); await d.dismiss(); });
+	page.on('response', async r => {
+		if (r.url().includes('esgame-calculation.local') && r.request().method() === 'POST') {
+			try { t.replies.push(await r.json()); } catch { /* not JSON; the assertions below will say so */ }
+		}
+	});
 	page.on('request', r => {
 		if (r.url().includes('esgame-calculation.local') && r.method() === 'POST') {
 			try { t.posts.push(r.postDataJSON()); } catch { t.posts.push(null); }
@@ -146,6 +157,29 @@ test('a browser plays a round end to end against the cluster', async ({ page }) 
 		expect(Number.isNaN(coverage.percent)).toBe(false);
 	} else {
 		console.log('  (allocation coverage unavailable — kubectl not on PATH, or no log line)');
+	}
+
+	// And the player was told. Deliberately NOT inside the kubectl block above: that one degrades
+	// to a console note when kubectl is absent, and the first version of this assertion sat inside
+	// it — so it skipped silently on the very run that was meant to prove it. This reads the
+	// response the browser itself received, which needs nothing but the browser.
+	expect(t.replies, 'no JSON reply from the calculation ingress').toHaveLength(1);
+	const reported = t.replies[0]?.allocationCoverage;
+	expect(reported, 'the calculator did not report allocationCoverage').toBeTruthy();
+	const percent = Math.round(100 * reported.fraction);
+	console.log(`  calculator reported: ${reported.matched} of ${reported.allocated} ids used (${percent}%)`);
+
+	// The committed raster shares 4 ids of 465 with the board, so this cluster always takes the
+	// low branch. That makes it the honest place to assert the warning rather than a contrived one.
+	if (reported.fraction < 0.5) {
+		const warning = t.dialogs.find(d => d.includes('reached the model'));
+		console.log(`  warning shown to the player: ${warning ? 'yes' : 'NO'}`);
+		expect(warning, 'the player was not told the round had been ignored').toBeTruthy();
+		expect(warning).toContain(`${percent}%`);
+		expect(warning).toContain(`${reported.matched} of ${reported.allocated}`);
+	} else {
+		console.log('  coverage is high, so no warning is expected');
+		expect(t.dialogs.filter(d => d.includes('reached the model'))).toHaveLength(0);
 	}
 
 	expect(t.errors).toEqual([]);
