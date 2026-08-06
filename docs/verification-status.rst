@@ -405,12 +405,13 @@ The committed base raster made the game inert — *fixed 2026-08-06*
    .. note::
 
       **All-nature scores NaN, and a player cannot submit it.** ``lulc 60`` on every hexagon —
-      zero agricultural area — returns NaN for all five indicators, presumably a division by zero
-      in the model. It is reachable only by placing *nothing*, and ``svg-level.component.ts``
-      blocks submission below ``minSelected`` (1% here, about 5 hexagons). Measured across the
-      realistic range and all finite: 5 placed ``37 46 36 40 33``, 12 ``48 34 42 43 45``, 46
-      ``46 65 41 50 40``, 116 ``45 62 43 49 44``, 232 ``46 65 47 46 45``. The inert raster had
-      been hiding this too — every allocation returned the same constant, including that one.
+      zero agricultural area — returns NaN for all five indicators. It is reachable only by
+      placing *nothing*, and ``svg-level.component.ts`` blocks submission below ``minSelected``
+      (1% here, about 5 hexagons). Measured across the realistic range and all finite: 5 placed
+      ``37 46 36 40 33``, 12 ``48 34 42 43 45``, 46 ``46 65 41 50 40``, 116 ``45 62 43 49 44``,
+      232 ``46 65 47 46 45``. The inert raster had been hiding this too — every allocation
+      returned the same constant, including that one. Why it happens is
+      :ref:`below <why-the-scores-go-nan>`.
 
    **The synthetic allocation was hiding this, not merely failing to exercise it.**
    :file:`deploy/k8s/ingress-test.sh` builds its payload from ids it reads out of the
@@ -730,6 +731,53 @@ The layout needed about 620px, and now stacks below it — *fixed 2026-08-06*
       earning its keep: the spec waited on the board, which becomes visible a beat before the
       types populate, and ``npx playwright test`` does not rebuild — so an early measurement was
       of the previous ``dist``. Neither would have been visible as anything but a green run.
+
+.. _why-the-scores-go-nan:
+
+Why the scores go NaN, and it is not only all-nature — *diagnosed 2026-08-06*
+   All five indicators are normalised the same way (:file:`tools/R/calculator.r`):
+
+   .. code-block:: r
+
+      HH_norm <- (HH - cellStats(HH, min)) / (cellStats(HH, max) - cellStats(HH, min)) * 100
+
+   Min-max, with no guard on the denominator. **Two different surfaces make it NaN**, and only
+   one of them is the all-nature case:
+
+   .. list-table::
+      :header-rows: 1
+      :widths: 26 74
+
+      * - Surface
+        - What happens
+      * - **Empty** — every cell NA
+        - ``cellStats(min)`` returns ``Inf`` and ``max`` returns ``-Inf`` (with a warning nobody
+          reads), so the expression is ``(NA - Inf) / (-Inf - Inf)`` → NaN.
+      * - **Degenerate** — all surviving cells equal, *including exactly one*
+        - ``max - min`` is ``0``, so it divides by zero → NaN.
+
+   Reproduced in isolation rather than inferred: a 100-cell raster masked to nothing gives
+   ``min: Inf  max: -Inf`` and a mean of ``NaN``; a constant raster gives ``min: 7  max: 7`` and
+   the same. The second row is the one worth knowing about — it needs no degenerate allocation at
+   all, just a mask that happens to leave one cell.
+
+   All-nature reaches the first row like this. Human health is built from five agricultural
+   sources, each falling back to ``zero_raster`` when that land use is absent; with ``lulc 60``
+   everywhere all five are absent, ``airconctot`` is zero, and ``HH[HH < 1] <- NA`` then masks
+   **every** cell. There is nothing left to normalise.
+
+   How much headroom normal play has, measured on the committed raster: ``HH`` is masked to
+   land-use class 2, which is **21,105 cells**, pruned to those within about 921 m of agriculture
+   (``100 * exp(-0.005 * d) >= 1``, i.e. ~9 cells at this 100 m resolution). So a real round is
+   nowhere near either edge — which is why every realistic ratio above scores finite.
+
+   **What an empty surface should score is a modelling decision, not a code fix, which is why
+   nothing here changes it.** "No agriculture, therefore no agricultural pollution" plausibly
+   argues for 0. But the normalisation is *relative within a single round* — it maps that round's
+   own spread onto 0–100 — so there is no absolute scale for 0 to mean anything against, and a
+   round of uniformly mild pollution and one of uniformly severe pollution can both average near
+   50. That property is worth a domain expert's attention in its own right, separately from the
+   NaN.
 
 No default IngressClass is assumed
    The three Ingresses set no ``ingressClassName``. If the cluster has no default
