@@ -16,6 +16,54 @@ spec:
       labels:
         app: esgame-angular
     spec:
+      volumes:
+        # nginx's pid file and its proxy/client/fastcgi/uwsgi/scgi temp paths all live under /tmp
+        # in the unprivileged image, so a read-only root needs exactly this one writable.
+        - name: tmp
+          emptyDir: {}
+        # And this one, because the entrypoint rewrites assets/config.json IN PLACE to inject
+        # CALC_URL. Seeded below — an emptyDir starts empty, unlike a docker named volume, which
+        # auto-populates from the image and makes this look unnecessary when tested with docker.
+        - name: assets
+          emptyDir: {}
+      initContainers:
+        # Copies the image's own assets into the emptyDir that will shadow them. Same image, so it
+        # copies whatever that image ships — which is how a downstream overlay (places bakes its
+        # own data.json, config.json and rasters) keeps working without knowing this exists.
+        - name: seed-assets
+          image: esgame-angular # rewritten by kustomization.yaml images:
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              # -R, not -a: -a tries to preserve ownership and timestamps on the emptyDir root,
+              # which uid 101 does not own, and prints three "Operation not permitted" lines that
+              # read like failures while the copy succeeds. Nothing here needs either preserved.
+              cp -R /usr/share/nginx/html/assets/. /seed/
+              # Presence, not exit status: cp can copy nothing and succeed. config.json is what the
+              # entrypoint rewrites, so its absence is the failure that would otherwise surface as
+              # a served 404 with the pod reporting healthy.
+              [ -s /seed/config.json ] || { echo "!! assets/config.json missing after seed" >&2; exit 1; }
+              echo ">> seeded $(find /seed -type f | wc -l) asset file(s)"
+          volumeMounts:
+            - name: assets
+              mountPath: /seed
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 101
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            limits:
+              cpu: 250m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
       containers:
         - name: esgame-angular
           image: esgame-angular # rewritten by kustomization.yaml images:
@@ -36,17 +84,24 @@ spec:
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 15
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: assets
+              mountPath: /usr/share/nginx/html/assets
           # runAsUser 101 is the `nginx` user in nginxinc/nginx-unprivileged, which v2/Dockerfile
           # now builds on. runAsNonRoot is the half the kubelet enforces at admission: it refuses
           # to start the pod if the image's uid is 0, so a base-image regression fails loudly here
           # instead of quietly restoring root. That is why both are set and not just runAsUser.
           #
-          # readOnlyRootFilesystem is still not set. nginx writes its pid and temp paths under
-          # /tmp in this image, but the entrypoint rewrites assets/config.json in place under
-          # /usr/share/nginx/html, so it would need an emptyDir there and a copy on start.
+          # readOnlyRootFilesystem needs the two mounts above and nothing else — measured by
+          # running the published image with `--read-only` and reading what it failed on, twice:
+          #   no writable paths   mktemp: : Read-only file system
+          #   /tmp only           mv: can't remove '.../assets/config.json': Read-only file system
           securityContext:
             runAsNonRoot: true
             runAsUser: 101
+            readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
             seccompProfile:
               type: RuntimeDefault

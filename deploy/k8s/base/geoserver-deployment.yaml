@@ -65,9 +65,25 @@ spec:
             failureThreshold: 30
           # The safe subset only, and this is now the one container it is still true of.
           # docker.osgeo.org/geoserver runs as uid 0 — measured, not assumed — so runAsNonRoot
-          # would refuse to start it, and readOnlyRootFilesystem would break its data directory.
-          # Both are upstream image concerns, not manifest ones. The other two containers do set
-          # runAsNonRoot: the calculation image runs as uid 10001, the frontend as uid 101.
+          # would refuse to start it. The other two containers do set it: the calculation image
+          # runs as uid 10001, the frontend as uid 101.
+          #
+          # readOnlyRootFilesystem is refused here on evidence rather than caution. Run with
+          # --read-only it does NOT fail; Tomcat binds and reports "Server startup in 6409 ms"
+          # while:
+          #
+          #   /opt/startup.sh: line 14: /usr/local/tomcat/conf/server.xml: Read-only file system
+          #   /opt/startup.sh: line 44: .../conf/healthcheck_url.txt: Read-only file system
+          #   sed: couldn't open temporary file /usr/local/tomcat/conf/sedpbEUk0: Read-only ...
+          #   java.io.FileNotFoundException: /usr/local/tomcat/logs/catalina.<date>.log
+          #
+          # The startup script REWRITES its own server.xml, and a read-only root drops those edits
+          # silently — a server that starts having ignored its configuration is worse than one
+          # that refuses to. Making it work means seeding emptyDirs over /usr/local/tomcat/conf,
+          # /logs, /work and /temp from the image, i.e. pinning this manifest to the internals of
+          # an upstream image whose next patch release can move them, with that same silent
+          # failure as the penalty. Not worth it for the one container here that holds no secrets
+          # of its own beyond the admin Secret already mounted.
           #
           # These two need nothing from the image: allowPrivilegeEscalation stops a setuid binary
           # gaining privileges the container did not start with, and RuntimeDefault applies the

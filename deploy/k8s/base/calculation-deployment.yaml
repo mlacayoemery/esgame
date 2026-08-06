@@ -21,6 +21,11 @@ spec:
       volumes:
         - name: app-data
           emptyDir: {}
+        # R puts tempdir() under TMPDIR (/tmp by default) and writes there throughout a round —
+        # raster's own temp files among them. The only path a read-only root needs beyond the
+        # /app/data mount below; measured by running the published image with `--read-only`.
+        - name: tmp
+          emptyDir: {}
       securityContext:
         # /app/data is a mount, so its ownership comes from the volume, not the image.
         # calculator.r does setwd() there and writes seven rasters plus the spider plot, and a
@@ -63,6 +68,8 @@ spec:
           volumeMounts:
             - name: app-data
               mountPath: /app/data
+            - name: tmp
+              mountPath: /tmp
           # Without this the pod is "ready" the instant the container starts, and the Service
           # sends it traffic while plumber is still binding — about 12 seconds. That is not
           # hypothetical: a POST straight after a rollout returned 503 from the ingress, and it
@@ -80,12 +87,16 @@ spec:
             failureThreshold: 12
           # allowPrivilegeEscalation stops a setuid binary gaining privileges the container did
           # not start with, and RuntimeDefault applies the container runtime's seccomp filter.
-          # Neither needs anything from the image. readOnlyRootFilesystem is still not set —
-          # R writes to its library and temp paths outside the /app/data mount. Verified on a
-          # live cluster — all three roll out, 16/16 in ingress-test.sh, and both browser rounds
-          # pass.
+          # Neither needs anything from the image.
+          #
+          # readOnlyRootFilesystem holds because both paths this writes are mounts: /app/data,
+          # where calculator.r does setwd() and writes its rasters and the spider plot, and /tmp,
+          # which is where R puts tempdir(). An earlier comment here said R "writes to its library
+          # and temp paths outside the /app/data mount" — the library is read at run time, not
+          # written to, and the temp paths are now mounted.
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             seccompProfile:
               type: RuntimeDefault
             # tools/R/Dockerfile now runs as uid 10001. runAsNonRoot is the assertion the
