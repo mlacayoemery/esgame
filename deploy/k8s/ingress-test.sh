@@ -28,7 +28,16 @@ ing()  { curl -s -H "Host: $1" "${BASE}${2:-/}" "${@:3}"; }
 code() { curl -s -o /dev/null -w '%{http_code}' -H "Host: $1" "${BASE}${2:-/}" "${@:3}"; }
 
 fail=0
-check() { if eval "$2" >/dev/null 2>&1; then echo "  ok   $1"; else echo "  FAIL $1"; fail=1; fi; }
+# Counted, not hand-tallied. docs/verification-status.rst quoted "16/16" for this script while it
+# actually ran 18 checks — the ingress-adoption check is inside a loop over three Ingresses, so
+# counting `check` in the source gives 16 and the run prints 18. Nothing re-derived it, so the
+# number drifted the moment a check was added inside a loop. Now the script says what it ran.
+checks=0
+passed=0
+check() {
+  checks=$((checks + 1))
+  if eval "$2" >/dev/null 2>&1; then passed=$((passed + 1)); echo "  ok   $1"; else echo "  FAIL $1"; fail=1; fi
+}
 
 echo "==> the controller is actually wired to our Ingresses"
 # An Ingress only gets a status.loadBalancer address once a controller has adopted it. Empty here
@@ -240,8 +249,14 @@ digests=$("${K[@]}" get pod -l 'app in (esgame-angular,esgame-calculation)' \
 check "both pods report an image digest"    "[ '${digests}' = '2' ]"
 
 echo
+# A run that executed no checks would otherwise report PASS. That is not hypothetical here: every
+# check is guarded by data read from the cluster, and an early `kubectl` failure could skip them.
+if [ "${checks}" -lt 10 ]; then
+  echo "ingress round-trip: FAIL   only ${checks} checks ran; this script covers more than that"
+  exit 1
+fi
 if [ "${fail}" = 0 ]; then
-  echo "ingress round-trip: PASS   (${n} ids, ${scored} scores, ${ok}/${tot} coverages, all via http://localhost:${PORT})${inert:-}"
+  echo "ingress round-trip: PASS   ${passed}/${checks} checks   (${n} ids, ${scored} scores, ${ok}/${tot} coverages, all via http://localhost:${PORT})${inert:-}"
 else
-  echo "ingress round-trip: FAIL"; exit 1
+  echo "ingress round-trip: FAIL   ${passed}/${checks} checks"; exit 1
 fi

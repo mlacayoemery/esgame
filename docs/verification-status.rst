@@ -18,6 +18,26 @@ Last updated: **2026-08-06**.
    recorded further down: a number that was true when written and is not re-derived when read.
    Re-measure before trusting one.
 
+   **Re-derived 2026-08-06, and three of four were wrong.** The unit and e2e counts are gated in
+   CI and were right. Every count that is *not* gated had drifted:
+
+   .. code-block:: text
+
+      ingress-test.sh          said 16/16   runs 18   hand-counted; one check is inside a loop
+      places test/stack.sh     said 21      runs 24
+      places test/k8s.sh       said 20      runs 22
+
+   ``ingress-test.sh`` now counts and prints its own total, so that one cannot drift again —
+   ``18/18 checks`` comes out of the run rather than out of someone counting ``check`` in the
+   source, which gives 16 because the ingress-adoption check runs once per Ingress. It also
+   refuses to report PASS having run fewer than ten checks: every check there is guarded by data
+   read from the cluster, so an early ``kubectl`` failure could have skipped all of them and still
+   printed success. Confirmed by mutation — raising that floor to 100 gives
+   ``FAIL only 18 checks ran`` and **exit 1**.
+
+   The two PLACES numbers are another repository's and cannot be gated from here, so they are
+   dated measurements like the rest of this page.
+
 
 Verified working
 ----------------
@@ -75,13 +95,13 @@ Verified working
        plot PNG, and no run-time package installation.
    * - places overlay
      - Renders 11 resources, all valid under ``kubeconform -strict``; ingress-host
-       patches apply; the GeoServer pin flows through from this base. 20 checks in
+       patches apply; the GeoServer pin flows through from this base. 22 checks in
        places' ``test/k8s.sh``, three of them confirmed able to fail by mutation.
    * - places local stack
      - The full compose stack up from a clean slate and a real round played through
        it: ``POST /esgame`` → 200 in 71s, six finite scores (HH 64, NP 34, WE 25,
        WA 25, HC 46, RV 47), six coverages fetched as GeoTIFFs **from outside the
-       compose network**, spider plot served as a PNG. 21 checks in places'
+       compose network**, spider plot served as a PNG. 24 checks in places'
        ``test/stack.sh``. That repo's geodata now loads for real in both paths —
        a loader service in compose, the ``load-geodata`` init container in k8s.
    * - Published GitHub Pages site
@@ -100,7 +120,9 @@ Verified working
    * - Cluster ingress traffic
      - **Closed 2026-07-31.** A round driven through a real ingress-nginx controller by
        ``Host`` header, never ``port-forward``: 15/15 checks in
-       :file:`deploy/k8s/ingress-test.sh`, against a **cold** cluster built by
+       :file:`deploy/k8s/ingress-test.sh` *as it stood that day* — it runs 18 now, and the
+       script reports its own total rather than leaving it to be counted here. Against a
+       **cold** cluster built by
        :file:`deploy/k8s/kind.sh`, pulling every image from the local registry.
        ``POST /esgame`` → 200 in 26s, five finite scores (HH 23, NP 22, WA 29, HC 33,
        RV 23), **5/5 coverages fetched as GeoTIFFs through the geoserver ingress**, and
@@ -131,7 +153,7 @@ Verified working
        Confirmed by mutation: with the portless value restored, ``ingress-test.sh`` reported
        ``PASS`` on a cluster where a browser could not finish a round, and this spec failed.
        ``ingress-test.sh`` now also resolves ``CALC_URL``'s own host and port and posts to
-       it, so it no longer passes on that (16 checks, verified failing under the mutation
+       it, so it no longer passes on that (18 checks, verified failing under the mutation
        and under an absent config).
 
        A second spec plays **two** rounds. :file:`v2/e2e/round-trip.spec.ts` already covered
@@ -203,7 +225,7 @@ Allocations were synthetic — *closed 2026-07-31*
 
    Verified as a cluster uses it, not only as CI built it: pulled anonymously from ghcr, then
    deployed to the kind cluster through the new ``overlays/published`` and put through a full
-   round — 16/16 in ``ingress-test.sh`` and both browser specs in ``v2/e2e-cluster`` (465
+   round — 18/18 in ``ingress-test.sh`` and both browser specs in ``v2/e2e-cluster`` (465
    hexagons, 5 coverages, two rounds in separate workspaces), with nothing built locally.
 
    The workflow does not stop at pushing. A push proves bytes were uploaded, not that the
@@ -232,7 +254,7 @@ The calculator refuses a round it cannot score — *added 2026-07-31*
       id-keyed object       400  ...'allocation' is a list; it must be an array of {id, lulc} objects.
       missing lulc column   400  ...'allocation' has columns [id]; it needs id and lulc.
 
-   A real round is unaffected: 16/16 in :file:`deploy/k8s/ingress-test.sh` and both browser
+   A real round is unaffected: 18/18 in :file:`deploy/k8s/ingress-test.sh` and both browser
    specs against the same rebuilt image.
 
 The loading spinner does not clear when a level fails to build — *fixed 2026-07-31*
@@ -432,7 +454,7 @@ Readiness probes — *added 2026-07-31*
 
 Container security context — *added 2026-07-31*, extended *2026-08-05* and *2026-08-06*, still partial on purpose
    All three containers now set ``allowPrivilegeEscalation: false`` and
-   ``seccompProfile: RuntimeDefault``. Verified on a live cluster: all three roll out, 16/16 in
+   ``seccompProfile: RuntimeDefault``. Verified on a live cluster: all three roll out, 18/18 in
    :file:`deploy/k8s/ingress-test.sh`, both browser rounds pass.
 
    **The calculation container now runs as uid 10001** (*2026-07-31*). It was the tractable one
@@ -478,7 +500,7 @@ Container security context — *added 2026-07-31*, extended *2026-08-05* and *20
 
    Measured against the **published** ghcr images through ``overlays/published``, which is what a
    real deployment and :file:`.github/workflows/manifests.yml` both use — not a locally built
-   image: ``kubectl exec`` reports ``uid=101(nginx)``, 16/16 in
+   image: ``kubectl exec`` reports ``uid=101(nginx)``, 18/18 in
    :file:`deploy/k8s/ingress-test.sh` (``POST /esgame`` → 200 in 16s, five finite scores, 5/5
    coverages through the geoserver ingress), and both browser specs pass — 465 hexagons, 5
    coverages, two rounds in separate workspaces.
@@ -537,7 +559,7 @@ Container security context — *added 2026-07-31*, extended *2026-08-05* and *20
 
    Verified on the live cluster against the published images: both roll out, the root filesystem
    really is read-only (``touch`` → ``Read-only file system``), the init container reports
-   ``seeded 54 asset file(s)``, 16/16 in :file:`deploy/k8s/ingress-test.sh` with a real round
+   ``seeded 54 asset file(s)``, 18/18 in :file:`deploy/k8s/ingress-test.sh` with a real round
    (200 in 16s, five finite scores, 5/5 coverages), and both browser specs pass.
 
    **GeoServer is refused on evidence, not caution.** Run with ``--read-only`` it does not fail —
