@@ -214,12 +214,21 @@ jobs:
           #
           # Both images roll on `master`. Assert that, and assert the workflows that produce
           # them still emit a branch tag, so this does not quietly stop meaning anything.
+          #
+          # DISTINCT images, not references. The frontend image is named twice now — once by the
+          # seed-assets init container and once by the container it seeds for — and counting
+          # references made that read as "a third image appeared". What this check is actually
+          # about is which images exist and what tag they carry; how many containers pull one is
+          # not its business. The count guard stays, so a manifest that stops referencing an
+          # image entirely still fails here rather than passing on an empty list.
           bad=0
-          imgs=$(grep -oP '^\s+image:\s*\Kghcr\.io/\S+' rendered.yaml || true)
+          refs=$(grep -oP '^\s+image:\s*\Kghcr\.io/\S+' rendered.yaml || true)
+          imgs=$(printf '%s\n' "$refs" | grep -c . >/dev/null && printf '%s\n' "$refs" | sort -u || true)
           n=$(printf '%s\n' "$imgs" | grep -c . || true)
+          echo "$(printf '%s\n' "$refs" | grep -c . || echo 0) reference(s) -> $n distinct:"
           echo "$imgs"
           if [ "$n" -ne 2 ]; then
-            echo "::error::expected 2 ghcr images in the render, found $n"; exit 1
+            echo "::error::expected 2 distinct ghcr images in the render, found $n"; exit 1
           fi
           for i in $imgs; do
             case "$i" in
