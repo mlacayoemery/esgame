@@ -792,13 +792,32 @@ took ten minutes, so it is written down.
      - ``docker compose config`` parses and schema-checks all four; none is ever **started** in
        CI. Every measurement of them on this page is by hand.
    * - :file:`perf/calc-load.js`
-     - No workflow, and no measurement anywhere in this document. So the question it exists to
-       answer — how many concurrent players one calculation replica sustains, which is what
-       sizing a workshop deployment needs — has no recorded answer.
+     - No workflow. It had no recorded measurement either until **2026-08-06**; it does now, and
+       the answer is below.
 
 None of this is an argument for gating all of it: a kind cluster with ingress-nginx and a 2.6 GB
 calculation image is a slow, fragile CI job, and a flaky gate is worse than an honest gap. It is
 an argument for knowing which green means which.
+
+* **One calculation replica sustains about one concurrent player** (*measured 2026-08-06*).
+  :file:`perf/calc-load.js` had never been run. Against the deployed backend, through the
+  Service, a round takes **12.9-28.2s** and rounds **do not overlap** — R/Plumber serves
+  single-threaded, so a second concurrent submission queues behind the first. At ``VUS=2`` the
+  median request was 31.5s, roughly two rounds deep, against a 15.5s minimum.
+
+  So a classroom of *N* students pressing *Next Level* together waits about *N* x 15s for the
+  last of them: twenty students is five minutes. Size ``replicas`` from that, not from a latency
+  target. This is the number :file:`deploy/k8s/README.md` needs and did not have.
+
+  **The script could not have told anyone this, because it could not pass.** Its request timeout
+  was 30s — shorter than one successful round — and its threshold ``p(95)<3000`` demanded 3s. The
+  first run reported **57% errors**, all of them the client hanging up on work the server went on
+  to finish. A load test whose own limits no run can satisfy measures its configuration and
+  nothing else. Timeout, p95 and error rate are env-overridable now and default to values a real
+  round can meet; at those defaults the same run is **0% errors, p95 35.4s**.
+
+  Both runs created GeoServer workspaces (one per iteration, by design) and both were cleaned up:
+  43 workspaces back to the 36 that were there before.
 
 * **Timing numbers move.** Lighthouse timings swing with machine load — 57 to 90 for
   identical code on one host. Only the byte budgets are stable; compare timings A/B in
