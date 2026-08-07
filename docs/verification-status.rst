@@ -1097,10 +1097,40 @@ A second shape, found 2026-08-07 — *the check was sound and could not run*
 
    **A path filter is an assertion about what can break a check**, and it is invisible in the
    check's own text. Reading `ci.yml`'s step told you nothing about the fact that it could not
-   see the file it was reading. Worth applying to the rest: ``manifests.yml`` validates
-   ``tools/R`` and ``deploy/**`` and is filtered to those, which matches; ``docs.yml`` builds
-   ``docs/**`` and is filtered to it, which matches. This one did not, and the mismatch had
-   been there since the check was written.
+   see the file it was reading.
+
+   **Two more of the same shape, in the same workflow — found by re-auditing rather than by
+   a failure** (*2026-08-07*). The first pass checked whether each *workflow's* filter matched
+   what it validated, and cleared ``manifests.yml`` and ``docs.yml`` on that basis. That was
+   the wrong granularity: a filter belongs to a workflow, but the claim belongs to a *step*, and
+   ``ci.yml`` holds two steps that read this very page —
+
+   .. code-block:: text
+
+      The documented test count is current   compares "385 unit tests" against the suite
+      The documented e2e count is current    compares "18 Playwright e2e" against the suite
+
+   — while being filtered to ``v2/**``. Both are live: changing the claim to 384 and re-running
+   the comparison by hand gives a mismatch. But neither could run on a documentation-only pull
+   request, so **any number could have been written into that line and merged green.** Both
+   directions matter and only one was covered: if the suite grows, ``v2/**`` fires and the claim
+   is checked; if the claim is edited, nothing fired at all.
+
+   The fix is the *opposite* of the doc-path one, and the difference is worth keeping straight.
+   That check needed no build, so it left ``ci.yml`` for an unfiltered workflow. These need the
+   suite's output, so the check cannot leave — the trigger comes to it instead, by adding
+   :file:`docs/verification-status.rst` to ``ci.yml``'s filter. It costs about two minutes, and
+   this page changes on most pull requests here, so in practice CI now runs on nearly all of
+   them. That is the price of the claims being checked against a run rather than against
+   nothing, and it is worth paying: a coverage number nobody re-derives is exactly the kind of
+   evidence this page exists to stop trusting.
+
+   The change was verified by simulating both filters against a list of paths — this page and
+   ``v2/**`` trigger CI, other documents still do not — and **not** by the pull request that
+   made it, which is worth recording because that was the first thing claimed and it was wrong.
+   That pull request also edited ``ci.yml``, which the *old* filter already matched, so CI would
+   have run on it either way. A change that carries its own trigger cannot demonstrate that
+   trigger. The first real demonstration is the next documentation-only change to this page.
 
    **Widened to all of** :file:`docs` **the same day**, once it was clear the alternative to
    rewriting 131 references was to let the documents say where their paths resolve from. Each
