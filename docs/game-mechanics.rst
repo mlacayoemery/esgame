@@ -2,6 +2,11 @@
 Game mechanics: pieces, counts, levels, and scoring
 ===================================================
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: v2/src/app/shared/models
+.. file-base: v2/src/assets
+
 This page documents, with reference-grade precision, how esgame represents a
 "piece" (a *production type* placed on a board field/zone), how the **number**
 of pieces is fixed and limited, where in the code those limits are enforced,

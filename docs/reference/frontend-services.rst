@@ -2,6 +2,10 @@
 Frontend Services Reference
 ============================
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: v2/src
+
 This page documents the Angular injectable services that drive the **esgame**
 front-end (the Angular v2 app under :file:`esgame/v2`). All five services live
 in :file:`esgame/v2/src/app/services/` and are registered with

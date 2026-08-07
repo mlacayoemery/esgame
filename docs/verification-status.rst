@@ -1102,12 +1102,53 @@ A second shape, found 2026-08-07 — *the check was sound and could not run*
    ``docs/**`` and is filtered to it, which matches. This one did not, and the mismatch had
    been there since the check was written.
 
-   Scope stayed narrow on purpose. The check reads only
-   :file:`docs/verification-status.rst`, whose convention is repo-root paths. The other 15 rst
-   files use ``:file:`` for paths relative to whatever the reader is looking at — 131 of the 210
-   distinct references across :file:`docs` do not resolve from the root — so widening it would
-   mean rewriting how the documentation reads, which is a decision about style rather than a
-   defect to fix.
+   **Widened to all of** :file:`docs` **the same day**, once it was clear the alternative to
+   rewriting 131 references was to let the documents say where their paths resolve from. Each
+   declares its own bases as an RST comment, which renders as nothing and sits next to the prose
+   that establishes it::
+
+      .. file-base: v2/src/app
+
+   Three conventions are understood: repo-root paths (what this page uses), the
+   parent-directory view several documents are written in (a leading ``esgame/`` is stripped),
+   and section-local paths resolved against the declared bases. Coverage went from **40 of 299
+   references in one file** to **299 in sixteen**, needing 33 declarations. Paths into places
+   are counted and skipped — they cannot be checked from here, which is a real gap and is why
+   they are reported rather than ignored.
+
+   Widening it found four things, none of which any check had been in a position to notice:
+
+   * :file:`examples/esgame-dynamic/geoserver/seed.py` was documented as ``seed.sh``. It *was*
+     ``seed.sh`` — renamed in ``7f29c7f`` — so :doc:`reference/calculator` had been pointing at
+     a file that stopped existing.
+   * **Four references named build output**: ``v2/dist/tradeoff-v2`` and friends, which exist on
+     any machine that has run a build and in no clone. They are now literals, not paths.
+   * ``docs/ARCHITECTURE.md``, cited as the page this one supersedes, was deleted when it was
+     superseded.
+   * Five places files were written bare (``pvc.yaml``, ``patch-config.yaml``) in a section
+     otherwise using the ``places/`` prefix, and one — ``deploy/compose/.env.places``
+     — does not exist in places either, because it is what you create by copying the
+     ``.example``.
+
+   **Resolution goes through** ``git ls-files``\ **, not the filesystem**, and that is the part
+   worth copying elsewhere. The first version asked whether a path existed on disk, which passed
+   here and would have failed in CI: ``v2/dist`` is gitignored, so a developer who has built
+   once gets a different answer from a clean checkout — and it hid all four build-output
+   references on the first run. What the documentation may point at is what a reader who clones
+   the repository will find, and that is exactly what git tracks. There is no fallback to the
+   filesystem when git is unavailable, because that fallback fails in the passing direction.
+
+   Confirmed able to fail, by mutation: a typo in a document that had never been checked, a
+   removed ``.. file-base:`` declaration, a base naming a non-directory, a reference to
+   untracked build output, a reference to a renamed file, and a tracked source file removed from
+   the index — each exits 1 with an annotation. Two vacuity guards were checked the same way: a
+   missing docs directory and a run outside a git checkout both fail rather than reporting
+   success on nothing.
+
+   One of those mutation tests was itself vacuous on the first attempt — it rewrote a string
+   that :file:`docs/index.rst` does not contain, so it changed nothing and "passed". The runner
+   now diffs the file and prints whether the mutation actually applied, which is the same lesson
+   as the rest of this section applied to the tests rather than to the code.
 
 
 Not verified

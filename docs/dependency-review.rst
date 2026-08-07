@@ -1,6 +1,13 @@
 Dependency review
 =================
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: v2
+.. file-base: v2/src
+.. file-base: v2/src/app
+.. file-base: .github/workflows
+
 A standing record of where esgame's dependencies sit relative to their newest
 releases, and — where something is held back — what is holding it and how to
 release it.

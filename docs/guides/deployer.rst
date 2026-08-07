@@ -2,6 +2,11 @@
 Deployer guide
 ==============
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: v2
+.. file-base: v2/src
+
 This guide explains how to **deploy** the **esgame** (Tradeoff /
 Ecosystem-Services) land-use allocation game to a running, public environment.
 It covers the three supported deployment paths, in increasing order of moving
@@ -132,8 +137,8 @@ The ``build`` job runs on ``ubuntu-latest`` and:
    it.
 #. archives the legacy v1 under ``/v1/`` by copying ``index.html``,
    ``calc.html``, ``wc.htm``, ``calc_files`` and ``images`` into
-   :file:`v2/dist/tradeoff-v2/v1/`;
-#. uploads :file:`v2/dist/tradeoff-v2` as the Pages artifact
+   ``v2/dist/tradeoff-v2/v1/``;
+#. uploads ``v2/dist/tradeoff-v2`` as the Pages artifact
    (``actions/upload-pages-artifact@v5``).
 
 The ``deploy`` job then publishes that artifact with
@@ -385,7 +390,7 @@ No image rebuild is needed either way.
 Path 3 — places (downstream overlay)
 ====================================
 
-The ``places`` deployment (a fork at :file:`places`) is the reference downstream
+The ``places`` deployment (a fork at ``places``) is the reference downstream
 deployment. It contains **no Angular source fork**: the whole app (nginx,
 entrypoint, runtime-config) comes from the upstream esgame image, and only the
 place-specific game data and map TIFFs are overlaid. This is the
@@ -460,7 +465,7 @@ Copy the example env file and bring the stack up:
    $ docker compose -p places --env-file deploy/compose/.env.places \
        -f deploy/compose/docker-compose.places.yml up -d --build
 
-The three tunable variables (from :file:`.env.places.example`) are:
+The three tunable variables (from :file:`places/deploy/compose/.env.places.example`) are:
 
 .. list-table::
    :header-rows: 1

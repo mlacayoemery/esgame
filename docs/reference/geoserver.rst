@@ -1,6 +1,11 @@
 GeoServer seeder and raster styling
 ===================================
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: examples/esgame-dynamic
+.. file-base: examples/esgame-dynamic/geoserver
+
 The **dynamic** (SVG) mode of esgame renders per-service *consequence rasters* that
 are served by `GeoServer <https://geoserver.org/>`_. The calculator returns a
 `WCS GetCoverage <https://www.ogc.org/standards/wcs/>`_ URL for each consequence
