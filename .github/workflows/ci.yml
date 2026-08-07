@@ -8,12 +8,21 @@ name: CI
 # close that hole — master gets exercised whether or not anyone touches v2/, and
 # breakage that arrives from outside the repo (a runner image change, a deprecated
 # action, a new advisory) surfaces on its own.
+#
+# docs/verification-status.rst is in the filter because two steps below READ IT: they compare
+# the unit and e2e counts it claims against what the suite actually ran. A filter of `v2/**`
+# alone meant those checks could not run on a change to their own input — a documentation-only
+# pull request could put any number in that line and merge green. Same shape as the doc-path
+# check moved out in #191, and the fix is the opposite one: that check needed no build, so it
+# left; these need the suite output, so the trigger comes to them. ~2 minutes, and that file
+# changes on most pull requests here, so in practice CI now runs on nearly all of them. That is
+# the cost of the claims being checked against a run rather than against nothing.
 on:
   pull_request:
-    paths: ['v2/**', '.github/workflows/ci.yml']
+    paths: ['v2/**', '.github/workflows/ci.yml', 'docs/verification-status.rst']
   push:
     branches: [master]
-    paths: ['v2/**', '.github/workflows/ci.yml']
+    paths: ['v2/**', '.github/workflows/ci.yml', 'docs/verification-status.rst']
   schedule:
     # Mondays 06:00 UTC.
     - cron: '0 6 * * 1'
