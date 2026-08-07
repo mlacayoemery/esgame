@@ -356,20 +356,22 @@ The published site was twelve commits behind master — *closed 2026-08-07*
    * :file:`.github/workflows/published.yml` fetches that JSON back off the live site daily
      and reports how many commits behind master it is, naming them. Scheduled only — the site
      legitimately lags a push, so as a required check it would fail after every merge and
-     teach people to click through it. Same reasoning as :file:`cluster.yml`.
+     teach people to click through it. Same reasoning as
+     :file:`.github/workflows/cluster.yml`.
    * :file:`.github/workflows/docs.yml` gates the producer on every pull request: the stamp
      must exist, must name a real sha rather than ``unknown``, must be on every page built,
      and must match ``build-info.json``. A freshness check downstream is worth nothing if the
      thing it reads can quietly stop being written.
 
    **One stamp covers the game as well as the documentation**, which is worth saying because
-   the check only ever fetches a docs URL. :file:`deploy.yml` builds the Angular app into
+   the check only ever fetches a docs URL. :file:`.github/workflows/deploy.yml` builds the
+   Angular app into
    ``v2/dist/tradeoff-v2`` and Sphinx into ``v2/dist/tradeoff-v2/docs``, then uploads *that
    whole directory* as one Pages artifact — so the app at ``/esgame/`` and the docs at
    ``/esgame/docs/`` are published atomically and cannot be at different commits. A stale
    ``build-info.json`` means the game is equally stale. (places has no Pages deploy and no
-   Sphinx docs — only :file:`.github/workflows/overlay.yml` — so there is nothing to mirror
-   there.)
+   Sphinx docs — only ``overlay.yml``, which is *its* workflow and not a path in this
+   repository — so there is nothing to mirror there.)
 
    Both halves were tested by mutation rather than by assertion — the trap in
    `The checks were audited for vacuity`_. The producer gate was run against six broken
@@ -1068,6 +1070,44 @@ specs guarded by a preceding length assertion.
 
 **The lesson is specific, not general:** *"assert X is not present"* is satisfied by *"the
 file is gone"*. Every absence-assertion needs a presence-assertion in front of it.
+
+A second shape, found 2026-08-07 — *the check was sound and could not run*
+   Every check above could run and might not fail. This one was the other way round: it was
+   correct, it had a presence guard, and **its workflow's path filter kept it away from the
+   change that breaks it**.
+
+   "Every file the verification doc points at must exist" lived in :file:`.github/workflows/ci.yml`,
+   which is filtered to ``paths: ['v2/**', ...]``. The file it validates is
+   :file:`docs/verification-status.rst`. So a documentation-only pull request — the single most
+   likely way to introduce a bad path — could not trigger it.
+
+   #189 did exactly that. It added three references that do not resolve: ``cluster.yml`` and
+   ``deploy.yml`` written bare instead of under ``.github/workflows/``, and
+   ``.github/workflows/overlay.yml``, which is a file in the **places** repository, not this
+   one. ``Docs`` passed, ``ci.yml`` never ran, and it merged. The failure then appeared on the
+   next unrelated pull request that happened to touch ``v2/`` — attached to a change with
+   nothing to do with it, which is the most expensive place for it to show up.
+
+   The check now lives in :file:`.github/workflows/doc-paths.yml` with **no path filter**,
+   because it can be broken from two directions and a filter only ever faces one: editing the
+   document to name a missing path needs ``docs/**``, while renaming a file the document
+   already names needs the whole tree. It is a checkout and a few milliseconds of
+   :file:`docs/_checks/check-file-paths.py`, so there is nothing to trade against running it
+   everywhere.
+
+   **A path filter is an assertion about what can break a check**, and it is invisible in the
+   check's own text. Reading `ci.yml`'s step told you nothing about the fact that it could not
+   see the file it was reading. Worth applying to the rest: ``manifests.yml`` validates
+   ``tools/R`` and ``deploy/**`` and is filtered to those, which matches; ``docs.yml`` builds
+   ``docs/**`` and is filtered to it, which matches. This one did not, and the mismatch had
+   been there since the check was written.
+
+   Scope stayed narrow on purpose. The check reads only
+   :file:`docs/verification-status.rst`, whose convention is repo-root paths. The other 15 rst
+   files use ``:file:`` for paths relative to whatever the reader is looking at — 131 of the 210
+   distinct references across :file:`docs` do not resolve from the root — so widening it would
+   mean rewriting how the documentation reads, which is a decision about style rather than a
+   defect to fix.
 
 
 Not verified

@@ -1,0 +1,42 @@
+name: Doc paths resolve
+
+# docs/verification-status.rst names files as evidence, so a path that stops existing makes the
+# document lie while every other check stays green.
+#
+# That check already existed — inside ci.yml. But ci.yml is path-filtered to `v2/**`, and the
+# file it validates is under `docs/`. So the check could not run on the change most likely to
+# break it. #189 proved it: a docs-only pull request added three bad references
+# (`cluster.yml` and `deploy.yml` bare rather than under .github/workflows/, and
+# `.github/workflows/overlay.yml`, which is a file in the *places* repository), ci.yml never
+# ran, Docs passed, and it merged. The failure surfaced on the next unrelated pull request that
+# happened to touch v2/ — attached to a change that had nothing to do with it.
+#
+# NO PATH FILTER, deliberately, because the check can be broken from two directions and a
+# filter can only face one:
+#
+#   * edit docs/verification-status.rst to name a path that does not exist  -> needs docs/**
+#   * rename or delete a file the document already names                    -> needs everything
+#
+# It is a checkout and a few milliseconds of Python — there is nothing to trade off against
+# running it everywhere. That is also why it is not folded into docs.yml, which builds Sphinx
+# and would then have to run on every source change to cover the second direction.
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  paths:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        # Quoted: an unquoted step name containing ": " is a YAML mapping, not a string, and
+        # the whole file fails to parse. actionlint catches it; a plain `git push` does not.
+      - name: "Every :file: path in verification-status.rst must exist"
+        run: python3 docs/_checks/check-file-paths.py
