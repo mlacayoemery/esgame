@@ -1,0 +1,75 @@
+name: Published site is current (scheduled)
+
+# Does the documentation people actually read match master?
+#
+# On 2026-08-07 it did not, by twelve commits. Everything from #177 onwards was missing from
+# https://mlacayoemery.github.io/esgame/docs/ and nothing anywhere said so. deploy.yml's
+# `build` job had succeeded; its `deploy` job had failed with "The job was not acquired by
+# Runner of type hosted even after multiple attempts". So the artefact was built and never
+# published, and the site went on serving the previous build with a 200.
+#
+# Every other check in this repository asks a question about the repository. This one asks
+# about a REMOTE ARTEFACT — whether a deploy that reported failure hours ago actually left
+# the world in the state master describes. Nothing else can answer that, because the evidence
+# is not in the tree; it is on the far end of an HTTP request.
+#
+# SCHEDULED ONLY, and it must not become a PR gate. The site legitimately lags a push by the
+# length of a deploy, so as a required check it would fail for a minute or two after every
+# merge and teach people to re-run it — the reasoning set out at the top of cluster.yml. A
+# red scheduled run is a signal someone reads; a red required check is a thing people click
+# through. It is its own workflow rather than a skipped job inside docs.yml so that a pull
+# request never sees it at all: a skipped check is not a pass, and should not have to be
+# explained away on every unrelated PR.
+
+on:
+  schedule:
+    # Daily, unlike the weekly cluster job: a docs deploy runs on every push to master, so the
+    # window in which this can go wrong opens far more often than the cluster's does. 07:10 UTC
+    # is after Monday's other crons (06:00, 06:20, 06:40) so a Monday failure is not read
+    # alongside three unrelated ones.
+    - cron: '10 7 * * *'
+  workflow_dispatch:
+    inputs:
+      max_behind:
+        description: 'Commits the site may lag before this fails'
+        required: false
+        default: '0'
+
+permissions:
+  contents: read
+
+jobs:
+  freshness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The check counts commits between the published sha and master, so it needs the
+          # history. At the default depth of 1 the published commit is not in the clone and
+          # the check cannot tell "12 behind" from "a different repository" — it reports the
+          # latter, which is true but useless.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: The published site must be built from master
+        run: |
+          python3 docs/_checks/check-published.py \
+            --ref origin/master \
+            --max-behind "${{ github.event.inputs.max_behind || 0 }}"
+
+      - name: What to do when this fails
+        if: failure()
+        run: |
+          echo "The site at https://mlacayoemery.github.io/esgame/docs/ is not built from master."
+          echo
+          echo "Almost always this means the last 'Deploy v2 to GitHub Pages' run did not finish."
+          echo "Check its most recent run and re-dispatch it:"
+          echo "  gh run list --workflow=deploy.yml --limit 5"
+          echo "  gh workflow run deploy.yml --ref master"
+          echo
+          echo "A 404 on build-info.json means the live site predates that file (added 2026-08-07),"
+          echo "which is itself a deploy that never happened."

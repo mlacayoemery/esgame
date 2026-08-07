@@ -61,3 +61,61 @@ jobs:
             echo "::error::sphinx produced ${n} pages; it is not building the docs it should be"
             exit 1
           fi
+
+      - name: The build must say which commit it came from
+        run: |
+          # docs/conf.py stamps build-info.json and a footer line into every build so that
+          # .github/workflows/published.yml can fetch them back off the live site and say
+          # whether it is current. That check is only as good as the stamp: if conf.py stops
+          # emitting it, or emits "unknown", the freshness check downstream starts reporting
+          # "cannot establish" for every run and the twelve-commits-behind condition it exists
+          # to catch becomes invisible again.
+          #
+          # So this gates the producer. It is the cheap, deterministic half of the pair — no
+          # network, no schedule — and it is here rather than in published.yml because this is
+          # where a change to conf.py is actually being reviewed.
+          set -euo pipefail
+          info=/tmp/docs-html/build-info.json
+          test -f "$info" || { echo "::error file=docs/conf.py::no build-info.json; the published site would have no identity"; exit 1; }
+          # The trailing echo is not cosmetic. A ::error:: annotation is only recognised at the
+          # start of a line, so if build-info.json ever lands without a final newline the next
+          # message is glued to the JSON and GitHub renders it as ordinary log text — the step
+          # still fails, but with no annotation pointing at the file. conf.py writes the newline;
+          # this does not depend on it having done so.
+          cat "$info"; echo
+
+          commit=$(python3 -c "import json;print(json.load(open('$info')).get('commit',''))")
+          # "unknown" is what conf.py writes when it cannot identify the build, and an empty
+          # string is what a truncated write leaves. Both must fail here: a stamp that names no
+          # commit is indistinguishable, downstream, from a site that was never redeployed.
+          if [ -z "$commit" ] || [ "$commit" = "unknown" ]; then
+            echo "::error file=docs/conf.py::build-info.json does not name a commit (got '${commit}')"
+            exit 1
+          fi
+          case "$commit" in
+            [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*) ;;
+            *) echo "::error::build-info.json commit '${commit}' is not a sha"; exit 1 ;;
+          esac
+          echo "build-info.json names ${commit}"
+
+          # And the human-readable half, on every page rather than on one: the footer is what a
+          # reader looking at a suspicious page has. Sphinx emits it from html_last_updated_fmt,
+          # which is easy to lose in a conf.py edit without any warning being raised.
+          pages=$(find /tmp/docs-html -name '*.html' | wc -l)
+          stamped=$(grep -rl 'Last updated on' /tmp/docs-html --include='*.html' | wc -l)
+          echo "${stamped}/${pages} pages carry the footer stamp"
+          if [ "${stamped}" -ne "${pages}" ]; then
+            echo "::error file=docs/conf.py::${pages} pages built but only ${stamped} carry a build stamp"
+            exit 1
+          fi
+
+          # The stamp must be the UTC instant the JSON records, not a localised rendering of it.
+          # html_last_updated_fmt goes through Sphinx's date formatter, which substitutes %
+          # codes against LOCAL time; the first version of this printed "06:01:31 UTC" for a
+          # 04:01:33Z build. A wrong timestamp is worse than none, and nothing warns about it.
+          built_at=$(python3 -c "import json;print(json.load(open('$info')).get('built_at',''))")
+          if ! grep -q "Last updated on ${built_at}" /tmp/docs-html/index.html; then
+            echo "::error file=docs/conf.py::the footer stamp does not match build-info.json's built_at (${built_at}); check html_last_updated_fmt is not being re-formatted against local time"
+            exit 1
+          fi
+          echo "footer and build-info.json agree on ${built_at}"
