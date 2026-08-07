@@ -408,8 +408,9 @@ Level progression and carry-over
 
 A :class:`Level` (:file:`esgame/v2/src/app/shared/models/level.ts`) holds a
 ``levelNumber``, its ``gameBoards``, the ``selectedFields`` snapshot, an
-``isReadOnly`` flag, ``showConsequenceMaps``, computed ``scores``, and an
-optional ``scoreImage``. Levels are kept in the private ``levels: Level[]``
+``isReadOnly`` flag, ``showConsequenceMaps``, computed ``scores``, and
+``indicatorScores`` (the calculator's raw 0-100 numbers, which the spider chart is drawn
+from). Levels are kept in the private ``levels: Level[]``
 array of :class:`GameService`.
 
 ``goToNextLevel``
@@ -446,8 +447,9 @@ extended:
 * **SVG:** the previous boards minus old consequence maps are kept; a fresh
   background and the consequence boards returned by the calculator
   (``calculationResult.results``) are loaded, the level ``scores`` are built from
-  the calculator results, and an optional summary image
-  (result with ``id == "-1"``) becomes ``level.scoreImage``.
+  the calculator results, and the raw indicator scores become
+  ``level.indicatorScores`` for the spider chart. A result with ``id == "-1"`` — an older
+  calculator's rendered plot — is excluded.
 
 Whether a player may keep generating levels is governed by
 ``Settings.infiniteLevels`` (``true`` for the SVG example, ``false`` for the
@@ -544,8 +546,8 @@ Key points:
   ``Result { name, id, score, url }``. In ``prepareNextLevel`` each result's
   ``url`` becomes a consequence map's ``urlToData``, and the level ``scores`` are
   built as ``[{ id: "all", score: previousScore }, ...results (id != "-1")
-  mapped to score: -(score*100)]``; the result with ``id == "-1"`` supplies the
-  summary ``scoreImage``.
+  mapped to score: -(score*100)]``. ``level.indicatorScores`` keeps the same results
+  unscaled, for the spider chart; ``id == "-1"`` is excluded from both.
 
 In other words, in dynamic mode the **suitability (income) score is computed
 client-side and sent up**, while the **consequence penalties and the new

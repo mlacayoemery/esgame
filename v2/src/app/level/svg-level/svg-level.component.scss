@@ -31,13 +31,17 @@
 			top: 0px;
 		}
 
-		img {
+		// Was `img`, for the PNG the calculator used to render. tro-spider-chart draws the same
+		// thing as inline SVG; the framing stays so the panel looks unchanged.
+		tro-spider-chart {
+			display: block;
 			width: 100%;
 			background: white;
 			margin: 0;
 			padding: 0;
 			max-width: 100%;
 			border: 2px solid lightgray;
+			box-sizing: border-box;
 		}
 
 		button {

@@ -48,7 +48,9 @@ got=$(python3 - "${body}" <<'PY'
 import json, sys
 d = json.load(open(sys.argv[1]))
 rows = d.get("results", [])
-# id -1 is the spider plot, which carries no score. Everything else is an indicator.
+# id -1 was the rendered spider plot, which carried no score. calculator.r no longer returns it —
+# v2 draws the chart from the scores — but the filter stays, because this script is also pointed
+# at deployments running an older calculation image.
 scores = {r["name"].split("_")[0]: r.get("score") for r in rows if r.get("id") != -1}
 if not scores:
     print("NO_SCORES"); raise SystemExit

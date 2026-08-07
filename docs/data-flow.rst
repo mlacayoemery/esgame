@@ -369,12 +369,15 @@ The frontend casts the response to ``CalculationResult``:
      - Meaning
    * - ``results``
      - ``Result[]``
-     - One entry per consequence map (plus optionally one ``id == "-1"`` image entry).
+     - One entry per consequence map. Older calculators also sent one ``id == "-1"`` image
+       entry; it is filtered out rather than drawn.
    * - ``results[].id``
      - ``string``
      - Matches a ``Consequence`` map ``id`` from the game data. The special id
-       ``"-1"`` is the score/summary **image** (e.g. the R spider plot), not a map; the
-       id ``"-1"`` is also explicitly filtered out of the score list.
+       ``"-1"`` was a rendered summary **image** — the R spider plot — and is no longer sent:
+       :file:`tools/R/calculator.r` stopped rendering it on 2026-08-07 and the browser draws
+       the chart from the scores instead. It is still filtered out on the way in, because a
+       frontend can be deployed against a calculation image that has not been rebuilt.
    * - ``results[].name``
      - ``string``
      - Coverage / human name (informational).

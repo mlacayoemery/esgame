@@ -560,6 +560,36 @@ LoadingIndicatorComponent
 Spinner shown while the calculator is busy. ``@HostBinding('class.show') show`` is set true
 whenever ``loadingIndicatorObs`` emits a non-empty list (the service tracks in-flight requests).
 
+SpiderChartComponent
+--------------------
+
+:File: :file:`spider-chart/spider-chart.component.ts`
+:Selector: ``tro-spider-chart``
+:Change detection: ``OnPush``
+
+The five indicator scores drawn as a radar chart, in inline SVG.
+
+**Input:** ``entries: SpiderChartEntry[]`` — ``{ id, score }``, the calculator's own 0-100
+numbers, taken from ``level.indicatorScores``. Empty, ``null`` or ``undefined`` renders nothing
+rather than an empty frame.
+
+Added *2026-08-07*, replacing a PNG: ``calculator.r`` rendered a ggplot to a 394×394 raster,
+wrote it to the calculation pod's local ``/app/data``, and served it back through plumber's
+``@assets`` mount with a URL built from ``req$HTTP_HOST``. That is what stopped the calculation
+deployment being scaled — with more than one replica a plot GET can reach a pod that never wrote
+the file. The chart is a pure function of five numbers the response already carries, so nothing
+needs storing or serving.
+
+Axis labels come from ``map_name_<id>`` via ``TranslateService.instant``, the same keys
+:file:`shared/models/settings.ts` registers from ``data.json`` — so they are **translated**,
+where the PNG's were baked in English. The ``<svg>`` carries ``role="img"`` and an
+``aria-label`` naming every indicator and score.
+
+**The viewBox is wider than tall** (``320 × 230``) and sized by the labels, not the circle. A
+square box was tried first and clipped "Water availability" and "Recreational value"; every unit
+test passed anyway, because the geometry was correct and only the text fell outside. It was
+caught by looking at a screenshot, and there is now an assertion on the horizontal room.
+
 ProductionTypeButtonComponent
 -----------------------------
 
@@ -722,9 +752,12 @@ One round of play.
    * - ``scores``
      - ``ScoreEntry[]``
      - Per-map scores (``ScoreEntry = { id:string, score:number }``).
-   * - ``scoreImage``
-     - ``string``
-     - Optional rendered result image (dynamic mode).
+   * - ``indicatorScores``
+     - ``SpiderChartEntry[]``
+     - The five indicator scores as the calculator returned them, 0-100, for
+       ``SpiderChartComponent``. Distinct from ``scores`` above, which is the game's point
+       system. Replaced ``scoreImage: string`` (a URL to a PNG the calculator rendered and
+       served from its own pod) on 2026-08-07.
 
 Field
 -----
