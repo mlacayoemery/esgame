@@ -83,7 +83,7 @@ COPY . .
 #
 # Two things make this container the tractable one of the three. It listens on 8000, above the
 # privileged range, so nothing needs CAP_NET_BIND_SERVICE to bind. And the only path it writes
-# is /app/data — calculator.r does setwd() there and writes seven rasters plus the spider plot —
+# is /app/data — calculator.r does setwd() there and writes its rasters —
 # which is an emptyDir in the base and a PVC in the places overlay, so it is a mount, not image
 # content: the directory has to exist and be owned here, and the volume inherits that ownership
 # via fsGroup.
