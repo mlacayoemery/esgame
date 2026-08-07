@@ -127,6 +127,35 @@ changed APIs), so they are verified by running Lighthouse rather than assumed
 safe. **Drop them once ``@lhci/cli`` ships a refreshed tree** — re-check with
 ``npm audit`` after removing the block.
 
+``js-yaml`` needed no override — *2026-08-07*
+   GHSA-5p4m-2wfm-xmqj (quadratic CPU in ``!!omap`` resolution, CVSS 7.5) landed against
+   ``js-yaml@3.15.0`` in the same ``@lhci/cli`` tree, and its title —
+   "CVE-2026-59870 fix **not backported**" — reads like the 3.x line is unfixable and an
+   override to 4.x is the only way out. It is not: the advisory patches **both** lines,
+   ``4.3.1`` and ``3.15.1``, and ``@lhci/utils`` already declares ``js-yaml: ^3.13.1``,
+   which reaches ``3.15.1`` on its own. A lockfile bump of three lines closed it.
+
+   That is the second time here that a transitive looked blocked and was not. **Read the
+   advisory's own patched-version list before believing the summary**, and check it against
+   the declared range::
+
+      gh api /advisories/GHSA-xxxx --jq '.vulnerabilities[]
+        | "\(.vulnerable_version_range) -> \(.first_patched_version)"'
+
+   **It was also not reachable here**, which is worth recording so the next person does not
+   over-value the fix. ``js-yaml`` has one call site in the tree —
+   ``@lhci/utils/src/lighthouserc.js:84``, ``yaml.safeLoad(contents)`` — and it is gated on
+   the config path matching ``/\.ya?ml$/``. This repository passes
+   ``--config=lighthouserc.json``, so parsing falls through to ``JSON.parse`` and the
+   vulnerable code never runs. Dev-only, unreachable, and free to fix: taken as hygiene, not
+   as an exploit.
+
+   **No CI job would have caught it.** The audit in :file:`ci.yml` is ``--omit=dev`` *and*
+   scheduled-only — deliberately, so a new advisory against a shipped dependency does not
+   block an unrelated PR. A dev-tree advisory therefore surfaces only through Dependabot.
+   This case argues for leaving that as it is rather than widening the gate: an unreachable
+   finding in a dev tool is exactly what should not stop a merge.
+
 
 Reproducibility gaps
 --------------------
