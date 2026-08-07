@@ -75,32 +75,11 @@ jobs:
           fi
           echo "documented count matches the suite"
 
-      - name: Every file the verification doc points at must exist
-        run: |
-          # Same failure mode as the test count, different shape: verification-status.rst names
-          # ~16 files as evidence, and a rename leaves the doc pointing at nothing while every
-          # other check stays green. Nothing re-derived these, so this does.
-          cd "${GITHUB_WORKSPACE}"
-          paths=$(grep -oE ':file:`[^`]+`' docs/verification-status.rst \
-                  | sed -E 's/^:file:`//; s/`$//' | sort -u)
-          # Presence first: an empty list would validate nothing and report success.
-          n=$(printf '%s\n' "$paths" | grep -c . || true)
-          echo "$n paths referenced"
-          if [ "$n" -lt 5 ]; then
-            echo "::error file=docs/verification-status.rst::found only $n :file: references; this check is not looking at the right thing"
-            exit 1
-          fi
-          bad=0
-          for p in $paths; do
-            # Absolute paths are system files being described (/etc/hosts), not repo paths.
-            case "$p" in /*) continue ;; esac
-            if [ ! -e "$p" ]; then
-              echo "::error file=docs/verification-status.rst::references $p, which does not exist"
-              bad=1
-            fi
-          done
-          [ "$bad" = 0 ] && echo "every referenced path exists"
-          exit $bad
+      # "Every file the verification doc points at must exist" used to live here. It has moved to
+      # .github/workflows/doc-paths.yml, unchanged in substance, because this workflow is
+      # path-filtered to `v2/**` and the file it validates is under `docs/` — so it could not run
+      # on the change most likely to break it, and #189 broke it exactly that way. The new
+      # workflow has no path filter, which is what the check actually needs.
 
       - name: E2E (Playwright)
         run: |
