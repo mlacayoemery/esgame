@@ -15,16 +15,25 @@ import { test, expect } from '@playwright/test';
 
 const CALC_URL = '/fake-calc';
 
-// ids 11/22/33/44/55 are the dynamic game's Consequence maps; -1 is the spider plot.
+// ids 11/22/33/44/55 are the dynamic game's Consequence maps.
+//
+// The -1 entry is a spider plot the calculator USED TO render and serve from its own pod. It is
+// kept here on purpose: tools/R/calculator.r stopped sending it on 2026-08-07 and the browser
+// draws the chart itself, but a frontend can be deployed against a calculation image that has
+// not been rebuilt, so "-1" must go on being filtered out rather than drawn as a sixth axis.
+//
+// Scores are the 0-100 integers the R calculator returns (these are the golden allocation's,
+// nudged per round so two rounds differ), not fractions — the chart is drawn against a 0-100
+// axis, so a fixture of 0.11 would have rendered five dots at the centre and asserted nothing.
 const calcResponse = (round: number) => ({
 	results: [
 		// Real GeoTIFFs that exist in the build. data.json's own Consequence_*_Clip.tif do NOT
 		// exist in this repository — see the note at the bottom of this file.
-		{ name: `HH_${round}.tif`, id: '11', score: 0.11 * round, url: `/assets/images/esgame_img_ag_carbon.tif?round=${round}` },
-		{ name: `NP_${round}.tif`, id: '22', score: 0.22 * round, url: `/assets/images/esgame_img_ag_habitat.tif?round=${round}` },
-		{ name: `WE_${round}.tif`, id: '33', score: 0.33 * round, url: `/assets/images/esgame_img_ag_hunt.tif?round=${round}` },
-		{ name: `WA_${round}.tif`, id: '44', score: 0.44 * round, url: `/assets/images/esgame_img_ag_water.tif?round=${round}` },
-		{ name: `HC_${round}.tif`, id: '55', score: 0.55 * round, url: `/assets/images/esgame_img_ranch_carbon.tif?round=${round}` },
+		{ name: `HH_${round}.tif`, id: '11', score: 65 + round, url: `/assets/images/esgame_img_ag_carbon.tif?round=${round}` },
+		{ name: `NP_${round}.tif`, id: '22', score: 60 + round, url: `/assets/images/esgame_img_ag_habitat.tif?round=${round}` },
+		{ name: `WE_${round}.tif`, id: '33', score: 72 + round, url: `/assets/images/esgame_img_ag_hunt.tif?round=${round}` },
+		{ name: `WA_${round}.tif`, id: '44', score: 66 + round, url: `/assets/images/esgame_img_ag_water.tif?round=${round}` },
+		{ name: `HC_${round}.tif`, id: '55', score: 68 + round, url: `/assets/images/esgame_img_ranch_carbon.tif?round=${round}` },
 		{ name: `Spider_${round}.png`, id: '-1', score: 0, url: `/assets/images/agropark.png?round=${round}` }
 	]
 });
@@ -144,8 +153,16 @@ test.describe('dynamic game round trip', () => {
 		await placeFields(page, 12);
 		await clickPastHelp(page, page.locator('button.btn-next'));
 
-		// The response is consumed: the spider plot only renders when a result carried id -1.
-		await expect(page.locator('.expandable img')).toBeVisible({ timeout: 60_000 });
+		// The response is consumed: the chart only renders once a round has been scored.
+		const chart = page.locator('tro-spider-chart svg');
+		await expect(chart).toBeVisible({ timeout: 60_000 });
+
+		// Drawn from the scores, in a real browser — not a PNG fetched from the calculator.
+		// Five axes, and the id -1 result must NOT have become a sixth.
+		await expect(page.locator('tro-spider-chart .spider-chart__dot')).toHaveCount(5);
+		await expect(page.locator('.expandable img')).toHaveCount(0);
+		// The numbers on the chart are the ones the calculator returned.
+		await expect(chart).toHaveAttribute('aria-label', /66 of 100/);
 
 		// The payload is the shape the R calculator parses into a reclassify matrix.
 		expect(posted).toHaveLength(1);
@@ -241,13 +258,17 @@ test.describe('dynamic game round trip', () => {
 
 		await placeFields(page, 12);
 		await clickPastHelp(page, page.locator('button.btn-next'));
-		await expect(page.locator('.expandable img')).toBeVisible({ timeout: 60_000 });
+		await expect(page.locator('tro-spider-chart svg')).toBeVisible({ timeout: 60_000 });
 
 		await placeFields(page, 8, 1);
 		await clickPastHelp(page, page.locator('button.btn-next'));
-		// The plot src carries the round, so waiting on it proves round 2 was consumed rather
-		// than the round-1 image simply still being on screen.
-		await expect(page.locator('.expandable img')).toHaveAttribute('src', /round=2/, { timeout: 60_000 });
+		// This used to wait on the plot's `src`, which carried ?round=N. There is no src now, so
+		// it waits on a SCORE only round 2 produces — id 33 is 72+round, so 74 appears in round 2
+		// and in no round-1 value (66/61/73/67/69). That proves round 2's numbers were consumed,
+		// which the URL never did: a changed query string only proved a different file was asked
+		// for.
+		await expect(page.locator('tro-spider-chart svg'))
+			.toHaveAttribute('aria-label', /74 of 100/, { timeout: 60_000 });
 
 		expect(posted).toHaveLength(2);
 		expect(posted[1].round).not.toBe(posted[0].round);
@@ -289,7 +310,7 @@ test.describe('dynamic game round trip', () => {
 
 		await placeFields(page, 12);
 		await clickPastHelp(page, page.locator('button.btn-next'));
-		await expect(page.locator('.expandable img')).toBeVisible({ timeout: 60_000 });
+		await expect(page.locator('tro-spider-chart svg')).toBeVisible({ timeout: 60_000 });
 
 		// Five indicators plus the running total.
 		// The static score board renders one table row per indicator plus the header total.

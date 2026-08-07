@@ -26,6 +26,7 @@ import { LoadingIndicatorComponent } from './loading-indicator/loading-indicator
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { LevelIndicatorComponent } from './level-indicator/level-indicator.component';
 import { HomeComponent } from './home/home.component';
+import { SpiderChartComponent } from './spider-chart/spider-chart.component';
 
 @Injectable()
 export class MyMissingTranslationHandler implements MissingTranslationHandler {
@@ -52,6 +53,7 @@ export class MyMissingTranslationHandler implements MissingTranslationHandler {
 		LoadingIndicatorComponent,
 		LevelIndicatorComponent,
 		HomeComponent,
+		SpiderChartComponent,
 	],
 	imports: [
 		BrowserModule,

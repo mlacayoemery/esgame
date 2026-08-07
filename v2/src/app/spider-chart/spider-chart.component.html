@@ -1,0 +1,40 @@
+<!--
+  role="img" with a label, because the shape is the meaning: a screen reader gets the same five
+  numbers a sighted player reads off the axes. The PNG this replaced had no alt text at all.
+-->
+<svg *ngIf="!isEmpty"
+	 class="spider-chart"
+	 [attr.viewBox]="'0 0 ' + viewWidth + ' ' + viewHeight"
+	 role="img"
+	 [attr.aria-label]="summary"
+	 preserveAspectRatio="xMidYMid meet">
+
+	<!-- Grid rings. -->
+	<polygon *ngFor="let r of rings"
+			 class="spider-chart__ring"
+			 [attr.points]="ringPoints(r)" />
+
+	<!-- One spoke per indicator. -->
+	<line *ngFor="let entry of entries; index as i; trackBy: trackById"
+		  class="spider-chart__spoke"
+		  [attr.x1]="cx" [attr.y1]="cy"
+		  [attr.x2]="spoke(i).x" [attr.y2]="spoke(i).y" />
+
+	<!-- The scores themselves. -->
+	<polygon class="spider-chart__area" [attr.points]="scorePoints" />
+
+	<circle *ngFor="let entry of entries; index as i; trackBy: trackById"
+			class="spider-chart__dot"
+			[attr.cx]="dot(i).x" [attr.cy]="dot(i).y" r="2.5" />
+
+	<!-- Labels sit outside the outer ring. aria-hidden because `summary` already says all of it. -->
+	<text *ngFor="let entry of entries; index as i; trackBy: trackById"
+		  class="spider-chart__label"
+		  [attr.x]="labelAt(i).x" [attr.y]="labelAt(i).y"
+		  [attr.text-anchor]="labelAnchor(i)"
+		  aria-hidden="true">
+		<tspan>{{ label(i) }}</tspan>
+		<tspan class="spider-chart__label-score"
+			   [attr.x]="labelAt(i).x" dy="1.1em">{{ displayScore(i) }}</tspan>
+	</text>
+</svg>

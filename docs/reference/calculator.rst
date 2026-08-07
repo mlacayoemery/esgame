@@ -97,8 +97,9 @@ A JSON object ``{"results": [...]}``. Each element:
        example.
    * - ``url``
      - string
-     - GeoServer WCS ``GetCoverage`` URL (or, for the spider plot in the R
-       engines, an ``/images/`` static-asset URL).
+     - GeoServer WCS ``GetCoverage`` URL. (places' ``calculation.r`` still returns an
+       ``/images/`` static-asset URL for its spider plot; esgame's ``calculator.r`` stopped
+       rendering one on 2026-08-07 — see below.)
 
 
 FastAPI example (``app.py``)
@@ -365,10 +366,6 @@ The two engines compute **different services and ids**.
      - recreational value
      - 55
      - raster min–max ×100; score against ``[0, 32.2197]``
-   * - ``Spider_plot``
-     - spider plot PNG
-     - -1
-     - see below
 
 In ``calculator.r`` the "model" is a single shared air-concentration surface
 ``airconctot = airconc10 + airconc20 + airconc30 + airconc40 + airconc50`` (per
@@ -446,18 +443,25 @@ The upload list order is ``list(hh_info, wa_info, hc_info, np_info, rv_info, plo
 Spider plot
 ~~~~~~~~~~~
 
-Both engines render a polar ``ggplot`` bar chart of the per-service scores
-against a background max of 100 and save it as
-``Spider_plot_Game_<game_id>_Round_<round_id>.png`` (transparent background,
-5×5 cm — ``res=200`` in ``calculator.r``, ``res=900`` in ``calculation.r``).
-Labels are drawn with ``grid.text``. The plot is recorded as
-``plot_info <- list('name' = plot_name, 'id' = -1)`` and, because its ``id`` is
-``-1``, is **not** uploaded to GeoServer; instead its ``url`` is built as a
-static asset:
+**esgame's** :file:`tools/R/calculator.r` no longer renders one (*2026-08-07*). The chart is
+drawn in the browser by ``SpiderChartComponent`` from the five scores the response already
+carries, so there is no PNG, no ``@assets`` mount, and no sixth ``id == -1`` result. See
+:doc:`../verification-status` for why the pod-local file had to go — it is what stopped the
+calculation deployment being scaled.
+
+**places'** ``calculation.r`` still does. It renders a polar ``ggplot`` bar chart of the
+per-service scores against a background max of 100 and saves it as
+``Spider_plot_Game_<game_id>_Round_<round_id>.png`` (transparent background, 5×5 cm,
+``res=900``). Labels are drawn with ``grid.text``. The plot is recorded as
+``plot_info <- list('name' = plot_name, 'id' = -1)`` and, because its ``id`` is ``-1``, is
+**not** uploaded to GeoServer; instead its ``url`` is built as a static asset:
 
 .. code-block:: r
 
    paste0(req$rook.url_scheme, "://", req$HTTP_HOST, "/images/", name)
+
+which names whatever host the request happened to arrive on — the same defect the coverage
+URLs had before ``GEOSERVER_PUBLIC_URL`` split them.
 
 GeoServer upload (side effects)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -506,8 +510,8 @@ For every raster entry (``id != -1``), with ``short_name`` = file name minus the
   and ``format=image/tiff``.
 
 * **Return value:** ``list(results = calculated_rasters)`` — the list of
-  ``{name, id, score, url}`` entries (one per service plus the spider plot),
-  serialised as unboxed JSON.
+  ``{name, id, score, url}`` entries — one per service, plus the spider plot in
+  ``calculation.r`` only — serialised as unboxed JSON.
 
 **Filesystem side effects (per call):** writes one ``.tif`` per service (plus
 ``LU_*.tif`` in ``calculation.r``) and one ``Spider_plot_*.png`` into

@@ -49,7 +49,7 @@ Verified working
    * - Path
      - How it was checked
    * - Static / grid game
-     - 385 unit tests, 18 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
+     - 399 unit tests, 18 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
        SEO 100. The board renders 2,436 fields; the e2e suite asserts that rather than
        just asserting the component mounted.
    * - No external runtime deps
@@ -901,9 +901,28 @@ Adding calculation replicas breaks the spider plot — *measured 2026-08-06*
           is ReadWriteOnce, so it would mean adding an RWX provisioner as a dependency of running
           the game.
 
-   Nothing here changes yet: which of those is right is a decision about the response contract
-   and about what a deployment may depend on. The manifest still says ``replicas: 1``, and now
-   there is a reason written down for why raising it is not a one-line change.
+   **Closed 2026-08-07 by a fifth option none of those four is: stop producing the file.**
+
+   The plot is a pure function of five numbers the response already carries, so there was never
+   anything that had to be stored or served. ``SpiderChartComponent`` draws it as inline SVG;
+   :file:`tools/R/calculator.r` no longer renders a PNG, no longer returns an ``id == -1``
+   result, and no longer declares ``#* @assets /app/data /images`` — so the calculator has
+   stopped publishing the contents of its own ``/app/data`` over HTTP at all.
+
+   The table above is worth keeping for what it shows about how the question was framed. Every
+   option in it takes "there is a file, and it must reach the browser" as given, and then argues
+   about transport — inline it, pin the browser to a pod, put it in GeoServer, or add an RWX
+   provisioner. **The cheapest of the four was still more machinery than deleting the file.**
+   Returning it inline was the one that came closest, and it would have left R rendering a
+   394×394 raster nobody needed.
+
+   What it also bought, none of which was the point: the chart scales with the panel instead of
+   being a fixed raster, its axis labels come from ``map_name_<id>`` and so are **translated**
+   where the PNG's were baked in English, and it carries an ``aria-label`` naming every
+   indicator and score where the PNG had no alt text.
+
+   ``replicas`` is still 1 in the manifest, because nothing has re-measured the round throughput
+   since; what changed is that raising it no longer serves 404s for a player's own chart.
 
 .. _why-the-scores-go-nan:
 
@@ -1159,7 +1178,7 @@ A second shape, found 2026-08-07 — *the check was sound and could not run*
 
    .. code-block:: text
 
-      The documented test count is current   compares "385 unit tests" against the suite
+      The documented test count is current   compares "399 unit tests" against the suite
       The documented e2e count is current    compares "18 Playwright e2e" against the suite
 
    — while being filtered to ``v2/**``. Both are live: changing the claim to 384 and re-running

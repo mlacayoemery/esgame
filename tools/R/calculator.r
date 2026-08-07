@@ -16,8 +16,13 @@ cors <- function(req, res) {
   }
 }
 
-#* @assets /app/data /images
-list()
+# `#* @assets /app/data /images` used to be here. It served the rendered spider plot, and nothing
+# else — every other output goes to GeoServer as a coverage. The plot is drawn in the browser now
+# (v2's SpiderChartComponent), so there is nothing left to serve, and dropping the mount means
+# the calculator no longer publishes the contents of its own /app/data over HTTP.
+#
+# ONE WAY TO REACH A THING, NOT TWO. Leaving the mount in place would have kept working at one
+# replica and rotted unseen, which is exactly how the pod-local plot survived this long.
 
 #* @post /esgame
 #* @serializer unboxedJSON
@@ -331,56 +336,26 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   hc_info['score']<-score_HC
   rv_info['score']<-score_RV
   
-  # scores matrix
-  scores_df<-as.data.frame(matrix(data=c("Human health", "Nutrient pollution", "Water availability", "Habitat cohesion", "Recreational value",
-                                            score_HH , score_NP, score_WA, score_HC ,  score_RV), nrow =5 , ncol=2, byrow = F)) 
-  colnames(scores_df)<-c("consequence","scores")
-  scores_df$scores<-as.numeric(scores_df$scores)
-  
-  #write.table(scores_df, file=paste0("Scores_Game_",game_id,"Round_",round_id,".txt"), row.names=F, col.names = T)
-  
-  #### Spider plot #####
-  scores_df$max_cons<-rep(100,length(scores_df$consequence))
-  scores_df$id<- seq(1,length(scores_df$consequence),1)
-  
-  p <-
-    ggplot(scores_df, aes(x=as.factor(id), y=max_cons))+        # Note that id is a factor. If x is numeric, there is some space between the first bar
-    geom_bar(aes(x=as.factor(id), y=max_cons),fill = "snow4", stat="identity", alpha=0.3) +
-    geom_bar(aes(x=as.factor(id), y=scores, fill=consequence), stat="identity", alpha=0.9) +
-    theme_minimal() +
-    theme(
-      legend.position = "none",
-      axis.text = element_blank(),
-      axis.title = element_blank(),
-      panel.grid = element_blank(),
-      # A margin has four sides. rep(1,5) supplies five; ggplot2 tolerated the extra
-      # silently until 4.x, which now errors with "The `plot.margin` theme element must
-      # be a <unit> vector of length 4" — losing the whole round at plot(p) below, after
-      # the model has already done all its work.
-      plot.margin = unit(rep(1,4), "cm") 
-    ) +
-    coord_polar()
-  
-  # Save your plot
- png(paste0("Spider_plot_","Game_",game_id,"_Round_",round_id,".png"), bg = 'transparent',  width = 5, height = 5, units = "cm", res = 200)
-  plot(p)
+  # The spider plot used to be rendered here: a ggplot with coord_polar, written to a 394x394
+  # PNG in the calculation pod's own /app/data, served back through the `@assets` mount that used
+  # to be at the top of this file, with a URL built from req$HTTP_HOST, and returned as a sixth
+  # result with id -1.
+  #
+  # It is drawn in the browser now, by v2's SpiderChartComponent, from these five scores. The
+  # chart is a pure function of them, so there was never anything to store.
+  #
+  # WHAT THAT FIXES. The file lived on whichever pod happened to serve the round. With more than
+  # one calculation replica a plot GET can land on a pod that never wrote it, so the player gets
+  # a 404 for a chart of their own round — which is why `replicas` could not be raised. That is
+  # documented under "adding calculation replicas breaks the spider plot".
+  #
+  # It also removes the req$HTTP_HOST URL, which was wrong for the same reason the coverage URLs
+  # were: it names whatever host the request happened to arrive on.
+  #
+  # ggplot2/grid are no longer used by this file. They stay in the Dockerfile: dropping them is a
+  # separate change with its own image rebuild to verify, and an unused package costs nothing at
+  # run time.
 
-  # Adding labels
-  grid.text(scores_df[1,1], x=0.77,  y=0.75, gp=gpar(col="black", fontsize=5, fontface="bold"))
-  grid.text(scores_df[2,1], x=0.92,  y=0.4, gp=gpar(col="black", fontsize=5, fontface="bold"))
-  grid.text(scores_df[3,1], x=0.5,  y=0.21, gp=gpar(col="black", fontsize=5, fontface="bold"))
-  grid.text(scores_df[4,1], x=0.1,  y=0.4, gp=gpar(col="black", fontsize=5, fontface="bold"))
-  grid.text(scores_df[5,1], x=0.21,  y=0.75, gp=gpar(col="black", fontsize=5, fontface="bold"))
-
-  dev.off()
-
-#}  
-  
-  #NEW CODE
-  plot_name <- paste0("Spider_plot_", "Game_", game_id, "_Round_", round_id, ".png")
-  plot_info <- list('name' = plot_name, 'id' = -1)
-  
-  
 #### Upload #####
   #connect to GeoServer
   ## Geoserver
@@ -432,13 +407,13 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   #register each raster into GeoServer
   #https://cran.r-project.org/web/packages/geosapi/vignettes/geosapi.html#GSCoverage-upload
   
-  calculated_rasters <- list(hh_info, wa_info, hc_info, np_info, rv_info, plot_info)
-  
+  # Five coverages, no sixth plot entry. Everything in this list is a real GeoTIFF that goes to
+  # GeoServer, so the id == -1 branch that built a pod-local URL from req$HTTP_HOST is gone with
+  # it — see the note where the plot used to be rendered.
+  calculated_rasters <- list(hh_info, wa_info, hc_info, np_info, rv_info)
+
   #CHANGED CODE --> loop over calculated rasters which contains all the informations
   for (i in 1:length(calculated_rasters)) {
-      if(calculated_rasters[[i]]['id'] == -1) {
-        calculated_rasters[[i]]['url'] = paste0(req$rook.url_scheme,"://", req$HTTP_HOST, "/images/", calculated_rasters[[i]]['name'])
-      } else {
   short_name <- substring(calculated_rasters[[i]]['name'], 1, nchar(calculated_rasters[[i]]['name'])-4)
   log_info("Attempting upload of {short_name} from {calculated_rasters[[i]]['path']}")
   uploaded <- gsman$uploadGeoTIFF(
@@ -484,11 +459,10 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   
   calculated_rasters[[i]]['url'] = raster_url
   log_info("Constructed URL for  {short_name}: from {raster_url}")
-  
+
   #DELETED CODE
   }
-  }
- 
+
   
   #DELETED CODE
   

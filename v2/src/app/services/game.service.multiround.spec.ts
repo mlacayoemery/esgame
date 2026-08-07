@@ -50,7 +50,10 @@ const settingsData = {
 	]
 };
 
-// Shaped exactly like what tools/R returns: string ids, a spider plot at id "-1".
+// Shaped like what tools/R USED to return: string ids, plus a rendered spider plot at id "-1".
+// Kept in that shape deliberately. The calculator no longer sends the plot — v2 draws the chart
+// itself — but a frontend can be deployed against a calculation image that has not been rebuilt,
+// so the "-1" entry has to keep being filtered out rather than drawn as a sixth axis.
 const resultFor = (round: number, scores: Record<string, number> = { '11': 0.13, '22': 0.17 }): CalculationResult => ({
 	results: [
 		{ name: `HH_r${round}.tif`, id: '11', score: scores['11'], url: `http://gs/wcs?coverageId=ws_round${round}:HH` },
@@ -144,10 +147,17 @@ describe('GameService multi-round (SVG)', () => {
 		expect(secondAll).toBe(55);
 	});
 
-	it('takes the spider plot from the id -1 result', async () => {
-		service.prepareNextLevel(resultFor(2), 55);
+	it('gives the chart the indicator scores, and never the old plot result', async () => {
+		service.prepareNextLevel(resultFor(2, { '11': 65, '22': 60 }), 55);
 
-		expect((await currentLevel(service))!.scoreImage).toBe('http://calc/images/Spider_r2.png');
+		const entries = (await currentLevel(service))!.indicatorScores;
+
+		// The scores the chart draws are the calculator's own 0-100 numbers, NOT the negated,
+		// x100 values in level.scores that the score board uses for game points.
+		expect(entries).toEqual([{ id: '11', score: 65 }, { id: '22', score: 60 }]);
+		// A calculator that still sends the rendered plot must not get it drawn as a sixth axis
+		// with a nonsense label.
+		expect(entries.some(e => e.id === '-1')).toBe(false);
 	});
 
 	it('does not leave a consequence board from the previous round on the new level', async () => {

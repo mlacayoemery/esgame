@@ -597,8 +597,9 @@ a placement round). Branches on ``settings.mode``.
   consequence map's ``urlToData`` at the matching result ``url``, sanitizes
   ``NaN`` scores to ``0``, and builds ``level.scores`` as
   ``[{ id: "all", score: previousScore }, ...results (id != "-1") mapped to
-  { id, score: -(score*100) }]``. A result with ``id == "-1"`` is treated as a
-  ``scoreImage`` (``level.scoreImage = image.url``). It then re-renders the
+  { id, score: -(score*100) }]``. It also sets ``level.indicatorScores`` to the raw
+  ``{ id, score }`` pairs, which is what the spider chart is drawn from; a result with
+  ``id == "-1"`` (an older calculator's rendered plot) is excluded. It then re-renders the
   background (with 25% opacity applied via ``addTransparencyToColors("3F")``)
   and the consequence SVGs through ``TiffService``, refreshes field scores, and
   publishes.

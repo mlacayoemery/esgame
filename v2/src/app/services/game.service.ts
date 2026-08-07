@@ -277,9 +277,19 @@ export class GameService {
 				level.scores = [{ id: "all", score: previousScore!} , ...calculationResult.results.filter(c => c.id != "-1").map(c => ({ score: -((c.score ?? 0)*100), id: c.id } as ScoreEntry))];
 			}
 
-			const image = calculationResult?.results.find(c => c.id == "-1");
-			if(image) {
-				level.scoreImage = image.url;
+			// The spider chart is drawn from these five numbers rather than fetched as a PNG.
+			// The calculator used to return a sixth result with id "-1" — a rendered chart it had
+			// written to its own pod's disk — and the level took its URL. That is gone: the chart
+			// is a pure function of the scores, so there is nothing to serve, and the calculation
+			// deployment can be scaled. See SpiderChartComponent.
+			//
+			// `id != "-1"` is kept when filtering, deliberately. A calculator that still sends the
+			// old plot result must not have it drawn as a sixth axis with a nonsense label; this
+			// frontend has to work against a backend that has not been redeployed yet.
+			if (calculationResult) {
+				level.indicatorScores = calculationResult.results
+					.filter(c => c.id != "-1")
+					.map(c => ({ id: c.id, score: c.score ?? 0 }));
 			}
 
 			level.gameBoards.push(...previousLevel.gameBoards.filter(c => c.gameBoardType != GameBoardType.ConsequenceMap));
