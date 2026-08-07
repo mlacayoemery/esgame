@@ -312,6 +312,73 @@ The loading spinner does not clear when a level fails to build — *fixed 2026-0
    test written without it measures the harness rather than the component, and would have
    reported this bug as unfixable a second time.
 
+.. _The published site was twelve commits behind master:
+
+The published site was twelve commits behind master — *closed 2026-08-07*
+   The documentation at https://mlacayoemery.github.io/esgame/docs/ was serving the build from
+   ``0c322c8`` (#176) while master was at ``a8b29f7`` (#188). Everything merged after #176 —
+   twelve commits, a full day of work, including every finding written up on this page that
+   day — was simply absent from the site people are pointed at. It answered every request with
+   a 200.
+
+   Nothing reported it, and nothing *could*, because the site carried no identity. Sphinx's
+   build says nothing about deployment; every other check in this repository asks a question
+   about the tree, and this is a question about a remote artefact.
+
+   The cause was not a bad build. :file:`.github/workflows/deploy.yml`'s ``build`` job
+   succeeded in 1m16s; its ``deploy`` job then failed with:
+
+   .. code-block:: text
+
+      The job was not acquired by Runner of type hosted even after multiple attempts
+
+   GitHub-hosted runners were unavailable to this repository for about eleven hours on
+   2026-08-06/07 — githubstatus.com reported Actions "operational" throughout, and the
+   repository is public, so this was neither a posted incident nor a spending cap. The visible
+   symptom was runs "failing" after ~15 minutes without executing a step, and one
+   ``Validate deploy artifacts`` run that sat queued for over eight hours. The artefact was
+   built and never published, and Pages went on serving the previous one.
+
+   **What that costs is not the outage; it is that the outage was indistinguishable from
+   health.** A reader cannot tell a current page from a day-old one, and neither could any
+   check. Three things close that:
+
+   * :file:`docs/conf.py` stamps every build. ``build-info.json`` lands beside the HTML with
+     the commit, the ref, the run id and the build time; a "Last updated" line carrying the
+     same instant and the short sha goes into the footer of **every** page.
+   * :file:`.github/workflows/published.yml` fetches that JSON back off the live site daily
+     and reports how many commits behind master it is, naming them. Scheduled only — the site
+     legitimately lags a push, so as a required check it would fail after every merge and
+     teach people to click through it. Same reasoning as :file:`cluster.yml`.
+   * :file:`.github/workflows/docs.yml` gates the producer on every pull request: the stamp
+     must exist, must name a real sha rather than ``unknown``, must be on every page built,
+     and must match ``build-info.json``. A freshness check downstream is worth nothing if the
+     thing it reads can quietly stop being written.
+
+   Both halves were tested by mutation rather than by assertion — the trap in
+   `The checks were audited for vacuity`_. The producer gate was run against six broken
+   builds (no JSON, ``unknown`` commit, empty commit, a non-sha, one unstamped page, a
+   mislabelled timestamp) and fails each with an annotation; the freshness check was run
+   against fixtures for a current site, a stale one, a site that cannot name its commit, a
+   commit from another repository, and Pages serving an SPA fallback instead of JSON. Pointed
+   at the real site it reproduces the finding from scratch: ``12 commit(s) behind master``.
+
+   **A timestamp that lies about its zone is worse than no timestamp**, and this nearly
+   shipped one. ``html_last_updated_fmt`` is rendered through Sphinx's date formatter, which
+   substitutes ``%`` codes against **local** time; the first version read
+   ``"%Y-%m-%d %H:%M:%S UTC"`` and published *06:01:31 UTC* for a build that happened at
+   *04:01:33Z*. Sphinx 7.1 added ``html_last_updated_use_utc``, but :file:`docs/requirements.txt`
+   floats on ``sphinx>=7`` and an unrecognised name in ``conf.py`` is ignored in silence rather
+   than refused — so on an older Sphinx that option would have failed the same way and said
+   nothing. The stamp is now pre-formatted in UTC with no format codes left in it, and the
+   footer and the JSON are the same string by construction, so they cannot drift.
+
+   One consequence reaches beyond the docs. The merge-on-green policy reads CI verdicts, and
+   for those eleven hours CI could not produce one: #186 and #187 were merged against runs that
+   had failed on runner acquisition rather than on their contents. That is what the
+   "re-verify locally before merging" rule exists for, and it held — but it is worth recording
+   that *"the run is red"* and *"the change is bad"* came apart here for a whole day.
+
 
 Known incomplete
 ----------------
@@ -1070,6 +1137,19 @@ took ten minutes, so it is written down.
    * - :file:`perf/calc-load.js`
      - No workflow. It had no recorded measurement either until **2026-08-06**; it does now, and
        the answer is below.
+   * - Whether the published site is current
+     - **Daily since 2026-08-07**, not on pull requests — :file:`.github/workflows/published.yml`
+       fetches ``build-info.json`` off the live site and fails if it is behind master. Scheduled
+       for the same reason as the cluster job: the site legitimately lags a push by the length of
+       a deploy, so gating on it would fail after every merge.
+
+       So a merge still completes without anyone knowing whether it reached the site — which is
+       exactly the state that let it fall twelve commits behind, undetected, on 2026-08-06. The
+       difference is that the condition is now *discoverable within a day* instead of never. See
+       `The published site was twelve commits behind master`_.
+
+       What **is** gated per pull request is the producer: ``docs.yml`` fails if a build does not
+       carry a stamp naming a real commit on every page.
 
 None of this is an argument for gating all of it: a kind cluster with ingress-nginx and a 2.6 GB
 calculation image is a slow, fragile CI job, and a flaky gate is worse than an honest gap. It is
