@@ -339,6 +339,13 @@ The published site was twelve commits behind master — *closed 2026-08-07*
    ``Validate deploy artifacts`` run that sat queued for over eight hours. The artefact was
    built and never published, and Pages went on serving the previous one.
 
+   **It repaired itself, and that is the argument for detecting it rather than against.**
+   When runners came back the next push to master deployed normally and the site caught up in
+   85 seconds — the page went from 94,716 bytes to 127,676, byte-for-byte the local build. So
+   the whole episode leaves no trace: anyone checking afterwards finds a healthy site and no
+   evidence it was ever a day stale. A fault that is invisible while it is happening and gone
+   before anyone looks is not a fault anyone will find by looking harder.
+
    **What that costs is not the outage; it is that the outage was indistinguishable from
    health.** A reader cannot tell a current page from a day-old one, and neither could any
    check. Three things close that:
