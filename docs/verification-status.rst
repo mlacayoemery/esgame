@@ -984,6 +984,58 @@ Why the scores go NaN, and it is not only all-nature — *diagnosed 2026-08-06*
    same family that does not have the problem, and adopting its approach is a concrete option
    rather than an invention.
 
+   **Closed 2026-08-07 — fixed bounds, derived here rather than copied.** The scores are now
+   normalised against fixed per-indicator bounds in :file:`tools/R/bounds.json`, derived from
+   the deployment's own base raster by :file:`tools/R/derive-bounds.R`. Two things were found on
+   the way that change what the entry above says.
+
+   **Fixed bounds alone do not fix the NaN, and this page implied they would.** With no
+   agriculture allocated the field is zero everywhere, so every cell falls under the model's own
+   ``X[X < 1] <- NA`` floor, the mask empties, and ``mean()`` of nothing is NaN — under *either*
+   normalisation. Measured in the real model: ``cells_surviving_floor=0`` for all five. The
+   division by ``(max - min) = 0`` was a second, independent failure on the same allocation.
+   ``esgame_score()`` answers 0, because a landscape with no emission sources has zero exposure
+   and that is known, not missing.
+
+   **The old scoring was ranking backwards.** With a single uniform source type the field's
+   *shape* is identical whatever the amplitude, so rescaling to the round's own range should
+   return the same score. It did not:
+
+   .. code-block:: text
+
+      all ext_arable (amplitude 10)   ->  HH 49        the only difference is how many
+      all agropark   (amplitude 130)  ->  HH 40        cells fall under the < 1 floor
+
+   So the game ranked the most intensive agriculture as *better* for human health than the least
+   intensive. Under fixed bounds the same two allocations score 1 and 9 — monotonic in
+   amplitude, which is what the model's own coefficients say.
+
+   **The bounds are on the mean, not on the cell**, and that was measured rather than assumed.
+   Bounding the cell is analytically tidier — no cell can exceed ``sum(amplitudes) = 350``, and
+   no receptor cell can exceed ``350 * exp(-0.005 * 100) = 212.3`` since a receptor is never
+   itself a source — but the score is a mean over a mask that is mostly far from any source, so
+   every candidate ceiling left the top of the scale unused:
+
+   .. code-block:: text
+
+      ceiling                     golden          all-arable    all-agropark
+      350   sum of amplitudes     6/6/10/6/6      1/1/1/1/1     9/11/14/10/9
+      212.3 receptor-reachable    10/10/17/10/10  1/1/2/1/1     15/18/24/16/15
+      182   observed envelope     11/12/20/12/12  1/1/2/1/1     17/21/28/19/17
+      aggregate (adopted)         65/60/72/66/68  0/0/0/0/0     100/100/100/100/100
+
+   Bounding the aggregate spans 0-100 by construction, and is the shape PLACES' ``4.2 / 180 / 70``
+   constants are in — which is what suggested it. The cost is that the bounds belong to a base
+   raster: a deployment supplying its own geodata must re-run ``derive-bounds.R``, and the
+   calculator **refuses to start** without a complete :file:`tools/R/bounds.json` rather than scoring
+   against nothing.
+
+   Everything above was measured three ways that agree: a standalone reimplementation of the
+   concentration field in Python, the real R model run in
+   ``ghcr.io/mlacayoemery/esgame-calculation:master``, and the committed golden file. The
+   reimplementation reproduces the old golden scores exactly (14/14/20/16/14), which is what
+   makes the rest of its output usable as evidence.
+
 No default IngressClass is assumed
    The three Ingresses set no ``ingressClassName``. If the cluster has no default
    ``IngressClass`` they apply cleanly and route nothing, with no error. Check
@@ -1242,7 +1294,12 @@ took ten minutes, so it is written down.
 
        .. code-block:: text
 
-          {"HC": 16, "HH": 14, "NP": 14, "RV": 14, "WA": 20}
+          {"HC": 66, "HH": 65, "NP": 60, "RV": 68, "WA": 72}
+
+       Re-recorded on **2026-08-07** when the normalisation changed; it read
+       ``{"HC": 16, "HH": 14, "NP": 14, "RV": 14, "WA": 20}`` before. The test did its job: the
+       change had to be justified and the new numbers measured, rather than the drift passing
+       unnoticed.
 
        **It catches a change and says nothing about correctness.** Nobody has a reference answer
        for this model, which is why this shape was chosen over asserting a correctness that

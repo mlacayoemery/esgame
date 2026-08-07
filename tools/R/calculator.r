@@ -96,6 +96,20 @@ library(logger)
 for (.p in c("coverage.R", "/app/coverage.R")) if (file.exists(.p)) { source(.p); break }
 stopifnot("coverage.R must be alongside calculator.r" = exists("esgame_report_coverage"))
 
+# The concentration field and the scoring. Same loading shape as coverage.R above: the
+# Dockerfile puts these next to calculator.r in /app, and the relative path covers a checkout.
+for (.p in c("model.R", "/app/model.R")) if (file.exists(.p)) { source(.p); break }
+stopifnot("model.R must be alongside calculator.r" = exists("esgame_score"))
+
+# Per-indicator normalisation bounds, derived from THIS deployment's base raster by
+# tools/R/derive-bounds.R. Loaded once at startup rather than per round: if they are missing or
+# malformed the calculator must not start, because every score it would return is wrong, and a
+# wrong score is indistinguishable from a right one at the far end.
+for (.p in c("bounds.json", "/app/bounds.json")) if (file.exists(.p)) { ESGAME_BOUNDS_PATH <- .p; break }
+stopifnot("bounds.json must be alongside calculator.r" = exists("ESGAME_BOUNDS_PATH"))
+ESGAME_BOUNDS <- esgame_load_bounds(ESGAME_BOUNDS_PATH)
+log_info("normalisation bounds loaded from {ESGAME_BOUNDS_PATH}")
+
 
 calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   ##### 0) start #####
@@ -288,12 +302,27 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   #WA_norm<-WA_norm*100
  # HC_norm<-HC_norm*100
  # RV_norm<-RV_norm*100
-  # The relative score of all cells that encounter the consequence: sum(score in cells that encounter consequence)/number of cells that encounter consequence
-  score_HH<-round(cellStats(HH_norm, mean), 0) #cellStats(HH_norm, sum)/(ncell(HH_norm)-freq(HH_norm, value=NA)
-  score_NP<-round(cellStats(NP_norm, mean), 0)
-  score_WA<-round(cellStats(WA_norm, mean), 0)
-  score_HC<-round(cellStats(HC_norm, mean), 0)
-  score_RV<-round(cellStats(RV_norm, mean), 0)
+  # Mean exposure over the cells that encounter the consequence, on a FIXED 0-100 scale.
+  #
+  # This used to be `cellStats(X_norm, mean)` — the mean of the ROUND-RELATIVE raster, rescaled
+  # to that round's own min and max. Three defects, all measured on 2026-08-07 against the
+  # golden allocation (see tools/R/derive-bounds.R for the numbers):
+  #
+  #   * a landscape with no agriculture divided by zero and returned NaN for all five;
+  #   * scores were not comparable between rounds, because the scale moved with the data;
+  #   * the ranking was an artefact of the < 1 floor and came out INVERTED — all-ext_arable
+  #     (amplitude 10) scored HH 49 and all-agropark (amplitude 130) scored HH 40.
+  #
+  # The raw masked raster (HH, not HH_norm) is what is scored now, against bounds derived from
+  # this deployment's base raster. X_norm is still what gets published as a coverage: the map
+  # answers "where, within this round", and the score answers "how does this round compare",
+  # which are different questions and want different scales.
+  score_HH<-esgame_score(values(HH), ESGAME_BOUNDS$HH$lo, ESGAME_BOUNDS$HH$hi)
+  score_NP<-esgame_score(values(NP), ESGAME_BOUNDS$NP$lo, ESGAME_BOUNDS$NP$hi)
+  score_WA<-esgame_score(values(WA), ESGAME_BOUNDS$WA$lo, ESGAME_BOUNDS$WA$hi)
+  score_HC<-esgame_score(values(HC), ESGAME_BOUNDS$HC$lo, ESGAME_BOUNDS$HC$hi)
+  score_RV<-esgame_score(values(RV), ESGAME_BOUNDS$RV$lo, ESGAME_BOUNDS$RV$hi)
+  log_info("scores HH={score_HH} NP={score_NP} WA={score_WA} HC={score_HC} RV={score_RV}")
   
   #NEW CODE
   hh_info['score']<-score_HH
