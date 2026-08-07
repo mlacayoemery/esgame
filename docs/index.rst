@@ -1,6 +1,10 @@
 esgame documentation
 =====================
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: v2/src
+
 **esgame** is the canonical implementation of the *Tradeoff / Ecosystem-Services*
 land-use allocation game — an Angular single-page application that lets players
 allocate a fixed budget of production types (e.g. arable land, livestock) across a

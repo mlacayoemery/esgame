@@ -2,6 +2,11 @@
 Data Flow: Values Passed Between Services
 =========================================
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: v2/src
+.. file-base: examples/esgame-dynamic/geoserver
+
 This page is the authoritative reference for **every data contract** that crosses a
 process or container boundary in esgame. It documents the exact field names, types, and
 endpoints that connect the Angular frontend (:file:`v2/`), the runtime configuration, the

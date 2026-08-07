@@ -1,6 +1,11 @@
 Configuration 2: static grid versus the dynamic example
 =======================================================
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: v2/src/assets
+.. file-base: examples/esgame-dynamic/frontend/assets/images
+
 esgame ships its flagship scenario, **Configuration 2 — "Tradeoff: Agriculture
 Edition"**, in two forms that are deliberately the *same game content shown two
 ways*. Comparing them is the clearest way to understand what the GRID/"static" and

@@ -1,6 +1,11 @@
 pygeoapi: a lightweight, read-only GeoServer alternative
 ========================================================
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: examples/esgame-dynamic
+.. file-base: examples/esgame-dynamic/pygeoapi
+
 The ``esgame-dynamic`` example ships an **alternative raster backend** that replaces GeoServer (and
 its one-shot seeder and persistent data volume) with a single small `pygeoapi
 <https://github.com/geopython/pygeoapi>`_ container. It is a **drop-in** replacement for the

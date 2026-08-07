@@ -2,6 +2,10 @@
 Frontend Components, Directives, and Models
 ===========================================
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: v2/src/app
+
 This page is the function reference for the Angular standalone-module application that
 ships in :file:`esgame/v2`. It documents the **components**, the shared **directive**, and
 the domain **models** that back the two game modes:

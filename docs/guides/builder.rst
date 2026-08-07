@@ -2,6 +2,12 @@
 Builder guide
 =============
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: v2
+.. file-base: v2/src
+.. file-base: examples/esgame-dynamic
+
 This guide explains how to **build** every artifact that makes up the **esgame**
 (Tradeoff / Ecosystem-Services) project: the Angular v2 single-page app, the
 production Docker frontend image, and the example calculator and GeoServer images
@@ -154,7 +160,7 @@ The ``build`` target's ``outputPath`` is an object, not a plain string:
 
 Because ``browser`` is the **empty string**, the output is **flat** — there is no
 ``browser/`` subdirectory. ``index.html``, the content-hashed bundles, and the
-``assets/`` tree all sit directly under :file:`dist/tradeoff-v2/`:
+``assets/`` tree all sit directly under ``dist/tradeoff-v2/``:
 
 .. code-block:: text
 

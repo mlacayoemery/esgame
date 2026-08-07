@@ -1,6 +1,13 @@
 Developer Guide
 ===============
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: v2
+.. file-base: v2/src
+.. file-base: v2/src/app
+.. file-base: v2/src/assets
+
 This guide is for developers working on the **esgame** frontend — the Angular
 single-page application under :file:`esgame/v2`. It covers the repository layout,
 the technology stack and version requirements, the local development loop, the
@@ -144,7 +151,7 @@ All versions below are pinned in :file:`esgame/v2/package.json`.
 The build is configured in :file:`esgame/v2/angular.json`. Highlights:
 
 * Application entry ``src/main.ts``, index ``src/index.html``, output to
-  :file:`dist/tradeoff-v2`.
+  ``dist/tradeoff-v2``.
 * SCSS is the default style language; ``src/styles`` is on the SCSS include path
   and the Material ``indigo-pink`` prebuilt theme is loaded globally.
 * ``src/assets``, ``src/favicon.ico`` and ``src/404.html`` are copied verbatim
@@ -181,7 +188,7 @@ Other scripts (from :file:`package.json`):
    * - Command
      - Effect
    * - ``npm run build``
-     - ``ng build`` — production bundle into :file:`dist/tradeoff-v2`.
+     - ``ng build`` — production bundle into ``dist/tradeoff-v2``.
    * - ``npm run watch``
      - ``ng build --watch --configuration development`` — rebuild on change.
    * - ``npm test``

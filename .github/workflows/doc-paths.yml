@@ -1,25 +1,35 @@
 name: Doc paths resolve
 
-# docs/verification-status.rst names files as evidence, so a path that stops existing makes the
-# document lie while every other check stays green.
+# The documentation names files as evidence, so a path that stops existing makes it lie while
+# every other check stays green.
 #
-# That check already existed — inside ci.yml. But ci.yml is path-filtered to `v2/**`, and the
-# file it validates is under `docs/`. So the check could not run on the change most likely to
-# break it. #189 proved it: a docs-only pull request added three bad references
-# (`cluster.yml` and `deploy.yml` bare rather than under .github/workflows/, and
-# `.github/workflows/overlay.yml`, which is a file in the *places* repository), ci.yml never
-# ran, Docs passed, and it merged. The failure surfaced on the next unrelated pull request that
-# happened to touch v2/ — attached to a change that had nothing to do with it.
+# That check already existed — inside ci.yml, covering one document. Two things were wrong with
+# it, and both are fixed here and in docs/_checks/check-file-paths.py.
 #
-# NO PATH FILTER, deliberately, because the check can be broken from two directions and a
-# filter can only face one:
+# 1. IT COULD NOT RUN ON THE CHANGE THAT BREAKS IT. ci.yml is path-filtered to `v2/**`, and the
+#    file it validated is under `docs/`. #189 proved it: a docs-only pull request added three
+#    bad references, ci.yml never ran, Docs passed, and it merged. The failure then surfaced on
+#    the next unrelated pull request that happened to touch v2/.
 #
-#   * edit docs/verification-status.rst to name a path that does not exist  -> needs docs/**
-#   * rename or delete a file the document already names                    -> needs everything
+# 2. IT COVERED 40 OF 299 REFERENCES. The other 15 documents write :file: paths relative to
+#    whatever the reader is looking at, so 131 of them did not resolve from the repository root
+#    and the check simply skipped those documents. They are covered now, via `.. file-base:`
+#    comments that each document declares for itself. Widening it found a genuinely stale
+#    reference — examples/esgame-dynamic/geoserver/seed.sh, renamed to seed.py in 7f29c7f —
+#    plus four references to build output that is in no clone at all.
+#
+# NO PATH FILTER, deliberately, because the check breaks from two directions and a filter can
+# only face one:
+#
+#   * edit a document to name a path that does not exist  -> needs docs/**
+#   * rename or delete a file a document already names    -> needs everything
 #
 # It is a checkout and a few milliseconds of Python — there is nothing to trade off against
 # running it everywhere. That is also why it is not folded into docs.yml, which builds Sphinx
 # and would then have to run on every source change to cover the second direction.
+#
+# fetch-depth stays at the default 1: the check reads the index via `git ls-files`, which is
+# fully populated in a shallow clone, and never looks at history.
 
 on:
   pull_request:
@@ -36,7 +46,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
-        # Quoted: an unquoted step name containing ": " is a YAML mapping, not a string, and
-        # the whole file fails to parse. actionlint catches it; a plain `git push` does not.
-      - name: "Every :file: path in verification-status.rst must exist"
+
+      # Quoted: an unquoted step name containing ": " is a YAML mapping, not a string, and the
+      # whole file fails to parse. actionlint catches it; a plain `git push` does not.
+      - name: "Every :file: path in the documentation must exist"
         run: python3 docs/_checks/check-file-paths.py

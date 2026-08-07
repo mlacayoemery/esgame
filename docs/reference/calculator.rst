@@ -2,6 +2,12 @@
 Calculator backends (reference)
 ================================
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: v2/src
+.. file-base: examples/esgame-dynamic
+.. file-base: examples/esgame-dynamic/geoserver
+
 The **dynamic** (SVG) mode of the esgame frontend posts each level submission to
 a *calculator* backend at the URL given by ``calcUrl`` in
 :file:`assets/config.json`. The calculator turns a land-use allocation into one
@@ -101,7 +107,7 @@ FastAPI example (``app.py``)
 :file:`esgame/examples/esgame-dynamic/calculator/app.py` — a ``FastAPI`` app
 titled ``"esgame example calculator"`` with permissive CORS
 (``allow_origins=["*"]``). It is deliberately **stateless**: it does *not* seed
-GeoServer (that is the separate one-shot :file:`../geoserver/seed.sh`) and never
+GeoServer (that is the separate one-shot :file:`geoserver/seed.py`) and never
 writes rasters. It just returns scores and URLs for coverages that GeoServer
 already serves.
 

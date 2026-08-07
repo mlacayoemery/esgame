@@ -2,6 +2,13 @@
 Architecture
 ============
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: v2
+.. file-base: v2/src
+.. file-base: v2/src/assets
+.. file-base: examples/esgame-dynamic/frontend/assets
+
 **esgame** is the canonical implementation of the *Tradeoff / Ecosystem-Services*
 land-use allocation game: an Angular single-page application in which players
 allocate a fixed budget of production types (e.g. arable land, livestock) across a
@@ -22,7 +29,7 @@ See :doc:`data-flow` for the request/response detail of a scoring round and
 
 .. note::
 
-   This page supersedes the older :file:`docs/ARCHITECTURE.md` with a richer,
+   This page supersedes the older ``docs/ARCHITECTURE.md`` with a richer,
    reference-grade overview.
 
 
@@ -337,7 +344,7 @@ at :file:`tools/R/calculator.r`.
      - Role
    * - ``places-frontend``
      - ``81:80``
-     - Built from :file:`../../frontend` (the overlay ``FROM`` ``ESGAME_IMAGE``);
+     - Built from ``../../frontend`` (the overlay ``FROM`` ``ESGAME_IMAGE``);
        ``CALC_URL`` defaults to ``http://localhost:8000``.
    * - ``places-calculation``
      - ``8000:8000``
@@ -347,7 +354,7 @@ at :file:`tools/R/calculator.r`.
      - ``8080:8080``
      - ``docker.osgeo.org/geoserver:2.24.x`` with ``CORS_ENABLED=true``.
 
-Configuration is supplied via :file:`deploy/compose/.env.places` (copied from
+Configuration is supplied via ``deploy/compose/.env.places`` (copied from
 ``.env.places.example``): ``ESGAME_IMAGE``, ``CALC_URL`` (the public URL the browser
 POSTs to), and ``GEOSERVER_URL`` (server-to-server). A *real* run also needs PLACES'
 geodata loaded into GeoServer/the calculator; that geodata and any secrets are **not
@@ -360,10 +367,11 @@ PLACES-specific patches — no forked manifests:
 
 * ``images:`` re-point the base's logical names ``esgame-angular`` →
   ``places-frontend`` and ``esgame-calculation`` → ``places-calculation``.
-* :file:`patch-config.yaml` overrides the ``esgame-config`` ConfigMap (``CALC_URL``,
-  ``GEOSERVER_URL``).
-* :file:`patch-calculation.yaml` swaps the base's ephemeral ``emptyDir`` for the
-  ``places-geodata`` PVC (:file:`pvc.yaml`, ``10Gi``, ``ReadWriteOnce``) and adds a
+* :file:`places/deploy/k8s/patch-config.yaml` overrides the ``esgame-config``
+  ConfigMap (``CALC_URL``, ``GEOSERVER_URL``).
+* :file:`places/deploy/k8s/patch-calculation.yaml` swaps the base's ephemeral ``emptyDir`` for the
+  ``places-geodata`` PVC (:file:`places/deploy/k8s/pvc.yaml`, ``10Gi``,
+  ``ReadWriteOnce``) and adds a
   ``load-geodata`` init container that loads PLACES' geodata into :file:`/data` at
   startup.
 * Ingress-host ``replace`` patches for the frontend, calculation, and geoserver

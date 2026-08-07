@@ -2,6 +2,13 @@
 Container runtime
 ==================
 
+.. Where this document's section-local :file: paths resolve from; see
+.. docs/_checks/check-file-paths.py.
+.. file-base: v2/src
+.. file-base: v2/src/assets
+.. file-base: examples/esgame-dynamic
+.. file-base: examples/esgame-dynamic/geoserver
+
 This page is the reference for how **esgame** is packaged and run as a container:
 the multi-stage frontend image, the tuned nginx server, the runtime-config entrypoint
 hook, and the self-contained ``esgame-dynamic`` Compose stack (frontend + FastAPI
