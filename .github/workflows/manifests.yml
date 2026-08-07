@@ -164,6 +164,65 @@ jobs:
             || { echo "::error::tools/R/test-coverage.R is missing; the R behaviour is ungated again"; exit 1; }
           Rscript tools/R/test-coverage.R
 
+      - name: The scoring must be right, not merely parseable
+        run: |
+          # esgame_score() decides every number a player sees. It replaced a round-relative
+          # normalisation that had three measured defects — NaN on a landscape with no
+          # agriculture, scores that were not comparable between rounds, and a ranking inverted
+          # by the < 1 floor — so the cases here are those three plus the arithmetic.
+          #
+          # model.R deliberately keeps the scoring separate from the raster work for exactly
+          # this reason: the distance transforms need GDAL, the scoring does not, and the
+          # scoring is the part that can be wrong without anything crashing.
+          set -euo pipefail
+          test -f tools/R/test-model.R \
+            || { echo "::error::tools/R/test-model.R is missing; the scoring is ungated"; exit 1; }
+          # jsonlite is the one dependency beyond base R: bounds.json is real JSON and
+          # hand-parsing it here would be a second parser that can disagree with the calculator's.
+          # ~10s from the binary repo, against a scoring change nothing else in CI can catch.
+          Rscript -e 'if (!requireNamespace("jsonlite", quietly=TRUE))
+                        install.packages("jsonlite", repos="https://packagemanager.posit.co/cran/__linux__/jammy/latest")'
+          Rscript tools/R/test-model.R
+
+      - name: The fixed normalisation bounds must be wired in and shippable
+        run: |
+          # A round is scored against tools/R/bounds.json. If it stops being loaded, or stops
+          # being copied into the image, the calculator either refuses to start (the good case)
+          # or silently scores against something else. These assert the wiring the tests cannot.
+          set -euo pipefail
+          for f in tools/R/model.R tools/R/bounds.json tools/R/derive-bounds.R; do
+            test -f "$f" || { echo "::error::$f is missing"; exit 1; }
+          done
+          # Every indicator must be scored through esgame_score, or one of them is still using
+          # the round-relative formula and nothing would look wrong.
+          for ind in HH NP WA HC RV; do
+            grep -q "score_${ind}<-esgame_score(values(${ind})" tools/R/calculator.r \
+              || { echo "::error file=tools/R/calculator.r::score_${ind} is not computed by esgame_score"; exit 1; }
+          done
+          # And the old formula must be gone from the score path specifically. cellStats is still
+          # used elsewhere, so this is anchored to the score assignment rather than to the name.
+          if grep -nE '^\s*score_(HH|NP|WA|HC|RV)\s*<-\s*round\(cellStats' tools/R/calculator.r; then
+            echo "::error file=tools/R/calculator.r::a score is still the mean of the round-relative raster"; exit 1
+          fi
+          grep -q 'source(.p)' tools/R/calculator.r && grep -q '"model.R"' tools/R/calculator.r \
+            || { echo "::error file=tools/R/calculator.r::model.R is never sourced"; exit 1; }
+          # The Dockerfile ships /app by COPY . . — assert neither is excluded.
+          if [ -f tools/R/.dockerignore ]; then
+            grep -qE '^\s*(model\.R|bounds\.json)\s*$' tools/R/.dockerignore \
+              && { echo "::error::model.R or bounds.json is excluded from the image"; exit 1; }
+          fi
+          # bounds.json must carry a usable range for all five, or the calculator refuses to boot.
+          python3 - <<'PY'
+          import json, sys
+          b = json.load(open("tools/R/bounds.json"))
+          bad = [i for i in ("HH","NP","WA","HC","RV")
+                 if i not in b or not isinstance(b[i].get("hi"), (int, float))
+                 or b[i]["hi"] <= b[i].get("lo", 0)]
+          if bad:
+              print(f"::error file=tools/R/bounds.json::no usable lo/hi for {', '.join(bad)}"); sys.exit(1)
+          print("bounds.json: " + "  ".join(f"{i} [{b[i]['lo']}, {b[i]['hi']}]" for i in ("HH","NP","WA","HC","RV")))
+          PY
+
       - name: The calculator reports how much of the allocation it actually used
         run: |
           # reclassify() ignores ids that are not in the base raster. Silently. The committed

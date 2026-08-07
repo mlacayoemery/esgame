@@ -1,0 +1,30 @@
+{
+  "HH": {
+    "lo": 0,
+    "hi": 32.472
+  },
+  "NP": {
+    "lo": 0,
+    "hi": 38.2291
+  },
+  "WA": {
+    "lo": 0,
+    "hi": 51.2589
+  },
+  "HC": {
+    "lo": 0,
+    "hi": 35.26
+  },
+  "RV": {
+    "lo": 0,
+    "hi": 32.2197
+  },
+  "_derivation": {
+    "base_raster": "LU_and_NEW_hexa.tif",
+    "cells": 122215,
+    "hexagons": 465,
+    "lo_allocation": "every hexagon = 60 (nature): no sources, zero exposure",
+    "hi_allocation": "every hexagon = 50 (agropark): amplitude 130, the largest",
+    "script": "tools/R/derive-bounds.R"
+  }
+}

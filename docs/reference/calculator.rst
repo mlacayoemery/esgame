@@ -314,8 +314,24 @@ Outputs and consequence-map ids
 Each model block builds a normalised raster, writes it with
 ``writeRaster(..., overwrite=TRUE, NAflag=-9999)`` to a file named
 ``<PREFIX>_Game_<game_id>_Round_<round_id>.tif``, and records a list
-``{name, id, score}``. The score is the rounded mean over non-NA cells
-(``cellStats(..._norm, mean)``).
+``{name, id, score}``.
+
+**The raster and the score are on different scales, deliberately** (*2026-08-07*). The published
+raster is still rescaled to the round's own min and max, because what it answers is *where,
+within this round*, the consequence falls. The **score** is the mean of the **raw** masked
+concentration against **fixed per-indicator bounds** from :file:`tools/R/bounds.json`, because
+what it answers is *how this round compares to another one* — a question the round's own range
+cannot answer.
+
+.. code-block:: text
+
+   score_HH <- esgame_score(values(HH), bounds$HH$lo, bounds$HH$hi)   # tools/R/model.R
+
+The bounds are derived from the deployment's own base raster by
+:file:`tools/R/derive-bounds.R`, which sweeps two extreme allocations — every hexagon nature
+(no sources, so exposure is zero) and every hexagon agropark (the largest amplitude). See
+:doc:`../verification-status` for what the previous round-relative scoring got wrong, which
+included ranking the most intensive agriculture as *better* for human health than the least.
 
 The two engines compute **different services and ids**.
 
@@ -332,23 +348,23 @@ The two engines compute **different services and ids**.
    * - ``HH``
      - human health
      - 11
-     - rescaled min–max ×100; ``score = round(cellStats(HH_norm, mean), 0)``
+     - raster min–max ×100; ``score = esgame_score(values(HH), 0, 32.472)``
    * - ``NP``
      - nutrient pollution
      - 22
-     - min–max ×100; mean
+     - raster min–max ×100; score against ``[0, 38.2291]``
    * - ``WA``
      - water availability
      - 33
-     - min–max ×100; mean
+     - raster min–max ×100; score against ``[0, 51.2589]``
    * - ``HC``
      - habitat cohesion
      - 44
-     - min–max ×100; mean
+     - raster min–max ×100; score against ``[0, 35.26]``
    * - ``RV``
      - recreational value
      - 55
-     - min–max ×100; mean
+     - raster min–max ×100; score against ``[0, 32.2197]``
    * - ``Spider_plot``
      - spider plot PNG
      - -1
