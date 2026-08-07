@@ -362,6 +362,15 @@ The published site was twelve commits behind master — *closed 2026-08-07*
      and must match ``build-info.json``. A freshness check downstream is worth nothing if the
      thing it reads can quietly stop being written.
 
+   **One stamp covers the game as well as the documentation**, which is worth saying because
+   the check only ever fetches a docs URL. :file:`deploy.yml` builds the Angular app into
+   ``v2/dist/tradeoff-v2`` and Sphinx into ``v2/dist/tradeoff-v2/docs``, then uploads *that
+   whole directory* as one Pages artifact — so the app at ``/esgame/`` and the docs at
+   ``/esgame/docs/`` are published atomically and cannot be at different commits. A stale
+   ``build-info.json`` means the game is equally stale. (places has no Pages deploy and no
+   Sphinx docs — only :file:`.github/workflows/overlay.yml` — so there is nothing to mirror
+   there.)
+
    Both halves were tested by mutation rather than by assertion — the trap in
    `The checks were audited for vacuity`_. The producer gate was run against six broken
    builds (no JSON, ``unknown`` commit, empty commit, a non-sha, one unstamped page, a
