@@ -1070,6 +1070,89 @@ The places geodata is not in its working tree
    all 13 arrived and fail loudly otherwise. A deployment still has to supply the URL.
 
 
+Open decisions
+--------------
+
+Not defects, not gaps in testing, and not things a deployment supplies: **questions that only a
+person can answer**, written down so they stop being re-derived from a chat log. Each says what
+is known, what it would cost to settle, and what happens if nobody does.
+
+The rest of this page is about whether the code does what it claims. This section is about the
+places where nobody has decided what it *should* claim.
+
+Is the model right?
+   Nothing in this repository can say so, and that is stated wherever a number appears.
+   :file:`tools/R/golden-test.sh` is a **characterization** test: it catches a change and says
+   nothing about correctness. The five scores it freezes were produced by the model, not checked
+   against anything.
+
+   **What exists to settle it.** :file:`tools/R/scores-sheet.sh` (2026-08-06) emits contrasting
+   allocations — all-arable, all-livestock, mixed, agropark-heavy — as a readable table, so
+   somebody who knows the ecology can judge it without touching R or Docker. Its three questions
+   are the ones that matter: is the *direction* right (does the landscape you would expect to
+   score worst actually score worst), is the *spread* usable, and what should an empty surface
+   score.
+
+   **Status: parked.** Nobody has reviewed it. That is a deliberate choice, not an oversight —
+   the alternative is asserting a correctness nobody here can establish.
+
+   **If nobody decides:** the golden test keeps catching drift, and the model keeps being
+   *unvalidated rather than wrong*. Everything on this page stays true; none of it becomes a
+   claim about ecology.
+
+Should the published rasters move to the same fixed scale as the scores?
+   *Introduced 2026-08-07 by the normalisation change.* They are now on **different scales, and
+   that is currently on purpose**:
+
+   .. code-block:: text
+
+      the raster   rescaled to the round's own min/max   "where, within this round?"
+      the score    fixed per-indicator bounds            "how does this round compare?"
+
+   Both questions are real and they want different scales, which is why the split was left in
+   place rather than resolved by default. But a player sees a map whose colours look much the
+   same every round beside a number that moves, and nobody has established whether that reads as
+   informative or as broken.
+
+   **Cost of changing it:** the per-cell fixed bounds are already derived (``[1, 350]`` from the
+   amplitudes, or ``[1, 212.3]`` for a receptor cell — see :file:`tools/R/derive-bounds.R`), so
+   it is a small change to ``calculator.r``. The consequence is that most rounds would render
+   in the bottom third of the colour ramp, for the same reason cell-level bounds were rejected
+   for the *scores*.
+
+   **If nobody decides:** the split stays, and it is documented here and in
+   :doc:`reference/calculator` rather than being folded knowledge.
+
+How many calculation replicas should a workshop run?
+   This stopped being a correctness question on 2026-08-07 and became a capacity one. The plot
+   that broke under replicas is gone, so raising ``replicas`` is now safe — see
+   :ref:`Adding calculation replicas breaks the spider plot
+   <what-blocks-scaling-the-calculation>`, which is closed.
+
+   **What is measured:** one replica sustains about **one concurrent player**.
+   :file:`perf/calc-load.js` found rounds take 12.9-28.2s and do **not** overlap, because
+   R/Plumber serves single-threaded. Twenty students pressing *Next Level* together wait about
+   five minutes for the last of them.
+
+   **Nobody has re-measured since**, so the manifest still says ``replicas: 1``. Sizing it needs
+   a real class size, which is a fact about a workshop rather than about this repository.
+
+GeoServer runs as uid 0 with a writable root filesystem
+   The only one of these that was investigated and **refused with evidence** rather than left
+   open. Recorded here because "why is this still like that" is otherwise a question somebody
+   asks once a year.
+
+   No rootless GeoServer image exists (*2026-08-06*). Forcing ``--user`` makes the webapp never
+   deploy — a **404 while Tomcat logs success** — and kartoza's image exits 10. Under
+   ``--read-only`` it starts while silently failing to rewrite its own ``server.xml``.
+
+   **The alternative was declined:** seeding four Tomcat paths as ``emptyDir``\ s from the image
+   in our own manifest. The call was to solve it upstream or not at all.
+
+   **If nobody decides:** the two images this repository builds stay hardened (uid 101 and
+   10001, both ``readOnlyRootFilesystem``) and the third stays upstream's problem.
+
+
 The checks were audited for vacuity
 -----------------------------------
 
