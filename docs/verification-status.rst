@@ -9,7 +9,7 @@ time precisely because nothing had ever run them, and the failures were silent �
 that logged ``done`` having registered nothing, an e2e suite passing against a board that
 never rendered, a schema check reporting 10/10 valid on manifests the API server rejected.
 
-Last updated: **2026-08-06**.
+Last updated: **2026-08-09**.
 
 .. note::
 
@@ -396,6 +396,56 @@ The published site was twelve commits behind master — *closed 2026-08-07*
    had failed on runner acquisition rather than on their contents. That is what the
    "re-verify locally before merging" rule exists for, and it held — but it is worth recording
    that *"the run is red"* and *"the change is bad"* came apart here for a whole day.
+
+.. _the-dependency-audit:
+
+The dependency audit — *closed 2026-08-09*
+   A **high**-severity advisory sat in the tree and neither of the two things that should have
+   found it did. ``nanoid`` 3.3.16, `GHSA-2v37-7h3g-55p8
+   <https://github.com/advisories/GHSA-2v37-7h3g-55p8>`_ — custom generators loop forever when
+   asked for a zero-length id. It was found by running ``npm audit`` by hand.
+
+   **CI could not see it, by construction.** ``nanoid`` arrives as
+   ``@angular/build`` → ``postcss`` → ``nanoid``, so it is ``dev`` scope, and the audit step
+   was ``--omit=dev``. Measured against the pre-fix lockfile, that command is
+   ``found 0 vulnerabilities``, **exit 0**, while the same lockfile with the dev tree included
+   is **exit 1** naming ``nanoid``. The production tree really is at 0 and really is the
+   stricter invariant; the mistake was treating it as the *only* one.
+
+   **Dependabot was the fallback, and it lagged.** It does watch the dev scope of
+   :file:`v2/package-lock.json` — 165 alerts on this repository, essentially all of them
+   ``development`` — so "the dev tree is Dependabot's job" was true, and still insufficient.
+   The advisory was published 2026-07-29 covering only ``>= 4.0.0, < 5.1.6``, then **amended**
+   2026-08-07 20:50 UTC to add ``< 3.3.17``; the newest alert of any kind here is dated
+   2026-08-07 04:13 UTC. No alert for ``nanoid`` was ever raised. An advisory whose *range*
+   grows later is not the same event as a new advisory, and only the second one was covered.
+
+   **The audit also ran last, behind everything it does not need.** It was the final step of
+   ``build-test``, after the build, both suites and Lighthouse — so it executed only if all of
+   them had passed. One flaky e2e on a Monday and the audit was skipped, in a run that was
+   already red for an unrelated reason and would be read as such. ``npm audit`` resolves
+   :file:`v2/package-lock.json` and needs no ``npm ci``, no build and no browser: verified by
+   running it in a directory holding nothing but a ``package.json`` and the lockfile, with no
+   ``node_modules`` at all. It is its own ``audit`` job now, still scheduled-only
+   (plus ``workflow_dispatch``), in two steps — production, then the whole tree — with the
+   second one under ``if: !cancelled()`` so a production finding cannot suppress the dev report.
+
+   The fix itself is three lines of lockfile: ``postcss`` declares ``nanoid: ^3.3.16``, so the
+   patched release was already inside the allowed range and nothing needed a new dependency.
+   Took **3.3.18** rather than the minimum 3.3.17 — diffed, and 3.3.18 is 3.3.17 plus the same
+   one-line guard applied to the async-native variant.
+
+   **It was not reachable here, and was bumped anyway.** The defect is in ``customRandom`` in
+   ``nanoid``'s *secure* entry point, whose ``while (true)`` compares ``id.length === size``
+   only after appending — never true for ``size`` 0. The sole consumer in this tree is
+   ``postcss/lib/input.js``, which calls ``nanoid/non-secure``'s ``nanoid(6)``: a literal size,
+   a different entry point, and ``non-secure/index.cjs`` is **byte-identical** between 3.3.16
+   and 3.3.18. Nothing in :file:`v2/src` imports ``nanoid`` directly. So this was free, in
+   range, and worth taking on those grounds rather than on urgency — the finding worth keeping
+   is not the bump but that two independent mechanisms both let it through.
+
+   Confirmed able to fail, in both directions: pre-fix lockfile, **exit 1**; post-fix,
+   ``found 0 vulnerabilities``, **exit 0**.
 
 
 Known incomplete
