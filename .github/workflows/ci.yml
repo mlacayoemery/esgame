@@ -135,9 +135,39 @@ jobs:
           path: v2/.lighthouseci/reports
           retention-days: 7
 
-      # Scheduled runs only: a new advisory against a shipped dependency should surface
-      # on its own, but should not block an unrelated PR that happens to be open when it
-      # lands. Production dependencies are at 0 — this defends that.
+  # Dependency advisories.
+  #
+  # Scheduled and on-demand, not per-PR: a new advisory should surface on its own, but should
+  # not block an unrelated pull request that happens to be open when it lands. That much was
+  # already true. Two things about it were not.
+  #
+  # It is a JOB now, not the last step of build-test. There it ran only once the build, both
+  # suites and Lighthouse had all passed — so a flaky e2e or a Lighthouse blip on a Monday took
+  # the audit with it, silently, and the run was red for a reason that had nothing to do with
+  # dependencies. `npm audit` reads package-lock.json: it needs no `npm ci`, no build and no
+  # browser, so it has no business waiting behind ten minutes of work it does not use.
+  #
+  # And it covers the dev tree. See "The dependency audit" in docs/verification-status.rst.
+  audit:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          # Pinned to build-test's Node so both see the same npm and the same audit behaviour.
+          # No `cache: npm`, because nothing here installs.
+          node-version: 26.5.0
+
+      # Split in two so the failure says which tree, and neither hides the other: production is
+      # the stricter invariant — it is what reaches the browser — and it has been at 0 since
+      # this existed. Without the `if:`, a production finding would skip the dev report entirely.
       - name: Production dependency audit
-        if: github.event_name == 'schedule'
         run: npm audit --omit=dev --audit-level=high
+
+      - name: Full dependency audit, including the build toolchain
+        if: ${{ !cancelled() }}
+        run: npm audit --audit-level=high
