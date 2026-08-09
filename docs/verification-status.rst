@@ -413,8 +413,8 @@ The dependency audit — *closed 2026-08-09*
    stricter invariant; the mistake was treating it as the *only* one.
 
    **Dependabot was the fallback, and it lagged.** It does watch the dev scope of
-   :file:`v2/package-lock.json` — 165 alerts on this repository, essentially all of them
-   ``development`` — so "the dev tree is Dependabot's job" was true, and still insufficient.
+   :file:`v2/package-lock.json` — 145 alerts on this repository, 115 of them ``development``
+   and 30 ``runtime`` — so "the dev tree is Dependabot's job" was true, and still insufficient.
    The advisory was published 2026-07-29 covering only ``>= 4.0.0, < 5.1.6``, then **amended**
    2026-08-07 20:50 UTC to add ``< 3.3.17``; the newest alert of any kind here is dated
    2026-08-07 04:13 UTC. No alert for ``nanoid`` was ever raised. An advisory whose *range*
