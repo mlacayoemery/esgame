@@ -163,22 +163,57 @@ EOF
     "${K[@]}" -n ingress-nginx wait --for=condition=ready pod \
       -l app.kubernetes.io/component=controller --timeout=300s
     echo ">> waiting for the admission webhook to answer"
+    # The probe must be a VALID Ingress. The previous one sent `rules: []` on the theory that an
+    # invalid object is "rejected on its merits once the webhook is up" — but built-in schema
+    # validation runs BEFORE admission webhooks, so the API server rejected it with
+    #
+    #   The Ingress "webhook-probe" is invalid: spec: Invalid value: []: either `defaultBackend`
+    #   or `rules` must be specified
+    #
+    # every time, webhook up or down. The request never reached the webhook at all. That output
+    # matches neither string below, so the loop broke on its first iteration and `up` announced
+    # a live webhook ~70ms after starting to wait for one. Run 31751267496 is what that costs:
+    # `up` exited 0, and the Ingresses in `deploy` were then refused by the webhook it had just
+    # declared ready.
+    #
+    # So: a schema-valid Ingress, which reaches the webhook, and a POSITIVE test for the answer
+    # rather than the absence of two error strings. A dry-run that is admitted prints
+    # "... (server dry run)"; nothing else does.
+    ok=""
     for _ in $(seq 1 60); do
-      # A deliberately empty Ingress: rejected on its merits (invalid) once the webhook is up,
-      # connection-refused while it is not. Either way it proves the endpoint is live.
       out=$("${K[@]}" apply --dry-run=server -f - <<'PROBE' 2>&1 || true
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: webhook-probe
+  namespace: default
 spec:
   ingressClassName: nginx
-  rules: []
+  rules:
+    - host: webhook-probe.invalid
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: webhook-probe
+                port:
+                  number: 80
 PROBE
 )
-      grep -q 'connection refused\|failed calling webhook' <<<"${out}" || break
+      grep -q 'server dry run' <<<"${out}" && { ok=1; break; }
       sleep 2
     done
+    # And it has to be able to fail. The loop above replaced one that could not: when it ran out
+    # of attempts it fell through to the success message, exactly like this one would without the
+    # line below. The endpoints loop upstairs already asserts; this is the same assertion.
+    [ -n "${ok}" ] || {
+      echo "!! the admission webhook never admitted a probe Ingress. The last reply was:"
+      echo "   ${out}"
+      echo "   Applying the overlay now would fail the same way, so stopping here instead."
+      exit 1
+    }
     echo ">> ingress reachable on http://localhost:${HTTP_PORT} (send a Host header)"
     ;;
 
