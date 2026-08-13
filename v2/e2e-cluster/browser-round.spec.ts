@@ -85,8 +85,9 @@ async function placeAndSubmit(page: Page, count: number, offset = 0) {
  * This is the honest version of a number ingress-test.sh also reports. That script builds its
  * payload from ids it reads out of the deployed raster, so it matches by construction and says
  * ~100% however wrong the raster is. The browser sends the ids the BOARD uses, which is the
- * comparison that means something — and on the raster committed to this repository the two
- * differ enormously: 100% there, 1% here.
+ * comparison that means something — and the two only agree because #181 gave the committed
+ * raster the board's hexagon ids. Before that this reported 1% against ingress-test.sh's 100%,
+ * which is the gap this function exists to expose.
  *
  * Returns null when kubectl is unavailable, so the spec still runs without it.
  */
@@ -122,8 +123,18 @@ test('a browser plays a round end to end against the cluster', async ({ page }) 
 
 	await placeAndSubmit(page, 12);
 
-	// The spider plot only renders once a result carrying id -1 came back and was consumed.
-	await expect(page.locator('.expandable img')).toBeVisible({ timeout: 240_000 });
+	// The chart only renders once the calculator's scores came back and were consumed.
+	const chart = page.locator('tro-spider-chart svg');
+	await expect(chart).toBeVisible({ timeout: 240_000 });
+
+	// Five axes, one per indicator calculator.r returns. e2e/round-trip.spec.ts asserts this too,
+	// against a stub whose payload it wrote itself; here the entries come from whichever calculator
+	// image is deployed. An older one still sending the id -1 plot result must not draw a sixth dot.
+	await expect(page.locator('tro-spider-chart .spider-chart__dot')).toHaveCount(5);
+
+	// The label a screen reader is given is built from those same scores, so an empty chart — a
+	// frame drawn with no entries — fails here instead of passing as a visible <svg>.
+	await expect(chart).toHaveAttribute('aria-label', /\d+ of 100/);
 
 	// The browser built and sent its own allocation — nothing here constructed it.
 	expect(t.posts).toHaveLength(1);
@@ -149,8 +160,8 @@ test('a browser plays a round end to end against the cluster', async ({ page }) 
 		console.log(`  ${coverage.line.trim()}`);
 		if (coverage.percent < 50) {
 			console.log(`  !! only ${coverage.percent}% of what the browser allocated was used, so`);
-			console.log(`  !! those scores barely depend on it. Expected with the raster committed`);
-			console.log(`  !! here; a deployment supplies the data-release one.`);
+			console.log(`  !! those scores barely depend on it. The committed raster has matched the`);
+			console.log(`  !! board since #181, so this means a DIFFERENT raster is deployed here.`);
 		}
 		// The reporter must be running. Nothing else in this file would notice if it were not,
 		// and it is the only signal that a round was inert.
@@ -169,8 +180,12 @@ test('a browser plays a round end to end against the cluster', async ({ page }) 
 	const percent = Math.round(100 * reported.fraction);
 	console.log(`  calculator reported: ${reported.matched} of ${reported.allocated} ids used (${percent}%)`);
 
-	// The committed raster shares 4 ids of 465 with the board, so this cluster always takes the
-	// low branch. That makes it the honest place to assert the warning rather than a contrived one.
+	// This used to say the committed raster shares 4 ids of 465 with the board, so the cluster
+	// always took the low branch. #181 ended that: the ids match, and a healthy cluster now takes
+	// the HIGH branch, where the assertion is that no warning appeared — a round that worked must
+	// not be reported to the player as ignored. The low branch is kept for a deployment whose
+	// raster does not match, and the warning's own wording is covered on every PR by
+	// v2/src/app/services/game.service.allocation-coverage.spec.ts.
 	if (reported.fraction < 0.5) {
 		const warning = t.dialogs.find(d => d.includes('reached the model'));
 		console.log(`  warning shown to the player: ${warning ? 'yes' : 'NO'}`);
@@ -197,7 +212,7 @@ test('a second round replaces the first round\'s maps', async ({ page }) => {
 	await expect(page.locator('tro-svg-game-board').first()).toBeVisible({ timeout: 120_000 });
 
 	await placeAndSubmit(page, 12);
-	await expect(page.locator('.expandable img')).toBeVisible({ timeout: 240_000 });
+	await expect(page.locator('tro-spider-chart svg')).toBeVisible({ timeout: 240_000 });
 	const round1 = coverageIds(t.coverages);
 	expect(round1.length).toBeGreaterThanOrEqual(5);
 	console.log(`  round 1 coverages: ${round1.join(', ')}`);
