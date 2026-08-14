@@ -34,13 +34,19 @@ const calcResponse = (round: number) => ({
 
 // Serves the dynamic game with a calculator configured. config.json ships calcUrl:"" so that a
 // default build has no backend; without this the Next Level button takes the offline branch.
-async function useDynamicGameWithCalculator(page: any, posted: any[], coverageRequests: string[]) {
+//
+// `dataUrl` selects the BOARD, exactly as a deployment does: assets/data.json is the hexagonal
+// board and assets/dataRect.json is the rectangular one (docs/boards.rst). Intercepting
+// config.json is how a deployment's DYNAMIC_DATA_URL is simulated without rebuilding the image —
+// the app reads the dataset from there and nothing else distinguishes the two boards.
+async function useDynamicGameWithCalculator(
+	page: any, posted: any[], coverageRequests: string[], dataUrl = 'assets/data.json') {
 	await page.route('**/assets/config.json', async (route: any) => {
 		await route.fulfill({
 			contentType: 'application/json',
 			body: JSON.stringify({
 				staticDataUrl: 'assets/dataGridExample.json',
-				dynamicDataUrl: 'assets/data.json',
+				dynamicDataUrl: dataUrl,
 				calcUrl: CALC_URL,
 				defaultMode: 'dynamic'
 			})
