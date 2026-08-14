@@ -506,6 +506,28 @@ The dependency audit — *closed 2026-08-09*
    program, and the check passes silently having done nothing. Both scripts pass the data as a file
    path now.
 
+   **And the config missed four directories.** Dependabot does not search for Dockerfiles; it
+   looks only where each entry's ``directory:`` points. The first version of that file covered
+   three and its comment described "the three Dockerfile directories" — the repository has
+   **seven**, and the four under :file:`examples/esgame-dynamic` were unwatched. A config that
+   misses a directory is silently doing nothing for it and reads exactly like one that covers
+   everything, which is the same shape as the manifest comment claiming 2.28.4 was newest.
+
+   :file:`tools/dependabot-coverage.sh` compares the set of directories holding a tracked
+   Dockerfile against the set the config names, and fails on a difference **in either direction** —
+   a missing entry, and a stale one pointing at a directory that no longer holds a Dockerfile. It
+   reads ``git ls-files``, so it sees what a fresh clone contains and skips ``node_modules``
+   without being told where they are. It checks *coverage*, not pinning: whether a base should be
+   pinned is a separate judgement made per image with reasons above.
+
+   Confirmed able to fail, in three states:
+
+   .. code-block:: text
+
+      config as shipped                     exit 0   "all 7 Dockerfile director(ies) are watched"
+      an entry pointing at a missing dir    exit 1   names the uncovered dir AND the stale entry
+      no dependabot.yml at all              exit 2   "is missing"
+
    Two things the new config makes visible rather than fixes. ``tools/R/Dockerfile`` is
    ``FROM rstudio/plumber`` with **no tag** when that config was written, so Dependabot could not bump
    it. Pinned to ``v1.3.0`` on 2026-08-14 — the same digest ``latest`` already resolved to — so the

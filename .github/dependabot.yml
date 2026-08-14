@@ -51,6 +51,40 @@ updates:
     commit-message:
       prefix: "chore(docker)"
 
+  # The example stack. Four more Dockerfiles, and the first version of this file missed all of
+  # them while its comment described "the three Dockerfile directories" — tools/dependabot-coverage.sh
+  # exists so that cannot happen quietly again.
+  #
+  # Two of these will actually produce bumps (python:3.14-slim). The other two cannot, and are
+  # listed anyway so the coverage check stays a simple set comparison with no allow-list to rot:
+  # pygeoapi is `:latest` and the frontend is `FROM ${ESGAME_IMAGE}`, a build argument. Whether
+  # those two SHOULD be pinned is a separate judgement, made per image with reasons in
+  # docs/dependency-review.rst — pygeoapi floats deliberately, because the example is read-only and
+  # config-driven so drift surfaces as a startup failure, which CI now runs.
+  - package-ecosystem: docker
+    directory: /examples/esgame-dynamic/calculator
+    schedule: { interval: weekly, day: monday }
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: docker
+    directory: /examples/esgame-dynamic/geoserver
+    schedule: { interval: weekly, day: monday }
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: docker
+    directory: /examples/esgame-dynamic/pygeoapi
+    schedule: { interval: weekly, day: monday }
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: docker
+    directory: /examples/esgame-dynamic/frontend
+    schedule: { interval: weekly, day: monday }
+    commit-message:
+      prefix: "chore(docker)"
+
   # npm is deliberately absent. The dev tree alone carries hundreds of packages and weekly version
   # PRs across an Angular toolchain would drown the signal this file exists to create; security
   # advisories there are covered by tools/audit.sh, which fails on anything unaccepted.

@@ -196,3 +196,11 @@ jobs:
       - uses: actions/checkout@v7
       - name: Is there a newer GeoServer than the one we pin?
         run: tools/newer-geoserver.sh
+
+      - name: Dependabot is watching every Dockerfile
+        # Dependabot does not search; it looks only where it is told. A config that misses a
+        # directory is silently doing nothing for it and looks identical to one that covers
+        # everything — which is what the first version of dependabot.yml did to the four
+        # Dockerfiles under examples/esgame-dynamic.
+        if: ${{ !cancelled() }}
+        run: tools/dependabot-coverage.sh
