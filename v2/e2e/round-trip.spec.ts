@@ -184,6 +184,40 @@ test.describe('dynamic game round trip', () => {
 		await page.locator('tro-production-type-button').first().click({ timeout: 10_000 });
 	});
 
+	// The consequence maps are published stretched to their own round, so the legend used to
+	// print 0 and 100 on every one of them — true of the pixels, and a claim of comparability the
+	// data does not support. This asserts what a player is actually told.
+	test('the consequence legend says its scale is round-relative', async ({ page }) => {
+		const posted: any[] = [];
+		const coverageRequests: string[] = [];
+		await useDynamicGameWithCalculator(page, posted, coverageRequests);
+		await page.goto('/dynamic-game');
+		await expect(page.locator('tro-svg-game-board').first()).toBeVisible();
+
+		await placeFields(page, 12);
+		await clickPastHelp(page, page.locator('button.btn-next'));
+		await expect(page.locator('tro-spider-chart svg')).toBeVisible({ timeout: 60_000 });
+
+		// `p.scope` is the round-relative marker, and it is the honest way to find these: the
+		// first .is-gradient legend on the page is a SUITABILITY map, which shares this component
+		// and must keep its numbers. Selecting `.first()` tested the wrong board and failed.
+		const relative = page.locator('tro-legend-board:has(p.scope)');
+		// Five consequence maps, one per indicator the calculator returns.
+		await expect.poll(() => relative.count(), { timeout: 60_000 }).toBe(5);
+		await expect(relative.first()).toContainText('within this round only');
+		await expect(relative.first()).toContainText('low');
+		await expect(relative.first()).toContainText('high');
+		// The numbers that made the false claim are gone from them.
+		await expect(relative.first()).not.toContainText('100');
+
+		// AND THE SUITABILITY MAPS ARE UNTOUCHED. Without this the change could have relabelled
+		// every gradient legend in the app — including the ones whose numbers come from the
+		// dataset and do mean what they say — and this test would still have passed.
+		const absolute = page.locator('tro-legend-board.is-gradient:not(:has(p.scope))');
+		await expect.poll(() => absolute.count(), { timeout: 30_000 }).toBeGreaterThan(0);
+		await expect(absolute.first()).toContainText('100');
+	});
+
 	test('the score board shows the returned indicators', async ({ page }) => {
 		const posted: any[] = [];
 		const coverageRequests: string[] = [];

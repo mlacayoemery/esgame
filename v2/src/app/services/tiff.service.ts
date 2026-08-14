@@ -21,7 +21,10 @@ export class TiffService {
 
 				uniqueValues = Array.from(new Set(data)).sort((a, b) => a - b);
 				gradient = gradients.get(defaultGradient)!;
-				legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: false };
+				// isRoundRelative: false — a grid board's values come from the dataset TIFF unchanged, so
+				// its legend numbers mean what they say. Only calculator.r's per-round stretch is
+				// relative, and that is the SVG path below.
+				legend = { elements: [...uniqueValues.map((o, i) => ({ forValue: o, color: gradient!.colors[i] }))], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: false, isRoundRelative: false };
 
 				fields = data.map((o, i) => {
 					return new Field(i, new FieldType(gradient!.colors[(uniqueValues.indexOf(o))] as string, "CONFIGURED"), o);
@@ -38,7 +41,10 @@ export class TiffService {
 			mergeMap(data => {
 				let gradient: Gradient | undefined, legend: Legend, fields: Field[];
         gradient = gradients.get(defaultGradient!);
-				legend = { elements: [{ forValue: minValue, color: gradient!.calculateColor(1) }, { forValue: maxValue, color: gradient!.calculateColor(0) }], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true };
+				// isRoundRelative on consequence maps ONLY. Those are the rasters calculator.r
+				// stretches to each round's own min/max; a suitability map is dataset data whose
+				// values are what they say they are.
+				legend = { elements: [{ forValue: minValue, color: gradient!.calculateColor(1) }, { forValue: maxValue, color: gradient!.calculateColor(0) }], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true, isRoundRelative: gameBoardType == GameBoardType.ConsequenceMap };
 				fields = overlay.fields.map((field) => {
 					return {
 						...field,

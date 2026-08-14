@@ -49,7 +49,7 @@ Verified working
    * - Path
      - How it was checked
    * - Static / grid game
-     - 399 unit tests, 19 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
+     - 401 unit tests, 20 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
        SEO 100. The board renders 2,436 fields; the e2e suite asserts that rather than
        just asserting the component mounted.
    * - No external runtime deps
@@ -1505,8 +1505,8 @@ A second shape, found 2026-08-07 — *the check was sound and could not run*
 
    .. code-block:: text
 
-      The documented test count is current   compares "399 unit tests" against the suite
-      The documented e2e count is current    compares "19 Playwright e2e" against the suite
+      The documented test count is current   compares "401 unit tests" against the suite
+      The documented e2e count is current    compares "20 Playwright e2e" against the suite
 
    — while being filtered to ``v2/**``. Both are live: changing the claim to 384 and re-running
    the comparison by hand gives a mismatch. But neither could run on a documentation-only pull

@@ -125,4 +125,31 @@ describe('LegendBoardComponent', () => {
 			expect(() => { c.legendData = legend([], { isGradient: true }); }).not.toThrow();
 		});
 	});
+
+	// A consequence map is published stretched to its OWN round — calculator.r applies
+	// `(x - min) / (max - min) * 100` per round — so its ramp runs 0-100 whatever the exposure
+	// behind it was. The template prints words rather than those numbers when this is set, and
+	// this is the flag it keys off.
+	describe('round-relative legends', () => {
+		it('carries isRoundRelative through', () => {
+			const c = new LegendBoardComponent();
+
+			c.legendData = legend([element(0, 'a'), element(100, 'b')],
+				{ isGradient: true, isRoundRelative: true });
+
+			expect(c.isRoundRelative).toBe(true);
+		});
+
+		// The default matters as much as the flag: a suitability map's numbers come from the
+		// dataset and DO mean something, so it must not be relabelled by inheriting a stale value.
+		it('defaults to false, and resets between bindings', () => {
+			const c = new LegendBoardComponent();
+
+			c.legendData = legend([element(0, 'a'), element(100, 'b')],
+				{ isGradient: true, isRoundRelative: true });
+			c.legendData = legend([element(0, 'a'), element(100, 'b')], { isGradient: true });
+
+			expect(c.isRoundRelative).toBe(false);
+		});
+	});
 });
