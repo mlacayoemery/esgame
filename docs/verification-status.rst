@@ -1507,6 +1507,34 @@ How many calculation replicas should a workshop run?
    says**, which makes ``cpu: "2"`` unreachable headroom and means capacity scales with replica
    count rather than with CPU per replica.
 
+   **And the peak is one core too, at 1s resolution** — *measured 2026-08-14, twice.* Everything
+   above is an average over minutes, and an average cannot justify changing a limit: a pod at 0.7
+   cores that spikes to 1.8 for three seconds averages under one and would be throttled
+   invisibly. Sampling ``cpu.stat`` inside the pod once a second, one replica taking all the load:
+
+   .. code-block:: text
+
+      run                  busy seconds   peak   p99   p95   median   mean
+      host load 8.20              171     1.04   1.03  1.01   1.00     0.99
+      host load 3.39              193     1.06   1.05  1.02   1.01     0.99
+
+   The second run exists because the first began on a busy host, and a busy host **suppresses** a
+   peak rather than revealing one — the trap that reversed the replica conclusion earlier the same
+   day. They agree.
+
+   ``limits.cpu: 2`` is therefore unreachable: the highest single second across 364 busy seconds is
+   1.06 cores. **But 177 of 193 busy seconds sat just above 1.00**, so a limit of exactly ``1``
+   would throttle almost continuously — which the averages hid, and which is why lowering it would
+   have been the wrong conclusion from those numbers alone.
+
+   **This is an open decision, not a change.** What the evidence supports is
+   ``requests.cpu: 500m`` → ``1``: requests drive *scheduling*, and at 500m the scheduler packs
+   twice as many pods onto a node as can run at speed. The cost is that three replicas then reserve
+   three cores and become unschedulable on a small node rather than merely slow — a behaviour
+   change for every overlay built on this base, which is why it is written down here rather than
+   applied. ``limits`` is not worth touching either way: limits do not affect scheduling, 1.25
+   would fit the peak and buy nothing, and 1 would hurt.
+
    **The uneven per-pod load was chance, not load balancing — hypothesis tested and rejected.**
    The suspect was connection reuse: each k6 VU holds one connection and ingress-nginx pins it to
    an upstream pod, the same effect recorded for plot fetches under

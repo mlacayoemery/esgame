@@ -152,6 +152,45 @@ Two consequences worth knowing before sizing anything:
 * **Capacity scales with replica count, not with CPU per replica.** Giving one pod more cores does
   nothing; another pod adds another ~1 core of real work.
 
+### The peak is one core too — 1s resolution, measured 2026-08-14
+
+Everything above is an **average over a 2-5 minute window**, and an average cannot justify changing
+a limit: a pod sitting at 0.7 cores for four minutes and spiking to 1.8 for three seconds averages
+under one core and would be throttled by a 1-core limit, invisibly. So: sample
+`/sys/fs/cgroup/cpu.stat` inside the pod once a second (one `kubectl exec` running a shell loop —
+one exec *per sample* costs ~200ms and would dominate a 1s interval) and difference consecutive
+readings. `usage_usec` is monotonic CPU-microseconds, so a delta over a 1s wall tick **is** cores
+used in that second.
+
+One replica, all the load on it, two runs:
+
+| run | busy seconds | peak | p99 | p95 | median | mean |
+|---|---|---|---|---|---|---|
+| load 8.20 at start | 171 | 1.04 | 1.03 | 1.01 | 1.00 | 0.99 |
+| load 3.39 at start | 193 | **1.06** | 1.05 | 1.02 | 1.01 | 0.99 |
+
+The second was run because the first began on a busy host, and a busy host **suppresses** a peak
+rather than revealing one — the trap that reversed the replica conclusion earlier the same day.
+They agree.
+
+So `limits.cpu: 2` is genuinely unreachable: the highest single second across 364 busy seconds is
+1.06 cores, 53% of the limit. **But 177 of 193 busy seconds sat just above 1.00**, so a limit of
+exactly 1 would throttle almost continuously — which the averages hid, and which is why "lower it
+to 1" would have been the wrong conclusion from the earlier numbers alone.
+
+What the measurement supports, and does not:
+
+* **`requests.cpu: 500m` under-reserves by about half.** Requests drive scheduling, and a busy
+  replica uses ~1.0 core sustained, so the scheduler will pack twice as many pods onto a node as
+  can run at speed. `1` matches what is measured. The cost is real: three replicas then reserve
+  three cores, and on a small node they become *unschedulable* rather than merely slow — which is
+  arguably the honest outcome, but it is a behaviour change for any overlay built on this base.
+* **`limits.cpu: 2` is not worth changing.** Limits do not affect scheduling, only throttling.
+  1.25 would fit the peak and buy nothing operationally; 1 would hurt.
+
+**Open, deliberately.** Nothing here is applied — this is the evidence for a decision about a
+manifest that downstream deployments build on.
+
 ### The uneven per-pod load is chance, not load balancing
 
 Per-pod CPU came out 0.87/0.71/0.54 and 0.96/0.62/0.59, and the obvious suspect was connection
