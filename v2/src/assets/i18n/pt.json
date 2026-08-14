@@ -82,5 +82,22 @@
   "custom color explanation": "The custom colours are only needed if there is a zone map which need a specific mapping of values in the tiff to certain colours. Otherwhise you can skip this step.",
   "low": "baixo",
   "high": "alto",
-  "within this round only": "apenas dentro desta rodada"
+  "within this round only": "apenas dentro desta rodada",
+  "pt": "Português brasileiro",
+  "Calculation URL": "URL de cálculo",
+  "new-custom-color": "Adicionar",
+  "Custom Colors": "Cores personalizadas",
+  "Finish": "Concluir",
+  "production type": "Tipo de produção",
+  "Custom Color Set": "Conjunto de cores personalizado",
+  "Select minimum fields": "Selecione pelo menos {{value}}% de todos os campos (atual: {{current}}%)",
+  "remove-color-set": "Remover conjunto",
+  "new-color": "Adicionar",
+  "Value in TIFF": "Valor no TIFF",
+  "map": "Mapa",
+  "custom": "Personalizado",
+  "Custom Color Pattern": "Padrão de cores personalizado",
+  "Color Set": "Conjunto de cores",
+  "Color": "Cor",
+  "remove-color": "Remover"
 }
