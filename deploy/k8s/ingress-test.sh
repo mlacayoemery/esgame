@@ -49,6 +49,27 @@ for i in esgame-angular-ingress esgame-calculation-ingress esgame-geoserver-ingr
 done
 
 echo "==> frontend through the ingress"
+# WAIT FOR THE CONTROLLER TO PICK UP THE BACKEND, which is not the same as the pod being Ready.
+#
+# These are the FIRST request-serving checks in this script, and they run the instant
+# `kind.sh deploy` returns. That deploy already waits for the rollout and for the Service to have
+# endpoints — and neither is sufficient: ingress-nginx still has to observe the new endpoint and
+# reload before it will route to it. In between it answers 503.
+#
+# Measured 2026-08-14. Two consecutive CI runs on the same commit failed all six checks below
+# while every pod was 1/1 Running, the Ingress was adopted, the Service had its endpoint, and the
+# published image served correctly when pulled and run by hand. Reproduced locally by replacing
+# the frontend pod: 503 immediately, 200 at 31s, endpoint `ready=true` throughout. The geoserver
+# and round checks passed in those same runs purely because they come later in this file and had
+# already won the race.
+#
+# THIS ASSERTS NOTHING. It is a poll, not a check: `checks` is not incremented and nothing here
+# can pass. If the app never serves, every check below fails exactly as it did before.
+for _ in $(seq 1 45); do
+  [ "$(code esgame.local /)" = 200 ] && break
+  sleep 2
+done
+
 check "esgame.local serves the app"        "[ \"\$(code esgame.local /)\" = 200 ]"
 # Body captured first, NOT piped into `grep -q`. grep -q exits the moment it matches, curl then
 # fails writing the rest of the body with exit 23, and pipefail reports the pipeline as failed —
