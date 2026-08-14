@@ -1,0 +1,58 @@
+# Nothing watched base images or action versions until 2026-08-14.
+#
+# What that cost: GeoServer 3.0.0 was published and the k8s manifest went on saying "2.28.4 is the
+# newest tag docker.osgeo.org publishes ... Checked, so nobody re-checks" for eight days. The note
+# was true when written, which is exactly the failure mode — a fact nobody re-derives. The same
+# exposure applied to node, nginx-unprivileged and the R base, and to every `uses:` in
+# .github/workflows (which currently pin actions/setup-node at BOTH v6 and v7, in different files).
+#
+# Dependabot's security alerts were already on — that is how the extract-zip advisory surfaced. This
+# is the other half: version updates, which are a different feed and were never configured.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(actions)"
+
+  # One entry per directory holding a Dockerfile; Dependabot does not search recursively.
+  - package-ecosystem: docker
+    directory: /v2
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: docker
+    # NOTE: this Dockerfile is `FROM rstudio/plumber`, with NO TAG — i.e. :latest. Dependabot
+    # cannot bump what is not pinned, so this entry does nothing for it today. That the R base
+    # floats is already recorded in docs/verification-status.rst as something that can move the
+    # golden test underneath a run; pinning it is a separate decision, and this entry starts
+    # being useful the moment somebody makes it.
+    directory: /tools/R
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: docker
+    # docker.osgeo.org is not Docker Hub and Dependabot's support for arbitrary registries is
+    # uneven, so tools/newer-geoserver.sh checks this one directly every Monday rather than
+    # trusting that this entry works. If Dependabot does open a PR here, the two agree and the
+    # check passes on the bumped pin; if it never does, the script still says so.
+    directory: /deploy/geoserver
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "chore(docker)"
+
+  # npm is deliberately absent. The dev tree alone carries hundreds of packages and weekly version
+  # PRs across an Angular toolchain would drown the signal this file exists to create; security
+  # advisories there are covered by tools/audit.sh, which fails on anything unaccepted.
