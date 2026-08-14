@@ -1446,6 +1446,8 @@ Should the published rasters move to the same fixed scale as the scores?
    **If nobody decides:** the split stays, and it is documented here and in
    :doc:`reference/calculator` rather than being folded knowledge.
 
+.. _how-many-calculation-replicas:
+
 How many calculation replicas should a workshop run?
    This stopped being a correctness question on 2026-08-07 and became a capacity one. The plot
    that broke under replicas is gone, so raising ``replicas`` is now safe — see
@@ -1926,7 +1928,9 @@ rather than remembered.
 
 * **One calculation replica sustains about one concurrent player** (*measured 2026-08-06*;
   superseded 2026-08-14 — the ceiling is **one core per replica** and about 4.5-5 rounds a minute
-  at three replicas, see `How many calculation replicas should a workshop run?`_).
+  at three replicas, see
+  :ref:`How many calculation replicas should a workshop run?
+  <how-many-calculation-replicas>`).
   :file:`perf/calc-load.js` had never been run. Against the deployed backend, through the
   Service, a round takes **12.9-28.2s** and rounds **do not overlap** — R/Plumber serves
   single-threaded, so a second concurrent submission queues behind the first. At ``VUS=2`` the
