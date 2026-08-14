@@ -82,5 +82,22 @@
   "custom color explanation": "The custom colours are only needed if there is a zone map which need a specific mapping of values in the tiff to certain colours. Otherwhise you can skip this step.",
   "low": "laag",
   "high": "hoog",
-  "within this round only": "alleen binnen deze ronde"
+  "within this round only": "alleen binnen deze ronde",
+  "pt": "Braziliaans Portugees",
+  "Calculation URL": "URL van de rekenservice",
+  "new-custom-color": "Toevoegen",
+  "Custom Colors": "Aangepaste kleuren",
+  "Finish": "Voltooien",
+  "production type": "Productietype",
+  "Custom Color Set": "Aangepaste kleurenset",
+  "Select minimum fields": "Selecteer ten minste {{value}}% van alle velden (nu: {{current}}%)",
+  "remove-color-set": "Kleurenset verwijderen",
+  "new-color": "Toevoegen",
+  "Value in TIFF": "Waarde in TIFF",
+  "map": "Kaart",
+  "custom": "Aangepast",
+  "Custom Color Pattern": "Aangepast kleurenpatroon",
+  "Color Set": "Kleurenset",
+  "Color": "Kleur",
+  "remove-color": "Verwijderen"
 }
