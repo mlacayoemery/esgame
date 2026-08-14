@@ -11,6 +11,7 @@ import { LegendElement, Legend } from '../shared/models/legend';
 export class LegendBoardComponent {
 	legendElements: LegendElement[];
 	isNegative = false;
+	isRoundRelative = false;
 	gradient: string = ""
 
 
@@ -23,6 +24,7 @@ export class LegendBoardComponent {
 			this.legendElements = data.elements.sort((a, b) => a.forValue - b.forValue);
 			this.isNegative = data.isNegative;
 			this.isGradient = data.isGradient;
+			this.isRoundRelative = data.isRoundRelative;
 			if (data.isGradient) {
 				// A gradient needs two stops. With fewer, this used to index elements[1] and throw
 				// "Cannot read properties of undefined (reading 'color')" — and because this setter

@@ -12,7 +12,20 @@
 <ng-container *ngIf="gradient">
 	<div class="gradient">
 		<div [ngStyle]="{ background: gradient}"></div>
-		<p [ngClass]="{'--positive': !isNegative, '--negative': isNegative}">{{legendElements[0].forValue}}</p>
-		<p [ngClass]="{'--positive': !isNegative, '--negative': isNegative}">{{legendElements[1].forValue}}</p>
+		<!--
+		  A consequence map is stretched to its OWN round, so its endpoints are 0 and 100 every
+		  round regardless of the exposure behind them. Printing those numbers claimed a
+		  comparability the data does not have. Words instead, plus the scope, so a player can
+		  read the shape within the round without reading the colour across rounds.
+		-->
+		<ng-container *ngIf="isRoundRelative; else numericEnds">
+			<p [ngClass]="{'--positive': !isNegative, '--negative': isNegative}" translate>low</p>
+			<p [ngClass]="{'--positive': !isNegative, '--negative': isNegative}" translate>high</p>
+			<p class="scope" translate>within this round only</p>
+		</ng-container>
+		<ng-template #numericEnds>
+			<p [ngClass]="{'--positive': !isNegative, '--negative': isNegative}">{{legendElements[0].forValue}}</p>
+			<p [ngClass]="{'--positive': !isNegative, '--negative': isNegative}">{{legendElements[1].forValue}}</p>
+		</ng-template>
 	</div>
 </ng-container>

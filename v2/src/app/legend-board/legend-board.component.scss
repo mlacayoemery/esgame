@@ -29,6 +29,17 @@
                 float: left;
             }
 
+            // Sits under both floated ends, centred, and clears them — otherwise it wraps
+            // alongside the "high" label instead of below the bar.
+            &.scope {
+                float: none;
+                clear: both;
+                text-align: center;
+                font-size: 10px;
+                font-style: italic;
+                opacity: 0.85;
+            }
+
             &.--positive {
                 color: $color-positive;
             }
