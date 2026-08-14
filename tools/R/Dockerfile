@@ -1,4 +1,19 @@
-FROM rstudio/plumber
+# Pinned 2026-08-14. This was the one unpinned base in the repository, and it was left floating
+# DELIBERATELY: docs/dependency-review.rst argued that "the newest concrete tag is v1.3.0, but that
+# pins a plumber version and may carry an older R, so pinning could regress the interpreter."
+#
+# Measured, and that concern is void — the two tags are the SAME IMAGE:
+#
+#   rstudio/plumber:latest -> sha256:2e2ec5ad3ff0d73bf5d0395fa80ddb65476356d85a5cfff9f4e4423884e51f21
+#   rstudio/plumber:v1.3.0 -> sha256:2e2ec5ad3ff0d73bf5d0395fa80ddb65476356d85a5cfff9f4e4423884e51f21
+#
+# Both are R 4.6.1. So this pin changes nothing today and stops `latest` moving under a future
+# build — which matters here more than most places, because tools/R/golden-test.sh freezes this
+# model's output and an interpreter that changed by itself would surface as "the scores moved".
+#
+# It does NOT make the build reproducible on its own: the install.packages lines below still
+# resolve whatever p3m currently serves. One moving part fewer, not none.
+FROM rstudio/plumber:v1.3.0
 
 # System libraries FIRST, then R packages. The previous order installed R packages and only
 # then the apt layers, which meant a package could install cleanly and still fail to LOAD:

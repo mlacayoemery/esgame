@@ -80,7 +80,9 @@ jobs:
         # model at all. Everywhere else, tools/R is parsed.
         #
         # A failure means find out why, not "the model is wrong". calculator.r, the base raster,
-        # or the R packages underneath (rstudio/plumber is untagged) can all move it.
+        # or the R packages underneath can all move it. The base image is pinned since
+        # 2026-08-14, but the Dockerfile's install.packages lines still resolve whatever p3m
+        # serves at build time, so this can still shift without anything here changing.
         run: tools/R/golden-test.sh
 
       - uses: actions/setup-node@v7
