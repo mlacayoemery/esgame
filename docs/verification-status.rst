@@ -401,7 +401,7 @@ The published site was twelve commits behind master — *closed 2026-08-07*
    real calculator and the real Angular build wired by compose, rather than published images and a
    FastAPI stand-in. The cheap parse stays in the per-PR job.
 
-   Its sharpest assertion is that the served :file:`assets/config.json` carries
+   Its sharpest assertion is that the served ``assets/config.json`` carries
    ``calcUrl = http://localhost:$ESGAME_CALC_PORT``. That is the premise of the whole deployment —
    one image, retargeted by environment variable at container start — and it catches the port and
    the URL drifting apart, which produces a stack that comes up clean and fails only in a browser.
