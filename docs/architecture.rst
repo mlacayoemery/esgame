@@ -283,7 +283,9 @@ defines four services:
        **not** seed.
    * - ``geoserver``
      - ``8080:8080``
-     - ``docker.osgeo.org/geoserver:2.28.4`` serving the consequence rasters. Its
+     - ``ghcr.io/<owner>/esgame-geoserver:master`` serving the consequence rasters — built
+       here (:file:`deploy/geoserver/Dockerfile`) so it runs as uid 10001; upstream GeoServer
+       runs as uid 0 at every version. Its
        catalog lives on the persistent named volume ``geoserver-data`` →
        :file:`/opt/geoserver_data`; the TIFF folder is bind-mounted read-only at
        :file:`/rasters`. ``CORS_ENABLED=true``.

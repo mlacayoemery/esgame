@@ -304,7 +304,7 @@ make up the project ``esgame-dynamic-example``:
        per consequence map ``+`` a simple allocation-based score.
    * - ``geoserver``
      - ``8080:8080``
-     - Serves the consequence rasters; ``docker.osgeo.org/geoserver:2.28.4``,
+     - Serves the consequence rasters; ``ghcr.io/<owner>/esgame-geoserver:master``,
        ``CORS_ENABLED=true``.
    * - ``geoserver-seed``
      - —
@@ -569,9 +569,12 @@ placeholder ``load-geodata`` init container for the real loader.
 
    Pin the base ``ref`` (currently ``?ref=master``) to ``v2.0.0`` once that
    esgame release is tagged. ``master`` is used until then; the ``1.9.0`` tag
-   predates :file:`deploy/k8s/base` entirely. For reproducible GeoServer deploys,
-   also pin the base's ``docker.osgeo.org/geoserver:2.24.x`` to a specific patch
-   (e.g. ``2.24.4``).
+   predates :file:`deploy/k8s/base` entirely. GeoServer needs no separate pin: since
+   2026-08-14 the base names ``ghcr.io/<owner>/esgame-geoserver:master``, built from
+   :file:`deploy/geoserver/Dockerfile`, and the GeoServer version is pinned inside
+   that Dockerfile. Pinning the *tag* here is the same question as pinning the other
+   two images, and the same answer — ``:master`` rolls, so pin it for a deployment
+   you need to reproduce.
 
 External geodata
 ~~~~~~~~~~~~~~~~~

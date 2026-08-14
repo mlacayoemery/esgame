@@ -6,10 +6,11 @@ name: Build & publish the GeoServer image
 # See deploy/geoserver/Dockerfile for why this image exists at all — upstream publishes no rootless
 # tag at any version, and both manifest-only routes were measured and rejected.
 #
-# NOTHING REFERENCES THIS IMAGE YET. deploy/k8s/base still names docker.osgeo.org/geoserver:2.28.4,
-# and switching it is a separate pull request on purpose: both images this repository publishes roll
+# deploy/k8s/base, v2/docker-compose.dynamic.yml and examples/esgame-dynamic all name this image.
+# They were pointed at it in a SEPARATE pull request, after the first publish: every image here rolls
 # on a `:master` tag, so a manifest change merged alongside an image change is deployed against the
-# PREVIOUS image. The order has to be publish, then point at it.
+# PREVIOUS image. Publish first, point at it second — that ordering still applies to any future
+# change that alters both.
 
 on:
   push:

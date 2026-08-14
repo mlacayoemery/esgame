@@ -53,7 +53,27 @@ services:
       - "8000:8000"
 
   geoserver:
-    image: docker.osgeo.org/geoserver:2.28.4
+    # Built here (deploy/geoserver/Dockerfile): upstream GeoServer runs as uid 0 at every version,
+    # this one runs as 10001. Same image as the k8s base and v2/docker-compose.dynamic.yml.
+    #
+    # UPGRADING AN EXISTING STACK? DELETE THE geoserver-data VOLUME FIRST.
+    #
+    #   docker compose down && docker volume rm esgame-dynamic_geoserver-data
+    #
+    # A docker named volume populates itself from the image the FIRST time it is used, ownership
+    # included — so a volume created by the old root image holds root-owned 0755 content that uid
+    # 10001 cannot write. Measured: GeoServer starts, serves /geoserver/index.html as **404**, and
+    # logs no permission error at all. What it does log, buried among startup noise, is
+    #
+    #   WARN  GEOSERVER_DATA_DIR set to /opt/geoserver_data/ , which is not writeable
+    #   ERROR Could not reconfigure LOG4J loggers ... Cannot create logs
+    #
+    # If the catalog in that volume is worth keeping, chown it instead of deleting it — verified to
+    # recover a volume that was already broken this way:
+    #
+    #   docker run --rm -v esgame-dynamic_geoserver-data:/d alpine \
+    #     sh -c 'chown -R 10001:0 /d && chmod -R g+w /d'
+    image: ghcr.io/mlacayoemery/esgame-geoserver:master
     container_name: esgame-dynamic-geoserver
     environment:
       CORS_ENABLED: "true"

@@ -350,8 +350,10 @@ and configured at run time.
 GeoServer and the seeder
 ------------------------
 
-GeoServer itself is **not built** — the example pulls the official image
-``docker.osgeo.org/geoserver:2.28.4`` and serves the consequence rasters from a
+GeoServer **is** built here, from :file:`deploy/geoserver/Dockerfile` — one ``chmod`` over the
+official image so it can run as uid 10001, because upstream publishes no rootless tag at any
+version. The example pulls ``ghcr.io/<owner>/esgame-geoserver:master`` and serves the consequence
+rasters from a
 persistent data dir (volume ``geoserver-data`` at ``/opt/geoserver_data``), which
 is reloaded on every boot.
 
@@ -511,7 +513,8 @@ same constraints are applied everywhere:
        ``node:26-alpine``; CI and Pages both pin ``26.5.0``.
    * - Pinned image bases
      - ``node:26-alpine``, ``nginxinc/nginx-unprivileged:alpine``, ``python:3.14-slim``, and
-       ``docker.osgeo.org/geoserver:2.28.4``; the example calculator pins
+       ``docker.osgeo.org/geoserver:3.0.0`` (the base of this repository's own
+       ``esgame-geoserver`` image); the example calculator pins
        ``fastapi==0.140.13`` and ``uvicorn[standard]==0.52.0``.
    * - Configuration-free build
      - No backend address is compiled in. ``CALC_URL`` (and ``config.json`` more

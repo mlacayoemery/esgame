@@ -763,7 +763,7 @@ Container security context — *added 2026-07-31*, extended *2026-08-05* and *20
 
       esgame frontend       uid 101     readOnlyRootFilesystem   /tmp + /usr/share/nginx/html/assets
       esgame calculation    uid 10001   readOnlyRootFilesystem   /tmp + /app/data
-      geoserver 2.28.4      uid 0       (refused, see below)     upstream
+      esgame-geoserver      uid 10001   (refused, see below)     built here, 2026-08-14
 
    The writable set was **measured, not guessed** — each image run with ``--read-only`` and the
    first thing it failed on read off the log, then the mount added and the run repeated:
@@ -1260,20 +1260,45 @@ How many calculation replicas should a workshop run?
    number needs a class size — a fact about a workshop, not about this repository. What has changed
    is that the choice is now arithmetic rather than a guess.
 
-GeoServer runs as uid 0 with a writable root filesystem
-   The only one of these that was investigated and **refused with evidence** rather than left
-   open. Recorded here because "why is this still like that" is otherwise a question somebody
-   asks once a year.
+GeoServer runs as uid 10001 — *closed 2026-08-14*
+   All three containers are non-root now. This entry stays because the shape of the answer is
+   worth keeping: it was refused with evidence for eight days, and then the refusal was overturned
+   by a decision rather than by new evidence.
 
-   No rootless GeoServer image exists (*2026-08-06*). Forcing ``--user`` makes the webapp never
-   deploy — a **404 while Tomcat logs success** — and kartoza's image exits 10. Under
-   ``--read-only`` it starts while silently failing to rewrite its own ``server.xml``.
+   **The refusal was sound and is still true.** No rootless GeoServer image exists at any version.
+   Rechecked from docker.osgeo.org's registry config blobs on 2026-08-14: ``2.28.4`` and ``3.0.0``
+   — newly published, and there is still no ``2.29`` — both declare ``User ""`` with the same
+   ``ENTRYPOINT ["bash", "/opt/startup.sh"]``. Forcing ``--user`` makes the webapp never deploy, a
+   **404 while Tomcat logs success**; kartoza's image exits 10 on ``groupadd``.
 
-   **The alternative was declined:** seeding four Tomcat paths as ``emptyDir``\ s from the image
-   in our own manifest. The call was to solve it upstream or not at all.
+   **What changed is the appetite for owning it.** Seeding Tomcat paths as ``emptyDir``\ s in our
+   own manifest had been declined — solve it upstream or not at all — and that was reconsidered.
+   Tried first, and it gets further than expected: a Ready pod, 18/18 in
+   :file:`deploy/k8s/ingress-test.sh`, both browser rounds green. It is still wrong, because the
+   startup script also ``sed``\ s ``webapps/geoserver/WEB-INF/web.xml`` to apply ``CORS_ENABLED``
+   and cannot, so GeoServer's own CORS preflight drops from **200** to **403** — invisible in the
+   cluster, where ingress-nginx supplies the headers, and load-bearing in the compose stacks, where
+   nothing does. Covering it needs a third seeded ``emptyDir`` over a 125 MB exploded webapp.
 
-   **If nobody decides:** the two images this repository builds stay hardened (uid 101 and
-   10001, both ``readOnlyRootFilesystem``) and the third stays upstream's problem.
+   So the fix is one ``chmod`` at build time: :file:`deploy/geoserver/Dockerfile`, on GeoServer
+   **3.0.0**, over the three paths the startup script actually writes. ``logs``, ``work`` and
+   ``temp`` are already ``drwxrwxrwt`` and are deliberately untouched. Cost 1.54 GB → 1.77 GB.
+
+   Verified with the published image deployed: uid 10001, zero permission-denied lines, CORS
+   preflight 200, ingress-test.sh 18/18, both browser rounds, and :file:`tools/R/golden-test.sh`
+   unchanged — which is the check that matters for a version bump, since the calculator drives
+   GeoServer's REST API every round.
+
+   **One upgrade hazard, measured.** A docker named volume populates from the image on first use,
+   ownership included, so an ``examples/esgame-dynamic`` stack with an existing ``geoserver-data``
+   volume holds root-owned ``0755`` content that uid 10001 cannot write. GeoServer then starts and
+   serves **404 with no permission error logged** — the cause appears only as
+   ``GEOSERVER_DATA_DIR ... which is not writeable`` among the startup noise. Delete the volume, or
+   ``chown -R 10001:0`` it; both are documented in that compose file and the chown was verified to
+   recover an already-broken volume.
+
+   ``readOnlyRootFilesystem`` is **still refused**, unchanged: the startup script rewrites its own
+   ``server.xml`` on every boot, so the root filesystem has to be writable whoever owns it.
 
 
 The checks were audited for vacuity
