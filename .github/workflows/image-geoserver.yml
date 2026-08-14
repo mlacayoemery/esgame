@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Reclaim runner disk
-        # The base is 1.52 GB and the chmod layer takes it to 1.74 GB, so the build needs several
+        # The base is 1.54 GB and the chmod layer takes it to 1.77 GB, so the build needs several
         # GB of layer space on a runner that arrives with ~25 GB. "no space left on device" during
         # a chmod of a 125 MB webapp surfaces as an unrelated-looking I/O error.
         run: |

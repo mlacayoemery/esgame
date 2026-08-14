@@ -4,10 +4,18 @@
 # a decision made upstream. It exists because the two alternatives were measured and are worse.
 #
 # THERE IS NO ROOTLESS GEOSERVER IMAGE TO USE INSTEAD. Read from docker.osgeo.org's own registry
-# config blobs on 2026-08-14, not assumed: both `2.28.4` (what this repository pins) and `3.0.0`
-# (published since the last time anyone looked — there is still no 2.29) declare `User ""` and the
-# same `ENTRYPOINT ["bash", "/opt/startup.sh"]`. No tag mentions rootless. kartoza/geoserver was
-# ruled out earlier: forced non-root it exits 10 on `groupadd: Permission denied`.
+# config blobs on 2026-08-14, not assumed: both `2.28.4` (what this repository pinned) and `3.0.0`
+# declare `User ""` and the same `ENTRYPOINT ["bash", "/opt/startup.sh"]`. No tag mentions rootless.
+# kartoza/geoserver was ruled out earlier: forced non-root it exits 10 on
+# `groupadd: Permission denied`.
+#
+# AND THIS MOVES TO 3.0.0, which was published since the last time anyone checked — the note this
+# replaces recorded 2.28.4 as the newest tag, and there is still no 2.29 at all. Verified as a
+# major-version bump in its own right rather than assumed to be transparent: the three paths below
+# are unchanged from 2.28.4, `GEOSERVER_DATA_DIR` is still `/opt/geoserver_data`, the calculator's
+# REST usage still creates workspaces and uploads coverages (ingress-test.sh 18/18, both
+# e2e-cluster browser rounds), and `tools/R/golden-test.sh` still returns
+# HC 66 / HH 65 / NP 60 / RV 68 / WA 72 — the model's scores did not move.
 #
 # WHY NOT JUST SET runAsUser IN THE MANIFEST. Because it does not fail, it 404s. The startup script
 # writes to paths the image leaves root-owned, and Tomcat comes up having silently skipped the
@@ -29,11 +37,11 @@
 #
 # One `chmod` at build time replaces all of that.
 #
-# COST, measured: 1.52 GB base -> 1.74 GB here. The 220 MB is overlayfs copying up the directories
+# COST, measured: 1.54 GB base -> 1.77 GB here. The 220 MB is overlayfs copying up the directories
 # whose mode changed; there is no way to change a mode without materialising the layer. That buys a
-# GeoServer whose behaviour as uid 10001 is byte-for-byte what it was as root — verified below and
-# in the workflow that publishes this.
-FROM docker.osgeo.org/geoserver:2.28.4
+# GeoServer that behaves as uid 10001 the way it did as root, on every check anyone here runs —
+# verified against a live cluster and re-checked by the workflow that publishes it.
+FROM docker.osgeo.org/geoserver:3.0.0
 
 # gid 0, not a new group. The container already runs with gid 0, so group-writable is sufficient
 # and nothing has to edit /etc/passwd or /etc/group — which is itself a thing that needs root.
@@ -44,7 +52,9 @@ FROM docker.osgeo.org/geoserver:2.28.4
 #   /usr/local/tomcat/conf/healthcheck_url.txt          created at startup
 #   /usr/local/tomcat/conf/server.xml                   rewritten at startup
 #   /usr/local/tomcat/webapps/geoserver/WEB-INF/web.xml sed for CORS (temp file + rename)
-#   /opt/geoserver_data                                 populated on first boot; EMPTY in the image
+#   /opt/geoserver_data                                 populated on first boot; the image ships
+#                                                       only a .gitignore here, so there is nothing
+#                                                       to preserve, only somewhere to write
 #
 # logs, work and temp are deliberately absent: they are already drwxrwxrwt in the image, so any uid
 # can write them and touching them would grow the image for nothing.
