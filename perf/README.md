@@ -187,4 +187,34 @@ The main remaining lever is Angular Material itself, still ~29% of `main`, with 
 its ten modules genuinely used by eagerly-loaded components. Going further means
 component-level changes rather than configuration.
 
-The Playwright suite (`v2/e2e`) can also assert time-to-first-board-render.
+## Client render — `v2/e2e/render-timing.spec.ts` (Playwright)
+
+Lighthouse gates the **build**. It stops looking once the page has loaded, and the heavy client op
+— decoding five GeoTIFFs into 466-hexagon SVG boards — happens entirely after that. This spec
+covers the gap, and runs on **every PR** with the rest of the e2e suite.
+
+**The gate is a count, not a clock.** Each coverage URL must be fetched exactly once per round.
+That is true or false on any machine at any load, and it is the shape most client performance
+regressions actually take — a board re-decoded, or a TIFF re-fetched, changes an integer.
+
+**The timings are printed and deliberately not asserted.** A ceiling was written and then removed
+once it was measured. Same machine, same build, same commit:
+
+| | first render | decode after the round |
+|---|---|---|
+| spec run alone | 3.0–3.4s | 0.5–0.9s |
+| in the full e2e suite | 11.4s | 0.9s |
+
+A **3.4× swing from Playwright's own concurrency**, before any CI runner is involved. Any ceiling
+tight enough to mean something fails on a busy runner; one loose enough to survive asserts nothing
+that a hang does not already trigger — and the hang is already covered, because `fieldsSettle`
+throws `hexagon count never settled at >= N; last saw M`, which says how far the render got rather
+than just that a number was exceeded.
+
+Recorded on a developer machine, 2026-08-14: **3262 hexagons across 7 boards** on first render,
+**5592 across 12** after a round. Compare A/B in one sitting, never against a different day.
+
+One trap worth knowing if you extend this. Measuring "when did rendering finish" by waiting for
+stillness needs a floor: the first version returned **0 hexagons in 0.8s**, because 0 is perfectly
+still before Angular renders anything, and a detector watching only for stillness cannot tell
+"has not started" from "has finished".
