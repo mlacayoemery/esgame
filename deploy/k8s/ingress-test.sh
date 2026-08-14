@@ -137,15 +137,27 @@ check "the image default password does NOT work" \
   "[ \"\$(code esgame-geoserver.local /geoserver/rest/about/version.json -u '${gs_user}:${gs_pass}')\" = 200 ] && [ \"\$(code esgame-geoserver.local /geoserver/rest/about/version.json -u admin:geoserver)\" != 200 ]"
 
 echo "==> a real round through the calculation ingress"
-# Ids come from the raster the deployed calculator actually reads, not from an assumption.
+# Ids come from the raster the deployed calculator actually reads, not from an assumption — and
+# ESGAME_BASE_RASTER is resolved INSIDE the pod, so this follows whichever board is deployed.
+#
+# It used to name LU_and_NEW_hexa.tif literally, which was the same thing when there was one board.
+# With two it would have been a check that cannot fail: overlays/rectangular ships both rasters, so
+# reading the hexagonal one still works, its ids (100..46500) are all present in the rectangular
+# raster (100..52900), and the round below would report 100% coverage while allocating to a board
+# the browser never drew. Exactly the circularity this file already warns about further down.
 pod=$("${K[@]}" get pod -l app=esgame-calculation -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
 "${K[@]}" exec "${pod}" -- R -q -e '
   suppressMessages(library(raster))
-  v <- sort(unique(na.omit(values(raster("/app/data/LU_and_NEW_hexa.tif")))))
+  p <- file.path("/app/data", Sys.getenv("ESGAME_BASE_RASTER", "LU_and_NEW_hexa.tif"))
+  cat("RASTER:", basename(p), "\n")
+  v <- sort(unique(na.omit(values(raster(p)))))
   cat("IDS:", paste(v[v >= 9], collapse=","), "\n")' 2>/dev/null \
-  | tr -d '\r' | sed -n 's/^IDS: //p' | tr -d ' ' > /tmp/esgame-ingress-ids.txt || true
+  | tr -d '\r' > /tmp/esgame-ingress-raster.txt || true
+sed -n 's/^IDS: //p' /tmp/esgame-ingress-raster.txt | tr -d ' ' > /tmp/esgame-ingress-ids.txt
+base_raster=$(sed -n 's/^RASTER: //p' /tmp/esgame-ingress-raster.txt | tr -d ' ' | head -1)
 n=$(tr ',' '\n' < /tmp/esgame-ingress-ids.txt | grep -c . || echo 0)
-echo "     ${n} allocatable ids read from the deployed raster"
+echo "     ${n} allocatable ids read from ${base_raster:-<unknown>}, the deployed board"
+check "the deployed base raster was identified" "[ -n '${base_raster}' ]"
 check "read the id space from the pod"     "[ '${n}' -gt 100 ]"
 
 python3 - /tmp/esgame-ingress-ids.txt > /tmp/esgame-ingress-payload.json <<'PY'

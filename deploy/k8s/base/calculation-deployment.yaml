@@ -51,6 +51,21 @@ spec:
           image: esgame-calculation # rewritten by kustomization.yaml images:
           imagePullPolicy: Always
           env:
+            # Which board this calculator scores against. It MUST be the pair of the frontend's
+            # DYNAMIC_DATA_URL: the browser sends the ids it drew, and reclassify() ignores ids the
+            # raster does not contain in silence, so a mismatched pair returns five finite scores
+            # that barely move whatever the player does. manifests.yml checks the two agree in every
+            # rendered overlay, because nothing at run time will.
+            #
+            # optional: true, and unset means LU_and_NEW_hexa.tif — the shipped board — so every
+            # overlay that does not set it is unaffected. calculator.r verifies the file exists at
+            # startup and refuses to come up otherwise.
+            - name: ESGAME_BASE_RASTER
+              valueFrom:
+                configMapKeyRef:
+                  name: esgame-config
+                  key: ESGAME_BASE_RASTER
+                  optional: true
             - name: GEOSERVER
               valueFrom:
                 configMapKeyRef:

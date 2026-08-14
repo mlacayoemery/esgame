@@ -137,10 +137,71 @@ PY
     [ "${status}" = FAIL ] && fail=1
   done <<<"${imgout}"
   [ -n "${imgout}" ] || { echo "  FAIL the images check for ${d} produced nothing"; fail=1; }
+
+  # The board the browser DRAWS and the board the calculator SCORES have to be the same one.
+  #
+  # There are two now — the hexagonal board and the rectangular one (docs/boards.rst) — chosen by
+  # two independent ConfigMap keys in two different containers:
+  #
+  #   DYNAMIC_DATA_URL    assets/data.json      -> New_rectangles? no: New_hexagons.tif
+  #                       assets/dataRect.json  -> New_rectangles.tif
+  #   ESGAME_BASE_RASTER  LU_and_NEW_hexa.tif / LU_and_NEW_rect.tif
+  #
+  # A mismatched pair DOES NOT FAIL. The browser sends the ids it drew and reclassify() ignores
+  # ids the raster does not contain in silence, so the round returns 200, publishes five coverages
+  # and produces five finite scores that barely move whatever the player does — the exact defect
+  # tools/R/make-base-raster.R exists to prevent, reintroduced through configuration instead of
+  # through data. calculator.r reports allocationCoverage precisely because nothing at run time
+  # will notice; this notices before it is applied.
+  pairout=$(python3 - "${rendered}" <<'PY'
+import sys, yaml
+
+# dataset -> the base raster that scores it.
+PAIRS = {'assets/data.json': 'LU_and_NEW_hexa.tif', 'assets/dataRect.json': 'LU_and_NEW_rect.tif'}
+DEFAULT_DATA, DEFAULT_RASTER = 'assets/data.json', 'LU_and_NEW_hexa.tif'
+
+cfgs = [d for d in yaml.safe_load_all(open(sys.argv[1]))
+        if d and d.get('kind') == 'ConfigMap' and (d.get('data') or {}).get('CALC_URL') is not None]
+if not cfgs:
+    print('skip\tboard pairing\tno esgame-config in this render'); raise SystemExit
+
+data = cfgs[0].get('data') or {}
+# Unset means the image default, which is the hexagonal board on both sides. That is a valid,
+# matched configuration and is what every overlay that predates the second board renders.
+dataset = data.get('DYNAMIC_DATA_URL', DEFAULT_DATA)
+raster = data.get('ESGAME_BASE_RASTER', DEFAULT_RASTER)
+
+if dataset not in PAIRS:
+    print(f"FAIL\tboard pairing\tDYNAMIC_DATA_URL={dataset} is not a known dataset "
+          f"({', '.join(PAIRS)}); add it here with the raster that scores it")
+elif PAIRS[dataset] != raster:
+    print(f"FAIL\tboard pairing\t{dataset} needs ESGAME_BASE_RASTER={PAIRS[dataset]}, "
+          f"but this render says {raster} — the round would score ids it does not have")
+else:
+    print(f"ok\tboard pairing\t{dataset} <-> {raster}")
+
+# DEFAULT_MODE is what makes any of it reachable: a rectangular dataset behind the grid game at
+# "/" is a board nobody can get to without knowing the /dynamic-game URL.
+mode = data.get('DEFAULT_MODE')
+if mode is not None and mode not in ('static', 'dynamic'):
+    print(f"FAIL\tDEFAULT_MODE\t{mode!r} is neither static nor dynamic; the entrypoint refuses it")
+elif dataset != DEFAULT_DATA and mode != 'dynamic':
+    print(f"FAIL\tDEFAULT_MODE\t{dataset} is selected but '/' serves "
+          f"{mode or 'static (the default)'}; nothing would render that board")
+else:
+    print(f"ok\tDEFAULT_MODE\t{mode or 'unset (static)'}")
+PY
+)
+  while IFS=$'\t' read -r status name detail; do
+    [ -n "${status}" ] || continue
+    printf '  %-4s %-22s %s\n' "${status}" "${name}" "${detail}"
+    [ "${status}" = FAIL ] && fail=1
+  done <<<"${pairout}"
+  [ -n "${pairout}" ] || { echo "  FAIL the board-pairing check for ${d} produced nothing"; fail=1; }
 done
 
 if [ "${fail}" = 0 ]; then
-  echo "renders are consistent (public URLs + images): PASS"
+  echo "renders are consistent (public URLs + images + board pairing): PASS"
 else
-  echo "renders are consistent (public URLs + images): FAIL"; exit 1
+  echo "renders are consistent (public URLs + images + board pairing): FAIL"; exit 1
 fi

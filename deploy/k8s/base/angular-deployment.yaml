@@ -69,12 +69,38 @@ spec:
           image: esgame-angular # rewritten by kustomization.yaml images:
           imagePullPolicy: Always
           env:
-            # The entrypoint substitutes this into assets/config.json on start (runtime config).
+            # The entrypoint substitutes these into assets/config.json on start (runtime config).
             - name: CALC_URL
               valueFrom:
                 configMapKeyRef:
                   name: esgame-config
                   key: CALC_URL
+            # Which game "/" serves, and which dataset the dynamic one loads. Together with the
+            # calculation container's ESGAME_BASE_RASTER these choose the BOARD — the hexagonal one
+            # by default, the rectangular one in overlays/rectangular.
+            #
+            # optional: true on both, so this base behaves EXACTLY as it did for every overlay that
+            # does not set them: an unset variable makes the entrypoint leave the built-in
+            # config.json alone. Without it, adding these keys would stop every downstream overlay's
+            # frontend from starting until its own esgame-config carried them — a base change that
+            # breaks deployments this repository cannot see.
+            #
+            # They must not be present-but-empty either. The entrypoint refuses DEFAULT_MODE="" (it
+            # is neither "static" nor "dynamic") rather than silently serving the wrong game, so a
+            # configMap that defines the key as "" fails the pod at start. That is why the base
+            # configmap does not define them at all.
+            - name: DEFAULT_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: esgame-config
+                  key: DEFAULT_MODE
+                  optional: true
+            - name: DYNAMIC_DATA_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: esgame-config
+                  key: DYNAMIC_DATA_URL
+                  optional: true
           ports:
             - containerPort: 8080
               protocol: TCP
