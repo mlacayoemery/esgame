@@ -1350,15 +1350,51 @@ Should the published rasters move to the same fixed scale as the scores?
    "colours do not move between rounds" for "colours do not move within a round" is not obviously
    a gain.
 
+   **Measured 2026-08-14: a LINEAR fixed scale cannot work, and a logarithmic one can.** The
+   pre-stretch cell values never leave the calculator, so this was computed by running the model
+   inside the pod over the same allocations the scores sheet uses. Cell maxima, which are identical
+   across all five indicators because they share one concentration field:
+
+   .. code-block:: text
+
+      all-ext-arable    6.07        mostly-nature-46farms   6.07
+      all-int-arable   24.26        half-int-half-nature   24.26
+      all-agropark     78.85
+
+   **A 13x range between the gentlest and the most intense allocation.** Fix the ramp at the
+   observed envelope (78.85, all-agropark) and a realistic player allocation lands in the bottom
+   tenth of it:
+
+   .. code-block:: text
+
+      allocation                linear median  linear max     log median   log max
+      mostly-nature-46farms              4.1%        7.7%          27.1%     41.3%
+      all-ext-arable                     7.7%        7.7%          41.3%     41.3%
+      half-int-half-nature              18.7%       30.8%          61.6%     73.0%
+      all-int-arable                    25.0%       30.8%          68.3%     73.0%
+      all-agropark                      81.3%      100.0%          95.3%    100.0%
+
+   The linear column is the answer to option C as it was posed, and it is worse than the "bottom
+   third" this page previously guessed: **a cautious player's whole map would be one flat shade at
+   4-8%**, and the within-round structure the map exists to show would be invisible. Fixing the
+   ramp lower instead only swaps the failure — intense allocations would saturate.
+
+   The log column is a **fifth option nobody had considered**, and it is the one that works: a
+   logarithmic ramp from the model's own floor (``ESGAME_FLOOR`` = 1, below which cells are
+   dropped) to the observed envelope. Every allocation is legible *and* comparable between rounds,
+   which is the thing the split gives up. It is a real change to how a map reads, so it wants a
+   look at rendered output before anyone commits to it.
+
    **Four options, and they are not all the same size:**
 
    .. code-block:: text
 
       A  leave it            two scales, two questions; the legend goes on saying 0-100
       B  fixed cell bounds   absolute across rounds; bottom-fifth ramp, measured above
-      C  derived envelope    fixed AND usable: bound from observed allocations, not the
-                             analytic maximum. derive-bounds.R would emit cell bounds
-                             beside the mean bounds it already emits. Per base raster.
+      C  derived envelope    MEASURED AND REJECTED as posed: linear, a cautious player's
+                             map occupies 4-8% of the ramp. See the table above.
+      E  logarithmic ramp    the same fixed bound, read logarithmically. 27-41% for that
+                             same allocation, 95-100% for all-agropark. Fixed AND legible.
       D  fix the legend only the defect may be the label, not the scale. Return the
                              pre-stretch min/max per indicator per round and print those,
                              or label the ramp "low - high (this round)".
