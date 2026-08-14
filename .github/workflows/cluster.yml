@@ -83,7 +83,7 @@ jobs:
         # or the R packages underneath (rstudio/plumber is untagged) can all move it.
         run: tools/R/golden-test.sh
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 26.5.0
           cache: npm
