@@ -1235,9 +1235,33 @@ How many calculation replicas should a workshop run?
    becoming 11.
 
    **The second replica is worth the most.** The third improves latency (41s → 27s) without
-   completing more rounds, which is what approaching a different limit looks like. The obvious
-   candidate is untested: GeoServer is a **single instance capped at** ``cpu: "1"``, and every
-   round publishes five coverages through it.
+   completing more rounds.
+
+   **That was attributed to GeoServer, and it is not GeoServer** — *tested 2026-08-14, the same
+   day the guess was written down.* The suspicion was reasonable: one instance, ``cpu: "1"``, and
+   every round publishes five coverages through it. Measured from cgroup v2 ``cpu.stat`` inside the
+   pods, across a load run at three replicas, it is not close:
+
+   .. code-block:: text
+
+      offered load   GeoServer          each calculation pod (limit 2)    rounds
+      VUS=4          0.11 cores of 1    0.65 / 0.73 / 0.71                 9
+      VUS=8          0.07 cores of 1    0.52 / 0.93 / 0.40                14
+
+   GeoServer never exceeded **11% of its single core**. Nothing else is saturated either — about
+   1.9 to 2.1 cores of the 6 those three pods may use. There is no CPU limit being reached
+   anywhere, so raising one would buy nothing.
+
+   Two things the same measurement does show. **Doubling the offered load completed more rounds**
+   (9 → 14), so there was headroom that the VUS=4 sweep could not reveal — which means the
+   1 → 2 → 3 table measures what replicas do *at that offered load*, not their ceiling. And the
+   per-pod CPU is **uneven**: 0.40 against 0.93 cores in the same run. That is the shape of
+   clients being pinned to upstream pods by connection reuse rather than spread across them —
+   the same effect already recorded for plot fetches under
+   :ref:`Adding calculation replicas breaks the spider plot
+   <what-blocks-scaling-the-calculation>`, where ``Connection: close`` changed a 11/12 result into
+   16/30. If replicas scale less than linearly here, that is the candidate to test next, and it is
+   a load-balancing question rather than a capacity one.
 
    **And one replica saturates at about two concurrent players.** Sweeping load against a single
    replica: ``VUS=1`` → 1.91/min at a 22.3s median, ``VUS=2`` → 2.89/min at 35.5s, ``VUS=4`` →

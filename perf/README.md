@@ -78,8 +78,37 @@ understates throughput and understates it most at one replica. The median fallin
 at unchanged offered load is the clean signal.
 
 The **second** replica is worth the most; the third cuts latency further without completing more
-rounds, which is what approaching another limit looks like. Untested candidate: GeoServer is one
-instance capped at `cpu: "1"` and every round publishes five coverages through it.
+rounds.
+
+### It is not GeoServer — tested, same day the guess was made
+
+GeoServer looked like the shared limit: one instance, `cpu: "1"`, five coverages published per
+round. Measured from cgroup v2 `cpu.stat` inside the pods during a load run at three replicas:
+
+| offered load | GeoServer | each calculation pod (limit 2) | rounds |
+|---|---|---|---|
+| VUS=4 | **0.11** cores of 1 | 0.65 / 0.73 / 0.71 | 9 |
+| VUS=8 | **0.07** cores of 1 | 0.52 / 0.93 / 0.40 | 14 |
+
+GeoServer never exceeded 11% of its single core. Nothing else is saturated either — ~1.9–2.1 cores
+of the 6 those pods may use. **No CPU limit is being reached anywhere, so raising one buys
+nothing.**
+
+Two things this does show:
+
+* **Doubling the load completed more rounds** (9 → 14). There was headroom the VUS=4 sweep couldn't
+  reveal, so the 1 → 2 → 3 table above measures what replicas do *at that offered load*, not their
+  ceiling.
+* **Per-pod CPU is uneven** — 0.40 against 0.93 cores in one run. That's the shape of clients being
+  pinned to upstream pods by connection reuse rather than spread across them, the same effect
+  already recorded for plot fetches, where `Connection: close` turned an 11-of-12 result into
+  16-of-30. If replicas scale sub-linearly here, that's the next thing to test, and it's a
+  load-balancing question rather than a capacity one.
+
+No metrics-server in the kind cluster, so this reads `usage_usec` from `/sys/fs/cgroup/cpu.stat`
+before and after a run and divides by elapsed wall time — average cores actually used. Watch the
+units: `date +%s%6N` on this host emits **nanoseconds**, not microseconds, and the first version of
+this reported a 37-hour window.
 
 Sweeping load against a **single** replica: `VUS=1` → 1.91/min at a 22.3s median, `VUS=2` →
 2.89/min at 35.5s, `VUS=4` → ~2.5/min at ~70s. **One replica saturates near two concurrent
