@@ -81,6 +81,57 @@ inside a rectangle, most of it zero. That is why the tests locate a scoring cell
 rather than picking one: (5, 5) scores nothing, and a guard written on it passed against an oracle
 that had done nothing at all.
 
+How it relates to the grid game v2 actually ships
+-------------------------------------------------
+
+They are the same game, which was not obvious and is worth not re-deriving.
+
+``dataGridExample.json`` is 28 × 29 with ``elementSize: 2``, two production types (Arable land,
+Livestock) and four consequence maps (Carbon, Habitat, Water, Hunt) — the same board, the same
+block size and the same four indicators as ``calc_files/game.js``. And the data is not merely
+similar. Every raster the grid game renders is **bit-identical** to the matrix this service scores
+with — measured 2026-08-15, all seven pairs, 812 cells each, zero differing cells:
+
+=================================  =================
+Raster                             Matrix
+=================================  =================
+``esgame_img_ag.tif``              ``pts_crop_ag``
+``esgame_img_ranch.tif``           ``pts_past_ps``
+``esgame_img_ag_carbon.tif``       ``pts_agcarb``
+``esgame_img_ranch_carbon.tif``    ``pts_pscarb``
+``esgame_img_ag_habitat.tif``      ``pts_aghq``
+``esgame_img_ag_water.tif``        ``pts_agwq``
+``esgame_img_ag_hunt.tif``         ``pts_agrec``
+=================================  =================
+
+So this service is a server-side scorer for the game v2 ships, not only for the 2013 page. It is
+**not** a lightweight substitute for the R calculator on the dynamic board: that is a different
+landscape, a different model and a different id space, and no pack for it exists.
+
+Where the three implementations differ
+--------------------------------------
+
+All three place a 2 × 2 block extending right and down and take a signed sum. They part company
+only in cases the interior of the board never reaches:
+
+===================  =====================  =========================  ======================
+                     2013 ``game.js``       v2 grid game               ``tools/calculator``
+===================  =====================  =========================  ======================
+Block at the edge    runs off, total NaN    slid back onto the board   refused, HTTP 400
+Overlapping blocks   counted twice          impossible                 counted twice
+===================  =====================  =========================  ======================
+
+v2 clamps: ``getAssociatedFields()`` shifts a block that would leave the right or bottom edge, and
+``game.service.placement-geometry.spec.ts`` property-tests both clamps across square and non-square
+boards. ``canFieldBePlaced()`` then refuses a block overlapping one already placed, so the 2013
+double-count is unreachable there.
+
+This service reproduces the 2013 behaviour, because that is what it is a backend for, and refuses
+the edge case rather than returning NaN. **Pointing v2's grid game at it would therefore need those
+two semantics chosen deliberately** — v2's are the corrected ones, and adopting them here would
+mean this no longer reproduces the original. That is a decision, not a task, and it is why nothing
+is wired up yet.
+
 Why it is not R
 ---------------
 
