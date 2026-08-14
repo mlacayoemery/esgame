@@ -308,8 +308,12 @@ jobs:
           # a tag nothing ever pushed. Nothing here pulls these images, so the mistake could
           # only surface as ErrImagePull in someone's cluster.
           #
-          # Both images roll on `master`. Assert that, and assert the workflows that produce
+          # All three images roll on `master`. Assert that, and assert the workflows that produce
           # them still emit a branch tag, so this does not quietly stop meaning anything.
+          #
+          # THREE since 2026-08-14, not two: GeoServer is built here now, because upstream runs as
+          # uid 0 at every published version. This count is the reason that change could not be a
+          # silent one, which is the point of having it.
           #
           # DISTINCT images, not references. The frontend image is named twice now — once by the
           # seed-assets init container and once by the container it seeds for — and counting
@@ -323,8 +327,8 @@ jobs:
           n=$(printf '%s\n' "$imgs" | grep -c . || true)
           echo "$(printf '%s\n' "$refs" | grep -c . || echo 0) reference(s) -> $n distinct:"
           echo "$imgs"
-          if [ "$n" -ne 2 ]; then
-            echo "::error::expected 2 distinct ghcr images in the render, found $n"; exit 1
+          if [ "$n" -ne 3 ]; then
+            echo "::error::expected 3 distinct ghcr images in the render, found $n"; exit 1
           fi
           for i in $imgs; do
             case "$i" in
@@ -332,12 +336,13 @@ jobs:
               *) echo "::error::$i does not use the :master tag the workflows publish"; bad=1 ;;
             esac
           done
-          for w in .github/workflows/image.yml .github/workflows/image-calculation.yml; do
+          for w in .github/workflows/image.yml .github/workflows/image-calculation.yml \
+                   .github/workflows/image-geoserver.yml; do
             [ -e "$w" ] || { echo "::error::$w is gone; nothing publishes that image"; bad=1; continue; }
             grep -q 'type=ref,event=branch' "$w" \
               || { echo "::error::$w no longer emits a branch tag, so :master is not published"; bad=1; }
           done
-          [ "$bad" = 0 ] && echo "both ghcr images use a tag their workflow publishes"
+          [ "$bad" = 0 ] && echo "all three ghcr images use a tag their workflow publishes"
           exit $bad
 
       - name: Browser-facing URLs must name a host an Ingress serves
