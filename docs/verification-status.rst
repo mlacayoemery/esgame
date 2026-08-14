@@ -1388,16 +1388,43 @@ How many calculation replicas should a workshop run?
    1.9 to 2.1 cores of the 6 those three pods may use. There is no CPU limit being reached
    anywhere, so raising one would buy nothing.
 
-   Two things the same measurement does show. **Doubling the offered load completed more rounds**
-   (9 → 14), so there was headroom that the VUS=4 sweep could not reveal — which means the
-   1 → 2 → 3 table measures what replicas do *at that offered load*, not their ceiling. And the
-   per-pod CPU is **uneven**: 0.40 against 0.93 cores in the same run. That is the shape of
-   clients being pinned to upstream pods by connection reuse rather than spread across them —
-   the same effect already recorded for plot fetches under
+   **The ceiling, found by sweeping the load — and it is one core per replica.** At three replicas:
+
+   .. code-block:: text
+
+      config    rounds  window  rounds/min  median   busiest pod   total CPU
+      VUS=4       12     137s      5.26      30.7s      0.87         2.12
+      VUS=8       15     210s      4.29      67.0s      0.96         2.17
+      VUS=16      25     321s      4.67     105.5s      0.98         2.42
+
+   Throughput is **flat across a 4x load range** while the median grows almost linearly. That is a
+   saturated system: more offered load buys queue, not work. Three replicas do about **4.5-5 rounds
+   a minute** on this hardware.
+
+   And the constraint is still not CPU headroom: total usage is 2.1-2.4 cores of the 6 those pods
+   may use, while the busiest pod presses against **one** core — 0.87, 0.96, 0.98 — and never
+   approaches its ``cpu: "2"`` limit. That is what a single-threaded server looks like. R/Plumber
+   handles one request at a time, so **a replica cannot use more than one core whatever the limit
+   says**, which makes ``cpu: "2"`` unreachable headroom and means capacity scales with replica
+   count rather than with CPU per replica.
+
+   **The uneven per-pod load was chance, not load balancing — hypothesis tested and rejected.**
+   The suspect was connection reuse: each k6 VU holds one connection and ingress-nginx pins it to
+   an upstream pod, the same effect recorded for plot fetches under
    :ref:`Adding calculation replicas breaks the spider plot
-   <what-blocks-scaling-the-calculation>`, where ``Connection: close`` changed a 11/12 result into
-   16/30. If replicas scale less than linearly here, that is the candidate to test next, and it is
-   a load-balancing question rather than a capacity one.
+   <what-blocks-scaling-the-calculation>`, where ``Connection: close`` turned 11/12 into 16/30.
+   Re-run with ``--no-connection-reuse``, so every request opens a fresh connection:
+
+   .. code-block:: text
+
+      VUS=8, 3 replicas    rounds   median   per-pod cores        spread
+      reuse on               15      67.0s   0.96 / 0.62 / 0.59    0.37
+      reuse OFF              15      59.1s   0.92 / 0.72 / 0.47    0.45
+
+   Identical round count, unchanged total CPU, and the spread slightly *worse*. What is left is
+   arithmetic: 15 long rounds over 3 pods expects 5 each with a standard deviation of 1.83, and the
+   observed shares are roughly 6/5/4 — inside one deviation. A small sample of slow requests, not a
+   defect.
 
    **And one replica saturates at about two concurrent players.** Sweeping load against a single
    replica: ``VUS=1`` → 1.91/min at a 22.3s median, ``VUS=2`` → 2.89/min at 35.5s, ``VUS=4`` →

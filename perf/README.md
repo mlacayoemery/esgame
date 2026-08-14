@@ -125,6 +125,50 @@ the calculation pod is capped at `cpu: "2"`, so three replicas wanted 6 of 12 co
 free. Re-run on a quiet machine it reversed completely. **Check `/proc/loadavg` before believing a
 capacity measurement taken on a workstation.**
 
+### The ceiling, and it is one core per replica — measured 2026-08-14
+
+The 1/2/3 table above was taken at `VUS=4`, which saturates nothing. Sweeping the offered load at
+three replicas, with per-pod CPU read from cgroup `cpu.stat`:
+
+| config | rounds | window | rounds/min | median | busiest pod | total CPU |
+|---|---|---|---|---|---|---|
+| VUS=4 | 12 | 137s | 5.26 | 30.7s | 0.87 | 2.12 |
+| VUS=8 | 15 | 210s | 4.29 | 67.0s | 0.96 | 2.17 |
+| VUS=16 | 25 | 321s | 4.67 | 105.5s | 0.98 | 2.42 |
+
+**Throughput is flat across a 4x load range** — 4.3 to 5.3 rounds/min — while the median grows
+almost linearly, 30.7 → 67.0 → 105.5s. That is a saturated system: more offered load buys queue,
+not work. Three replicas do about **4.5–5 rounds a minute** on this hardware.
+
+**And the binding constraint is not CPU.** Total usage sits at 2.1–2.4 cores of the 6 those three
+pods are allowed. The busiest pod reaches **0.87, 0.96, 0.98** — pressed against **one** core, never
+near its `cpu: "2"` limit. That is what a single-threaded server looks like: R/Plumber handles one
+request at a time, so one replica cannot use more than one core no matter what the limit says.
+
+Two consequences worth knowing before sizing anything:
+
+* **`cpu: "2"` on the calculation deployment is unreachable.** It is not wrong, but it reserves
+  headroom that nothing can consume, and on a scheduler that matters for how many pods fit.
+* **Capacity scales with replica count, not with CPU per replica.** Giving one pod more cores does
+  nothing; another pod adds another ~1 core of real work.
+
+### The uneven per-pod load is chance, not load balancing
+
+Per-pod CPU came out 0.87/0.71/0.54 and 0.96/0.62/0.59, and the obvious suspect was connection
+reuse — each k6 VU holds one connection, ingress-nginx pins it to one upstream pod. Tested, with
+k6's `--no-connection-reuse` so every request opens a fresh connection:
+
+| VUS=8, 3 replicas | rounds | median | per-pod cores | spread |
+|---|---|---|---|---|
+| connection reuse on | 15 | 67.0s | 0.96 / 0.62 / 0.59 | 0.37 |
+| connection reuse **off** | 15 | 59.1s | 0.92 / 0.72 / 0.47 | **0.45** |
+
+Identical round count, unchanged total CPU, and the spread got slightly *worse*. **The hypothesis
+is rejected.** What is left is arithmetic: 15 long rounds distributed over 3 pods has an expected
+5 each with a standard deviation of 1.83, and the observed shares correspond to roughly 6/5/4 —
+inside one deviation. There is no load-balancing defect here to chase, only a small sample of slow
+requests.
+
 **Clean up afterwards when running locally.** Each iteration creates a GeoServer workspace by
 design (`game_id` is per-VU-per-iteration), so a long run leaves state behind. CI does not need
 this — it deletes the whole cluster two steps later.
