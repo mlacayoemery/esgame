@@ -447,6 +447,41 @@ The dependency audit — *closed 2026-08-09*
    Confirmed able to fail, in both directions: pre-fix lockfile, **exit 1**; post-fix,
    ``found 0 vulnerabilities``, **exit 0**.
 
+   **Nothing watched upstream VERSIONS until 2026-08-14, only advisories.** There was no
+   :file:`.github/dependabot.yml` at all, so the version-update feed — a different feed from the
+   security alerts that found ``nanoid`` and ``extract-zip`` — was never configured. What that cost
+   is recorded under the GeoServer entry: a manifest comment reading "2.28.4 is the newest tag
+   docker.osgeo.org publishes ... Checked, so nobody re-checks", true when written and false eight
+   days later, corrected only because somebody happened to look while doing something else.
+
+   There is a ``dependabot.yml`` now, covering ``github-actions`` and the three Dockerfile
+   directories, and :file:`tools/newer-geoserver.sh` run weekly by ``ci.yml``'s ``base-images``
+   job. The script exists because ``docker.osgeo.org`` is not Docker Hub and Dependabot's support
+   for arbitrary registries is uneven — it asks the registry directly rather than trusting that the
+   config entry works. It carries a ``REVIEWED_UP_TO`` marker so that declining an upgrade is a
+   recorded decision rather than a red run people learn to ignore, the same shape as ``ACCEPTED``
+   in :file:`tools/audit.sh`.
+
+   Confirmed able to fail, in four states — the second was found by running it:
+
+   .. code-block:: text
+
+      pinned 3.0.0, newest 3.0.0          exit 0   "up to date"
+      python given the tag list on stdin  exit 0   AND PRINTED NOTHING — see below
+      pinned 2.28.4, 3.0.0 published      exit 1   names 3.0.0 as unreviewed
+      registry unreachable                exit 2   "nothing was checked"
+
+   The second row is the bug the first version shipped with, and it is the same one
+   :file:`tools/audit.sh` carries a note about: ``python3 - <<'PY' <<<"$tags"`` hands python both
+   the script and the data on stdin, the here-string wins, python reads the tag JSON as its
+   program, and the check passes silently having done nothing. Both scripts pass the data as a file
+   path now.
+
+   Two things the new config makes visible rather than fixes. ``tools/R/Dockerfile`` is
+   ``FROM rstudio/plumber`` with **no tag**, so Dependabot cannot bump it — that the R base floats
+   under the golden test is already recorded on this page, and pinning it is a separate decision.
+   And ``actions/setup-node`` is pinned at both ``v6`` and ``v7`` in different workflows.
+
    **An advisory this cannot fix — scoped 2026-08-14.** ``extract-zip``,
    `GHSA-jmr9-qjv8-65gv <https://github.com/advisories/GHSA-jmr9-qjv8-65gv>`_, high, dev scope,
    reached as ``@lhci/cli`` → ``lighthouse`` → ``puppeteer-core`` → ``@puppeteer/browsers`` →

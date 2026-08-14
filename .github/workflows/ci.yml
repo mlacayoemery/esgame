@@ -179,3 +179,20 @@ jobs:
         if: ${{ !cancelled() }}
         working-directory: .
         run: tools/audit.sh
+
+  # Upstream versions, which is a different question from upstream advisories.
+  #
+  # Scheduled-only for the same reason `audit` is: a new GeoServer release should surface on its
+  # own, and should not block an unrelated pull request that happens to be open when it lands.
+  #
+  # This exists because nothing watched it. The k8s manifest said "2.28.4 is the newest tag
+  # docker.osgeo.org publishes ... Checked, so nobody re-checks", which was true when written and
+  # false eight days later. .github/dependabot.yml now covers the ecosystems Dependabot handles;
+  # docker.osgeo.org is not one of them, so this asks the registry directly.
+  base-images:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Is there a newer GeoServer than the one we pin?
+        run: tools/newer-geoserver.sh
