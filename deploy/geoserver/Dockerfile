@@ -41,7 +41,7 @@
 # whose mode changed; there is no way to change a mode without materialising the layer. That buys a
 # GeoServer that behaves as uid 10001 the way it did as root, on every check anyone here runs —
 # verified against a live cluster and re-checked by the workflow that publishes it.
-FROM docker.osgeo.org/geoserver:3.0.0
+FROM docker.osgeo.org/geoserver:3.1.x
 
 # gid 0, not a new group. The container already runs with gid 0, so group-writable is sufficient
 # and nothing has to edit /etc/passwd or /etc/group — which is itself a thing that needs root.
