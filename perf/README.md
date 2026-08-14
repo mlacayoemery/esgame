@@ -62,6 +62,40 @@ which *does* trip the gate.
 
 Raise `VUS` (and `TIMEOUT` with it) to find the per-replica ceiling.
 
+### What replicas buy — measured 2026-08-14
+
+Eight runs, live cluster, `calc_errors` 0.00% throughout. At a fixed offered load of `VUS=4`:
+
+| replicas | rounds done | median | max | throughput |
+|---|---|---|---|---|
+| 1 | 7, 8, 7 | ~70s | 87–117s | 2.31–2.72/min |
+| 2 | 11 | 41.2s | 50.2s | 4.71/min |
+| 3 | 11 | 26.5s | 63.6s | 5.41/min |
+
+**Read the median and rounds-done columns, not throughput.** `iterations.rate` divides by
+wall-clock including ramp-up and drain, and the drain is longer for slower configurations, so it
+understates throughput and understates it most at one replica. The median falling 70s → 41s → 27s
+at unchanged offered load is the clean signal.
+
+The **second** replica is worth the most; the third cuts latency further without completing more
+rounds, which is what approaching another limit looks like. Untested candidate: GeoServer is one
+instance capped at `cpu: "1"` and every round publishes five coverages through it.
+
+Sweeping load against a **single** replica: `VUS=1` → 1.91/min at a 22.3s median, `VUS=2` →
+2.89/min at 35.5s, `VUS=4` → ~2.5/min at ~70s. **One replica saturates near two concurrent
+players** — past that, latency grows and throughput does not.
+
+Two reasons these are conservative. `FIELDS` defaults to **812** but the browser posts **465**; at
+465 one replica does 2.89/min at a 59.7s median, so a real round is 10–25% cheaper than the table.
+And this was a single-node kind cluster on a 12-core workstation with every pod sharing those
+cores.
+
+A first attempt at this table concluded that replicas bought *nothing* — 2.46, 2.24, 2.40/min for
+1, 2, 3. That run had a Playwright suite competing for the same cores (load average 5.5–7.3) while
+the calculation pod is capped at `cpu: "2"`, so three replicas wanted 6 of 12 cores that were not
+free. Re-run on a quiet machine it reversed completely. **Check `/proc/loadavg` before believing a
+capacity measurement taken on a workstation.**
+
 **Clean up afterwards when running locally.** Each iteration creates a GeoServer workspace by
 design (`game_id` is per-VU-per-iteration), so a long run leaves state behind. CI does not need
 this — it deletes the whole cluster two steps later.
