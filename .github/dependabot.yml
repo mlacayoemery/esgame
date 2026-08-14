@@ -29,11 +29,9 @@ updates:
       prefix: "chore(docker)"
 
   - package-ecosystem: docker
-    # NOTE: this Dockerfile is `FROM rstudio/plumber`, with NO TAG — i.e. :latest. Dependabot
-    # cannot bump what is not pinned, so this entry does nothing for it today. That the R base
-    # floats is already recorded in docs/verification-status.rst as something that can move the
-    # golden test underneath a run; pinning it is a separate decision, and this entry starts
-    # being useful the moment somebody makes it.
+    # This Dockerfile was `FROM rstudio/plumber` with no tag when this file was written, so this
+    # entry did nothing: Dependabot cannot bump what is not pinned. It is `:v1.3.0` as of
+    # 2026-08-14 — the same digest `latest` already resolved to — so this entry is live now.
     directory: /tools/R
     schedule:
       interval: weekly

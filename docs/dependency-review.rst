@@ -176,10 +176,16 @@ rule but means two builds a month apart are not the same build.
 
    * - Reference
      - Trade-off
-   * - ``rstudio/plumber`` (untagged → ``latest``)
-     - Currently R 4.6.1. The newest concrete tag is ``v1.3.0``, but that pins a
-       *plumber* version and may carry an older R, so pinning could regress the
-       interpreter. Left floating deliberately.
+   * - ``rstudio/plumber:v1.3.0`` (*pinned 2026-08-14*)
+     - R 4.6.1. This entry used to read "left floating deliberately", on the
+       argument that ``v1.3.0`` pins a *plumber* version and might carry an older
+       R. Measured: ``latest`` and ``v1.3.0`` resolve to the **same digest**
+       (``sha256:2e2ec5ad…``), so that could not have been true, and the pin
+       changes nothing today. What it buys is that ``latest`` cannot move under a
+       build — which matters because :file:`tools/R/golden-test.sh` freezes this
+       model's output, so a self-updating interpreter would present as "the scores
+       moved". Dependabot watches this directory and can now propose bumps, which
+       it could not do against an untagged base.
    * - ``geopython/pygeoapi:latest``
      - Same shape. The pygeoapi example is read-only and config-driven, so drift
        shows up as a startup failure rather than silent misbehaviour.

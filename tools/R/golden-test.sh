@@ -10,7 +10,8 @@
 #
 # So a failure here means "the model's output moved; find out why", not "the model is wrong". The
 # honest reasons it can move are a change to calculator.r, a change to the base raster, or a
-# change to the R packages underneath — tools/R/Dockerfile builds on rstudio/plumber untagged, so
+# change to the R packages underneath — tools/R/Dockerfile pins its base but still installs R
+# packages from p3m at build time, so
 # the third can happen without anyone touching this repository. See docs/dependency-review.rst.
 #
 # Scores are integers, which is what makes this viable: small numeric drift in raster/terra does

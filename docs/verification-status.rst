@@ -507,7 +507,9 @@ The dependency audit — *closed 2026-08-09*
    path now.
 
    Two things the new config makes visible rather than fixes. ``tools/R/Dockerfile`` is
-   ``FROM rstudio/plumber`` with **no tag**, so Dependabot cannot bump it — that the R base floats
+   ``FROM rstudio/plumber`` with **no tag** when that config was written, so Dependabot could not bump
+   it. Pinned to ``v1.3.0`` on 2026-08-14 — the same digest ``latest`` already resolved to — so the
+   entry is live now. That the R base floated
    under the golden test is already recorded on this page, and pinning it is a separate decision.
    And ``actions/setup-node`` is pinned at both ``v6`` and ``v7`` in different workflows.
 
@@ -1741,8 +1743,9 @@ took ten minutes, so it is written down.
        **It catches a change and says nothing about correctness.** Nobody has a reference answer
        for this model, which is why this shape was chosen over asserting a correctness that
        cannot be established. A failure means *find out why* — ``calculator.r``, the base raster,
-       or the R packages underneath, since ``tools/R/Dockerfile`` builds on ``rstudio/plumber``
-       untagged. Integer scores are what make it viable: numeric drift in ``raster``/``terra``
+       or the R packages underneath: ``tools/R/Dockerfile`` pins its base since 2026-08-14, but
+       still installs R packages from p3m at build time, so they can still move. Integer scores
+       are what make it viable: numeric drift in ``raster``/``terra``
        does not move an integer that was not already on a boundary.
 
        The model was confirmed deterministic first — the same allocation POSTed twice returns
