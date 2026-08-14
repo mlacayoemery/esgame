@@ -169,5 +169,13 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
 
       - name: Full dependency audit, including the build toolchain
+        # tools/audit.sh rather than `npm audit --audit-level=high` since 2026-08-14: one advisory
+        # in this tree is unfixable at any version (extract-zip, vulnerable range `*`, reached
+        # through @lhci/cli). The choices were a permanently red Monday, dropping the Lighthouse
+        # gate, or scoping this one — and scoping it with `continue-on-error` would have meant the
+        # NEXT dev advisory also landed in a green run. The script fails on anything not
+        # explicitly accepted, and on an accepted entry that no longer applies. See
+        # "The dependency audit" in docs/verification-status.rst.
         if: ${{ !cancelled() }}
-        run: npm audit --audit-level=high
+        working-directory: .
+        run: tools/audit.sh

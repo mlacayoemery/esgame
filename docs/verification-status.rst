@@ -9,7 +9,7 @@ time precisely because nothing had ever run them, and the failures were silent �
 that logged ``done`` having registered nothing, an e2e suite passing against a board that
 never rendered, a schema check reporting 10/10 valid on manifests the API server rejected.
 
-Last updated: **2026-08-09**.
+Last updated: **2026-08-14**.
 
 .. note::
 
@@ -446,6 +446,44 @@ The dependency audit — *closed 2026-08-09*
 
    Confirmed able to fail, in both directions: pre-fix lockfile, **exit 1**; post-fix,
    ``found 0 vulnerabilities``, **exit 0**.
+
+   **An advisory this cannot fix — scoped 2026-08-14.** ``extract-zip``,
+   `GHSA-jmr9-qjv8-65gv <https://github.com/advisories/GHSA-jmr9-qjv8-65gv>`_, high, dev scope,
+   reached as ``@lhci/cli`` → ``lighthouse`` → ``puppeteer-core`` → ``@puppeteer/browsers`` →
+   ``extract-zip``. Its vulnerable range is ``*`` — **every version ever published**, 2.0.1 being
+   the newest that exists — so there is no upgrade and nothing to wait for. ``@lhci/cli`` is
+   already on its newest release (0.15.1) and ``>= 0.13.0`` is inside the flagged range, so
+   upgrading cannot help either; npm's only ``fixAvailable`` is a **downgrade** to ``@lhci/cli``
+   0.12.0, flagged ``isSemVerMajor``. An ``overrides`` entry has nothing non-vulnerable to point
+   at. The production tree is unaffected and stayed at 0.
+
+   That left three options: a permanently red Monday, dropping Lighthouse CI — which is the gate
+   holding the frontend byte budgets, ``categories:accessibility`` at exactly 1.00 and
+   ``third-party:size`` at 0 — or scoping this one advisory. Scoped, and deliberately **not**
+   with ``continue-on-error``: that makes the whole dev audit non-blocking, so the next dev
+   advisory, of the kind that *is* actionable, lands in a green run and nobody looks.
+
+   :file:`tools/audit.sh` replaces ``npm audit --audit-level=high`` for the dev tree. It carries
+   an explicit ``ACCEPTED`` list, each entry requiring a reason it cannot be fixed and what would
+   close it, and it fails on **two** things: a high or critical advisory that is not listed, and a
+   listed advisory that ``npm audit`` no longer reports. The second matters as much as the first —
+   an exception list that outlives its advisories stops meaning anything, and this one will fail
+   loudly the day upstream drops ``extract-zip``, which is when the line should be deleted.
+
+   Confirmed able to fail, in four states — the fourth was found by running it rather than reading
+   it:
+
+   .. code-block:: text
+
+      real tree, advisory accepted     exit 0   "1 high/critical advisory, all accepted"
+      accepted list emptied            exit 1   names extract-zip and the advisory URL
+      a listed advisory not reported   exit 1   "delete the entry"
+      no lockfile at all               exit 2   "npm audit could not run: ENOLOCK"
+
+   The last one originally reported a *stale exception* — it could not tell "npm found nothing"
+   from "npm could not run", so the way a missing project surfaced was a confident instruction to
+   delete a live exception line. ``npm audit`` reports its own failures as ``{"error": {...}}``,
+   which the script now checks for before reading anything else.
 
 
 Known incomplete
