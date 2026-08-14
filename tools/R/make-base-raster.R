@@ -43,12 +43,19 @@
 suppressMessages(library(raster))
 
 dir <- Sys.getenv("ESGAME_ASSETS", "/d")
-hex_path <- file.path(dir, "New_hexagons.tif")
+# The board is a parameter because there are two of them: the hexagonal board and the rectangular
+# one tools/R/make-rect-board.R derives from it. Both mosaic with the same land use, and the
+# assertions below are exactly what makes a second board safe to introduce. The defaults are the
+# hexagonal board, so running this with no environment set does what it always did.
+board_name <- Sys.getenv("ESGAME_BOARD", "New_hexagons.tif")
+out_name   <- Sys.getenv("ESGAME_BASE_RASTER", "LU_and_NEW_hexa.tif")
+hex_path <- file.path(dir, board_name)
 lu_path  <- file.path(dir, "New_Land_use_only.tif")
-out_path <- file.path(dir, "LU_and_NEW_hexa.tif")
+out_path <- file.path(dir, out_name)
 
-stopifnot("New_hexagons.tif is missing"      = file.exists(hex_path))
+stopifnot("the board raster is missing"      = file.exists(hex_path))
 stopifnot("New_Land_use_only.tif is missing" = file.exists(lu_path))
+cat(sprintf("board %s + land use -> %s\n", board_name, out_name))
 
 hex <- raster(hex_path)
 lu  <- raster(lu_path)

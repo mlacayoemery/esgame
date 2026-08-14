@@ -254,7 +254,10 @@ jobs:
           # allocation — a constant this repo's own docs once quoted as a working round.
           # coverage.R turns that into a log line, so the check is that it is still wired in.
           test -f tools/R/coverage.R || { echo "::error::tools/R/coverage.R is missing"; exit 1; }
-          if ! grep -q 'esgame_report_coverage(LU_hexa, map_AG)' tools/R/calculator.r; then
+          # Matched WITHOUT the closing paren: the call gained a base_name argument when a second
+          # board arrived, and a pattern anchored to the exact argument list failed a change that
+          # kept the check perfectly well wired in. What matters is that it is called at all.
+          if ! grep -q 'esgame_report_coverage(LU_hexa, map_AG' tools/R/calculator.r; then
             echo "::error file=tools/R/calculator.r::coverage check is not called before reclassify()"; exit 1
           fi
           # And it must be sourced, or the call above is an undefined-function error at run time.

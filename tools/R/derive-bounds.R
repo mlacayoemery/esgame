@@ -2,9 +2,11 @@
 #
 #   Rscript tools/R/derive-bounds.R [base-raster] [out.json]
 #
-# Run it inside the calculation image, where `raster` and the geodata exist:
-#   docker run --rm -v "$PWD/tools/R:/work" ghcr.io/mlacayoemery/esgame-calculation:master \
-#       Rscript /work/derive-bounds.R
+# Run it inside the calculation image, where `raster` and the geodata exist. --entrypoint is
+# required: the image's entrypoint is the plumber launcher, so appending `Rscript ...` to it makes
+# plumb() try to serve derive-bounds.R's OUTPUT path as an API and die on "File does not exist".
+#   docker run --rm --entrypoint Rscript -v "$PWD/tools/R:/work" \
+#       ghcr.io/mlacayoemery/esgame-calculation:master /work/derive-bounds.R
 #
 # WHY THESE BOUNDS EXIST
 #

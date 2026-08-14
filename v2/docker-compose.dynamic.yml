@@ -18,6 +18,19 @@ services:
     ports:
       - "${ESGAME_CALC_PORT:-8000}:8000"
     # url: http://localhost:8000/openapi.json
+    #
+    # THE BASE RASTER IS NOT IN THE IMAGE. tools/R/Dockerfile creates /app/data empty, because in
+    # the cluster it is a mount whose content an init container supplies. Compose supplied nothing,
+    # so this stack came up entirely healthy and failed on every round: measured 2026-08-14 against
+    # the published image with the golden allocation, POST /esgame -> HTTP 500, and in the log
+    # "/app/data/LU_and_NEW_hexa.tif: No such file or directory (GDAL error 4)". The frontend
+    # renders that as the round reaching 0% of the model, which reads like a board/id mismatch and
+    # sends you looking in the wrong place entirely.
+    #
+    # Read-only, and a file rather than the directory: /app/data is also where calculator.r writes
+    # its output rasters, so mounting a host directory over it would put those on the host too.
+    volumes:
+      - ./src/assets/images/LU_and_NEW_hexa.tif:/app/data/LU_and_NEW_hexa.tif:ro
 
   esgame-geoserver:
     # Built here (deploy/geoserver/Dockerfile) because upstream GeoServer runs as uid 0 at every
