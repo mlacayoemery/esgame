@@ -1,0 +1,4 @@
+test/
+extract/
+golden/
+*.md
