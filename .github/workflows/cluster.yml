@@ -99,6 +99,62 @@ jobs:
         working-directory: v2
         run: npx playwright test --config e2e-cluster/browser-round.config.ts
 
+      - name: Install k6
+        run: |
+          curl -sSfL -o k6.tar.gz https://github.com/grafana/k6/releases/download/v2.2.0/k6-v2.2.0-linux-amd64.tar.gz
+          tar xzf k6.tar.gz
+          sudo mv k6-v2.2.0-linux-amd64/k6 /usr/local/bin/
+          rm -rf k6.tar.gz k6-v2.2.0-linux-amd64
+          k6 version
+
+      - name: A classroom submits rounds at once
+        # perf/calc-load.js existed for months and nothing ran it: it had been executed by hand
+        # exactly once, on 2026-08-06. This is the only job with a live calculator behind an
+        # ingress, so it is the only place it can run at all.
+        #
+        # THE GATE IS calc_errors, NOT LATENCY. A round either comes back 200 with a results[] or
+        # it does not, and that means the same thing on every machine; round TIME does not. The
+        # same healthy backend measured 12.9-28.2s on one machine on 2026-08-06 and 27-89s on
+        # another on 2026-08-14, so any p95 budget picked here would fail runs where nothing is
+        # wrong. P95_MS is therefore left unset and the script registers no latency threshold —
+        # the numbers are recorded below instead, and a ceiling can be set once several runs on
+        # THIS runner have established what normal looks like. TIMEOUT is the real upper bound:
+        # a round that exceeds it fails as an error, which does trip the gate.
+        #
+        # No workspace cleanup: each iteration creates a GeoServer workspace by design, and the
+        # whole cluster is deleted two steps down. Local runs need it (see perf/README.md).
+        run: |
+          set -o pipefail
+          k6 run --quiet --no-color --summary-export=perf-summary.json \
+            -e CALC_URL=http://127.0.0.1:8880/esgame \
+            -e CALC_HOST=esgame-calculation.local \
+            -e VUS=2 \
+            -e TIMEOUT=300s \
+            perf/calc-load.js
+
+      - name: Record what it measured
+        # `if: always()` so a run that FAILED the error gate still reports its numbers — that is
+        # when they are most worth reading. Guarded on the file existing, because an earlier step
+        # failing means k6 never wrote one, and a summary step that dies on a missing file would
+        # replace a real failure with a confusing one.
+        if: always()
+        run: |
+          [ -f perf-summary.json ] || { echo "no k6 summary — the load step did not run"; exit 0; }
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          m = json.load(open('perf-summary.json'))['metrics']
+          lat, err = m.get('calc_latency', {}), m.get('calc_errors', {})
+          it = m.get('iterations', {}).get('count', 0)
+          print('### Calculation backend under load\n')
+          print(f'{it} rounds at VUS=2, through the ingress.\n')
+          print('| | seconds |'); print('|---|---|')
+          for k in ('min', 'med', 'avg', 'p(95)', 'max'):
+              if k in lat:
+                  print(f'| {k} | {lat[k]/1000:.1f} |')
+          print(f'\nError rate: **{err.get("value", 0) * 100:.2f}%** '
+                f'(the gate; latency is recorded, not thresholded).')
+          PY
+
       - name: What the cluster looked like if any of that failed
         if: failure()
         run: |
