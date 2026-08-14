@@ -916,16 +916,48 @@ A scores sheet for domain review — *added 2026-08-06*
    :file:`tools/R/scores-sheet.example.md` is a committed sample so it can be read without
    running anything.
 
-   It carries its own caveats rather than presenting bare numbers: that the scores are normalised
-   **within each round**, so a value near 50 means "average for this landscape" and not "moderate";
-   and that ``NaN`` for ``all-nature`` is a real result with a known cause
-   (:ref:`why-the-scores-go-nan`), not a crash. It ends with the questions the harness cannot
-   answer — whether the indicators move independently or together, whether the direction is right,
-   whether the spread is usable, and what ``all-nature`` ought to score.
+   It carries its own notes rather than presenting bare numbers: that the rows **are** comparable
+   with each other, because every indicator is normalised against the fixed bounds in
+   :file:`tools/R/bounds.json`; that the published *rasters* are still on a per-round scale, which
+   is a separate open question; and that ``all-nature`` scores **0** rather than ``NaN``. It ends
+   with the questions the harness cannot answer — whether the indicators move independently, whether
+   the direction is right, whether the spread is usable, and whether 0 is right for ``all-nature``.
 
-   The first run is worth a look on its own: across all eight landscapes the five indicators rise
-   and fall almost in step. Whether that is expected of a *tradeoff* game is exactly the sort of
-   question this exists to put in front of someone qualified to answer it.
+   **Those notes were wrong for a week, which is worth recording.** The committed sample was
+   generated 2026-08-06 and its caveats described round-relative scoring — true when written, false
+   from 2026-08-07 when #194 moved scores onto fixed bounds. It told a reviewer that the rows were
+   *not* comparable and that ``NaN`` was expected, both of which had stopped being true. The
+   caveats live in the generator, so the sample inherited them; the fix is in
+   :file:`tools/R/scores-sheet.sh`, and the provenance line is now stamped by the generator instead
+   of being written by hand. **This is the artefact the model decision depends on**, so a stale
+   caveat here is not cosmetic — it misdirects the one question nobody in this repository can answer.
+
+   **Regenerated 2026-08-14, and the co-movement is now a number.** Across all eight landscapes the
+   five indicators differ by **at most 3 points out of 100**, and are identical for two of them:
+
+   .. code-block:: text
+
+      landscape                    range    spread     source amplitude
+      all-nature                   0-0        0        0
+      mostly-nature-some-farms     8-10       2        mixed
+      all-extensive-arable         9-11       2        10
+      half-intensive-half-nature   25-28      3        mixed
+      all-intensive-arable         32-34      2        40
+      all-extensive-livestock      55-56      1        70
+      all-intensive-livestock      77-78      1        100
+      all-agropark                 100-100    0        130
+
+   And for the six uniform landscapes the mean score tracks the **source amplitude alone** at
+   Pearson *r* = **0.99966** — 0, 10, 34, 56, 78, 100 against amplitudes 0, 10, 40, 70, 100, 130.
+
+   There is a mechanism, and it is not a defect on its face: all five indicators are means of the
+   *same* agricultural concentration field, differing only in which receptor land-use class they
+   average over. A uniform allocation makes that field broadly uniform, so every mask sees much the
+   same mean. What it means for the game is the part needing a domain expert: on this base raster
+   the five axes carry nearly the same information, so a player has little to trade off — and
+   ``all-agropark`` scores exactly 100 everywhere because the ``hi`` bound was derived from it.
+   Whether that is expected of a *tradeoff* game is precisely the question this sheet exists to put
+   in front of someone qualified to answer it.
 
 .. _what-blocks-scaling-the-calculation:
 
@@ -1189,24 +1221,64 @@ Is the model right?
    claim about ecology.
 
 Should the published rasters move to the same fixed scale as the scores?
-   *Introduced 2026-08-07 by the normalisation change.* They are now on **different scales, and
-   that is currently on purpose**:
+   *Introduced 2026-08-07 by the normalisation change; laid out 2026-08-14.* They are on
+   **different scales, on purpose**:
 
    .. code-block:: text
 
       the raster   rescaled to the round's own min/max   "where, within this round?"
       the score    fixed per-indicator bounds            "how does this round compare?"
 
-   Both questions are real and they want different scales, which is why the split was left in
-   place rather than resolved by default. But a player sees a map whose colours look much the
-   same every round beside a number that moves, and nobody has established whether that reads as
-   informative or as broken.
+   **The question as posed cannot be answered yes.** The score's bounds bound the **mean** — HH
+   is ``[0, 32.472]`` in :file:`tools/R/bounds.json`, an aggregate over a receptor mask. A raster
+   is per-cell, and a cell's ceiling is a different quantity entirely: ``350`` (the sum of the
+   amplitudes) or ``212.3`` (the most a receptor cell can receive). There is no scale that is
+   simultaneously both, so "the same scale as the scores" is not on the menu; a *fixed* scale for
+   the raster is, and it would be a third scale rather than a shared one.
 
-   **Cost of changing it:** the per-cell fixed bounds are already derived (``[1, 350]`` from the
-   amplitudes, or ``[1, 212.3]`` for a receptor cell — see :file:`tools/R/derive-bounds.R`), so
-   it is a small change to ``calculator.r``. The consequence is that most rounds would render
-   in the bottom third of the colour ramp, for the same reason cell-level bounds were rejected
-   for the *scores*.
+   **What is actually on screen, and it is worse than "the colours look similar".**
+   :file:`tools/R/calculator.r` stretches each published raster with
+   ``(HH - cellStats(HH,min)) / (cellStats(HH,max) - cellStats(HH,min)) * 100``, so every round's
+   map spans 0-100 by construction. The frontend then reads ``minValue: 0`` and ``maxValue: 100``
+   from :file:`v2/src/assets/data.json` and uses them for **two** things — the colour ramp, and the
+   numbers printed on the legend (:file:`v2/src/app/services/tiff.service.ts`, the ``isGradient``
+   branch). So the legend reads ``0 … 100`` every round. That is true of the pixel values and
+   misleading about the quantity: this round's 100 and last round's 100 are different absolute
+   exposures, and nothing on screen says so.
+
+   **What a fixed cell scale would cost, already measured.** From
+   :file:`tools/R/derive-bounds.R`, scoring the same allocations against cell-level ceilings:
+
+   .. code-block:: text
+
+      ceiling                      golden          all-arable   all-agropark
+      350   sum of amplitudes      6/6/10/6/6      1/1/1/1/1    9/11/14/10/9
+      212.3 receptor-reachable     10/10/17/10/10  1/1/2/1/1    15/18/24/16/15
+      182   observed envelope      11/12/20/12/12  1/1/2/1/1    17/21/28/19/17
+
+   Every allocation lands in the bottom fifth. That was disqualifying for the scores and it is the
+   same arithmetic for colour: most rounds would render near one end of the ramp, and the
+   *within-round* structure the map exists to show would compress into a few steps. Trading
+   "colours do not move between rounds" for "colours do not move within a round" is not obviously
+   a gain.
+
+   **Four options, and they are not all the same size:**
+
+   .. code-block:: text
+
+      A  leave it            two scales, two questions; the legend goes on saying 0-100
+      B  fixed cell bounds   absolute across rounds; bottom-fifth ramp, measured above
+      C  derived envelope    fixed AND usable: bound from observed allocations, not the
+                             analytic maximum. derive-bounds.R would emit cell bounds
+                             beside the mean bounds it already emits. Per base raster.
+      D  fix the legend only the defect may be the label, not the scale. Return the
+                             pre-stretch min/max per indicator per round and print those,
+                             or label the ramp "low - high (this round)".
+
+   **D is cheap and independent of the rest**, and worth separating out: whichever scale the raster
+   ends up on, a legend that prints a fixed-looking ``0 … 100`` over a round-relative stretch is
+   wrong on its own terms. A, B and C are the real question, and it is a question about what a
+   player should be able to compare — which is a teaching decision, not a correctness one.
 
    **If nobody decides:** the split stays, and it is documented here and in
    :doc:`reference/calculator` rather than being folded knowledge.
