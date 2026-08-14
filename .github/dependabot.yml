@@ -91,6 +91,13 @@ updates:
   - package-ecosystem: pip
     directory: /docs
     schedule: { interval: weekly, day: monday }
+    # increase-if-necessary, because this file is deliberately an open range. The default strategy
+    # RAISES THE FLOOR — the first run proposed `sphinx>=7` -> `sphinx>=9.1.0`, which pins nothing,
+    # changes nothing about what pip installs (it takes the newest either way), and would churn
+    # again on every Sphinx release. With this, Dependabot only opens a PR when the existing
+    # constraint would EXCLUDE the new version, which `>=7` never does — so what is left is the
+    # thing actually worth knowing: a release this range can no longer accept.
+    versioning-strategy: increase-if-necessary
     commit-message:
       prefix: "chore(pip)"
 

@@ -203,7 +203,12 @@ rule but means two builds a month apart are not the same build.
        version feed on it until :file:`.github/dependabot.yml` gained a ``pip``
        entry, so "a Sphinx major could break the build" was true and unmonitored.
        Still unpinned — the freshness argument stands — but a major now arrives as
-       a pull request rather than as a red docs job.
+       a pull request rather than as a red docs job. The entry uses
+       ``versioning-strategy: increase-if-necessary``: the default raises the
+       floor, and its first run proposed ``sphinx>=7`` → ``sphinx>=9.1.0``, which
+       pins nothing, changes nothing about what pip installs, and would churn on
+       every release. What is left is the case worth seeing — a release this range
+       can no longer accept.
 
 
 Runtime dependencies on external hosts
