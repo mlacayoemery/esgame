@@ -22,10 +22,12 @@
 		<tro-svg-game-board [boardData]="focusedGameBoard | async" hideLegend [clickMode]="gameBoardClickMode.Field" class="main-board"
 			[readOnly]="readOnly"></tro-svg-game-board>
 		<div class="score-board-wrapper">
-			<button troButton class="btn-prev" (click)="prevLevel()" [disabled]="(level | async)?.levelNumber == 1"
+			<!-- Hidden rather than disabled at the ends of the run: a button that can never be
+			     pressed is furniture, and "Previous" on round 1 never can be. -->
+			<button troButton class="btn-prev" (click)="prevLevel()" *ngIf="(level | async)?.levelNumber != 1"
 				translate>Previous Level</button>
 			<button troButton class="btn-next" (click)="nextLevel()"
-				[disabled]="(!(settings | async)?.infiniteLevels) && (level | async)?.levelNumber != 1" translate>Next
+				*ngIf="(settings | async)?.infiniteLevels || (level | async)?.levelNumber == 1" translate>Next
 				Level</button>
 
 			<tro-score-board *ngIf="!((level | async)?.scores)" class="score-board"></tro-score-board>

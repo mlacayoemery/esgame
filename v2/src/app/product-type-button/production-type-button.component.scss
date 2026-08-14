@@ -30,7 +30,8 @@
 		padding: 2px;
 		width: 45px;
 		height: 45px;
-		border-radius: 50%;
+		// Square, not round. The swatch and its selection ring both follow the piece shape.
+		border-radius: 0;
 		border: 2px solid transparent;
 		margin: 3px;
 
@@ -45,7 +46,7 @@
 			width: calc(100% - 6px);
 			height: calc(100% - 6px);
 			user-select: none;
-			border-radius: 50%;
+			border-radius: 0;
 			margin:3px;
 		}
 

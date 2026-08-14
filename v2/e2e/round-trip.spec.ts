@@ -218,6 +218,32 @@ test.describe('dynamic game round trip', () => {
 		await expect(absolute.first()).toContainText('100');
 	});
 
+	// Round navigation is hidden where it cannot act, not shown greyed out. Asserted because a
+	// preference with no check drifts back, and because the two level components disagreed about
+	// this until 2026-08-14 — grid-level ignored `infiniteLevels` entirely.
+	test('Previous Level is absent on round 1 and present on round 2', async ({ page }) => {
+		const posted: any[] = [];
+		const coverageRequests: string[] = [];
+		await useDynamicGameWithCalculator(page, posted, coverageRequests);
+		await page.goto('/dynamic-game');
+		await expect(page.locator('tro-svg-game-board').first()).toBeVisible();
+
+		const prev = page.locator('button.btn-prev');
+		const next = page.locator('button.btn-next');
+
+		// Round 1: nowhere to go back to, so the button is not rendered at all.
+		await expect(prev).toHaveCount(0);
+		// And the one that CAN act is there — otherwise this test would pass on an empty page.
+		await expect(next).toBeVisible();
+
+		await placeFields(page, 12);
+		await clickPastHelp(page, next);
+		await expect(page.locator('tro-spider-chart svg')).toBeVisible({ timeout: 60_000 });
+
+		// Round 2: going back is now possible, so it appears.
+		await expect(prev).toBeVisible({ timeout: 30_000 });
+	});
+
 	test('the score board shows the returned indicators', async ({ page }) => {
 		const posted: any[] = [];
 		const coverageRequests: string[] = [];
