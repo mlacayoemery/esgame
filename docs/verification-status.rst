@@ -394,10 +394,25 @@ The published site was twelve commits behind master — *closed 2026-08-07*
    **while logging no permission error at all**. A fresh-volume run populates correctly and says
    nothing about it. The upgrade path is documented in the compose file instead.
 
-   :file:`v2/docker-compose.dynamic.yml` is parsed rather than run — it needs the frontend built
-   from source. It is an *override*, so it is parsed together with :file:`v2/docker-compose.yml`;
-   alone it fails with "esgame-core has neither an image nor a build context specified", which is
-   not a defect and is how the first attempt at this check read it.
+   :file:`v2/docker-compose.dynamic.yml` is **run too, weekly** — the stack a developer gets from
+   ``make esgame-dynamic-up``, which nothing had ever started either. It is a separate job on a
+   schedule rather than a pull-request gate because it builds the frontend *and* the R calculator
+   from source, and the calculator alone is ~15 minutes. What it adds over the example stack is the
+   real calculator and the real Angular build wired by compose, rather than published images and a
+   FastAPI stand-in. The cheap parse stays in the per-PR job.
+
+   Its sharpest assertion is that the served ``assets/config.json`` carries
+   ``calcUrl = http://localhost:$ESGAME_CALC_PORT``. That is the premise of the whole deployment —
+   one image, retargeted by environment variable at container start — and it catches the port and
+   the URL drifting apart, which produces a stack that comes up clean and fails only in a browser.
+
+   It is an *override*, so it is parsed and run together with :file:`v2/docker-compose.yml`; alone
+   it fails with "esgame-core has neither an image nor a build context specified", which is not a
+   defect and is how the first attempt at this check read it.
+
+   Verified by running the stack by hand first, with the published calculation image substituted
+   to skip the 15-minute build: frontend 200, ``calcUrl`` matching the port, GeoServer 200, and
+   ``POST /esgame`` with an empty allocation returning a structured 400 rather than dying.
 
    Verified by running the stack by hand first: GeoServer 200 in 3s as uid 10001 with 0
    complaints, seeder ``exited:0`` reporting "verified 8 coverage stores", the ``esgame`` workspace
