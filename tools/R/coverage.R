@@ -41,7 +41,11 @@ esgame_coverage_stats <- function(alloc, present) {
 }
 
 # Returns the stats invisibly so a caller can assert on them; logs as a side effect.
-esgame_report_coverage <- function(LU_hexa, map_AG, warn_below = 0.5) {
+# base_name is PASSED, not looked up. plumber evaluates calculator.r in its own environment while
+# source() puts these functions in the global one, so an exists("ESGAME_BASE_RASTER") here is false
+# at run time even though calculator.r set it — measured: the message read "the base raster" while
+# the calculator was demonstrably reading LU_and_NEW_rect.tif.
+esgame_report_coverage <- function(LU_hexa, map_AG, warn_below = 0.5, base_name = "the base raster") {
   stats <- tryCatch(
     esgame_coverage_stats(esgame_allocation_ids(map_AG), raster::values(LU_hexa)),
     error = function(e) NULL)
@@ -52,8 +56,11 @@ esgame_report_coverage <- function(LU_hexa, map_AG, warn_below = 0.5) {
     return(invisible(NULL))
   }
 
+  # Names the raster it actually read. There are two boards now — the hexagonal one and the
+  # rectangular one (tools/R/make-rect-board.R) — selected by ESGAME_BASE_RASTER, and a message that
+  # always said "LU_and_NEW_hexa.tif" would misdirect exactly the person debugging a board mismatch.
   logger::log_info(
-    "Allocation coverage: {stats$matched} of {stats$allocated} ids exist in LU_and_NEW_hexa.tif ({round(100 * stats$fraction)}%).")
+    "Allocation coverage: {stats$matched} of {stats$allocated} ids exist in {base_name} ({round(100 * stats$fraction)}%).")
 
   if (stats$allocated == 0) {
     logger::log_warn("Allocation is empty; the round will score the base raster unchanged.")
@@ -61,7 +68,7 @@ esgame_report_coverage <- function(LU_hexa, map_AG, warn_below = 0.5) {
     logger::log_warn(paste(
       "Only {round(100 * stats$fraction)}% of the allocation matches the base raster, so most of it",
       "is being IGNORED. The scores below will barely depend on the allocation, and may be identical",
-      "for every round. This usually means the allocation and /app/data/LU_and_NEW_hexa.tif are in",
+      "for every round. This usually means the allocation and /app/data/{base_name} are in",
       "different id spaces - check that /app/data holds the data-release raster and not the copy",
       "shipped in the frontend assets."))
   }

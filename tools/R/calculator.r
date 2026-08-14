@@ -115,6 +115,25 @@ stopifnot("bounds.json must be alongside calculator.r" = exists("ESGAME_BOUNDS_P
 ESGAME_BOUNDS <- esgame_load_bounds(ESGAME_BOUNDS_PATH)
 log_info("normalisation bounds loaded from {ESGAME_BOUNDS_PATH}")
 
+# The board this deployment scores against, checked HERE rather than on the first round. calculate()
+# runs with setwd("/app/data"), and raster() on a missing file fails inside a request handler — one
+# 500 per round, with the operator's mistake buried in a stack trace. A calculator pointed at a
+# board it does not have should not come up at all.
+#
+# The same bounds.json serves both boards. derive-bounds.R's extremes are "every unit nature" and
+# "every unit agropark", which depend on WHICH CELLS the board covers, not on how they are grouped,
+# and the rectangular board covers the hexagonal board's 65,826 cells exactly. Re-derived against
+# LU_and_NEW_rect.tif on 2026-08-14, all five bounds came back identical to the committed file.
+ESGAME_BASE_RASTER <- Sys.getenv("ESGAME_BASE_RASTER", "LU_and_NEW_hexa.tif")
+local({
+  .p <- file.path("/app/data", ESGAME_BASE_RASTER)
+  if (!file.exists(.p)) {
+    stop(sprintf("ESGAME_BASE_RASTER is '%s' but %s does not exist; this deployment has no board to score.",
+                 ESGAME_BASE_RASTER, .p))
+  }
+  log_info("base raster: {ESGAME_BASE_RASTER}")
+})
+
 
 calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   ##### 0) start #####
@@ -123,7 +142,13 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   setwd(directory)
   
   ##### 1) Create Land use map #####
-  LU_hexa<- raster("LU_and_NEW_hexa.tif")
+  # Which board this deployment serves. The hexagonal board is the default and the shipped one;
+  # ESGAME_BASE_RASTER=LU_and_NEW_rect.tif serves the rectangular board instead (tools/R/make-rect-board.R).
+  # It must match the board the BROWSER draws — both are derived from the same farmland mask, so a
+  # mismatched pair produces ids that are simply absent from the raster, which reclassify() ignores
+  # in silence. That is exactly the failure coverage_stats below exists to surface, and the reason
+  # this is one variable rather than a guess.
+  LU_hexa<- raster(ESGAME_BASE_RASTER)
   # How much of the allocation actually lands on this raster? reclassify() silently ignores any
   # id that is not present, so a caller whose ids belong to a different id space gets a 200, a
   # published set of coverages, and five finite scores that are the SAME whatever they allocate.
@@ -134,7 +159,7 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   # Kept, not just logged. The log line below is inside the container; the person who needs it is
   # the one running the workshop, and until now the only way to learn a round had been ignored was
   # to read the calculator's stdout. It goes back in the response — see the end of this function.
-  coverage_stats <- esgame_report_coverage(LU_hexa, map_AG)
+  coverage_stats <- esgame_report_coverage(LU_hexa, map_AG, base_name = ESGAME_BASE_RASTER)
   LU_complete<-reclassify(LU_hexa, map_AG, right=F) # no value can be 1!!!!
 
   #### Set parameters ####

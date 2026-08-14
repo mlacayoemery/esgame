@@ -1,0 +1,35 @@
+# Overlay for the RECTANGULAR dynamic game: the same landscape, the same production types and the
+# same model, on a board partitioned into rectangles instead of hexagons. Layers on top of both
+# other files:
+#
+#   docker compose -p esgame-rect \
+#     -f docker-compose.yml -f docker-compose.dynamic.yml -f docker-compose.rect.yml up -d
+#
+# WHY THIS IS ONLY CONFIGURATION
+#
+# The dynamic game derives every playable shape from a raster — tiffToSvgPaths() emits one SVG path
+# per distinct value — so the board's geometry is data. Nothing in the frontend knows what a hexagon
+# is. Changing the board is therefore three variables and two files, and no code at all:
+#
+#   assets/dataRect.json         the dataset whose board raster is New_rectangles.tif
+#   LU_and_NEW_rect.tif          the matching mosaic the calculator reclassifies
+#
+# THE TWO MUST MATCH. The browser sends the ids IT drew; reclassify() silently ignores any id the
+# raster does not contain, so a rectangular frontend against a hexagonal calculator returns five
+# finite scores that are identical whatever the player does. That is not hypothetical — it is the
+# defect tools/R/make-base-raster.R was written to fix, and the reason calculator.r reports how much
+# of each round actually landed on the raster.
+services:
+  esgame-core:
+    environment:
+      # "/" serves the dynamic game rather than the client-side grid game.
+      DEFAULT_MODE: "dynamic"
+      DYNAMIC_DATA_URL: "assets/dataRect.json"
+
+  esgame-calculator:
+    environment:
+      ESGAME_BASE_RASTER: "LU_and_NEW_rect.tif"
+    # Appended to the hexagonal mount in docker-compose.dynamic.yml — compose merges volume lists,
+    # so both rasters are present and ESGAME_BASE_RASTER alone decides which is read.
+    volumes:
+      - ./src/assets/images/LU_and_NEW_rect.tif:/app/data/LU_and_NEW_rect.tif:ro
