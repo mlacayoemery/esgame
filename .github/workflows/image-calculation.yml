@@ -81,7 +81,20 @@ jobs:
           set -euo pipefail
           tag=$(printf '%s\n' '${{ steps.meta.outputs.tags }}' | head -1)
           echo "probing ${tag}"
-          docker run -d --name calc -p 8000:8000 "${tag}"
+
+          # THE BASE RASTER IS MOUNTED, and has to be. tools/R/Dockerfile creates /app/data empty
+          # because in the cluster an init container fills it, and since 2026-08-14 calculator.r
+          # checks ESGAME_BASE_RASTER exists at STARTUP rather than failing on the first round — so
+          # a bare `docker run` of this image now exits immediately, by design.
+          #
+          # That check is also why this probe is worth more than it was. It used to run the image
+          # with no geodata and accept any HTTP status, on the grounds that "with no geodata mounted
+          # it cannot score a real round" — which meant it passed against a container that would
+          # have 500'd on every request a player made. A probe that cannot fail for the reason the
+          # thing is used is not a probe.
+          docker run -d --name calc -p 8000:8000 \
+            -v "${PWD}/v2/src/assets/images/LU_and_NEW_hexa.tif:/app/data/LU_and_NEW_hexa.tif:ro" \
+            "${tag}"
 
           # Plumber takes ~12s to bind. Poll rather than sleep-and-hope: a fixed sleep that is
           # too short reads as "the image is broken". There is no /health route, so the test is
@@ -108,14 +121,46 @@ jobs:
           echo "POST /esgame -> ${code}"
           head -c 400 body.txt || true
           echo
-          # Any HTTP status is fine — with no geodata mounted it cannot score a real round. A
-          # 000 means the process died on the request, which is the failure worth catching.
-          if [ "${code}" = 000 ]; then
-            echo "::error::the calculator died handling a request"
+          # 400 exactly, not "anything but 000". An empty allocation is one calculator.r explicitly
+          # refuses, with a message naming what was wrong, and that is a much narrower claim than
+          # "something answered": 500 would mean it died in the model, and 200 would mean it scored
+          # a round it should have rejected.
+          if [ "${code}" != 400 ]; then
+            echo "::error::POST /esgame with an empty allocation returned ${code}, expected 400"
             docker logs calc || true
             exit 1
           fi
+          grep -q "'allocation' is empty" body.txt || {
+            echo "::error::the 400 did not say why; the refusal is supposed to be actionable"
+            cat body.txt
+            exit 1
+          }
+
+          # The startup line naming the board it loaded. Without this the mount above could silently
+          # stop working — the container would refuse to start, the poll would fail, and the error
+          # would point at the network rather than at the missing file.
+          docker logs calc 2>&1 | grep -q 'base raster: LU_and_NEW_hexa.tif' || {
+            echo "::error::the calculator never logged which base raster it loaded"
+            docker logs calc || true
+            exit 1
+          }
           docker rm -f calc >/dev/null
+
+      - name: ...and must refuse to start without one
+        # The other half of the check above, and the half that rots: if calculator.r ever stopped
+        # verifying its base raster, every test here would still pass while a misconfigured
+        # deployment went back to answering health checks and 500ing every round — which is exactly
+        # the state the dynamic compose stack was in for months.
+        run: |
+          set -uo pipefail
+          tag=$(printf '%s\n' '${{ steps.meta.outputs.tags }}' | head -1)
+          if docker run --rm --name calc-nodata "${tag}" > nodata.log 2>&1; then
+            echo "::error::the calculator started with no base raster; it should refuse"
+            head -c 800 nodata.log
+            exit 1
+          fi
+          echo "refused, as it should:"
+          grep -i 'ESGAME_BASE_RASTER\|does not exist' nodata.log | head -3
 
       - name: Say what was published
         run: |
