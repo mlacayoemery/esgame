@@ -1217,13 +1217,48 @@ How many calculation replicas should a workshop run?
    :ref:`Adding calculation replicas breaks the spider plot
    <what-blocks-scaling-the-calculation>`, which is closed.
 
-   **What is measured:** one replica sustains about **one concurrent player**.
-   :file:`perf/calc-load.js` found rounds take 12.9-28.2s and do **not** overlap, because
-   R/Plumber serves single-threaded. Twenty students pressing *Next Level* together wait about
-   five minutes for the last of them.
+   **Re-measured 2026-08-14, and replicas do help.** Eight runs on a live cluster, all with
+   ``calc_errors`` 0.00%. At a fixed offered load of ``VUS=4``:
 
-   **Nobody has re-measured since**, so the manifest still says ``replicas: 1``. Sizing it needs
-   a real class size, which is a fact about a workshop rather than about this repository.
+   .. code-block:: text
+
+      replicas   rounds done   median      max        throughput
+      1          7, 8, 7       ~70s        87-117s    2.31-2.72/min
+      2          11            41.2s       50.2s      4.71/min
+      3          11            26.5s       63.6s      5.41/min
+
+   Read the **median** and **rounds done** columns, not the throughput one: k6's
+   ``iterations.rate`` divides by wall-clock including ramp-up and drain, and the drain is longer
+   for the slower configurations, so it understates throughput and understates it *most* at one
+   replica. The 1.9x it appears to show from 1→2 is therefore an overstatement of the ratio; the
+   median falling **70s → 41s → 27s** at unchanged offered load is not, and neither is 7 rounds
+   becoming 11.
+
+   **The second replica is worth the most.** The third improves latency (41s → 27s) without
+   completing more rounds, which is what approaching a different limit looks like. The obvious
+   candidate is untested: GeoServer is a **single instance capped at** ``cpu: "1"``, and every
+   round publishes five coverages through it.
+
+   **And one replica saturates at about two concurrent players.** Sweeping load against a single
+   replica: ``VUS=1`` → 1.91/min at a 22.3s median, ``VUS=2`` → 2.89/min at 35.5s, ``VUS=4`` →
+   ~2.5/min at ~70s. Past two, latency grows and throughput does not, which is the shape the old
+   "one replica sustains about one concurrent player" note was pointing at — that claim was about
+   *latency*, and it is throughput that decides how long a class waits.
+
+   **Sizing, then, at roughly 3-5 rounds a minute for two to three replicas:** twenty students
+   pressing *Next Level* together drain in about 4 minutes at two replicas and 3.5 at three,
+   against 7 at one. Thirty students need about 6 minutes at three.
+
+   **Two things that make these numbers conservative rather than optimistic.** The load test posts
+   ``FIELDS=812`` by default and the browser posts **465** — the real board. Measured at 465,
+   one replica does 2.89/min at a 59.7s median rather than 2.31-2.72 at ~70s, so a real round is
+   10-25% cheaper than the ones in the table above. And this was a **single-node** kind cluster on
+   a 12-core workstation with every pod sharing those cores; a multi-node deployment has more room
+   than this could show.
+
+   **Still open, and deliberately.** The manifest still says ``replicas: 1``, because choosing a
+   number needs a class size — a fact about a workshop, not about this repository. What has changed
+   is that the choice is now arithmetic rather than a guess.
 
 GeoServer runs as uid 0 with a writable root filesystem
    The only one of these that was investigated and **refused with evidence** rather than left
