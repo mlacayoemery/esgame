@@ -1,0 +1,140 @@
+name: Build & publish the GeoServer image
+
+# Publishes a GeoServer that can run as a non-root uid.
+# Image: ghcr.io/<owner>/esgame-geoserver  (branch, semver and commit-sha tags)
+#
+# See deploy/geoserver/Dockerfile for why this image exists at all — upstream publishes no rootless
+# tag at any version, and both manifest-only routes were measured and rejected.
+#
+# NOTHING REFERENCES THIS IMAGE YET. deploy/k8s/base still names docker.osgeo.org/geoserver:2.28.4,
+# and switching it is a separate pull request on purpose: both images this repository publishes roll
+# on a `:master` tag, so a manifest change merged alongside an image change is deployed against the
+# PREVIOUS image. The order has to be publish, then point at it.
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+    paths:
+      - 'deploy/geoserver/**'
+      - '.github/workflows/image-geoserver.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Reclaim runner disk
+        # The base is 1.52 GB and the chmod layer takes it to 1.74 GB, so the build needs several
+        # GB of layer space on a runner that arrives with ~25 GB. "no space left on device" during
+        # a chmod of a 125 MB webapp surfaces as an unrelated-looking I/O error.
+        run: |
+          df -h / | tail -1
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
+          df -h / | tail -1
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}-geoserver
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha
+
+      - uses: docker/build-push-action@v7
+        id: build
+        with:
+          context: deploy/geoserver
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # No GHA layer cache, for the same reason image-calculation.yml has none: the image is
+          # larger than a useful fraction of the 10 GB repository-wide cache, and evicting the
+          # caches other workflows use to speed up a build that runs only when
+          # deploy/geoserver/** changes is a bad trade.
+
+      - name: The published image must run as uid 10001 AND behave like root did
+        # A push proves bytes were uploaded. The whole point of this image is a behavioural claim —
+        # that nothing changed except the uid — so the check has to be behavioural, and it has to
+        # include the thing the rejected initContainer route got wrong.
+        run: |
+          set -euo pipefail
+          tag=$(printf '%s\n' '${{ steps.meta.outputs.tags }}' | head -1)
+          echo "probing ${tag}"
+          docker run -d --name gs -p 8080:8080 -e CORS_ENABLED=true "${tag}"
+
+          # GeoServer needs ~30-60s. Poll for the webapp, not for the port: Tomcat binds long
+          # before the webapp deploys, and a webapp that never deployed is exactly the failure
+          # this image exists to prevent — it answers 404 while the log says startup succeeded.
+          for i in $(seq 1 90); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/geoserver/index.html || true)
+            if [ "${code}" = 200 ]; then ok=1; echo "webapp answered 200 after ${i} attempts"; break; fi
+            sleep 2
+          done
+          if [ "${ok:-0}" != 1 ]; then
+            echo "::error::/geoserver/index.html never returned 200 — the webapp did not deploy"
+            docker logs gs 2>&1 | tail -40
+            exit 1
+          fi
+
+          # 1. It is genuinely not root.
+          uid=$(docker exec gs id -u)
+          echo "uid: ${uid}"
+          if [ "${uid}" = 0 ]; then
+            echo "::error::running as root — the USER directive did not take effect"
+            exit 1
+          fi
+
+          # 2. Nothing was silently skipped for want of write access. This is the check that would
+          #    have caught the initContainer route: it starts, serves, and logs two of these.
+          denied=$(docker logs gs 2>&1 | grep -ciE 'permission denied|read-only file system' || true)
+          echo "permission-denied lines in the log: ${denied}"
+          if [ "${denied}" != 0 ]; then
+            echo "::error::the startup script could not write something; it has skipped configuration"
+            docker logs gs 2>&1 | grep -iE 'permission denied|read-only file system' | head -10
+            exit 1
+          fi
+
+          # 3. CORS_ENABLED actually applied. Root gives 200 with Access-Control-Allow-Origin; the
+          #    initContainer route gave 403 while every other check here still passed.
+          hdrs=$(curl -s -D- -o /dev/null -X OPTIONS \
+            -H 'Origin: http://example.invalid' -H 'Access-Control-Request-Method: GET' \
+            http://127.0.0.1:8080/geoserver/wcs || true)
+          echo "${hdrs}" | grep -iE '^HTTP|access-control-allow-origin' || true
+          if ! grep -qi 'access-control-allow-origin' <<<"${hdrs}"; then
+            echo "::error::CORS_ENABLED=true did not apply — the preflight carries no allow-origin header"
+            exit 1
+          fi
+
+          docker rm -f gs >/dev/null
+
+      - name: Say what was published
+        run: |
+          {
+            echo "### Published"
+            echo
+            echo '```'
+            printf '%s\n' '${{ steps.meta.outputs.tags }}'
+            echo '```'
+            echo
+            echo "digest: \`${{ steps.build.outputs.digest }}\`"
+            echo
+            echo "Runs as uid 10001. Nothing points at it yet — see the note at the top of"
+            echo "\`.github/workflows/image-geoserver.yml\`."
+          } >> "$GITHUB_STEP_SUMMARY"
