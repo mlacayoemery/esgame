@@ -1,0 +1,40 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# The published stack, serving the RECTANGULAR board instead of the hexagonal one.
+#
+#   deploy/k8s/kind.sh up
+#   ESGAME_OVERLAY=rectangular deploy/k8s/kind.sh deploy
+#   deploy/k8s/ingress-test.sh
+#
+# Same landscape, same production types, same model — the playable area is partitioned into
+# rectangles rather than hexagons. See ../../../../docs/boards.rst.
+#
+# THIS OVERLAY IS THREE LITERALS. Nothing else is needed, because the dynamic game derives every
+# playable shape from a raster: tiffToSvgPaths() emits one SVG path per distinct value, so the
+# board's geometry is data. No image differs, no manifest differs, no code differs.
+#
+# It builds on ../published rather than ../local-registry so it needs nothing built — both images
+# on ghcr already contain what this selects (assets/dataRect.json in the frontend,
+# ESGAME_BASE_RASTER support in the calculator). Point it at ../local-registry instead to test an
+# unpushed build.
+resources:
+  - ../published
+
+configMapGenerator:
+  - name: esgame-config
+    behavior: merge
+    literals:
+      # "/" serves the dynamic game rather than the client-side grid game. The frontend entrypoint
+      # rejects anything that is not exactly "static" or "dynamic", so a typo fails the pod at
+      # start instead of quietly serving the other game.
+      - DEFAULT_MODE=dynamic
+      # The dataset whose board raster is New_rectangles.tif. Identical to assets/data.json apart
+      # from that and the title, which v2/src/app/shared/data-variants.spec.ts pins.
+      - DYNAMIC_DATA_URL=assets/dataRect.json
+      # The matching mosaic. THIS MUST PAIR WITH THE LINE ABOVE — the browser sends the ids it
+      # drew, and reclassify() ignores ids the raster does not contain in silence, so a rectangular
+      # frontend against a hexagonal calculator returns five finite scores that barely depend on
+      # the allocation. The "board and calculator agree" step in .github/workflows/manifests.yml
+      # asserts the pairing across every overlay, because nothing at run time will.
+      - ESGAME_BASE_RASTER=LU_and_NEW_rect.tif

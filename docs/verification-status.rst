@@ -28,8 +28,11 @@ Last updated: **2026-08-14**.
       places test/k8s.sh       said 20      runs 22
 
    ``ingress-test.sh`` now counts and prints its own total, so that one cannot drift again —
-   ``18/18 checks`` comes out of the run rather than out of someone counting ``check`` in the
-   source, which gives 16 because the ingress-adoption check runs once per Ingress. It also
+   ``19/19 checks`` comes out of the run rather than out of someone counting ``check`` in the
+   source, which gives 17 because the ingress-adoption check runs once per Ingress. (It was 18
+   until 2026-08-15, when the second board added a check that the deployed base raster was
+   identified at all. That the number in this sentence moved with the suite, rather than being
+   noticed months later, is the whole point of the script printing it.) It also
    refuses to report PASS having run fewer than ten checks: every check there is guarded by data
    read from the cluster, so an early ``kubectl`` failure could have skipped all of them and still
    printed success. Confirmed by mutation — raising that floor to 100 gives

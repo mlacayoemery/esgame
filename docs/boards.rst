@@ -78,6 +78,22 @@ committed ``tools/R/bounds.json``. One bounds file serves both boards, and this 
 Running the rectangular board
 -----------------------------
 
+Kubernetes::
+
+    deploy/k8s/kind.sh up
+    ESGAME_OVERLAY=rectangular deploy/k8s/kind.sh deploy
+    deploy/k8s/ingress-test.sh
+
+``deploy/k8s/overlays/rectangular`` is three ConfigMap literals on top of ``published`` — no image
+differs, no manifest differs, no code differs. ``kind.sh`` loads both boards into the geodata
+ConfigMap whichever overlay you deploy, so switching between them is the overlay name and nothing
+else.
+
+Verified on a live cluster, 2026-08-15: ``19/19`` in ``ingress-test.sh`` against each board —
+529 ids from ``LU_and_NEW_rect.tif`` and 465 from ``LU_and_NEW_hexa.tif``, five scores and 5/5
+fetchable coverages both times — and the rectangular board rendered in a browser through the
+ingress.
+
 Compose::
 
     cd v2
@@ -102,6 +118,13 @@ silently ignores ids the raster does not contain, so a rectangular frontend agai
 calculator returns five finite scores that barely move whatever the player does. The calculator
 reports what fraction of each round landed on its raster — in the log and in
 ``allocationCoverage`` in the response — precisely so that failure is visible.
+
+Since nothing at run time will refuse a mismatched pair, ``deploy/k8s/render-test.sh`` refuses it
+before it is applied: for every rendered kustomization it checks that ``DYNAMIC_DATA_URL`` and
+``ESGAME_BASE_RASTER`` name the same board, and that a non-default dataset is actually reachable
+(``DEFAULT_MODE=dynamic``). Confirmed able to fail four ways — the rectangular dataset against the
+hexagonal raster, the rectangular dataset behind the grid game, a misspelt ``DEFAULT_MODE``, and a
+dataset the check does not know about.
 
 Regenerating the rasters
 ------------------------
