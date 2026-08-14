@@ -1446,6 +1446,8 @@ Should the published rasters move to the same fixed scale as the scores?
    **If nobody decides:** the split stays, and it is documented here and in
    :doc:`reference/calculator` rather than being folded knowledge.
 
+.. _how-many-calculation-replicas:
+
 How many calculation replicas should a workshop run?
    This stopped being a correctness question on 2026-08-07 and became a capacity one. The plot
    that broke under replicas is gone, so raising ``replicas`` is now safe — see
@@ -1881,11 +1883,23 @@ took ten minutes, so it is written down.
        ``manifests.yml`` still only *parses* :file:`tools/R/calculator.r` on a push, so a wrong
        ``reclassify`` is caught weekly, not per-change.
    * - The compose stacks
-     - ``docker compose config`` parses and schema-checks all four; none is ever **started** in
-       CI. Every measurement of them on this page is by hand.
+     - **No longer a gap, since 2026-08-14** — this entry said "none is ever *started* in CI" and
+       that stopped being true while it still said so. ``.github/workflows/example-stack.yml``
+       starts :file:`examples/esgame-dynamic` on every change to it and on Mondays, and starts
+       v2's dynamic stack on Mondays only, since that one builds the frontend *and* the R
+       calculator from source. ``docker compose config`` still parses all four, which costs
+       seconds and catches a typo before anything is built.
+
+       What is still by hand: the pygeoapi variant, and any measurement of these stacks other than
+       "it came up and served".
    * - :file:`perf/calc-load.js`
-     - No workflow. It had no recorded measurement either until **2026-08-06**; it does now, and
-       the answer is below.
+     - **No longer a gap, since 2026-08-14.** It runs weekly in ``cluster.yml``, after the browser
+       round-trip, against the live cluster that job already builds — the only place it *can* run,
+       since it needs a calculator behind an ingress. Before that it had been executed by hand
+       exactly once, on 2026-08-06, and this entry read "No workflow" for eight days afterwards.
+
+       The gate there is ``calc_errors``; latency is recorded, not thresholded, because the same
+       healthy backend measured 12.9-28.2s on one machine and 27-89s on another.
    * - Whether the published site is current
      - **Daily since 2026-08-07**, not on pull requests — :file:`.github/workflows/published.yml`
        fetches ``build-info.json`` off the live site and fails if it is behind master. Scheduled
@@ -1904,7 +1918,19 @@ None of this is an argument for gating all of it: a kind cluster with ingress-ng
 calculation image is a slow, fragile CI job, and a flaky gate is worse than an honest gap. It is
 an argument for knowing which green means which.
 
-* **One calculation replica sustains about one concurrent player** (*measured 2026-08-06*).
+**And this section drifted the other way, which is worth naming.** Two entries above described
+gaps that had been closed — the compose stacks and :file:`perf/calc-load.js` — and went on saying
+so for days. Everywhere else on this page the failure mode is claiming coverage that does not
+exist; here it was *disclaiming* coverage that does. It is the same defect and it costs the same
+thing: somebody reads "none is ever started in CI" and builds what already exists. Nothing
+re-derives this table, which is why it is grepped from the workflows each time it is touched
+rather than remembered.
+
+* **One calculation replica sustains about one concurrent player** (*measured 2026-08-06*;
+  superseded 2026-08-14 — the ceiling is **one core per replica** and about 4.5-5 rounds a minute
+  at three replicas, see
+  :ref:`How many calculation replicas should a workshop run?
+  <how-many-calculation-replicas>`).
   :file:`perf/calc-load.js` had never been run. Against the deployed backend, through the
   Service, a round takes **12.9-28.2s** and rounds **do not overlap** — R/Plumber serves
   single-threaded, so a second concurrent submission queues behind the first. At ``VUS=2`` the
