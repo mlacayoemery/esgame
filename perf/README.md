@@ -9,7 +9,16 @@ replica sustains, then size the K8s `replicas` / HPA accordingly.
 ```sh
 # bring up the calculator (e.g. the esgame-dynamic stack), then:
 k6 run -e CALC_URL=http://localhost:8000/esgame perf/calc-load.js
+
+# or against a kind cluster, through the ingress, the way ingress-test.sh reaches it:
+k6 run -e CALC_URL=http://127.0.0.1:8880/esgame -e CALC_HOST=esgame-calculation.local \
+       perf/calc-load.js
 ```
+
+**It runs weekly in CI now** — `.github/workflows/cluster.yml`, after the browser round-trip,
+against the live cluster that job already builds. That is the only place it *can* run: it needs a
+calculator behind an ingress. Before that it had been executed by hand exactly once, on
+2026-08-06. The run posts its numbers to the job summary every time, including when it fails.
 
 **Measured 2026-08-06, first run ever.** A round takes 12.9–28.2s and rounds do not overlap —
 Plumber is single-threaded, so a second concurrent submission queues. **One replica sustains
@@ -23,19 +32,51 @@ error the server never saw. That was the original defect here: a 30s timeout and
 threshold, neither of which any real round has ever satisfied, so the test could not pass at any
 concurrency.
 
-Each iteration creates a GeoServer workspace by design (`game_id` is per-VU-per-iteration), so a
-long run leaves state behind — clean it up afterwards.
-
 - `CALC_URL` — the calculation endpoint (default `http://localhost:8000`). Note the **path**: the
   route is `/esgame`, and posting to the bare origin gets a 404 that reads as a broken backend.
+- `CALC_HOST` — vhost to send as the `Host` header, for reaching it through an ingress. Unset by
+  default. The `.local` names do not resolve, and putting them in `/etc/hosts` is exactly what the
+  browser harness avoids.
 - `VUS` — concurrent students to ramp to (default `2`).
 - `FIELDS` — allocation size (default `812` = the 28×29 board).
 - `TIMEOUT` — per-request timeout (default `180s`). Must exceed `VUS` × round time.
-- `P95_MS` — p95 latency ceiling (default `60000`).
+- `GRACEFUL` — how long a stage waits for rounds already in flight (defaults to `TIMEOUT`).
+- `P95_MS` — p95 latency ceiling. **Unset by default: no latency threshold is registered.**
 - `ERROR_RATE` — allowed error rate (default `0.01`).
 
-Thresholds fail the run if breached. They are a ceiling a real round can meet, not a target anyone
-has committed to. Raise `VUS` (and `TIMEOUT` with it) to find the per-replica ceiling.
+**`calc_errors` is the gate; latency is recorded, not thresholded.** A round either comes back 200
+with a `results[]` or it does not, and that means the same thing everywhere. Round *time* does not:
+
+| measured | machine | rounds | min | max | median |
+|---|---|---|---|---|---|
+| 2026-08-06 | workstation | 7 | 12.9s | 28.2s | 14.0s |
+| 2026-08-14 | another, loaded | 12 over 3 runs | 27.1s | 89.0s | 36.5–70s |
+
+Both were healthy backends returning five correct scores, at the same `VUS=2`. Note the last
+column: the median moved by 2× *between runs on one machine*. The old default of `p(95)<60000`
+failed the second machine outright — 8 of 8 checks passed, `calc_errors` 0.00%, k6 exited 99. That
+is the original 3s/30s defect in a milder form, so the default is gone rather than re-guessed. Set
+`P95_MS` from a baseline you measured on the machine you are gating, once you have more than one
+run. `TIMEOUT` is the real upper bound in the meantime: a round that exceeds it fails as an error,
+which *does* trip the gate.
+
+Raise `VUS` (and `TIMEOUT` with it) to find the per-replica ceiling.
+
+**Clean up afterwards when running locally.** Each iteration creates a GeoServer workspace by
+design (`game_id` is per-VU-per-iteration), so a long run leaves state behind. CI does not need
+this — it deletes the whole cluster two steps later.
+
+```sh
+PW=$(kubectl get secret esgame-geoserver-admin -o jsonpath='{.data.password}' | base64 -d)
+curl -s -u "admin:$PW" -H 'Host: esgame-geoserver.local' \
+  http://127.0.0.1:8880/geoserver/rest/workspaces.json |
+  python3 -c 'import sys,json; [print(w["name"]) for w in json.load(sys.stdin)["workspaces"]["workspace"] if "k6-" in w["name"]]' |
+  while read -r w; do
+    curl -s -X DELETE -u "admin:$PW" -H 'Host: esgame-geoserver.local' \
+      "http://127.0.0.1:8880/geoserver/rest/workspaces/$w?recurse=true"
+  done
+```
+
 Install k6: https://k6.io/docs/get-started/installation/
 
 ## Frontend load — Lighthouse CI
