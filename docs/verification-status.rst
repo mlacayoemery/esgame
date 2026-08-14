@@ -834,6 +834,30 @@ Container security context — *added 2026-07-31*, extended *2026-08-05* and *20
    runs what it publishes and requires the app on 8080, ``uid == 101``, and a ``CALC_URL`` it can
    see injected into the served config.
 
+   **The entrypoint announced a substitution it had not made — fixed 2026-08-14.** ``sed`` exits 0
+   whether or not its pattern matched, so a ``config.json`` without a ``calcUrl`` key was
+   copied through untouched while the script logged
+   ``[esgame] runtime config: calcUrl="…"``. Measured on the published image with a key-less
+   config: the log claimed ``calcUrl="http://example.invalid:9999"`` and the served file was
+   ``{"staticDataUrl":…,"defaultMode":"static"}`` — a client-side game, an operator who asked for
+   a backend, and a log saying they got one. Not contrived either: the example stack mounts its
+   own ``config.json``, so any deployment doing the same with a key-less file hit this.
+
+   It now reads the value back off disk and refuses rather than reporting. A non-zero exit from a
+   ``/docker-entrypoint.d/`` script aborts container start — measured — so these become a
+   container that will not serve instead of one serving the wrong backend, which is the same
+   preference this page applies to GeoServer's ``readOnlyRootFilesystem``.
+
+   Verified against built images, all five paths:
+
+   .. code-block:: text
+
+      CALC_URL set, key present     running   calcUrl served == CALC_URL, "(verified on disk)"
+      CALC_URL unset                running   built-in config untouched, nothing logged
+      CALC_URL=""                   running   injects empty, the documented client-side mode
+      key absent, CALC_URL set      exit 1    "has no \"calcUrl\" key" — previously served silently
+      config.json absent            exit 1    "does not exist; nothing to inject into"
+
    :file:`deploy/k8s/base` carries the port move — ``containerPort`` and the readiness probe to
    8080, the Service's ``targetPort`` to 8080 with ``port: 80`` left alone so no Ingress backend
    reference moved — and asserts ``runAsNonRoot: true`` with ``runAsUser: 101``. ``runAsNonRoot``
