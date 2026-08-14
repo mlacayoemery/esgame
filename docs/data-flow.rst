@@ -622,7 +622,7 @@ Source: :file:`examples/esgame-dynamic/docker-compose.yml`
      - ``GEOSERVER_PUBLIC_URL=http://localhost:8080/geoserver`` (browser-facing; baked
        into the WCS URLs it returns).
    * - ``geoserver``
-     - ``docker.osgeo.org/geoserver:2.28.4``
+     - ``ghcr.io/<owner>/esgame-geoserver:master``
      - ``8080:8080``
      - ``CORS_ENABLED=true``; volume ``geoserver-data:/opt/geoserver_data``
        (persistent catalog) and ``./geoserver/rasters:/rasters:ro``.

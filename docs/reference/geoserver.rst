@@ -384,7 +384,7 @@ for its catalog and the rasters as a *read-only bind mount*:
 
    services:
      geoserver:
-       image: docker.osgeo.org/geoserver:2.28.4
+       image: ghcr.io/<owner>/esgame-geoserver:master
        environment:
          CORS_ENABLED: "true"
        ports:

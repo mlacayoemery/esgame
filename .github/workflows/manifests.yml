@@ -82,26 +82,49 @@ jobs:
 
       - name: Check the GeoServer pin matches the compose stacks
         run: |
-          # One version of GeoServer across k8s and both compose files, and never a
-          # rolling tag — the drift this workflow exists to catch.
-          for f in deploy/k8s/base v2/docker-compose.dynamic.yml examples/esgame-dynamic/docker-compose.yml; do
+          # One GeoServer across k8s and both compose files, pinned to a specific patch and never
+          # a rolling tag — the drift this workflow exists to catch.
+          #
+          # THE INVARIANT MOVED ON 2026-08-14 and this check moved with it. GeoServer is built here
+          # now (deploy/geoserver/Dockerfile) because upstream runs as uid 0 at every version, so
+          # there are two things to check rather than one: the three stacks agree on the IMAGE, and
+          # the Dockerfile pins the VERSION. Checking only the old `docker.osgeo.org/geoserver:X`
+          # string would have matched nothing and, without the guard below, passed.
+          for f in deploy/k8s/base v2/docker-compose.dynamic.yml \
+                   examples/esgame-dynamic/docker-compose.yml deploy/geoserver/Dockerfile; do
             [ -e "$f" ] || { echo "::error::$f is gone; this check no longer covers what it claims"; exit 1; }
           done
-          pins=$(grep -rhoE 'docker\.osgeo\.org/geoserver:[0-9.x]+' \
+
+          # 1. All three stacks name the same image.
+          pins=$(grep -rhoE 'ghcr\.io/[^ ]*/esgame-geoserver:[A-Za-z0-9._-]+' \
                    deploy/k8s/base v2/docker-compose.dynamic.yml \
                    examples/esgame-dynamic/docker-compose.yml | sort -u)
-          echo "$pins"
-          # Without this the check passes on nothing: `echo "" | wc -l` is 1, so an empty match
-          # set looks exactly like one agreed pin, and `grep -q 'x$'` finds no rolling tag in it
-          # either. A rename that stopped the grep matching would have reported success.
+          echo "image references: ${pins:-<none>}"
+          # Without this the check passes on nothing: `echo "" | wc -l` is 1, so an empty match set
+          # looks exactly like one agreed pin. A rename that stopped the grep matching would have
+          # reported success — which is exactly what happened to the previous version of this
+          # check when the image changed, and why it failed loudly instead.
           if [ -z "$pins" ]; then
-            echo "::error::no GeoServer pin found in any of those files; the check matched nothing"; exit 1
+            echo "::error::no esgame-geoserver image found in any of those files; the check matched nothing"; exit 1
           fi
           if [ "$(echo "$pins" | wc -l)" -ne 1 ]; then
-            echo "::error::GeoServer pins disagree across k8s and the compose stacks"; exit 1
+            echo "::error::GeoServer image references disagree across k8s and the compose stacks"; exit 1
           fi
-          if echo "$pins" | grep -q 'x$'; then
-            echo "::error::GeoServer is on a rolling tag; pin a specific patch"; exit 1
+
+          # 2. The Dockerfile pins a specific GeoServer patch. This is where the version lives now.
+          from=$(grep -oE '^FROM docker\.osgeo\.org/geoserver:[A-Za-z0-9._-]+' deploy/geoserver/Dockerfile \
+                   | sed 's/.*://' | sort -u)
+          echo "GeoServer version: ${from:-<none>}"
+          if [ -z "$from" ]; then
+            echo "::error file=deploy/geoserver/Dockerfile::no FROM docker.osgeo.org/geoserver:<tag> found"; exit 1
+          fi
+          if [ "$(echo "$from" | wc -l)" -ne 1 ]; then
+            echo "::error file=deploy/geoserver/Dockerfile::more than one GeoServer base tag"; exit 1
+          fi
+          # A specific patch only. Rejects 3.0.x, 3.0-latest, 3.0-RC and a bare 3.0 — every one of
+          # which docker.osgeo.org actually publishes, so this is not a hypothetical.
+          if ! echo "$from" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error file=deploy/geoserver/Dockerfile::GeoServer is on a rolling tag ($from); pin a specific patch"; exit 1
           fi
 
       - name: No run-time package installation in the R calculator
@@ -285,8 +308,12 @@ jobs:
           # a tag nothing ever pushed. Nothing here pulls these images, so the mistake could
           # only surface as ErrImagePull in someone's cluster.
           #
-          # Both images roll on `master`. Assert that, and assert the workflows that produce
+          # All three images roll on `master`. Assert that, and assert the workflows that produce
           # them still emit a branch tag, so this does not quietly stop meaning anything.
+          #
+          # THREE since 2026-08-14, not two: GeoServer is built here now, because upstream runs as
+          # uid 0 at every published version. This count is the reason that change could not be a
+          # silent one, which is the point of having it.
           #
           # DISTINCT images, not references. The frontend image is named twice now — once by the
           # seed-assets init container and once by the container it seeds for — and counting
@@ -300,8 +327,8 @@ jobs:
           n=$(printf '%s\n' "$imgs" | grep -c . || true)
           echo "$(printf '%s\n' "$refs" | grep -c . || echo 0) reference(s) -> $n distinct:"
           echo "$imgs"
-          if [ "$n" -ne 2 ]; then
-            echo "::error::expected 2 distinct ghcr images in the render, found $n"; exit 1
+          if [ "$n" -ne 3 ]; then
+            echo "::error::expected 3 distinct ghcr images in the render, found $n"; exit 1
           fi
           for i in $imgs; do
             case "$i" in
@@ -309,12 +336,13 @@ jobs:
               *) echo "::error::$i does not use the :master tag the workflows publish"; bad=1 ;;
             esac
           done
-          for w in .github/workflows/image.yml .github/workflows/image-calculation.yml; do
+          for w in .github/workflows/image.yml .github/workflows/image-calculation.yml \
+                   .github/workflows/image-geoserver.yml; do
             [ -e "$w" ] || { echo "::error::$w is gone; nothing publishes that image"; bad=1; continue; }
             grep -q 'type=ref,event=branch' "$w" \
               || { echo "::error::$w no longer emits a branch tag, so :master is not published"; bad=1; }
           done
-          [ "$bad" = 0 ] && echo "both ghcr images use a tag their workflow publishes"
+          [ "$bad" = 0 ] && echo "all three ghcr images use a tag their workflow publishes"
           exit $bad
 
       - name: Browser-facing URLs must name a host an Ingress serves

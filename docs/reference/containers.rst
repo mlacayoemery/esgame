@@ -299,7 +299,7 @@ Services
      - —
      - —
    * - ``geoserver``
-     - ``docker.osgeo.org/geoserver:2.28.4``
+     - ``ghcr.io/<owner>/esgame-geoserver:master``
      - ``8080:8080``
      - ``geoserver-data`` → :file:`/opt/geoserver_data`; ``./geoserver/rasters`` → :file:`/rasters` ``:ro``
      - —
@@ -366,8 +366,10 @@ Compose network).
 geoserver
 ~~~~~~~~~
 
-Stock ``docker.osgeo.org/geoserver:2.28.4`` with ``CORS_ENABLED: "true"`` (so the browser
-may fetch coverages cross-origin). Two volumes: the persistent ``geoserver-data`` catalog,
+``ghcr.io/<owner>/esgame-geoserver:master`` with ``CORS_ENABLED: "true"`` (so the browser may
+fetch coverages cross-origin — and unlike the cluster there is no ingress here to add those
+headers, so GeoServer has to apply it itself). Built from :file:`deploy/geoserver/Dockerfile`
+rather than pulled: upstream runs as uid 0 at every published version, this runs as 10001. Two volumes: the persistent ``geoserver-data`` catalog,
 and the raster folder ``./geoserver/rasters`` mounted read-only at :file:`/rasters` and
 referenced *in place* by the external coverages the seeder registers.
 

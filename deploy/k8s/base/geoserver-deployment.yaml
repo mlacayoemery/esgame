@@ -16,9 +16,15 @@ spec:
     spec:
       containers:
         - name: esgame-geoserver
-          # Pinned to a specific patch, matching v2/docker-compose.dynamic.yml and
-          # examples/esgame-dynamic/docker-compose.yml. 2.24.x was a rolling tag.
-          image: docker.osgeo.org/geoserver:2.28.4
+          # Built here, from deploy/geoserver/Dockerfile: upstream GeoServer runs as uid 0 at every
+          # version and this one does not. Same image in v2/docker-compose.dynamic.yml and
+          # examples/esgame-dynamic/docker-compose.yml, so what is developed against is what is
+          # deployed — and compose has no ingress supplying CORS, which makes GeoServer's own
+          # CORS_ENABLED load-bearing there in a way it is not here.
+          #
+          # A rolling :master tag, like the other two images. GeoServer's version is pinned inside
+          # the Dockerfile (3.0.0) rather than here.
+          image: ghcr.io/mlacayoemery/esgame-geoserver:master
           imagePullPolicy: Always
           env:
             - name: CORS_ENABLED
@@ -63,25 +69,24 @@ spec:
             initialDelaySeconds: 15
             periodSeconds: 10
             failureThreshold: 30
-          # The safe subset only, and this is now the one container it is still true of.
-          # docker.osgeo.org/geoserver runs as uid 0 — measured, not assumed — so runAsNonRoot
-          # would refuse to start it. The other two containers do set it: the calculation image
-          # runs as uid 10001, the frontend as uid 101.
+          # All three containers run non-root now. This was the last one: the frontend is uid 101,
+          # the calculation image uid 10001, and this is uid 10001 because deploy/geoserver builds
+          # it that way. UPSTREAM STILL CANNOT DO THIS — read from docker.osgeo.org's registry
+          # config blobs on 2026-08-14, both 2.28.4 and 3.0.0 declare User "" — so the uid comes
+          # from a chmod applied at build time, not from anything set here.
           #
-          # Do not "just add runAsUser" on the strength of those two. Forcing this image to a
-          # non-root uid does not fail; it 404s. Measured 2026-08-06 with `--user 10001:0`:
-          # Tomcat logs `Server startup in [28806] milliseconds` and /geoserver/web returns 404,
-          # because the webapp never deployed — `Unable to create directory for deployment:
-          # /usr/local/tomcat/conf/Catalina/localhost`, plus `Cannot create logs` and a failed
-          # rewrite of its own server.xml. The readiness probe below does catch it — it requests
-          # /geoserver/index.html, which is part of that undeployed webapp and 404s, so the pod
-          # never goes Ready. Visible failure, but no reason to choose it.
+          # Do not try to reproduce it with runAsUser against the upstream image. That does not
+          # fail, it 404s: Tomcat logs `Server startup in [28806] milliseconds` while the webapp
+          # never deployed, because it could not create
+          # /usr/local/tomcat/conf/Catalina/localhost or rewrite its own server.xml. The readiness
+          # probe below does catch it — /geoserver/index.html is part of the undeployed webapp — so
+          # the pod never goes Ready. And seeding those paths as emptyDirs from an initContainer,
+          # which was tried, gets a Ready pod and 18/18 in ingress-test.sh while GeoServer's own
+          # CORS preflight silently drops from 200 to 403. See deploy/geoserver/Dockerfile.
           #
-          # kartoza/geoserver is not an escape either: forced non-root it exits 10 with
-          # `groupadd: Permission denied` — its entrypoint needs root. 2.28.4 is the newest tag
-          # docker.osgeo.org publishes (2.28.5 and 2.29.0 are not). Checked, so nobody re-checks.
-          #
-          # readOnlyRootFilesystem is refused here on evidence rather than caution. Run with
+          # readOnlyRootFilesystem is STILL refused, and for a reason the new image does not touch:
+          # the startup script rewrites server.xml on every boot, so the root filesystem has to be
+          # writable whoever owns it. Run with
           # --read-only it does NOT fail; Tomcat binds and reports "Server startup in 6409 ms"
           # while:
           #
@@ -90,19 +95,19 @@ spec:
           #   sed: couldn't open temporary file /usr/local/tomcat/conf/sedpbEUk0: Read-only ...
           #   java.io.FileNotFoundException: /usr/local/tomcat/logs/catalina.<date>.log
           #
-          # The startup script REWRITES its own server.xml, and a read-only root drops those edits
-          # silently — a server that starts having ignored its configuration is worse than one
-          # that refuses to. Making it work means seeding emptyDirs over /usr/local/tomcat/conf,
-          # /logs, /work and /temp from the image, i.e. pinning this manifest to the internals of
-          # an upstream image whose next patch release can move them, with that same silent
-          # failure as the penalty. Not worth it for the one container here that holds no secrets
-          # of its own beyond the admin Secret already mounted.
+          # A server that starts having ignored its configuration is worse than one that refuses
+          # to, which is the whole argument, and it is unchanged by owning the image: making the
+          # root filesystem read-only would still need those paths supplied as volumes.
           #
-          # These two need nothing from the image: allowPrivilegeEscalation stops a setuid binary
-          # gaining privileges the container did not start with, and RuntimeDefault applies the
-          # container runtime's seccomp filter. Verified on a live cluster — all three roll out,
-          # 16/16 in ingress-test.sh, and both browser rounds pass.
+          # Verified on a live cluster with this image: uid 10001 in the pod, zero
+          # permission-denied lines in the log, CORS preflight 200 carrying
+          # Access-Control-Allow-Origin, ingress-test.sh 18/18, both e2e-cluster browser rounds,
+          # and tools/R/golden-test.sh unchanged at HC 66 / HH 65 / NP 60 / RV 68 / WA 72 — which
+          # is the check that matters for a GeoServer version bump, because the calculator drives
+          # its REST API to create a workspace and upload five coverages per round.
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
             allowPrivilegeEscalation: false
             seccompProfile:
               type: RuntimeDefault

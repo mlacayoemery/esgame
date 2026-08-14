@@ -20,9 +20,16 @@ services:
     # url: http://localhost:8000/openapi.json
 
   esgame-geoserver:
-    # Pinned to a specific patch (not a rolling 2.x tag) for reproducibility, and kept in
-    # step with examples/esgame-dynamic/docker-compose.yml so both stacks run the same server.
-    image: docker.osgeo.org/geoserver:2.28.4
+    # Built here (deploy/geoserver/Dockerfile) because upstream GeoServer runs as uid 0 at every
+    # version; this one runs as 10001. Kept in step with the k8s base and
+    # examples/esgame-dynamic/docker-compose.yml so all three stacks run the same server. GeoServer's
+    # version is pinned inside that Dockerfile rather than here.
+    #
+    # CORS_ENABLED below is load-bearing HERE in a way it is not in the cluster: there is no ingress
+    # in front of this to add the headers, so the browser's cross-origin fetches depend on GeoServer
+    # applying it. That is exactly what a non-root GeoServer can silently fail to do, and why this
+    # image fixes ownership at build time rather than in a manifest.
+    image: ghcr.io/mlacayoemery/esgame-geoserver:master
     environment:
       CORS_ENABLED: "true"
     ports:

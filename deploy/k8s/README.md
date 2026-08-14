@@ -6,7 +6,7 @@ A generalized Kustomize base for deploying the **full esgame stack** (dynamic mo
 |---|---|---|
 | `esgame-angular` | `ghcr.io/<owner>/esgame` (published) | the frontend, served at the ingress root |
 | `esgame-calculation` | built from [`../../tools/R`](../../tools/R) | R Plumber backend (dynamic mode only) |
-| `esgame-geoserver` | `docker.osgeo.org/geoserver` | geodata service used by the backend |
+| `esgame-geoserver` | `ghcr.io/<owner>/esgame-geoserver` | geodata service used by the backend; built here so it runs as uid 10001 |
 
 > The **canonical esgame game is grid mode — client-side, no backend** (that's what GitHub Pages
 > serves). You only need this stack for the dynamic (SVG) mode. For a frontend-only deployment, run
