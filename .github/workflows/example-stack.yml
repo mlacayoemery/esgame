@@ -1,4 +1,4 @@
-name: The example compose stack comes up
+name: The compose stacks come up
 
 # examples/esgame-dynamic is the "clone it and run it" stack, and nothing ever ran it. That mattered
 # on 2026-08-14, when both compose files were pointed at a GeoServer image this repository builds
@@ -11,8 +11,10 @@ name: The example compose stack comes up
 # 404 while logging no permission error at all. A fresh-volume run populates correctly and says
 # nothing about that. The upgrade path is documented in the compose file instead.
 #
-# It also does not run v2/docker-compose.dynamic.yml, which needs the frontend image built from
-# source (a full Angular build). That one is only parsed, below.
+# v2/docker-compose.dynamic.yml is run too, in a SECOND job, and only on a schedule: it builds
+# both the frontend AND the R calculator from source, and the calculator alone is ~15 minutes
+# (eleven R packages against GDAL). That is too much for a pull-request gate and is why this used
+# to only parse it. The parse stays in the per-PR job, since it costs seconds and catches a typo.
 
 on:
   pull_request:
@@ -145,6 +147,98 @@ jobs:
                    esgame-dynamic-calculator esgame-dynamic-frontend; do
             echo "=== $c ==="; docker logs "$c" 2>&1 | tail -30 || true
           done
+
+      - name: Tear down
+        if: always()
+        run: ${{ env.COMPOSE }} down -v || true
+
+  # The stack a developer gets from `make esgame-dynamic-up`, which nothing ran either.
+  #
+  # SCHEDULE AND DISPATCH ONLY. It builds the frontend and the R calculator from source; the
+  # calculator is ~15 minutes on its own. The example stack above covers the same SHAPE far more
+  # cheaply by pulling published images and a FastAPI stand-in, so what this adds is the real
+  # calculator and the real Angular build wired together by compose — worth having weekly, not
+  # worth it on every pull request.
+  v2-stack:
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      # Non-default ports throughout: 8080 is a common occupant and `up` fails with an opaque
+      # "Bind for 0.0.0.0:8080 failed" if anything holds it.
+      ESGAME_FRONTEND_PORT: '8191'
+      ESGAME_CALC_PORT: '8192'
+      ESGAME_GEOSERVER_PORT: '8193'
+      COMPOSE: docker compose -p esgame-v2 -f v2/docker-compose.yml -f v2/docker-compose.dynamic.yml
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Reclaim runner disk
+        # The calculator image is ~2.6 GB and GeoServer is 1.77 GB.
+        run: |
+          df -h / | tail -1
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
+          df -h / | tail -1
+
+      - name: Build and start the dynamic stack
+        run: ${{ env.COMPOSE }} up -d --build
+
+      - name: The frontend serves, with CALC_URL injected at container start
+        # The premise of the whole deployment: one image, retargeted by env var at start rather
+        # than by rebuilding. The compose overlay sets CALC_URL from ESGAME_CALC_PORT, so this
+        # also catches the two drifting apart — a stack that comes up clean and fails only in a
+        # browser, which is the failure ingress-test.sh guards against on the k8s side.
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${ESGAME_FRONTEND_PORT}/" || true)
+            [ "$code" = 200 ] && { ok=1; echo "frontend answered 200 after $((i*3))s"; break; }
+            sleep 3
+          done
+          [ "${ok:-0}" = 1 ] || { echo "::error::the frontend never served"; docker logs esgame-core 2>&1 | tail -30; exit 1; }
+
+          got=$(curl -s "http://127.0.0.1:${ESGAME_FRONTEND_PORT}/assets/config.json" \
+                  | python3 -c 'import sys,json; print(json.load(sys.stdin).get("calcUrl",""))')
+          want="http://localhost:${ESGAME_CALC_PORT}"
+          echo "calcUrl served: ${got}   expected: ${want}"
+          [ "$got" = "$want" ] || { echo "::error::CALC_URL did not reach the served config"; exit 1; }
+
+      - name: The calculator is the calculator, not merely something listening
+        # Plumber binds ~12s after the container starts, so this polls. An unrouted path gives 404
+        # once it is up and 000 while it is not — those are the two states worth telling apart.
+        # Then POST an empty allocation: any HTTP status is fine, but it must REFUSE structurally
+        # rather than die, which is what 000 on the second request would mean.
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "http://127.0.0.1:${ESGAME_CALC_PORT}/" || true)
+            [ "$code" != 000 ] && { ok=1; echo "calculator answered ${code} after $((i*3))s"; break; }
+            sleep 3
+          done
+          [ "${ok:-0}" = 1 ] || { echo "::error::the calculator never accepted a connection"; docker compose -p esgame-v2 logs esgame-calculator 2>&1 | tail -30; exit 1; }
+
+          code=$(curl -s -o body.txt -w '%{http_code}' --max-time 120 \
+            -X POST "http://127.0.0.1:${ESGAME_CALC_PORT}/esgame" \
+            -H 'Content-Type: application/json' -d '{"allocation":[],"round":1,"game_id":"ci"}' || true)
+          echo "POST /esgame -> ${code}"; head -c 300 body.txt || true; echo
+          [ "$code" != 000 ] || { echo "::error::the calculator died handling a request"; exit 1; }
+
+      - name: GeoServer serves, non-root
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${ESGAME_GEOSERVER_PORT}/geoserver/index.html" || true)
+            [ "$code" = 200 ] && { ok=1; echo "geoserver answered 200 after $((i*3))s"; break; }
+            sleep 3
+          done
+          [ "${ok:-0}" = 1 ] || { echo "::error::GeoServer never served"; exit 1; }
+          uid=$(docker compose -p esgame-v2 exec -T esgame-geoserver id -u | tr -d '\r')
+          echo "uid: ${uid}"
+          [ "${uid}" != 0 ] || { echo "::error::GeoServer is running as root"; exit 1; }
+
+      - name: What the stack looked like if any of that failed
+        if: failure()
+        run: ${{ env.COMPOSE }} ps || true; ${{ env.COMPOSE }} logs --tail 40 || true
 
       - name: Tear down
         if: always()
