@@ -1,4 +1,4 @@
 # Build the docs:  pip install -r requirements.txt && make html
-sphinx>=7
+sphinx>=9.1.0
 furo
 myst-parser
