@@ -10,6 +10,7 @@ container in the system. Each page is grounded in the actual source.
    frontend-services
    frontend-components
    calculator
+   static-calculator
    geoserver
    pygeoapi
    containers

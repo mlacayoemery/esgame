@@ -29,6 +29,17 @@ updates:
       prefix: "chore(docker)"
 
   - package-ecosystem: docker
+    # The static calculator: python:3.14-alpine and nothing else. There is no pip entry for it
+    # because it installs no packages — the standard library is its whole runtime — so this base
+    # image is the entirety of its dependency surface.
+    directory: /tools/calculator
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: docker
     # This Dockerfile was `FROM rstudio/plumber` with no tag when this file was written, so this
     # entry did nothing: Dependabot cannot bump what is not pinned. It is `:v1.3.0` as of
     # 2026-08-14 — the same digest `latest` already resolved to — so this entry is live now.
