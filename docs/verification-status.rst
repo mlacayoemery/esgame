@@ -374,7 +374,36 @@ The published site was twelve commits behind master — *closed 2026-08-07*
    repository — so there is nothing to mirror there.)
 
    Both halves were tested by mutation rather than by assertion — the trap in
-   `The checks were audited for vacuity`_. The producer gate was run against six broken
+   `The example compose stack is now run — *2026-08-14*
+   :file:`examples/esgame-dynamic` is the "clone it and run it" stack and **nothing ever ran it**.
+   That mattered when both compose files were pointed at a GeoServer image this repository builds
+   itself: a change whose entire risk is at container start, and which no job could exercise.
+
+   ``.github/workflows/example-stack.yml`` brings it up on every change to the example, either
+   compose file or :file:`deploy/geoserver`, and on Mondays — the scheduled run being the one that
+   catches the stack breaking because an image it pulls on ``:master`` moved, rather than because
+   this repository changed. It asserts GeoServer serves, runs as a **non-root uid**, logs no
+   writability complaint, that the **seeder** finished cleanly and its workspace is in the catalog
+   (the only assertion here that needs GeoServer to be *writable* — serving 200 proves reads), and
+   that the frontend and calculator answer.
+
+   **What it does not cover, said plainly because the gap is easy to assume away.** It runs on a
+   FRESH volume, and the hazard that actually bit needs an EXISTING one: a docker named volume
+   populates from the image on first use, ownership included, so a volume created by the old root
+   image holds root-owned ``0755`` content that uid 10001 cannot write. GeoServer then serves 404
+   **while logging no permission error at all**. A fresh-volume run populates correctly and says
+   nothing about it. The upgrade path is documented in the compose file instead.
+
+   :file:`v2/docker-compose.dynamic.yml` is parsed rather than run — it needs the frontend built
+   from source. It is an *override*, so it is parsed together with :file:`v2/docker-compose.yml`;
+   alone it fails with "esgame-core has neither an image nor a build context specified", which is
+   not a defect and is how the first attempt at this check read it.
+
+   Verified by running the stack by hand first: GeoServer 200 in 3s as uid 10001 with 0
+   complaints, seeder ``exited:0`` reporting "verified 8 coverage stores", the ``esgame`` workspace
+   present, frontend and calculator both 200.
+
+The checks were audited for vacuity`_. The producer gate was run against six broken
    builds (no JSON, ``unknown`` commit, empty commit, a non-sha, one unstamped page, a
    mislabelled timestamp) and fails each with an annotation; the freshness check was run
    against fixtures for a current site, a stale one, a site that cannot name its commit, a

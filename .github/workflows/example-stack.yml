@@ -1,0 +1,151 @@
+name: The example compose stack comes up
+
+# examples/esgame-dynamic is the "clone it and run it" stack, and nothing ever ran it. That mattered
+# on 2026-08-14, when both compose files were pointed at a GeoServer image this repository builds
+# itself — a change whose whole risk is at container start, and which no CI job could have exercised.
+#
+# WHAT THIS DOES NOT COVER, stated because the gap is easy to assume away: it brings the stack up on
+# a FRESH volume, and the hazard that actually bit during that change needs an EXISTING one. A docker
+# named volume populates from the image on first use, ownership included, so a volume created by the
+# old root image holds root-owned 0755 content that uid 10001 cannot write — GeoServer then serves
+# 404 while logging no permission error at all. A fresh-volume run populates correctly and says
+# nothing about that. The upgrade path is documented in the compose file instead.
+#
+# It also does not run v2/docker-compose.dynamic.yml, which needs the frontend image built from
+# source (a full Angular build). That one is only parsed, below.
+
+on:
+  pull_request:
+    paths:
+      - 'examples/esgame-dynamic/**'
+      - 'v2/docker-compose*.yml'
+      - 'deploy/geoserver/**'
+      - '.github/workflows/example-stack.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'examples/esgame-dynamic/**'
+      - 'v2/docker-compose*.yml'
+      - 'deploy/geoserver/**'
+      - '.github/workflows/example-stack.yml'
+  schedule:
+    # Mondays, with the rest. The path filters above mean this can go a long time without running,
+    # and both images it pulls roll on `:master` — so a scheduled run is what catches the stack
+    # breaking because something it depends on moved rather than because this repository changed.
+    - cron: '50 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  example-stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Explicit and non-default: a runner with anything already on 8080 fails at `up` with
+      # "Bind for 0.0.0.0:8080 failed", which is what happened running this by hand. The
+      # calculator's GEOSERVER_PUBLIC_URL is derived from this, so the two stay consistent.
+      ESGAME_GEOSERVER_PORT: '18080'
+      COMPOSE: docker compose -p esgame-example -f examples/esgame-dynamic/docker-compose.yml
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Reclaim runner disk
+        # The GeoServer image alone is 1.77 GB and the frontend base is pulled on top of it.
+        run: |
+          df -h / | tail -1
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/share/boost
+          df -h / | tail -1
+
+      - name: The other compose file at least parses
+        # v2/docker-compose.dynamic.yml is an OVERRIDE — `esgame-core` is defined in the base file,
+        # so parsing it alone fails with "has neither an image nor a build context specified".
+        # Both together is how it is used and how it must resolve.
+        run: |
+          set -euo pipefail
+          docker compose -f v2/docker-compose.yml -f v2/docker-compose.dynamic.yml config \
+            | grep -qE 'esgame-geoserver:master' \
+            || { echo "::error::v2 compose does not resolve to the esgame-geoserver image"; exit 1; }
+          echo "v2 compose resolves"
+
+      - name: Bring the example up
+        # No ESGAME_IMAGE, so the frontend builds FROM the published esgame image rather than
+        # compiling Angular here.
+        run: ${{ env.COMPOSE }} up -d --build
+
+      - name: GeoServer serves, as a non-root uid, having written its own catalog
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 80); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' \
+              "http://127.0.0.1:${ESGAME_GEOSERVER_PORT}/geoserver/index.html" || true)
+            if [ "$code" = 200 ]; then ok=1; echo "geoserver answered 200 after $((i*3))s"; break; fi
+            sleep 3
+          done
+          if [ "${ok:-0}" != 1 ]; then
+            echo "::error::GeoServer never served /geoserver/index.html"
+            docker logs esgame-dynamic-geoserver 2>&1 | tail -40
+            exit 1
+          fi
+
+          uid=$(docker exec esgame-dynamic-geoserver id -u)
+          echo "uid: ${uid}"
+          [ "${uid}" != 0 ] || { echo "::error::GeoServer is running as root"; exit 1; }
+
+          # The interesting failure is a writability one, and it does NOT appear as "permission
+          # denied" — GeoServer logs it as a WARN about its data dir and then serves 404s.
+          bad=$(docker logs esgame-dynamic-geoserver 2>&1 \
+                | grep -ciE 'permission denied|not writeable' || true)
+          echo "writability complaints: ${bad}"
+          [ "${bad}" = 0 ] || {
+            echo "::error::GeoServer could not write something; its catalog is not trustworthy"
+            docker logs esgame-dynamic-geoserver 2>&1 | grep -iE 'permission denied|not writeable' | head
+            exit 1
+          }
+
+      - name: The seeder registered the coverages
+        # This is the assertion that needs GeoServer to be WRITABLE — the seeder drives its REST
+        # API to create a workspace and eight coverage stores. Serving 200 proves reads.
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 60); do
+            st=$(docker inspect -f '{{.State.Status}}:{{.State.ExitCode}}' esgame-dynamic-geoserver-seed)
+            case "$st" in exited:*) break ;; esac
+            sleep 3
+          done
+          echo "seeder: ${st}"
+          [ "$st" = "exited:0" ] || {
+            echo "::error::the seeder did not finish cleanly (${st})"
+            docker logs esgame-dynamic-geoserver-seed 2>&1 | tail -30; exit 1
+          }
+          ws=$(curl -s -u admin:geoserver \
+                 "http://127.0.0.1:${ESGAME_GEOSERVER_PORT}/geoserver/rest/workspaces.json")
+          echo "$ws" | grep -q '"esgame"' || {
+            echo "::error::the esgame workspace is not in GeoServer's catalog"
+            echo "$ws" | head -c 400; exit 1
+          }
+          echo "esgame workspace present"
+
+      - name: The frontend and calculator answer
+        run: |
+          set -euo pipefail
+          for name in "frontend http://127.0.0.1:81/" "calculator http://127.0.0.1:8000/"; do
+            set -- $name
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$2" || true)
+            echo "$1 -> $code"
+            [ "$code" = 200 ] || { echo "::error::$1 answered $code, not 200"; exit 1; }
+          done
+
+      - name: What the stack looked like if any of that failed
+        if: failure()
+        run: |
+          ${{ env.COMPOSE }} ps || true
+          for c in esgame-dynamic-geoserver esgame-dynamic-geoserver-seed \
+                   esgame-dynamic-calculator esgame-dynamic-frontend; do
+            echo "=== $c ==="; docker logs "$c" 2>&1 | tail -30 || true
+          done
+
+      - name: Tear down
+        if: always()
+        run: ${{ env.COMPOSE }} down -v || true
