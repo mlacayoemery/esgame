@@ -22,8 +22,11 @@
 		<div class="score-board-wrapper">
 			<tro-score-board class="score-board"></tro-score-board>
 			<tro-score-indicator class="score-indicator"></tro-score-indicator>
-			<button troButton class="btn-prev" (click)="prevLevel()" [disabled]="(level | async)?.levelNumber == 1" translate>Previous Level</button>
-			<button troButton class="btn-next" (click)="nextLevel()" [disabled]="(level | async)?.levelNumber != 1" translate>Next Level</button>
+			<!-- Hidden rather than disabled, as in svg-level. And `infiniteLevels` is honoured here
+			     now: this button used to be `levelNumber != 1` outright, so the grid game stopped
+			     after two rounds whatever the dataset said, while the SVG game did not. -->
+			<button troButton class="btn-prev" (click)="prevLevel()" *ngIf="(level | async)?.levelNumber != 1" translate>Previous Level</button>
+			<button troButton class="btn-next" (click)="nextLevel()" *ngIf="(settings | async)?.infiniteLevels || (level | async)?.levelNumber == 1" translate>Next Level</button>
 		</div>
 	</div>
 </div>
