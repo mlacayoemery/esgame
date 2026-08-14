@@ -85,6 +85,23 @@ updates:
     commit-message:
       prefix: "chore(docker)"
 
+  # pip. docs/requirements.txt is FULLY unpinned — `sphinx>=7`, `furo`, `myst-parser` — and
+  # docs/dependency-review.rst already records that a Sphinx major could break the docs build with
+  # no code change here. Nothing watched it until now.
+  - package-ecosystem: pip
+    directory: /docs
+    schedule: { interval: weekly, day: monday }
+    commit-message:
+      prefix: "chore(pip)"
+
+  # The example calculator, pinned exactly (fastapi==, uvicorn==), so this entry does what the
+  # docker ones do for a pinned base: propose the bump rather than take it silently.
+  - package-ecosystem: pip
+    directory: /examples/esgame-dynamic/calculator
+    schedule: { interval: weekly, day: monday }
+    commit-message:
+      prefix: "chore(pip)"
+
   # npm is deliberately absent. The dev tree alone carries hundreds of packages and weekly version
   # PRs across an Angular toolchain would drown the signal this file exists to create; security
   # advisories there are covered by tools/audit.sh, which fails on anything unaccepted.

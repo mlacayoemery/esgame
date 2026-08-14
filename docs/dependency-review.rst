@@ -199,7 +199,11 @@ rule but means two builds a month apart are not the same build.
    * - :file:`docs/requirements.txt` (``sphinx>=7``, ``furo``, ``myst-parser``)
      - Fully unpinned, so docs builds always take the newest Sphinx (9.1.0 at
        review time). Good for freshness, and a Sphinx major could break the build
-       without a code change here.
+       without a code change here. **Watched since 2026-08-14**: nothing had a
+       version feed on it until :file:`.github/dependabot.yml` gained a ``pip``
+       entry, so "a Sphinx major could break the build" was true and unmonitored.
+       Still unpinned — the freshness argument stands — but a major now arrives as
+       a pull request rather than as a red docs job.
 
 
 Runtime dependencies on external hosts
