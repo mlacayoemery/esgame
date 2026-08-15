@@ -18,3 +18,12 @@ data:
   # the Service name above. Leave it equal to GEOSERVER_URL and every round still returns 200 with
   # coverage URLs no client can resolve. See geoserver-ingress.yaml for the matching host.
   GEOSERVER_PUBLIC_URL: "https://change-me-esgame-geoserver.example.com/geoserver"
+
+  # The board the calculation backend scores against, and the pair of the frontend's
+  # DYNAMIC_DATA_URL. STATED, not defaulted: calculator.r refuses to start without it, because a
+  # deployment that never says which board it serves would otherwise get one chosen for it and come
+  # up healthy. overlays/rectangular overrides both together.
+  #
+  # The file has to be in /app/data — an emptyDir here, filled by an init container in the
+  # overlays, a PersistentVolumeClaim in places.
+  ESGAME_BASE_RASTER: "LU_and_NEW_hexa.tif"

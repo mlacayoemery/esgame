@@ -158,7 +158,7 @@ import sys, yaml
 
 # dataset -> the base raster that scores it.
 PAIRS = {'assets/data.json': 'LU_and_NEW_hexa.tif', 'assets/dataRect.json': 'LU_and_NEW_rect.tif'}
-DEFAULT_DATA, DEFAULT_RASTER = 'assets/data.json', 'LU_and_NEW_hexa.tif'
+DEFAULT_DATA = 'assets/data.json'
 
 cfgs = [d for d in yaml.safe_load_all(open(sys.argv[1]))
         if d and d.get('kind') == 'ConfigMap' and (d.get('data') or {}).get('CALC_URL') is not None]
@@ -166,12 +166,17 @@ if not cfgs:
     print('skip\tboard pairing\tno esgame-config in this render'); raise SystemExit
 
 data = cfgs[0].get('data') or {}
-# Unset means the image default, which is the hexagonal board on both sides. That is a valid,
-# matched configuration and is what every overlay that predates the second board renders.
+# DYNAMIC_DATA_URL may be absent: the frontend image ships an assets/config.json that already names
+# a dataset, so unset means "the one baked in", which is data.json. ESGAME_BASE_RASTER may NOT be:
+# /app/data is a mount with nothing baked in, calculator.r has no default and refuses to start
+# without it, so a render that omits it describes a deployment that cannot come up.
 dataset = data.get('DYNAMIC_DATA_URL', DEFAULT_DATA)
-raster = data.get('ESGAME_BASE_RASTER', DEFAULT_RASTER)
+raster = data.get('ESGAME_BASE_RASTER')
 
-if dataset not in PAIRS:
+if raster is None:
+    print('FAIL\tboard pairing\tESGAME_BASE_RASTER is not set; the calculation container will '
+          'refuse to start, and there is no default for it to fall back to')
+elif dataset not in PAIRS:
     print(f"FAIL\tboard pairing\tDYNAMIC_DATA_URL={dataset} is not a known dataset "
           f"({', '.join(PAIRS)}); add it here with the raster that scores it")
 elif PAIRS[dataset] != raster:

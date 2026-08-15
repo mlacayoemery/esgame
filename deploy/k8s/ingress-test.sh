@@ -148,7 +148,7 @@ echo "==> a real round through the calculation ingress"
 pod=$("${K[@]}" get pod -l app=esgame-calculation -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
 "${K[@]}" exec "${pod}" -- R -q -e '
   suppressMessages(library(raster))
-  p <- file.path("/app/data", Sys.getenv("ESGAME_BASE_RASTER", "LU_and_NEW_hexa.tif"))
+  p <- file.path("/app/data", Sys.getenv("ESGAME_BASE_RASTER"))
   cat("RASTER:", basename(p), "\n")
   v <- sort(unique(na.omit(values(raster(p)))))
   cat("IDS:", paste(v[v >= 9], collapse=","), "\n")' 2>/dev/null \

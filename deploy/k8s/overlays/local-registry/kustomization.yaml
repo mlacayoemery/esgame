@@ -98,13 +98,14 @@ patches:
                       configMapKeyRef:
                         name: esgame-config
                         key: ESGAME_BASE_RASTER
-                        optional: true
                 command:
                   - /bin/sh
                   - -c
                   - |
                     set -eu
-                    want="${ESGAME_BASE_RASTER:-LU_and_NEW_hexa.tif}"
+                    # No fallback: the calculation container refuses to start without this, so
+                    # a default here would only move the failure later and make it less clear.
+                    want="${ESGAME_BASE_RASTER:?the calculation container requires it; set it in esgame-config}"
                     cp -n /srv/geodata/*.tif /data/ 2>/dev/null || true
                     [ -s "/data/${want}" ] || {
                       echo "!! ${want} is missing from /data; the calculation container will refuse to start." >&2
