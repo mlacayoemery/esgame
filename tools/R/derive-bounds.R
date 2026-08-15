@@ -41,11 +41,19 @@
 #
 # WHAT THE TWO EXTREMES ARE
 #
-#   lo   every hexagon left as nature: no source cells, so the field is zero, every cell falls
-#        under the floor, and exposure is zero. This is exactly the allocation that used to NaN.
+#   lo   every hexagon left as nature: no source cells, so the field is zero everywhere and
+#        exposure is zero. This is exactly the allocation that used to NaN — under the old
+#        normalisation it divided by (max - min) = 0, and the < 1 floor emptied the mask so the
+#        mean was taken over nothing. Both are gone; the mask is now full of zeros and means to 0.
 #   hi   every hexagon set to agropark: the largest amplitude (130) everywhere it can be placed.
 #        Measured to dominate mixed allocations on this raster — a 5-type striped allocation
 #        reaches about 70% of it.
+#
+#        THIS CEILING FELL when the floor was removed on 2026-08-15 (HH 32.4720 -> 26.5027, and
+#        similarly for the other four), because all-agropark's mean now includes the 19% of
+#        receptor cells that used to be dropped for being under 1. The bounds and the scoring must
+#        be re-derived together: a round scored with a floor against bounds derived without one is
+#        arithmetically consistent and meaningless.
 #
 # THESE BOUNDS BELONG TO A BASE RASTER. They are derived from the geodata in /app/data, so a
 # deployment that supplies its own must re-run this. That is the cost of scores that mean

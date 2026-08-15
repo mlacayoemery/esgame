@@ -34,10 +34,11 @@ ok("it scores the MEAN, not the max",    esgame_score(c(0, 100), 0, 100) == 50)
 ok("a non-zero floor shifts the scale",  esgame_score(c(20), 10, 110) == 10)
 
 cat("==> the NaN this replaced\n")
-# With no agriculture the field is zero everywhere, every cell falls under ESGAME_FLOOR and is
-# dropped, and the mask empties. mean(numeric(0)) is NaN; the old formula ALSO divided by
-# (max - min) = 0. Both are gone, and the answer is the one the model implies: no sources, no
-# exposure.
+# This used to be reachable by an ordinary allocation: with no agriculture the field was zero
+# everywhere, every cell fell under the floor and was dropped, and the mask emptied.
+# mean(numeric(0)) is NaN, and the old formula ALSO divided by (max - min) = 0. The floor is gone
+# so that allocation now yields zeros, but an empty vector is still reachable — a receptor class
+# with no cells on the map — and the answer is the one the model implies: no exposure.
 ok("no agriculture scores 0, not NaN",   esgame_score(numeric(0), 0, 32.472) == 0)
 ok("...and it is not NA either",         !is.na(esgame_score(numeric(0), 0, 32.472)))
 ok("an all-NA mask scores 0",            esgame_score(c(NA_real_, NA_real_), 0, 10) == 0)
@@ -74,7 +75,10 @@ ok("RV takes two land-use classes",      identical(ESGAME_RECEPTORS$RV, c(6, 8))
 ok("five source types",                  length(ESGAME_SOURCES) == 5)
 ok("amplitudes sum to 350",              sum(ESGAME_SOURCES) == 350)
 ok("agropark is the largest amplitude",  ESGAME_SOURCES[["50"]] == max(ESGAME_SOURCES))
-ok("the floor is 1",                     ESGAME_FLOOR == 1)
+# The floor is GONE, and this is the assertion that keeps it gone. It dropped every receptor cell
+# under 1, which emptied 93% of a cautious allocation's map and lifted the bottom of the score
+# range; reintroducing the constant would restore both silently, since nothing else here reads it.
+ok("there is no exposure floor",         !exists("ESGAME_FLOOR"))
 
 cat("==> bounds.json must be loadable and complete\n")
 bp <- Filter(file.exists, c("bounds.json", "tools/R/bounds.json"))[1]
