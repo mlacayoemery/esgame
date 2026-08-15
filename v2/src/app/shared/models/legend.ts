@@ -12,6 +12,20 @@ export class Legend {
      * Suitability maps come from the dataset unstretched, so their numbers do mean something.
      */
     isRoundRelative = false;
+
+    /**
+     * The colours the map is actually interpolated through, lightest first, as bare 6-digit hex.
+     *
+     * `elements` carries the two LABELLED ends and nothing between, which was enough while a
+     * continuous map was a straight line between two colours. It is not one any more: the six
+     * built-in gradients are ColorBrewer 5-class palettes and the map passes through all five, so
+     * a legend built from the two ends alone would show a different ramp from the map beside it —
+     * muddy through the middle where the map is saturated. Same defect as printing 0-100 over a
+     * round-relative stretch: a legend that does not describe its map.
+     *
+     * Optional, and the legend falls back to the two ends when it is absent.
+     */
+    stops?: string[];
 }
 
 export class LegendElement {

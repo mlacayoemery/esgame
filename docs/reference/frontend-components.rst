@@ -389,7 +389,9 @@ Renders a discrete or gradient legend.
 ``legendData: Legend``.
 
 Setting ``legendData`` sorts ``elements`` by ``forValue`` ascending, copies ``isNegative`` and
-``isGradient``; for gradients it builds ``linear-gradient(90deg, #<first>, #<second>)``, and for
+``isGradient``; for gradients it builds ``linear-gradient(90deg, ...)`` over **every stop the map
+is interpolated through** — ``Legend.stops``, falling back to the two labelled ends when a legend
+carries no ramp — and for
 discrete legends it filters out the ``forValue == 0`` element.
 
 ScoreIndicatorComponent

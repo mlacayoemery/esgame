@@ -65,6 +65,30 @@ describe('LegendBoardComponent', () => {
 			expect(c.legendElements.map(e => e.forValue)).toEqual([0, 1]);
 		});
 
+		// The map interpolates the whole ColorBrewer palette; a legend drawn from the two ends
+		// alone is muddy through the middle where the map is saturated, and describes something
+		// the player is not looking at. Same defect as printing 0-100 over a round-relative
+		// stretch — a legend that does not match its map.
+		it('draws every stop the map is interpolated through', () => {
+			const c = new LegendBoardComponent();
+
+			c.legendData = legend([element(0, 'eff3ff'), element(100, '08519c')], {
+				isGradient: true,
+				stops: ['eff3ff', 'bdd7e7', '6baed6', '3182bd', '08519c'],
+			});
+
+			expect(c.gradient).toBe(
+				'linear-gradient(90deg, #eff3ff, #bdd7e7, #6baed6, #3182bd, #08519c)');
+		});
+
+		it('falls back to the two ends when the legend carries no ramp', () => {
+			const c = new LegendBoardComponent();
+
+			c.legendData = legend([element(2, 'ff0000'), element(1, '00ff00')], { isGradient: true });
+
+			expect(c.gradient).toBe('linear-gradient(90deg, #00ff00, #ff0000)');
+		});
+
 		// isGradient is both an @Input and set here, so the data wins over whatever the template
 		// bound — which is what makes the host class track the legend rather than the caller.
 		it('overrides the isGradient input from the data', () => {

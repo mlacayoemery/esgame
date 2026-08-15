@@ -44,7 +44,7 @@ export class TiffService {
 				// isRoundRelative on consequence maps ONLY. Those are the rasters calculator.r
 				// stretches to each round's own min/max; a suitability map is dataset data whose
 				// values are what they say they are.
-				legend = { elements: [{ forValue: minValue, color: gradient!.calculateColor(1) }, { forValue: maxValue, color: gradient!.calculateColor(0) }], isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true, isRoundRelative: gameBoardType == GameBoardType.ConsequenceMap };
+				legend = { elements: [{ forValue: minValue, color: gradient!.calculateColor(1) }, { forValue: maxValue, color: gradient!.calculateColor(0) }], stops: gradient!.rampColors(), isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true, isRoundRelative: gameBoardType == GameBoardType.ConsequenceMap };
 				fields = overlay.fields.map((field) => {
 					return {
 						...field,
