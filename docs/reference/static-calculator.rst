@@ -114,23 +114,61 @@ Where the three implementations differ
 All three place a 2 × 2 block extending right and down and take a signed sum. They part company
 only in cases the interior of the board never reaches:
 
-===================  =====================  =========================  ======================
+===================  =====================  =========================  ==========================
                      2013 ``game.js``       v2 grid game               ``tools/calculator``
-===================  =====================  =========================  ======================
+===================  =====================  =========================  ==========================
 Block at the edge    runs off, total NaN    slid back onto the board   refused, HTTP 400
-Overlapping blocks   counted twice          impossible                 counted twice
-===================  =====================  =========================  ======================
+Overlapping blocks   counted twice          impossible                 refused (``validation``)
+===================  =====================  =========================  ==========================
 
 v2 clamps: ``getAssociatedFields()`` shifts a block that would leave the right or bottom edge, and
 ``game.service.placement-geometry.spec.ts`` property-tests both clamps across square and non-square
 boards. ``canFieldBePlaced()`` then refuses a block overlapping one already placed, so the 2013
 double-count is unreachable there.
 
-This service reproduces the 2013 behaviour, because that is what it is a backend for, and refuses
-the edge case rather than returning NaN. **Pointing v2's grid game at it would therefore need those
-two semantics chosen deliberately** — v2's are the corrected ones, and adopting them here would
-mean this no longer reproduces the original. That is a decision, not a task, and it is why nothing
-is wired up yet.
+Validation, and why it is on by default
+---------------------------------------
+
+In the 2013 game the **page** did the validating. You typed coordinates into a form with four rows
+of boxes, and the calculator summed whatever arrived — which is why ``game.js`` has an edge case
+that returns NaN and a double-count nobody ever hit. Split the calculator out into a service and
+that stops being true: it is now reachable by anything.
+
+So it validates, and can be asked not to::
+
+    validation: true    (default)  reject cells off the board, cells claimed by two pieces, and a
+                                   piece whose footprint exceeds placementSize x placementSize
+    validation: false              score exactly what game.js scores, double-count included
+
+**Cells are never counted twice** under validation. That is the substantive difference from the
+original, and it is a correctness rule rather than a preference: ``concat_pairs()`` filters each
+expanded cell against the original coordinate list and never against the cells it is in the middle
+of adding, so two overlapping blocks contribute the shared cells once each. Two 2 × 2 blocks one
+column apart cover six distinct cells and game.js scores seven.
+
+Off the board is refused in **both** modes. That is the one place this parts company with the
+original even with validation off, because the original's answer there is NaN and no caller can act
+on it.
+
+``golden/allocations.json`` is checked with ``validation=false``, so the oracle is untouched: the
+service still reproduces game.js exactly, on demand.
+
+A piece is its cells, not a corner
+----------------------------------
+
+A placement can be given either way::
+
+    {"type": "farm", "x": 10, "y": 10}
+    {"type": "farm", "cells": [{"x": 10, "y": 10}, {"x": 11, "y": 10}, {"x": 10, "y": 11}]}
+
+The anchor is the 2013 form and grows into a 2 × 2 block. The cell form exists because an anchor
+cannot express **a piece some of whose cells have been given back** — a round in which a player
+returns individual cells rather than whole farms. Anchors are expanded to cells on the way in, so
+the cell form is what is actually scored, and the two are asserted to agree.
+
+Which is why validation also checks the **footprint**: cells may be missing from a piece, but the
+ones present must still fit inside one placementSize × placementSize square, or "a 2 × 2 farm"
+could arrive as four cells scattered across the map.
 
 Why it is not R
 ---------------

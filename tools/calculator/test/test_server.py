@@ -145,3 +145,43 @@ class ItRefuses(ServerTest):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TheCellFormAndValidationOverHttp(ServerTest):
+    """The two things the model gained, as a caller meets them."""
+
+    def test_a_piece_given_as_cells(self):
+        status, body, _ = self.json_request("/score", {"allocation": [
+            {"type": "farm", "cells": [{"x": 10, "y": 10}, {"x": 11, "y": 10}, {"x": 10, "y": 11}]}]})
+        self.assertEqual(status, 200, body)
+        self.assertEqual(body["cells"]["farm"], 3)
+
+    def test_overlapping_pieces_are_refused_by_default(self):
+        status, body, _ = self.json_request("/score", {"allocation": [
+            {"type": "farm", "x": 10, "y": 10}, {"type": "farm", "x": 11, "y": 10}]})
+        self.assertEqual(status, 400)
+        self.assertIn("claimed by two pieces", body["error"])
+
+    def test_validation_false_scores_them(self):
+        status, body, _ = self.json_request("/score", {"validation": False, "allocation": [
+            {"type": "farm", "x": 10, "y": 10}, {"type": "farm", "x": 11, "y": 10}]})
+        self.assertEqual(status, 200, body)
+        self.assertEqual(body["cells"]["farm"], 7)
+
+    def test_an_oversized_footprint_is_refused(self):
+        status, body, _ = self.json_request("/score", {"allocation": [
+            {"type": "farm", "cells": [{"x": 3, "y": 3}, {"x": 9, "y": 3}]}]})
+        self.assertEqual(status, 400)
+        self.assertIn("fits inside", body["error"])
+
+    def test_validation_must_be_a_boolean(self):
+        status, body, _ = self.json_request("/score", {"validation": "yes", "allocation": []})
+        self.assertEqual(status, 400)
+        self.assertIn("validation", body["error"])
+
+    def test_the_spec_documents_both_forms(self):
+        _, spec, _ = self.json_request("/openapi.json")
+        placement = spec["components"]["schemas"]["Placement"]
+        self.assertIn("cells", placement["properties"])
+        self.assertEqual(placement["required"], ["type"])
+        self.assertIn("validation", spec["components"]["schemas"]["ScoreRequest"]["properties"])
