@@ -1581,6 +1581,19 @@ Should the published rasters move to the same fixed scale as the scores?
    ``model.R``, ``airconc10..50`` inline in ``calculator.r`` — and they agree today. Unifying them
    is worth doing and has not been done.
 
+   **Where this landed, 2026-08-15.** The floor was removed (above). The PALETTE half was fixed in
+   a different place entirely: the six built-in gradients are ColorBrewer 5-class sequential
+   palettes and a continuous map was using only their two ends, so it drew a straight RGB line
+   through the middle where the palette is saturated — and ``red``'s stops were not even its own
+   palette's ends. Both fixed, legend included, so a map and the strip beside it agree.
+
+   **The SCALE stays round-relative and stays in the calculator.** ``calculator.r`` publishes each
+   raster already stretched to 0-100, so options B, C and E are all server-side changes, not
+   symbology settings a builder could offer. Deliberate for now. The note in ``calculator.r`` and
+   in :doc:`reference/calculator` records the shape a future change would take — an optional
+   ``ESGAME_SCALE`` defaulting to the present behaviour, with a ``raw`` mode for client-side
+   scaling — and why it is a decision about consumers rather than a refactor.
+
    **D is cheap and independent of the rest**, and worth separating out: whichever scale the raster
    ends up on, a legend that prints a fixed-looking ``0 … 100`` over a round-relative stretch is
    wrong on its own terms. A, B and C are the real question, and it is a question about what a

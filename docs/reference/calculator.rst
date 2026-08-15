@@ -270,6 +270,22 @@ GitHub (``remotes::install_github('eblondel/geosapi')``) and defines:
     ingress host. Leave it equal and every round still returns ``200`` — with
     coverage URLs nothing outside the cluster can load.
 
+* **How a round's rasters are scaled:** round-relative, in the calculator, and **not
+  configurable**. Each indicator raster is stretched with ``(x - min) / (max - min) * 100`` over
+  that round's own surface before it is published, so a colour means "low or high *within this
+  round*" and nothing across rounds. ``Legend.isRoundRelative`` says so in the UI rather than
+  printing numbers the stretch does not support.
+
+  The consequence is that the **scale** is a server decision baked into the published GeoTIFF while
+  the **palette** is a client one, so a game builder offering symbology can only reach half of it.
+
+  **A possible future change, not made:** an optional flag — say ``ESGAME_SCALE``, defaulting to
+  ``round-relative`` so nothing moves — choosing between this stretch, a fixed one, and publishing
+  **raw** exposure values for the client to scale. Raw is what a builder-level colour UI would
+  need. It changes what every published coverage contains, so it is a decision about consumers
+  (WCS clients, places' own calculation) rather than a refactor, and the five ``*_norm`` blocks
+  should be unified with ``model.R``'s ``esgame_indicator()`` before anyone attempts it.
+
 * **Where a round's rasters go:** ``ESGAME_PUBLISH``, one of three, **stated rather than
   inferred**, and the URL scheme in the response says which one produced it.
 
