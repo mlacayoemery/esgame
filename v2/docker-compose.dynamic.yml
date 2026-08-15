@@ -49,6 +49,15 @@ services:
       # k8s ConfigMap makes, and the same way of getting it wrong.
       GEOSERVER: "http://esgame-geoserver:8080/geoserver"
       GEOSERVER_PUBLIC_URL: "http://localhost:${ESGAME_GEOSERVER_PORT:-8080}/geoserver"
+      # Stated, not guessed. calculator.r used to default these to admin/geoserver and warn; it
+      # refuses to start without them now, because a guessed credential is what let a calculator
+      # aimed at the wrong host keep trying instead of failing.
+      #
+      # These ARE the stock values, and that is fine here: esgame-geoserver in this stack is a
+      # fresh GeoServer with its default admin account, on a developer's own machine. Saying so
+      # out loud is the point — the cluster injects real ones from a Secret.
+      GEOSERVER_USER: "${ESGAME_GEOSERVER_USER:-admin}"
+      GEOSERVER_PASSWORD: "${ESGAME_GEOSERVER_PASSWORD:-geoserver}"
     volumes:
       - ./src/assets/images/LU_and_NEW_hexa.tif:/app/data/LU_and_NEW_hexa.tif:ro
 
