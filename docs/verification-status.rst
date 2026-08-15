@@ -409,6 +409,24 @@ The published site was twelve commits behind master — *closed 2026-08-07*
    one image, retargeted by environment variable at container start — and it catches the port and
    the URL drifting apart, which produces a stack that comes up clean and fails only in a browser.
 
+   **It now scores a real round, because posting an empty allocation could not tell this stack from
+   a broken one** — *measured 2026-08-15.* The job used to POST ``{"allocation":[]}`` and accept any
+   status but ``000``. Under that check the committed stack passed while being wrong twice over:
+   the calculator had no ``GEOSERVER`` or ``GEOSERVER_PUBLIC_URL``, so it fell back to
+   ``https://esgame-geoserver.azurewebsites.net/geoserver`` — a host nobody here controls. A round
+   returned **200 with five finite scores** whose coverage URLs all pointed off-site, while the
+   GeoServer the stack had just started held only its five stock demo workspaces (``ne``, ``nurc``,
+   ``sf``, ``tiger``, ``topp``). Nothing had been published to it. A 500 would have been kinder.
+
+   The job now POSTs the golden allocation and requires five coverage URLs on
+   ``http://localhost:$ESGAME_GEOSERVER_PORT``, the first of which must return a GeoTIFF.
+   Confirmed against both recorded responses: the fixed stack passes and serves a 1.2 MB GeoTIFF,
+   the old one fails naming the off-site host.
+
+   This is the second gap in the same file. :file:`v2/docker-compose.dynamic.yml` mounted no base
+   raster until 2026-08-14 — that made every round a 500 — and fixing it made the stack *start*,
+   which made it look more finished than it was.
+
    It is an *override*, so it is parsed and run together with :file:`v2/docker-compose.yml`; alone
    it fails with "esgame-core has neither an image nor a build context specified", which is not a
    defect and is how the first attempt at this check read it.

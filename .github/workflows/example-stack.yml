@@ -223,6 +223,47 @@ jobs:
           echo "POST /esgame -> ${code}"; head -c 300 body.txt || true; echo
           [ "$code" != 000 ] || { echo "::error::the calculator died handling a request"; exit 1; }
 
+      - name: A real round, scored against THIS stack's GeoServer
+        # The step above only ever POSTed an EMPTY allocation and accepted any status, so it could
+        # not tell a working stack from one scoring against a server on the other side of the
+        # internet. It could not, and did not: measured 2026-08-15, the committed stack returned 200
+        # with five finite scores whose coverage URLs all began
+        # https://esgame-geoserver.azurewebsites.net/geoserver — a host nobody here controls —
+        # while the GeoServer this job starts held only its stock demo workspaces.
+        #
+        # So: score the golden allocation, and require the URLs it hands back to point at this
+        # stack and to actually serve a GeoTIFF. Publishing is the only part of a round that leaves
+        # the calculator, and it is the part that was wrong.
+        run: |
+          set -euo pipefail
+          code=$(curl -s -o round.json -w '%{http_code}' --max-time 900 \
+            -X POST "http://127.0.0.1:${ESGAME_CALC_PORT}/esgame" \
+            -H 'Content-Type: application/json' --data @tools/R/golden/allocation.json || true)
+          echo "POST /esgame (golden) -> ${code}"
+          [ "$code" = 200 ] || {
+            echo "::error::the golden allocation did not score"; head -c 600 round.json || true
+            docker compose -p esgame-v2 logs esgame-calculator 2>&1 | tail -40; exit 1; }
+
+          python3 - "${ESGAME_GEOSERVER_PORT}" <<'EOF'
+          import json, sys, urllib.request
+          port = sys.argv[1]
+          want = f"http://localhost:{port}/geoserver"
+          data = json.load(open("round.json"))
+          urls = [r["url"] for r in data.get("results", []) if r.get("id") != "-1"]
+          if len(urls) != 5:
+              raise SystemExit(f"::error::expected 5 coverage URLs, got {len(urls)}")
+          off = [u for u in urls if not u.startswith(want)]
+          if off:
+              raise SystemExit(f"::error::coverage URLs do not point at this stack ({want}): {off[0]}")
+          # And they have to SERVE something. A URL on the right host that 404s is the same
+          # failure one step later.
+          with urllib.request.urlopen(urls[0], timeout=120) as r:
+              head = r.read(4)
+          if head[:2] not in (b"II", b"MM"):
+              raise SystemExit(f"::error::{urls[0]} did not return a GeoTIFF (starts {head!r})")
+          print(f"5/5 coverage URLs on {want}, and the first serves a GeoTIFF")
+          EOF
+
       - name: GeoServer serves, non-root
         run: |
           set -euo pipefail

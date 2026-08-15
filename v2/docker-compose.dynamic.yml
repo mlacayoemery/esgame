@@ -34,6 +34,21 @@ services:
       # tools/R/calculator.r — so every deployment says which board it serves. The rectangular
       # overlay (docker-compose.rect.yml) overrides this together with the frontend's dataset.
       ESGAME_BASE_RASTER: "LU_and_NEW_hexa.tif"
+      # THIS STACK'S OWN GEOSERVER. Both of these were missing, and calculator.r's default is
+      # https://esgame-geoserver.azurewebsites.net/geoserver — a host nobody here controls. So the
+      # stack came up healthy, scored a round, and handed the browser five coverage URLs pointing
+      # off-site while the GeoServer it had just started sat unused.
+      #
+      # Measured on the committed stack, 2026-08-15: POST /esgame returned 200 with five finite
+      # scores, every returned URL began https://esgame-geoserver.azurewebsites.net/geoserver/wcs,
+      # and this stack's GeoServer held only its five stock demo workspaces (ne, nurc, sf, tiger,
+      # topp) — nothing had been published to it. A 500 would have been kinder.
+      #
+      # GEOSERVER is server-to-server, so it uses the compose service name. GEOSERVER_PUBLIC_URL is
+      # what the BROWSER fetches, so it must be the published host port — the same distinction the
+      # k8s ConfigMap makes, and the same way of getting it wrong.
+      GEOSERVER: "http://esgame-geoserver:8080/geoserver"
+      GEOSERVER_PUBLIC_URL: "http://localhost:${ESGAME_GEOSERVER_PORT:-8080}/geoserver"
     volumes:
       - ./src/assets/images/LU_and_NEW_hexa.tif:/app/data/LU_and_NEW_hexa.tif:ro
 
