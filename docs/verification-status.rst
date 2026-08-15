@@ -359,12 +359,35 @@ The published site was twelve commits behind master — *closed 2026-08-07*
    * :file:`.github/workflows/published.yml` fetches that JSON back off the live site daily
      and reports how many commits behind master it is, naming them. Scheduled only — the site
      legitimately lags a push, so as a required check it would fail after every merge and
-     teach people to click through it. Same reasoning as
-     :file:`.github/workflows/cluster.yml`.
+     teach people to click through it. :file:`.github/workflows/cluster.yml` applies the same
+     reasoning selectively: it gates pull requests that touch ``deploy/k8s/**`` and nothing else,
+     because that is the only diff it can answer a question about.
    * :file:`.github/workflows/docs.yml` gates the producer on every pull request: the stamp
      must exist, must name a real sha rather than ``unknown``, must be on every page built,
      and must match ``build-info.json``. A freshness check downstream is worth nothing if the
      thing it reads can quietly stop being written.
+
+   **The cluster round-trip runs when it can mean something, not weekly** — *changed
+   2026-08-15.* It stands up kind and deploys master's images against master's manifests, so a
+   pull request that changes ``v2`` or ``tools/R`` is the one case it CANNOT speak to: the images
+   it pulls do not contain the change. It now runs on three triggers instead of one.
+
+   ``workflow_run``
+       after an image is published from master. Starting at merge instead would pull the
+       *previous* image — the build takes about fifteen minutes — and test the wrong thing. This
+       is the ordering trap recorded under the rolling ``:master`` tag; waiting for the publish is
+       what makes "master's images against master's manifests" true rather than nearly true. It is
+       guarded on ``conclusion == 'success'``, because a ``workflow_run`` fires whatever the
+       outcome and would otherwise report on a failed build's leftovers.
+
+   ``pull_request`` on ``deploy/k8s/**``
+       a manifest-only change is exactly where master's images ARE the right images, so the gate
+       asks the question the PR raises. Deliberately narrow: a gate people cannot act on is one
+       they learn to click through.
+
+   ``schedule``
+       kept, because it catches the world moving under a repository that did not — an upstream
+       ingress-nginx release, a base image rebuild, a GeoServer tag shifting.
 
    **One stamp covers the game as well as the documentation**, which is worth saying because
    the check only ever fetches a docs URL. :file:`.github/workflows/deploy.yml` builds the
@@ -1905,8 +1928,8 @@ took ten minutes, so it is written down.
        ``unique()``, removing the empty-allocation guard, and reading the ``lulc`` column instead
        of ``id`` — each caught by the assertion written for it, with exit 1.
 
-       **The model itself gets a characterization test** (*2026-08-06*), in the weekly cluster
-       job — the only place anything runs it. :file:`tools/R/golden-test.sh` POSTs one fixed
+       **The model itself gets a characterization test** (*2026-08-06*), in the cluster job — the
+       only place anything runs it. :file:`tools/R/golden-test.sh` POSTs one fixed
        465-hexagon allocation and compares the five indicators against
        :file:`tools/R/golden/scores.json`:
 
@@ -1945,7 +1968,7 @@ took ten minutes, so it is written down.
        What is still by hand: the pygeoapi variant, and any measurement of these stacks other than
        "it came up and served".
    * - :file:`perf/calc-load.js`
-     - **No longer a gap, since 2026-08-14.** It runs weekly in ``cluster.yml``, after the browser
+     - **No longer a gap, since 2026-08-14.** It runs in ``cluster.yml``, after the browser
        round-trip, against the live cluster that job already builds — the only place it *can* run,
        since it needs a calculator behind an ingress. Before that it had been executed by hand
        exactly once, on 2026-08-06, and this entry read "No workflow" for eight days afterwards.

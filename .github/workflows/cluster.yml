@@ -1,20 +1,33 @@
-name: Cluster round-trip (scheduled)
+name: Cluster round-trip
 
 # The strongest checks in this repository are the ones nothing ran:
 # deploy/k8s/ingress-test.sh and v2/e2e-cluster both need a cluster with ingress-nginx, so they
 # only ever executed when someone executed them by hand. That gap is written up under
 # "Not verified" in docs/verification-status.rst.
 #
-# SCHEDULED ONLY, DELIBERATELY. This is not a PR gate and must not become one.
-#   - It stands up kind, installs ingress-nginx and pulls a 2.6 GB image; that is ~10 minutes.
-#   - Both images roll on :master, so what it tests is "master's images against master's
-#     manifests" — which is a question about the deployed world, not about a diff. Running it on
-#     a PR would answer a question the PR did not ask.
-#   - A flaky gate is worse than an honest gap. A red scheduled run is a signal someone reads on
-#     Monday; a red required check is a thing people learn to re-run until it passes.
+# STILL NOT A BLANKET PR GATE, and for the reason that has always been written here: both images
+# roll on :master, so this tests "master's images against master's manifests". On a pull request
+# that changes v2 or tools/R, the images it would pull do NOT contain the change — it would answer
+# a question the PR did not ask, and answer it wrong in both directions.
 #
-# workflow_dispatch is here so it can be run on demand after a change that ought to affect it,
-# which is also how it was first verified.
+# But waiting until Monday to learn that master cannot deploy is its own defect. So it runs at the
+# two moments the question is meaningful, and not otherwise:
+#
+#   workflow_run    after an image is PUBLISHED from master. This is the ordering trap this
+#                   repository has hit before: an image build takes ~15 minutes, so a run started
+#                   at merge would pull the PREVIOUS image and test the wrong thing. Waiting for
+#                   the publish to finish is what makes "master's images against master's
+#                   manifests" true rather than approximately true.
+#
+#   pull_request    only for deploy/k8s/**. A manifest-only change is exactly the case where
+#                   master's images ARE the right images to test against, so here the PR gate
+#                   asks precisely the question the PR raises.
+#
+# The schedule stays, because it also catches the world drifting under a repository that did not
+# change: an upstream ingress-nginx release, a base image rebuild, a GeoServer tag moving.
+#
+# A flaky gate is worse than an honest gap, and that has not stopped being true — the pull_request
+# trigger is deliberately narrow so that the gate people must pass is the one they can act on.
 
 on:
   schedule:
@@ -22,12 +35,26 @@ on:
     # a known-good build rather than alongside one.
     - cron: '40 6 * * 1'
   workflow_dispatch:
+  workflow_run:
+    workflows:
+      - 'Build & publish container image'
+      - 'Build & publish the calculation image'
+    types: [completed]
+    branches: [master]
+  pull_request:
+    paths:
+      - 'deploy/k8s/**'
+      - '.github/workflows/cluster.yml' 
 
 permissions:
   contents: read
 
 jobs:
   round-trip:
+    # A workflow_run fires on completion whatever the conclusion, so without this the cluster job
+    # would run against an image build that FAILED — deploying whatever :master happened to be,
+    # and reporting on it as though it were the new one.
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
