@@ -67,6 +67,28 @@ Each of those was checked against a deliberate break. Transposing the ``[y][x]``
 farm-beats-ranch rule, and "fixing" the double-count each fail the suite — 11, 6 and 4 assertions
 respectively.
 
+Both ends are pinned
+--------------------
+
+``golden/allocations.json`` anchors the service to ``calc_files/game.js`` with ``validation``
+**off** — what the 2013 page did. ``v2/e2e/grid-calculator-agrees.spec.ts`` anchors it to the game
+v2 ships today with ``validation`` **on**: it plays the grid game in a browser, reads the six
+numbers off the score board, and requires the service to reproduce every one of them plus the total
+for the same cells.
+
+That comparison happens in **round 2**. Round 1 shows only the suitability maps — the game's own
+design, "fill the blank spaces based on maps that show their relative productivity" — so its score
+board carries the two production rows and nothing else. Comparing there would check half the model
+and call it agreement.
+
+The allocation is sent as explicit ``cells`` rather than anchors, so the comparison does not depend
+on the browser and the service agreeing about what an anchor expands to, which would be assuming
+the thing under test.
+
+Between the two, the service cannot drift toward either implementation without something going red.
+Confirmed able to fail: transposing the service's ``[y][x]`` and shifting every indicator by one
+each break the browser comparison.
+
 The data pack
 -------------
 
