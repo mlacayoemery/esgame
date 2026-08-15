@@ -111,7 +111,10 @@ Which sets three things — and they must agree:
     near-duplicate datasets drift the way the translation files did.
 
 ``ESGAME_BASE_RASTER=LU_and_NEW_rect.tif``
-    The mosaic the calculator reclassifies.
+    The mosaic the calculator reclassifies. **Mandatory, with no default** — every deployment says
+    which board it serves, because a calculator handed one by default comes up healthy and scores
+    against a board the browser may not be drawing. ``deploy/k8s/base/configmap.yaml`` states the
+    hexagonal one; this overlay overrides it.
 
 **A mismatched pair does not fail.** The browser sends the ids it drew, and ``reclassify()``
 silently ignores ids the raster does not contain, so a rectangular frontend against a hexagonal

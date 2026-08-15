@@ -29,6 +29,11 @@ services:
     #
     # Read-only, and a file rather than the directory: /app/data is also where calculator.r writes
     # its output rasters, so mounting a host directory over it would put those on the host too.
+    environment:
+      # Stated, not defaulted. calculator.r refuses to start without it — see the note in
+      # tools/R/calculator.r — so every deployment says which board it serves. The rectangular
+      # overlay (docker-compose.rect.yml) overrides this together with the frontend's dataset.
+      ESGAME_BASE_RASTER: "LU_and_NEW_hexa.tif"
     volumes:
       - ./src/assets/images/LU_and_NEW_hexa.tif:/app/data/LU_and_NEW_hexa.tif:ro
 

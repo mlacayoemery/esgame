@@ -124,8 +124,23 @@ log_info("normalisation bounds loaded from {ESGAME_BOUNDS_PATH}")
 # "every unit agropark", which depend on WHICH CELLS the board covers, not on how they are grouped,
 # and the rectangular board covers the hexagonal board's 65,826 cells exactly. Re-derived against
 # LU_and_NEW_rect.tif on 2026-08-14, all five bounds came back identical to the committed file.
-ESGAME_BASE_RASTER <- Sys.getenv("ESGAME_BASE_RASTER", "LU_and_NEW_hexa.tif")
+# MANDATORY, AND WITH NO DEFAULT. It had one — LU_and_NEW_hexa.tif — and a default is the same
+# defect as a missing file, one step earlier: a deployment that never says which board it serves
+# gets one chosen for it, comes up healthy, and scores every round against a board the browser may
+# not be drawing. There are two boards now and the number is not going to go down; "whichever one
+# used to be the only one" is not an answer a calculator should supply on the operator's behalf.
+#
+# Every deployment states it: deploy/k8s/base/configmap.yaml for the cluster (overlays/rectangular
+# overrides it), v2/docker-compose.dynamic.yml for compose. That is a few more characters in each
+# and it makes the frontend/calculator pairing visible at both ends, which is what
+# deploy/k8s/render-test.sh checks.
+ESGAME_BASE_RASTER <- Sys.getenv("ESGAME_BASE_RASTER", "")
 local({
+  if (!nzchar(ESGAME_BASE_RASTER)) {
+    stop(paste("ESGAME_BASE_RASTER is not set. It names the board this calculator scores against",
+               "and has no default: set it to the base raster in /app/data, e.g.",
+               "LU_and_NEW_hexa.tif (hexagonal) or LU_and_NEW_rect.tif (rectangular)."))
+  }
   .p <- file.path("/app/data", ESGAME_BASE_RASTER)
   if (!file.exists(.p)) {
     stop(sprintf("ESGAME_BASE_RASTER is '%s' but %s does not exist; this deployment has no board to score.",

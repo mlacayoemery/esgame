@@ -57,15 +57,15 @@ spec:
             # that barely move whatever the player does. manifests.yml checks the two agree in every
             # rendered overlay, because nothing at run time will.
             #
-            # optional: true, and unset means LU_and_NEW_hexa.tif — the shipped board — so every
-            # overlay that does not set it is unaffected. calculator.r verifies the file exists at
-            # startup and refuses to come up otherwise.
+            # NOT optional. configmap.yaml states it, so an overlay that replaces esgame-config
+            # without the key gets CreateContainerConfigError naming the key it dropped — which is
+            # the right failure. calculator.r has no default either: it refuses to start unset,
+            # and refuses again if the file it names is not in /app/data.
             - name: ESGAME_BASE_RASTER
               valueFrom:
                 configMapKeyRef:
                   name: esgame-config
                   key: ESGAME_BASE_RASTER
-                  optional: true
             - name: GEOSERVER
               valueFrom:
                 configMapKeyRef:

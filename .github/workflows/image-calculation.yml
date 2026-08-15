@@ -93,6 +93,7 @@ jobs:
           # have 500'd on every request a player made. A probe that cannot fail for the reason the
           # thing is used is not a probe.
           docker run -d --name calc -p 8000:8000 \
+            -e ESGAME_BASE_RASTER=LU_and_NEW_hexa.tif \
             -v "${PWD}/v2/src/assets/images/LU_and_NEW_hexa.tif:/app/data/LU_and_NEW_hexa.tif:ro" \
             "${tag}"
 
@@ -151,16 +152,40 @@ jobs:
         # verifying its base raster, every test here would still pass while a misconfigured
         # deployment went back to answering health checks and 500ing every round — which is exactly
         # the state the dynamic compose stack was in for months.
+        #
+        # TWO ways to have no board, and both must be refused. ESGAME_BASE_RASTER has no default
+        # since 2026-08-15: a deployment that does not say which board it serves would otherwise be
+        # handed one, come up healthy, and score against a board the browser may not be drawing.
         run: |
           set -uo pipefail
           tag=$(printf '%s\n' '${{ steps.meta.outputs.tags }}' | head -1)
-          if docker run --rm --name calc-nodata "${tag}" > nodata.log 2>&1; then
-            echo "::error::the calculator started with no base raster; it should refuse"
+
+          # (a) nothing said at all
+          if docker run --rm --name calc-unset "${tag}" > unset.log 2>&1; then
+            echo "::error::the calculator started with ESGAME_BASE_RASTER unset; it should refuse"
+            head -c 800 unset.log
+            exit 1
+          fi
+          grep -q 'ESGAME_BASE_RASTER is not set' unset.log || {
+            echo "::error::it refused, but not for the reason it should have:"
+            head -c 800 unset.log
+            exit 1
+          }
+          echo "unset: refused, as it should"
+
+          # (b) a board named that is not there
+          if docker run --rm --name calc-nodata -e ESGAME_BASE_RASTER=LU_and_NEW_hexa.tif \
+               "${tag}" > nodata.log 2>&1; then
+            echo "::error::the calculator started with no base raster on disk; it should refuse"
             head -c 800 nodata.log
             exit 1
           fi
-          echo "refused, as it should:"
-          grep -i 'ESGAME_BASE_RASTER\|does not exist' nodata.log | head -3
+          grep -q 'does not exist' nodata.log || {
+            echo "::error::it refused, but not for the reason it should have:"
+            head -c 800 nodata.log
+            exit 1
+          }
+          echo "named but absent: refused, as it should"
 
       - name: Say what was published
         run: |
