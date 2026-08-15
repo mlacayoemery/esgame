@@ -105,8 +105,19 @@ COPY . .
 #
 # 10001 rather than a name so the manifests can assert runAsUser numerically. A named user alone
 # would leave runAsNonRoot unable to tell what the image resolves to in some runtimes.
+# /srv/rounds exists, and is owned by 10001, ONLY so that a docker named volume mounted there is
+# writable. A fresh named volume takes its ownership from the image directory it covers — unlike a
+# Kubernetes emptyDir, which is created root-owned regardless and needs fsGroup instead. Measured
+# both ways: a volume over a path the image owns comes up `10001 0 drwxrwxr-x` and is writable; one
+# over a path the image lacks comes up `0 0 drwxr-xr-x` and is not, which is how the file-publishing
+# compose stack failed to start the first time.
+#
+# It is a convention, not a default: ESGAME_FILES_DIR has no default and publish.R refuses to start
+# without it. This just means the conventional answer works with no extra plumbing.
 RUN useradd --system --uid 10001 --gid 0 --no-create-home --shell /usr/sbin/nologin esgame \
- && mkdir -p /app/data \
+ && mkdir -p /app/data /srv/rounds \
+ && chown -R 10001:0 /srv/rounds \
+ && chmod -R g=u /srv/rounds \
  && chown -R 10001:0 /app \
  && chmod -R g=u /app
 USER 10001

@@ -270,6 +270,45 @@ GitHub (``remotes::install_github('eblondel/geosapi')``) and defines:
     ingress host. Leave it equal and every round still returns ``200`` — with
     coverage URLs nothing outside the cluster can load.
 
+* **Where a round's rasters go:** ``ESGAME_PUBLISH``, one of three, **stated rather than
+  inferred**, and the URL scheme in the response says which one produced it.
+
+  ================  =================================================  ==========================
+  Mode              Rasters go                                         ``url`` in the response
+  ================  =================================================  ==========================
+  ``geoserver``     published over GeoServer's REST API (the default)   ``http(s)://`` WCS
+  ``fileserver``    written to ``ESGAME_FILES_DIR``, served by others   ``http(s)://…/name.tif``
+  ``files``         written to ``ESGAME_FILES_DIR``, nothing serving    ``file:///…/name.tif``
+  ================  =================================================  ==========================
+
+  The mode is explicit because inferring it from whichever variables happen to be set is how a
+  deployment ends up in a mode nobody chose — setting ``ESGAME_FILES_DIR`` does **not** quietly
+  switch a GeoServer deployment over. ``fileserver`` additionally requires ``ESGAME_FILES_URL``,
+  which is the address the *browser* asks for the rasters at and is not the directory they are
+  written to; the two are as different as ``GEOSERVER`` and ``GEOSERVER_PUBLIC_URL``, and
+  ``publish.R`` refuses an ``ESGAME_FILES_URL`` that is not ``http(s)://``.
+
+  The file modes are cheap because the five GeoTIFFs **already exist** before anything is
+  published: ``calculate()`` writes them with ``writeRaster()`` and only then uploads them. A file
+  publisher copies what is already there and builds a different URL.
+
+  ``ESGAME_FILES_DIR`` is deliberately not ``/app/data``. That directory holds the base raster and
+  ``bounds.json``, and serving it would publish the calculator's inputs alongside its outputs —
+  which is why ``#* @assets /app/data /images`` was removed from ``calculator.r`` in the first
+  place. The image ships ``/srv/rounds`` owned by uid 10001 so a docker named volume mounted there
+  is writable; a volume takes its ownership from the image directory it covers, unlike a
+  Kubernetes ``emptyDir``, which is root-owned regardless and needs ``fsGroup``.
+
+  Everything is checked at startup — an unknown mode, a missing directory, a directory that cannot
+  be created or written, a ``fileserver`` with no URL. A publisher that is wrong is wrong on every
+  round, and the score is computed *before* anything is published, so the failure would otherwise
+  be a ``200`` carrying five URLs that fetch nothing.
+
+  :file:`v2/docker-compose.files.yml` is the stack with no GeoServer at all: the calculator writes
+  into a named volume and the frontend's own nginx serves it at ``/rounds``. It layers on
+  :file:`v2/docker-compose.yml` alone rather than on the dynamic overlay, because Compose can add
+  services to a merged stack but not remove them.
+
 * **GeoServer credentials:** ``GEOSERVER_USER`` and ``GEOSERVER_PASSWORD``, both
   **mandatory with no default** since 2026-08-15. ``calculator.r`` refuses to start
   without them, naming whichever is missing.

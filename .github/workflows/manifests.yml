@@ -207,6 +207,21 @@ jobs:
                         install.packages("jsonlite", repos="https://packagemanager.posit.co/cran/__linux__/jammy/latest")'
           Rscript tools/R/test-model.R
 
+      - name: Where a round's rasters go must be right, not merely parseable
+        run: |
+          # publish.R decides whether the URLs a player is handed point at anything. Every one of
+          # its refusals guards a failure that is silent by construction: the score is computed
+          # BEFORE anything is published, so a wrong directory, a missing base URL or an
+          # unwritable mount produces a 200 carrying five URLs that fetch nothing — which is the
+          # shape the v2 compose stack was in while publishing to a stranger's GeoServer.
+          #
+          # Base R, like the two above: publish.R touches no raster and no GDAL on purpose, so it
+          # runs in this job with nothing installed.
+          set -euo pipefail
+          test -f tools/R/test-publish.R \
+            || { echo "::error::tools/R/test-publish.R is missing; the publishing modes are ungated"; exit 1; }
+          Rscript tools/R/test-publish.R
+
       - name: The fixed normalisation bounds must be wired in and shippable
         run: |
           # A round is scored against tools/R/bounds.json. If it stops being loaded, or stops

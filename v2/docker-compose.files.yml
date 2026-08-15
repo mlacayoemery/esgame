@@ -1,0 +1,57 @@
+# The dynamic game WITHOUT GeoServer: the calculator writes each round's rasters into a directory
+# and the frontend's own nginx serves them.
+#
+#   docker compose -p esgame-files -f docker-compose.yml -f docker-compose.files.yml up -d
+#
+# Layered on docker-compose.yml ALONE, not on docker-compose.dynamic.yml. Compose can add services
+# to a merged stack but not remove them, so a stack that must not contain GeoServer cannot be
+# expressed as an overlay on one that does. This defines the calculator itself for that reason.
+#
+# WHAT IT COSTS TO NOT HAVE GEOSERVER: GeoServer is 1.77 GB and takes ~30 s to come up, and the
+# only thing it does in this stack is hold five GeoTIFFs per round and hand them back over WCS. If
+# nothing is using the rest of a spatial data infrastructure — styling, reprojection, WMS, a
+# catalog — then a directory and a static file server do the same job.
+#
+# WHAT IT GIVES UP: the WCS endpoint, and with it anything that consumes coverages as a service
+# rather than as files. The cluster keeps GeoServer; this is for a laptop, a workshop on a bad
+# network, and CI.
+#
+# ESGAME_PUBLISH is EXPLICIT — see tools/R/publish.R. The mode is never inferred from which
+# variables happen to be set, so switching stacks cannot switch publishing mode by accident, and
+# the URL scheme in the response says which mode produced it: http(s):// here, file:// under
+# ESGAME_PUBLISH=files, and a WCS GetCoverage URL under geoserver.
+services:
+  esgame-core:
+    environment:
+      # The browser reaches the calculator via the published host port (it POSTs client-side).
+      CALC_URL: "http://localhost:${ESGAME_CALC_PORT:-8000}"
+    volumes:
+      # The same directory the calculator writes into, served as /rounds by the frontend's nginx.
+      # Read-only here: nginx has no business writing to it, and the calculator is the only writer.
+      - round-output:/usr/share/nginx/html/rounds:ro
+
+  esgame-calculator:
+    build:
+      context: ../tools/R
+    image: local/esgame-calculator
+    ports:
+      - "${ESGAME_CALC_PORT:-8000}:8000"
+    environment:
+      ESGAME_BASE_RASTER: "LU_and_NEW_hexa.tif"
+      ESGAME_PUBLISH: "fileserver"
+      # Where the rasters are written. NOT /app/data: that holds the base raster and bounds.json,
+      # and serving it would publish the calculator's inputs alongside its outputs — the reason
+      # `#* @assets /app/data /images` was removed from calculator.r in the first place.
+      ESGAME_FILES_DIR: "/srv/rounds"
+      # Where the BROWSER asks for them, which is the frontend's port and not the calculator's.
+      # The two are different things for the same reason GEOSERVER and GEOSERVER_PUBLIC_URL are.
+      ESGAME_FILES_URL: "http://localhost:${ESGAME_FRONTEND_PORT:-81}/rounds"
+    volumes:
+      - ./src/assets/images/LU_and_NEW_hexa.tif:/app/data/LU_and_NEW_hexa.tif:ro
+      - round-output:/srv/rounds
+
+volumes:
+  # A named volume rather than a bind mount, so the two containers share it without depending on
+  # a host path, and so `down -v` disposes of a game's rounds the way it disposes of everything
+  # else in the stack.
+  round-output:
