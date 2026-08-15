@@ -314,6 +314,23 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   HH<-airconctot
   HH[which(values(LU_complete != 2) )]<-NA
   
+  # ROUND-RELATIVE, AND DELIBERATELY SO FOR NOW. Each raster is stretched to 0-100 over its OWN
+  # round's surface before it is published, so the colour a player sees means "low or high within
+  # this round" and nothing across rounds. The legend says exactly that (v2's Legend.isRoundRelative,
+  # #210) rather than printing numbers the stretch does not support.
+  #
+  # THE CONSEQUENCE OF DOING IT HERE is that the SCALE is a server decision baked into the
+  # published GeoTIFF, while the PALETTE is a client one. A game builder offering symbology can
+  # only reach half of it. Measured alternatives are written up under the ramp discussion in
+  # docs/verification-status.rst: a fixed linear scale puts a cautious allocation in the bottom
+  # 4-8% of the ramp, a logarithmic one at 27-41%.
+  #
+  # A POSSIBLE FUTURE CHANGE, not made: an optional flag — say ESGAME_SCALE, defaulting to
+  # round-relative so nothing moves — choosing between this stretch, a fixed one, and publishing
+  # RAW exposure values for the client to scale. Raw is what a builder-level colour UI would need,
+  # and it changes what every published coverage contains, so it is a decision about consumers
+  # (WCS clients, places) rather than a refactor. The five values are written five times below;
+  # whoever does it should unify these blocks with model.R's esgame_indicator() first.
   HH_norm<-HH
   HH_norm<-(HH - cellStats(HH,min))/(cellStats(HH,max) - cellStats(HH,min))*100
   
