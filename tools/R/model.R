@@ -26,10 +26,22 @@ ESGAME_DECAY <- 0.005
 # class; RV takes two.
 ESGAME_RECEPTORS <- list(HH = 2, NP = 5, WA = 4, HC = 7, RV = c(6, 8))
 
-# The model discards concentrations below this as NA. It is not a rounding threshold: it is why
-# a landscape with no agriculture at all produces an EMPTY raster rather than a zero one, which
-# is where the NaN came from. See esgame_score().
-ESGAME_FLOOR <- 1
+# THERE IS NO FLOOR ANY MORE. ESGAME_FLOOR was 1, and esgame_indicator() dropped every receptor
+# cell under it before scoring or drawing. Removed 2026-08-15, measured first:
+#
+#   cells drawn, a 46-farm allocation    HH            NP          WA         HC         RV
+#     with the floor                1377/21105   1200/7855   871/7410   481/5669   760/8734
+#     without                      21105/21105   7855/7855  7410/7410  5669/5669  8734/8734
+#
+# It was costing 93% of a cautious player's map, and the map that remained was a few fragments
+# rather than a landscape. It also lifted the bottom of the score range — that allocation read 9
+# and now reads 1 — because dropping the smallest values raises a mean.
+#
+# ITS STATED REASON HAD ALREADY GONE. It existed so a landscape with no agriculture produced an
+# EMPTY raster rather than a zero one, "which is where the NaN came from" — but that NaN belonged
+# to the round-relative normalisation replaced on 2026-08-07. esgame_score() returns 0 for an
+# empty vector and the bounds are fixed, so an empty raster and a zero raster both score 0. With
+# no floor an all-nature allocation now yields zeros rather than nothing, and scores 0 either way.
 
 
 #' The total agricultural concentration field.
@@ -53,11 +65,14 @@ esgame_airconctot <- function(LU_complete) {
 }
 
 
-#' One indicator's raster: the field masked to its receptor class, with sub-floor cells dropped.
+#' One indicator's raster: the field masked to its receptor class.
+#'
+#' Every cell of the class is kept, however small its exposure. A low number is a measurement, not
+#' an absence, and treating it as one emptied the map of any allocation that did not press hard on
+#' the landscape — see the note on the floor at the top of this file.
 esgame_indicator <- function(airconctot, LU_complete, codes) {
   x <- airconctot
   x[which(!(raster::values(LU_complete) %in% codes))] <- NA
-  x[which(raster::values(x) < ESGAME_FLOOR)] <- NA
   x
 }
 
@@ -69,12 +84,12 @@ esgame_indicator <- function(airconctot, LU_complete, codes) {
 #' from any source, no cell-level ceiling put a score above about 28, and the analytic ceiling
 #' of 350 put every allocation between 1 and 14. Bounding the aggregate uses the whole scale.
 #'
-#' AN EMPTY VECTOR SCORES 0, AND THAT IS THE NaN FIX. With no agriculture allocated the field is
-#' zero everywhere, every cell falls below ESGAME_FLOOR and is dropped, and the mask empties —
-#' so `mean()` of nothing is NaN. That is not missing data: it is a landscape with no emission
-#' sources, whose exposure is zero and is known to be zero. The old round-relative formula also
-#' divided by (max - min) = 0 here, so this used to fail twice for the same allocation; fixed
-#' bounds remove the division, and this line removes the empty mean.
+#' AN EMPTY VECTOR SCORES 0, AND THAT IS THE NaN FIX. It used to be reachable by an ordinary
+#' allocation: with no agriculture the field is zero everywhere, every cell fell below the floor
+#' and was dropped, and the mask emptied — so `mean()` of nothing was NaN. The floor is gone and
+#' that allocation now yields zeros, which mean to 0; this line still matters for a receptor class
+#' with no cells on the map at all. The old round-relative formula also divided by (max - min) = 0
+#' here, so the same allocation used to fail twice.
 #'
 #' No raster call, so tools/R/test-model.R can exercise it in base R.
 esgame_score <- function(values, lo, hi) {

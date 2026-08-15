@@ -1559,8 +1559,27 @@ Should the published rasters move to the same fixed scale as the scores?
    wrong. ``render-ramps.R`` carries its own ``RAMP_FLOOR`` now, and refuses to write an image
    whose colours are not finite.
 
-   Nothing here is applied. Removing the floor moves every score in the game, including
-   :file:`tools/R/golden/scores.json`.
+   **Applied 2026-08-15.** The floor is gone, the bounds are re-derived and the golden scores are
+   re-recorded:
+
+   .. code-block:: text
+
+      bounds hi     HH 32.4720 -> 26.5027   NP 38.2291 -> 36.7523   WA 51.2589 -> 45.8518
+                    HC 35.2600 -> 31.3203   RV 32.2197 -> 29.2637
+      golden        HH 65 -> 60   NP 60 -> 58   WA 72 -> 64   HC 66 -> 64   RV 68 -> 61
+
+   Both ends had to move together, and nearly did not. ``calculator.r`` does **not** use
+   ``model.R``'s ``esgame_indicator()`` — it carries its own copy of the mask and the floor, inline,
+   once per indicator. Removing the floor from ``model.R`` alone therefore moved the CEILING, since
+   ``derive-bounds.R`` goes through ``model.R``, while the five inline blocks went on applying it.
+   The golden allocation came back at ``HH 80``: a round scored *with* the floor against bounds
+   derived *without* one, arithmetically consistent and meaningless. The inline copies are gone
+   too, and the re-recorded scores match an independent calculation of every indicator
+   (``HH 15.963 / 26.5027 = 60``, and so on for the other four).
+
+   That duplication is still there for the concentration field — ``esgame_airconctot()`` in
+   ``model.R``, ``airconc10..50`` inline in ``calculator.r`` — and they agree today. Unifying them
+   is worth doing and has not been done.
 
    **D is cheap and independent of the rest**, and worth separating out: whichever scale the raster
    ends up on, a legend that prints a fixed-looking ``0 … 100`` over a round-relative stretch is

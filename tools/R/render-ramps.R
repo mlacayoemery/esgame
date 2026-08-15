@@ -28,24 +28,26 @@
 #
 # WHAT IT SHOWED, which the numbers did not
 #
-# The dominant reason a gentle allocation's map is unreadable is NOT the ramp. esgame_indicator()
-# drops every cell below ESGAME_FLOOR, and for a mostly-nature allocation that is most of the
-# receptor mask — 1,377 of 21,105 HH cells survive, 7%. A colour ramp cannot render a cell that is
-# not there, so no choice of ramp fixes that map. The ramp choice is real, and visible here, for
-# mid and high allocations.
+# The dominant reason a gentle allocation's map was unreadable was NOT the ramp. esgame_indicator()
+# used to drop every cell below a floor of 1, and for a mostly-nature allocation that was most of
+# the receptor mask — 1,377 of 21,105 HH cells, 7%. A colour ramp cannot render a cell that is not
+# there, so no choice of ramp fixed that map. THE FLOOR WAS REMOVED on 2026-08-15 as a result;
+# ESGAME_RENDER_FLOOR=1 reproduces the old picture for comparison. The ramp choice is separate, and
+# visible here for mid and high allocations.
 
 suppressMessages(library(raster))
 source(if (file.exists("/app/model.R")) "/app/model.R" else "model.R")
 
-# The floor, overridable, because it turned out to matter more than the ramp does. Set
-# ESGAME_RENDER_FLOOR=none to keep every receptor cell and see what a map looks like when nothing
-# has been dropped from it. Anything else is read as a number and replaces ESGAME_FLOOR for these
-# renders only — nothing here writes to the model.
-local({
+# THE MODEL HAS NO FLOOR since 2026-08-15 — esgame_indicator() keeps every receptor cell. Set
+# ESGAME_RENDER_FLOOR=1 to drop sub-1 cells for these renders only, which is what the maps looked
+# like before, and is the comparison that decided it. Nothing here writes to the model.
+RENDER_FLOOR <- local({
   o <- Sys.getenv("ESGAME_RENDER_FLOOR", "")
-  if (!nzchar(o)) return(invisible(NULL))
-  ESGAME_FLOOR <<- if (identical(o, "none")) -Inf else as.numeric(o)
-  cat(sprintf("floor overridden to %s for these renders\n", o))
+  if (!nzchar(o)) return(NA_real_)
+  v <- suppressWarnings(as.numeric(o))
+  if (is.na(v)) stop(sprintf("ESGAME_RENDER_FLOOR is '%s'; it must be a number.", o))
+  cat(sprintf("dropping cells under %g for these renders\n", v))
+  v
 })
 
 base <- Sys.getenv("ESGAME_BASE_RASTER")
@@ -99,10 +101,11 @@ cat(sprintf("HH receptor cells on this map: %d\n", mask))
 for (name in names(allocs)) {
   LUc <- reclassify(LU, cbind(ids, allocs[[name]]), right = FALSE)
   hh <- esgame_indicator(esgame_airconctot(LUc), LUc, ESGAME_RECEPTORS$HH)
+  if (!is.na(RENDER_FLOOR)) hh[which(raster::values(hh) < RENDER_FLOOR)] <- NA
   vals <- raster::values(hh)
   kept <- sum(!is.na(vals))
   lo <- min(vals, na.rm = TRUE); hi <- max(vals, na.rm = TRUE)
-  cat(sprintf("%-14s %6d of %d survive the floor (%2.0f%%)   min %5.2f  max %5.2f\n",
+  cat(sprintf("%-14s %6d of %d cells drawn (%2.0f%%)   min %5.2f  max %5.2f\n",
               name, kept, mask, 100 * kept / mask, lo, hi))
 
   # a) what ships: stretched to the round's own range, so no two rounds are comparable

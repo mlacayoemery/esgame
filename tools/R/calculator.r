@@ -298,10 +298,21 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   # sum up all agriculture types
   airconctot<- airconc10+airconc20+airconc30+airconc40+airconc50 + zero_raster
   
+  # THE < 1 FLOOR IS GONE FROM ALL FIVE, 2026-08-15. It dropped every receptor cell under an
+  # exposure of 1 before scoring, which emptied 93% of a cautious allocation's map — 1,377 of
+  # 21,105 HH cells drawn — and lifted the bottom of the score range. Its stated reason (a NaN
+  # under the round-relative normalisation) went away on 2026-08-07. See tools/R/model.R.
+  #
+  # THESE FIVE BLOCKS ARE A SECOND IMPLEMENTATION of model.R's esgame_indicator(), and that is
+  # how this change nearly went wrong: derive-bounds.R builds bounds.json through model.R, so
+  # removing the floor there moved the CEILING while these lines went on applying it. The golden
+  # allocation came back at HH 80 — a round scored with the floor against bounds derived without
+  # it — which is arithmetically consistent and means nothing. Both had to change together.
+  # Unifying them is worth doing and is not this change.
+  #
   # Human Health
   HH<-airconctot
   HH[which(values(LU_complete != 2) )]<-NA
-  HH[which(values(HH < 1) )]<-NA
   
   HH_norm<-HH
   HH_norm<-(HH - cellStats(HH,min))/(cellStats(HH,max) - cellStats(HH,min))*100
@@ -318,7 +329,6 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   #### 3) MODEL: Nutrient pollution #####
   NP<-airconctot
   NP[which(values(LU_complete != 5) )]<-NA
-  NP[which(values(NP < 1) )]<-NA
   
   NP_norm<-NP
   NP_norm<-(NP - cellStats(NP,min))/(cellStats(NP,max) - cellStats(NP,min))*100
@@ -335,7 +345,6 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   #### 4) MODEL: Water availability #####
   WA<-airconctot
   WA[which(values(LU_complete != 4) )]<-NA
-  WA[which(values(WA < 1) )]<-NA
   
   WA_norm<-WA
   WA_norm<-(WA - cellStats(WA,min))/(cellStats(WA,max) - cellStats(WA,min))*100
@@ -352,7 +361,6 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   #### 5) MODEL: Habitat cohesion #####
   HC<-airconctot
   HC[which(values(LU_complete != 7) )]<-NA
-  HC[which(values(HC < 1) )]<-NA
   
   HC_norm<-HC
   HC_norm<-(HC - cellStats(HC,min))/(cellStats(HC,max) - cellStats(HC,min))*100
@@ -369,7 +377,6 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   #### 6) MODEL: Recreational value #####
   RV<-airconctot
   RV[which(values(LU_complete != 6) & values(LU_complete != 8))]<-NA
-  RV[which(values(RV < 1) )]<-NA
   
   RV_norm<-RV
   RV_norm<-(RV - cellStats(RV,min))/(cellStats(RV,max) - cellStats(RV,min))*100
