@@ -586,6 +586,46 @@ leaves the actual fetch to you. Supply it from your object storage or data
 release and wire it into the ``load-geodata`` init container before the
 calculation backend can return real consequence maps.
 
+Sizing the calculation backend
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The base reserves ``requests.cpu: 500m`` and caps at ``limits.cpu: 2``. **A production overlay
+should raise the request to one core**, and the reason generalises beyond any one deployment:
+R Plumber handles one request at a time, so a calculation replica cannot use more than a single
+core whatever the limit says. Capacity scales with replica count, not with CPU per replica.
+
+Measured on the esgame calculator (2026-08-14, sampling cgroup ``cpu.stat`` once a second): a busy
+replica sustains ~1.0 core, peak 1.06 across 364 busy seconds. So the 500m request is about half
+what a busy pod uses, and the scheduler will pack twice as many onto a node as can run at speed.
+
+The base is deliberately left at 500m — raising it there would change the behaviour of every
+overlay built on it, including ones this repository cannot see. Set it where the deployment is::
+
+    # patch-calculation.yaml
+    spec:
+      template:
+        spec:
+          containers:
+            - name: esgame-calculation
+              resources:
+                requests:
+                  cpu: "1"
+
+A strategic-merge patch on the container by name leaves ``requests.memory`` and both limits alone.
+
+``limits.cpu`` is **not** worth changing. It is unreachable at 2, and lowering it to exactly 1
+would throttle almost continuously — 177 of 193 busy seconds sat just *above* 1.00.
+
+.. warning::
+
+   Reserving a core has a cost: three replicas then need three free cores, so on a small node they
+   sit ``Pending`` rather than merely running slowly. That is arguably the honest outcome, but it
+   is a behaviour change worth knowing before you make it.
+
+   The sustained figure above is esgame's. A downstream calculator with a different model may sit
+   well below one core, in which case the request over-reserves — the single-threaded *ceiling*
+   generalises, the *utilisation* does not. Measure yours before assuming.
+
 
 Runtime configuration cheatsheet
 =================================
