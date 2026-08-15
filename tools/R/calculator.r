@@ -27,7 +27,15 @@ cors <- function(req, res) {
 #* @post /esgame
 #* @serializer unboxedJSON
 esgame <- function(req, res, json_in='{}') {
-  geoserver_url <- Sys.getenv("GEOSERVER", "https://esgame-geoserver.azurewebsites.net/geoserver")
+  # Defaults to LOCAL, and that is a correction rather than a preference. It used to default to
+  # https://esgame-geoserver.azurewebsites.net/geoserver — a host this repository does not control
+  # — so a deployment that said nothing tried to publish five coverages per round to a stranger,
+  # with the stock GeoServer credential, and handed the browser URLs there. The v2 compose stack
+  # did exactly that until 2026-08-15: 200, five finite scores, every URL off-site, and the
+  # GeoServer it had just started holding nothing but its demo workspaces.
+  #
+  # A wrong local address fails where the operator can see it. A wrong remote one does not.
+  geoserver_url <- Sys.getenv("GEOSERVER", "http://localhost:8080/geoserver")
   #NEW CODE --> ALLOW TO SEND DATA IN BODY OF Request
   if (!(json_in == '' || json_in == '{}')) { 
     json_list<-fromJSON(json_in, simplifyVector = T)
@@ -147,6 +155,27 @@ local({
                  ESGAME_BASE_RASTER, .p))
   }
   log_info("base raster: {ESGAME_BASE_RASTER}")
+})
+
+# The GeoServer this publishes to, and who it publishes as. Checked HERE for the same reason the
+# base raster is: a credential that is wrong is wrong on every round, and finding out inside a
+# request handler buries it in a stack trace the operator never sees.
+#
+# NO DEFAULT FOR EITHER. They defaulted to admin/geoserver — the stock GeoServer credential — which
+# is exactly what let a calculator pointed at the wrong host keep trying rather than fail. A
+# password worth having is one the deployment supplies; deploy/k8s injects both from a Secret and
+# v2/docker-compose.dynamic.yml states them for the local stack.
+ESGAME_GEOSERVER_USER <- Sys.getenv("GEOSERVER_USER", "")
+ESGAME_GEOSERVER_PASSWORD <- Sys.getenv("GEOSERVER_PASSWORD", "")
+local({
+  missing <- c(if (!nzchar(ESGAME_GEOSERVER_USER)) "GEOSERVER_USER",
+               if (!nzchar(ESGAME_GEOSERVER_PASSWORD)) "GEOSERVER_PASSWORD")
+  if (length(missing)) {
+    stop(paste0(paste(missing, collapse = " and "), " not set. The calculator publishes every ",
+                "round's coverages to GeoServer over its REST API and will not guess a credential ",
+                "for it; there is no default."))
+  }
+  log_info("publishing to GeoServer as {ESGAME_GEOSERVER_USER}")
 })
 
 
@@ -411,15 +440,11 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   if (gs_public == gs_url) {
     log_warn("GEOSERVER_PUBLIC_URL is unset, so coverage URLs will use the internal GeoServer address ({gs_url}). A browser probably cannot resolve it.")
   }
-  # Credentials come from the environment. They used to be hardcoded as admin/geoserver —
-  # the image's defaults — on a GeoServer whose REST API is published through an ingress.
-  # The fallbacks keep an already-running deployment working, and warn loudly, rather than
-  # breaking it on upgrade; deploy/k8s injects real values from a Secret.
-  gs_user <- Sys.getenv("GEOSERVER_USER", "admin")
-  gs_pwd  <- Sys.getenv("GEOSERVER_PASSWORD", "geoserver")
-  if (gs_pwd == "geoserver") {
-    log_warn("GEOSERVER_PASSWORD is unset, so the GeoServer default password is in use. Set GEOSERVER_USER/GEOSERVER_PASSWORD.")
-  }
+  # Checked at startup, so this only reads them. They were hardcoded as admin/geoserver once, then
+  # defaulted to it with a warning; both are gone. A guessed credential is what turned publishing
+  # to the wrong host into an ATTEMPT rather than an obvious failure.
+  gs_user <- ESGAME_GEOSERVER_USER
+  gs_pwd  <- ESGAME_GEOSERVER_PASSWORD
   gsman <-GSManager$new(
     url = gs_url, #baseUrl of the Geoserver
     user = gs_user, pwd = gs_pwd,

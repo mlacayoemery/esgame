@@ -94,6 +94,7 @@ jobs:
           # thing is used is not a probe.
           docker run -d --name calc -p 8000:8000 \
             -e ESGAME_BASE_RASTER=LU_and_NEW_hexa.tif \
+            -e GEOSERVER_USER=probe -e GEOSERVER_PASSWORD=probe \
             -v "${PWD}/v2/src/assets/images/LU_and_NEW_hexa.tif:/app/data/LU_and_NEW_hexa.tif:ro" \
             "${tag}"
 
@@ -161,7 +162,8 @@ jobs:
           tag=$(printf '%s\n' '${{ steps.meta.outputs.tags }}' | head -1)
 
           # (a) nothing said at all
-          if docker run --rm --name calc-unset "${tag}" > unset.log 2>&1; then
+          if docker run --rm --name calc-unset -e GEOSERVER_USER=probe -e GEOSERVER_PASSWORD=probe \
+               "${tag}" > unset.log 2>&1; then
             echo "::error::the calculator started with ESGAME_BASE_RASTER unset; it should refuse"
             head -c 800 unset.log
             exit 1
@@ -175,6 +177,7 @@ jobs:
 
           # (b) a board named that is not there
           if docker run --rm --name calc-nodata -e ESGAME_BASE_RASTER=LU_and_NEW_hexa.tif \
+               -e GEOSERVER_USER=probe -e GEOSERVER_PASSWORD=probe \
                "${tag}" > nodata.log 2>&1; then
             echo "::error::the calculator started with no base raster on disk; it should refuse"
             head -c 800 nodata.log
@@ -186,6 +189,22 @@ jobs:
             exit 1
           }
           echo "named but absent: refused, as it should"
+
+          # (c) a board, but no credential to publish with. Guessing admin/geoserver is what let a
+          # calculator aimed at the wrong host keep trying instead of failing.
+          if docker run --rm --name calc-nocreds -e ESGAME_BASE_RASTER=LU_and_NEW_hexa.tif \
+               -v "${PWD}/v2/src/assets/images/LU_and_NEW_hexa.tif:/app/data/LU_and_NEW_hexa.tif:ro" \
+               "${tag}" > nocreds.log 2>&1; then
+            echo "::error::the calculator started with no GeoServer credentials; it should refuse"
+            head -c 800 nocreds.log
+            exit 1
+          fi
+          grep -q 'GEOSERVER_USER and GEOSERVER_PASSWORD not set' nocreds.log || {
+            echo "::error::it refused, but not for the reason it should have:"
+            head -c 800 nocreds.log
+            exit 1
+          }
+          echo "no credentials: refused, as it should"
 
       - name: Say what was published
         run: |

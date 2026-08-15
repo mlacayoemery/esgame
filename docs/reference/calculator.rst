@@ -254,15 +254,32 @@ GitHub (``remotes::install_github('eblondel/geosapi')``) and defines:
   * ``GEOSERVER`` — server-to-server. Coverages are published over GeoServer's REST
     API from inside the cluster, so this is the in-cluster Service name.
     ``calculator.r`` reads
-    ``Sys.getenv("GEOSERVER", "https://esgame-geoserver.azurewebsites.net/geoserver")``
-    (env with a hard default); ``calculation.r`` reads ``Sys.getenv("GEOSERVER")``
-    (no default).
+    ``Sys.getenv("GEOSERVER", "http://localhost:8080/geoserver")``;
+    ``calculation.r`` reads ``Sys.getenv("GEOSERVER")`` (no default).
+
+    **The default is local since 2026-08-15, and it used to be a third-party host** —
+    ``https://esgame-geoserver.azurewebsites.net/geoserver``. A deployment that said
+    nothing therefore tried to publish every round to a server this repository does
+    not control, and handed the browser URLs there. The v2 compose stack did exactly
+    that until the same day. A wrong local address fails where the operator can see
+    it; a wrong remote one does not.
   * ``GEOSERVER_PUBLIC_URL`` — browser-facing. The WCS ``GetCoverage`` URLs in the
     response are built from this and fetched by the **client**, which cannot resolve
     a Service name. Both R engines default it to ``GEOSERVER`` and log a warning, so
     an existing single-address deployment is unchanged; set it to the geoserver
     ingress host. Leave it equal and every round still returns ``200`` — with
     coverage URLs nothing outside the cluster can load.
+
+* **GeoServer credentials:** ``GEOSERVER_USER`` and ``GEOSERVER_PASSWORD``, both
+  **mandatory with no default** since 2026-08-15. ``calculator.r`` refuses to start
+  without them, naming whichever is missing.
+
+  They were hardcoded as ``admin``/``geoserver`` once, then defaulted to it with a
+  warning. That is the stock GeoServer credential, and guessing it is what turned
+  publishing to the wrong host into an *attempt* rather than an obvious failure.
+  ``deploy/k8s`` injects both from the ``esgame-geoserver-admin`` Secret;
+  :file:`v2/docker-compose.dynamic.yml` states them for the local stack, where they
+  genuinely are the stock values — saying so out loud is the point.
 
   Enforced by :file:`.github/workflows/manifests.yml`, which fails a PR if the two
   ConfigMap values are equal, if the public one names the Service, if the calculation
