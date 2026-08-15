@@ -199,12 +199,19 @@ class Handler(BaseHTTPRequestHandler):
         set_asides = body.get("setAsides", [])
         if not isinstance(set_asides, list):
             return self._send(400, {"error": '"setAsides" must be an array of {x, y}'})
+        # Shape only. A placement is either {x, y} or {cells: [...]}, and which fields each form
+        # needs is the model's business — it raises Refused naming the piece and the coordinate,
+        # which is more use than anything that could be said from here.
         for p in [*body["allocation"], *set_asides]:
-            if not isinstance(p, dict) or not isinstance(p.get("x"), int) or not isinstance(p.get("y"), int):
-                return self._send(400, {"error": f"every placement needs integer x and y; got {p!r}"})
+            if not isinstance(p, dict):
+                return self._send(400, {"error": f"every placement must be an object; got {p!r}"})
+
+        validation = body.get("validation", True)
+        if not isinstance(validation, bool):
+            return self._send(400, {"error": '"validation" must be true or false'})
 
         try:
-            return self._send(200, score(PACK, body["allocation"], set_asides))
+            return self._send(200, score(PACK, body["allocation"], set_asides, validation))
         except Refused as cause:
             # The model refusing the allocation is the caller's business.
             return self._send(400, {"error": str(cause)})

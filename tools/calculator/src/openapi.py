@@ -76,7 +76,13 @@ def openapi(pack):
         "components": {
             "schemas": {
                 "Placement": {
-                    "type": "object", "required": ["type", "x", "y"],
+                    "type": "object", "required": ["type"],
+                    "description":
+                        "Either an anchor (x, y) or the cells the piece covers. The anchor is the "
+                        f'2013 form and grows into a {pack["placementSize"]} x {pack["placementSize"]} '
+                        "block extending right and down. The cell form can express a piece some of "
+                        "whose cells have been given back, which an anchor cannot say.",
+                    "oneOf": [{"required": ["x", "y"]}, {"required": ["cells"]}],
                     "properties": {
                         "type": {"type": "string", "enum": [t["id"] for t in types],
                                  "description": "; ".join(f'`{t["id"]}` — {t["name"]}' for t in types)},
@@ -84,6 +90,11 @@ def openapi(pack):
                               "description": "Column, from 1"},
                         "y": {"type": "integer", "minimum": 1, "maximum": pack["rows"],
                               "description": "Row, from 1"},
+                        "cells": {"type": "array", "minItems": 1,
+                                  "items": {"$ref": "#/components/schemas/Cell"},
+                                  "description":
+                                      "The cells this piece covers. They must all fit inside one "
+                                      f'{pack["placementSize"]} x {pack["placementSize"]} footprint.'},
                     },
                 },
                 "Cell": {
@@ -101,6 +112,17 @@ def openapi(pack):
                         "setAsides": {"type": "array", "items": {"$ref": "#/components/schemas/Cell"},
                                       "description": "Cells removed from every production type "
                                                      "before scoring"},
+                        "validation": {
+                            "type": "boolean", "default": True,
+                            "description":
+                                "Reject cells off the board, cells claimed by two pieces, and a "
+                                "piece whose footprint exceeds "
+                                f'{pack["placementSize"]} x {pack["placementSize"]}. '
+                                "In the 2013 game the PAGE enforced these; a service reachable by "
+                                "anything else must. Set false to score exactly what "
+                                "calc_files/game.js scores, which counts overlapping cells twice "
+                                "— off-board cells are refused either way, since the original "
+                                "returns NaN there and no caller can act on that."},
                     },
                 },
                 "ScoreResponse": {
