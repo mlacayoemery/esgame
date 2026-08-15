@@ -21,8 +21,19 @@ describe('applyGradientOverrides', () => {
 	it('resets a previously-overridden gradient to its built-in default when not in the new overrides', () => {
 		applyGradientOverrides({ red: { start: 'AAAAAA', end: 'BBBBBB' } });
 		applyGradientOverrides({}); // no red -> must reset, not leak
-		expect(gradients.get('red')!.startingColor).toBe('ffc0c0');
-		expect(gradients.get('red')!.endingColor).toBe('c90000');
+		// These were 'ffc0c0'/'c90000' until 2026-08-15, which were not the ends of red's own
+		// palette — so a red map rendered as one pair on a grid board and a different pair on an
+		// SVG board. They are the ColorBrewer Reds ends now.
+		expect(gradients.get('red')!.startingColor).toBe('fee5d9');
+		expect(gradients.get('red')!.endingColor).toBe('a50f15');
+	});
+
+	it('restores the built-in ramp too, not just the stops', () => {
+		applyGradientOverrides({ blue: { start: '000000', end: 'ffffff' } });
+		applyGradientOverrides({});
+		// If only the stops were reset, this would still be the two-colour override ramp and the
+		// middle of the range would be grey.
+		expect(gradients.get('blue')!.calculateColor(0.5)).toBe('6baed6');
 	});
 
 	it('leaves untouched gradients at their defaults', () => {
@@ -210,6 +221,64 @@ describe('Gradient stops assigned in any hex form', () => {
 
 		g.startingColor = '#0f0';
 
+		expect(g.calculateColor(0.5)).not.toContain('NaN');
+		expect(g.calculateColorRGB(0.5).every((c: number) => Number.isInteger(c))).toBe(true);
+	});
+});
+
+
+// The six built-ins are ColorBrewer 5-class sequential palettes. A continuous map used only their
+// two ENDS until 2026-08-15: mix() drew a straight RGB line from lightest to darkest and threw
+// away the three classes between, while the grid game coloured by the full palette — so the same
+// gradient rendered two different ways depending on the board type. A ColorBrewer sequence is not
+// a straight line in RGB; being perceptually even is the entire reason to use one.
+describe('a continuous map follows the whole ColorBrewer palette', () => {
+	afterEach(() => applyGradientOverrides({}));
+
+	// Blues 5-class: eff3ff bdd7e7 6baed6 3182bd 08519c. With five stops the quarter points land
+	// exactly on a class, which is what makes these assertions exact rather than approximate.
+	it('lands on the palette classes at the quarter points', () => {
+		const blue = gradients.get('blue')!;
+		expect(blue.calculateColor(1)).toBe('eff3ff');
+		expect(blue.calculateColor(0.75)).toBe('bdd7e7');
+		expect(blue.calculateColor(0.5)).toBe('6baed6');
+		expect(blue.calculateColor(0.25)).toBe('3182bd');
+		expect(blue.calculateColor(0)).toBe('08519c');
+	});
+
+	it('is not the straight line between the two ends', () => {
+		// What the old two-stop mix produced at the midpoint of Blues. If this ever comes back,
+		// the palette is being ignored again.
+		expect(gradients.get('blue')!.calculateColor(0.5)).not.toBe('7ca2ce');
+	});
+
+	it('every built-in ends on its own palette ends', () => {
+		for (const name of ['blue', 'green', 'orange', 'purple', 'red', 'yellow']) {
+			const g = gradients.get(name)!;
+			const palette = g.colors.slice(1).map(c => c.replace(/^#/, '').toLowerCase());
+			expect(g.calculateColor(1), `${name} light end`).toBe(palette[0]);
+			expect(g.calculateColor(0), `${name} dark end`).toBe(palette[palette.length - 1]);
+		}
+	});
+
+	// An override names two colours, so it gets a two-colour ramp. Keeping ColorBrewer's middle
+	// classes under colours a deployment chose would make the override look ignored mid-range.
+	it('an override collapses the ramp to the two colours it named', () => {
+		applyGradientOverrides({ blue: { start: '000000', end: 'ffffff' } });
+		expect(gradients.get('blue')!.calculateColor(1)).toBe('000000');
+		expect(gradients.get('blue')!.calculateColor(0)).toBe('ffffff');
+		expect(gradients.get('blue')!.calculateColor(0.5)).toBe('808080');
+	});
+
+	// The brown is a grid-map colour for the first distinct value; interpolating it into a blue
+	// ramp would be wrong, and it is the one entry of `colors` the ramp excludes.
+	it('does not interpolate the leading brown', () => {
+		expect(gradients.get('blue')!.colors[0]).toBe('#d2b188');
+		expect(gradients.get('blue')!.ramp).not.toContain('#d2b188');
+	});
+
+	it('still produces a colour for a gradient built with no palette', () => {
+		const g = new Gradient('ff0000', '00ff00', []);
 		expect(g.calculateColor(0.5)).not.toContain('NaN');
 		expect(g.calculateColorRGB(0.5).every((c: number) => Number.isInteger(c))).toBe(true);
 	});

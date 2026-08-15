@@ -31,9 +31,16 @@ export class LegendBoardComponent {
 				// runs during change detection, that took out the view binding the legend rather
 				// than merely rendering it wrong. One entry now renders as a solid bar of its own
 				// colour, which is what a one-value gradient means; none renders nothing.
+				// Every stop the map is interpolated through, not just the two labelled ends. The
+				// built-in gradients are ColorBrewer 5-class palettes and the map passes through
+				// all five; a two-stop legend beside that map is muddy where the map is saturated,
+				// and describes something the player is not looking at. Falls back to the ends
+				// when a legend carries no ramp.
 				const [first, second] = this.legendElements;
-				this.gradient = first
-					? `linear-gradient(90deg, #${first.color}, #${(second ?? first).color})`
+				const stops = data.stops?.length ? data.stops
+					: first ? [first.color, (second ?? first).color] : [];
+				this.gradient = stops.length
+					? `linear-gradient(90deg, ${stops.map(c => `#${c}`).join(', ')})`
 					: '';
 			} else
 				this.legendElements = this.legendElements.filter(o => o.forValue != 0)

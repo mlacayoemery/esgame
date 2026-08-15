@@ -18,11 +18,33 @@ export class Gradient {
 		this.startingColor = startingColor;
 		this.endingColor = endingColor;
 		this.colors = colors;
+		// colors[0] is the brown a grid map gives its first distinct value; the rest are the
+		// palette proper. See `ramp`.
+		this.ramp = colors.slice(1);
 	}
 
 	colors: string[];
 	startingColor: string;
 	endingColor: string;
+
+	/**
+	 * The colours a CONTINUOUS map is interpolated through, lightest first.
+	 *
+	 * The six built-ins are ColorBrewer 5-class sequential palettes — Blues, Greens, Oranges,
+	 * Purples, Reds — and until 2026-08-15 a continuous map used only their two ENDS: `mix()`
+	 * drew a straight line in RGB from lightest to darkest and discarded the three classes
+	 * between. A ColorBrewer sequence is not a straight line in RGB; being perceptually even is
+	 * the whole reason to use one. The grid game was already colouring by the full palette
+	 * (`colors`), so the same gradient rendered two different ways depending on the board type.
+	 *
+	 * `colors[0]` is excluded on purpose: it is `#d2b188`, a brown that a grid map assigns to its
+	 * first distinct value, and interpolating brown into a blue ramp would be wrong.
+	 *
+	 * A deployment's `gradientOverrides` replaces this with exactly the two colours it named —
+	 * asking for a two-colour gradient and getting ColorBrewer's middle classes anyway would be
+	 * a surprise. See applyGradientOverrides.
+	 */
+	ramp: string[];
 
 	/**
 	 * The two stops, as bare 6-digit hex whatever form they were assigned in.
@@ -43,12 +65,37 @@ export class Gradient {
 		};
 	}
 
-	private mix(ratio: number): number[] {
+	/** The ramp as bare 6-digit hex, falling back to the two stops if it is empty or malformed. */
+	private rampStops(): string[] {
+		const expanded = this.ramp
+			.map(c => expandHexColor(`#${String(c).replace(/^#/, '')}`)?.slice(0, 6))
+			.filter((c): c is string => !!c);
+		if (expanded.length >= 2) { return expanded; }
 		const { start, end } = this.stops();
-		const at = (i: number) => Math.ceil(
-			parseInt(start.substring(i, i + 2), 16) * ratio +
-			parseInt(end.substring(i, i + 2), 16) * (1 - ratio));
-		return [at(0), at(2), at(4)];
+		return [start, end];
+	}
+
+	/**
+	 * Interpolate the ramp. ratio 1 is the lightest end and 0 the darkest, which is the sense
+	 * TiffService.arrayToImage passes and the opposite of what "ratio" usually suggests.
+	 */
+	private mix(ratio: number): number[] {
+		const stops = this.rampStops();
+		// Position along the ramp, from the light end. Clamped because a caller may hand over a
+		// value outside the configured range, and an out-of-range index silently yields NaN.
+		const pos = Math.min(1, Math.max(0, 1 - ratio)) * (stops.length - 1);
+		const lo = Math.floor(pos);
+		const hi = Math.min(stops.length - 1, lo + 1);
+		const t = pos - lo;
+		const channel = (i: number) => Math.ceil(
+			parseInt(stops[lo].substring(i, i + 2), 16) * (1 - t) +
+			parseInt(stops[hi].substring(i, i + 2), 16) * t);
+		return [channel(0), channel(2), channel(4)];
+	}
+
+	/** The ramp as bare 6-digit hex, lightest first — what a legend must draw to match the map. */
+	rampColors(): string[] {
+		return this.rampStops();
 	}
 
 	calculateColor(ratio: number) : string {
@@ -71,12 +118,18 @@ gradients.set('blue', new Gradient("eff3ff", "08519c", ['#d2b188', '#eff3ff', '#
 gradients.set('green', new Gradient("edf8e9", "006d2c", ['#d2b188', '#edf8e9', '#bae4b3', '#74c476', '#31a354', '#006d2c']));
 gradients.set('orange', new Gradient("feedde", "a63603", ['#d2b188', '#feedde', '#fdbe85', '#fd8d3c', '#e6550d', '#a63603']));
 gradients.set('purple', new Gradient("f2f0f7", "54278f", ['#d2b188', '#f2f0f7', '#cbc9e2', '#9e9ac8', '#756bb1', '#54278f']));
-gradients.set('red', new Gradient("ffc0c0", "c90000", ['#d2b188', '#fee5d9', '#fcae91', '#fb6a4a', '#de2d26', '#a50f15']));
+// red's stops were "ffc0c0"/"c90000", which are not the ends of its own palette — so a red map
+// rendered as one pair of colours on a grid board and a different pair on an SVG board. They are
+// the ColorBrewer Reds ends now, like every other gradient here.
+gradients.set('red', new Gradient("fee5d9", "a50f15", ['#d2b188', '#fee5d9', '#fcae91', '#fb6a4a', '#de2d26', '#a50f15']));
 gradients.set('yellow', new Gradient("F8F27D", "670B0D", ['#d2b188', '#F8F27D', '#F7D068', '#F6A825', '#AE5322', '#670B0D']));
 
 // Snapshot the built-in start/end colors so per-deployment overrides can be reset between configs.
 const defaultGradientStops = new Map<string, { start: string, end: string }>();
 gradients.forEach((g, name) => defaultGradientStops.set(name, { start: g.startingColor, end: g.endingColor }));
+// The built-in ColorBrewer ramps, so an override can be undone by the next config load.
+const defaultGradientRamps = new Map<string, string[]>();
+gradients.forEach((g, name) => defaultGradientRamps.set(name, [...g.ramp]));
 
 export interface GradientOverride { start?: string; end?: string; }
 
@@ -110,9 +163,11 @@ function normaliseStop(value: string, gradient: string, which: 'start' | 'end'):
 }
 
 export function applyGradientOverrides(overrides: { [name: string]: GradientOverride } = {}) {
+	// Reset first, ramp included: this runs on every config load, and without restoring the ramp a
+	// deployment that removed an override would keep the two-colour one from the previous load.
 	defaultGradientStops.forEach((d, name) => {
 		const g = gradients.get(name);
-		if (g) { g.startingColor = d.start; g.endingColor = d.end; }
+		if (g) { g.startingColor = d.start; g.endingColor = d.end; g.ramp = defaultGradientRamps.get(name) ?? g.ramp; }
 	});
 	Object.keys(overrides).forEach(name => {
 		const g = gradients.get(name);
@@ -120,6 +175,10 @@ export function applyGradientOverrides(overrides: { [name: string]: GradientOver
 		if (g && o) {
 			if (o.start) g.startingColor = normaliseStop(o.start, name, 'start') ?? g.startingColor;
 			if (o.end) g.endingColor = normaliseStop(o.end, name, 'end') ?? g.endingColor;
+			// An override names two colours, so it gets a two-colour ramp. Keeping ColorBrewer's
+			// middle classes under colours the deployment chose would produce a gradient nobody
+			// asked for — and would make the override look ignored in the middle of the range.
+			if (o.start || o.end) { g.ramp = [g.startingColor, g.endingColor]; }
 		}
 	});
 }
