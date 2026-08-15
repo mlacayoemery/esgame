@@ -1513,6 +1513,55 @@ Should the published rasters move to the same fixed scale as the scores?
    player's map is unreadable" is a separate defect with a separate cause, and picking a ramp will
    not close it. The floor is the thing to look at for that one.
 
+   **And then the floor was measured too, 2026-08-15, and it is the bigger lever.**
+   ``esgame_indicator()`` drops every cell under ``ESGAME_FLOOR`` = 1 before any ramp is applied.
+   Removing it and re-deriving the bounds exactly as ``derive-bounds.R`` does — lo from
+   all-nature, hi from all-agropark — across all five indicators:
+
+   .. code-block:: text
+
+      floor = 1 (today)          HH    NP    WA    HC    RV
+        mostly-nature             9     8     8     9     9
+        half-and-half            58    55    64    56    62
+        all-agropark            100   100   100   100   100
+
+      no floor                   HH    NP    WA    HC    RV
+        mostly-nature             1     1     1     1     1
+        half-and-half            47    44    50    44    52
+        all-agropark            100   100   100   100   100
+
+   The ordering is preserved and all-agropark stays at 100 by construction. What changes is the
+   bottom of the scale — a cautious allocation reads 9 today and 1 without the floor — and, far
+   more visibly, **how much of the map exists at all**:
+
+   .. code-block:: text
+
+      cells drawn for mostly-nature      HH            NP           WA          HC          RV
+        floor = 1                  1377/21105    1200/7855    871/7410    481/5669    760/8734
+        no floor                  21105/21105    7855/7855   7410/7410   5669/5669   8734/8734
+
+   Rendered, the difference is not subtle: with the floor a gentle allocation's map is a few
+   scattered fragments; without it every settlement is drawn, most of them pale, and the ones near
+   a farm stand out. That is a map of a landscape a player barely touched, which is what the round
+   actually was. **No choice of ramp produces it**, because the cells were gone before the ramp saw
+   them.
+
+   The floor's stated purpose no longer holds either: ``model.R`` says it is "why a landscape with
+   no agriculture at all produces an EMPTY raster rather than a zero one, which is where the NaN
+   came from", but that NaN belonged to the round-relative normalisation replaced on 2026-08-07,
+   and ``esgame_score()`` now reads ``m <- if (length(values) == 0) 0 else mean(values)``. An empty
+   raster and a zero raster both score 0.
+
+   **The two questions are coupled in one direction only.** A logarithmic ramp needs a positive
+   lower bound — ``log(x / L)`` is undefined for ``L <= 0`` — and while the floor was 1 it silently
+   served as that bound. The first render with the floor removed produced ``NaN`` for every ratio,
+   which ``as.raw()`` turned into 0 without a word, and the images looked plausible and were
+   wrong. ``render-ramps.R`` carries its own ``RAMP_FLOOR`` now, and refuses to write an image
+   whose colours are not finite.
+
+   Nothing here is applied. Removing the floor moves every score in the game, including
+   :file:`tools/R/golden/scores.json`.
+
    **D is cheap and independent of the rest**, and worth separating out: whichever scale the raster
    ends up on, a legend that prints a fixed-looking ``0 … 100`` over a round-relative stretch is
    wrong on its own terms. A, B and C are the real question, and it is a question about what a
