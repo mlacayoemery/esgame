@@ -114,6 +114,10 @@ stopifnot("coverage.R must be alongside calculator.r" = exists("esgame_report_co
 for (.p in c("model.R", "/app/model.R")) if (file.exists(.p)) { source(.p); break }
 stopifnot("model.R must be alongside calculator.r" = exists("esgame_score"))
 
+# Where the round's rasters go and what URL the browser is given — geoserver, fileserver or files.
+for (.p in c("publish.R", "/app/publish.R")) if (file.exists(.p)) { source(.p); break }
+stopifnot("publish.R must be alongside calculator.r" = exists("esgame_publish_config"))
+
 # Per-indicator normalisation bounds, derived from THIS deployment's base raster by
 # tools/R/derive-bounds.R. Loaded once at startup rather than per round: if they are missing or
 # malformed the calculator must not start, because every score it would return is wrong, and a
@@ -165,9 +169,18 @@ local({
 # is exactly what let a calculator pointed at the wrong host keep trying rather than fail. A
 # password worth having is one the deployment supplies; deploy/k8s injects both from a Secret and
 # v2/docker-compose.dynamic.yml states them for the local stack.
+ESGAME_PUBLISH <- esgame_publish_config()
+esgame_publish_prepare(ESGAME_PUBLISH)
+
 ESGAME_GEOSERVER_USER <- Sys.getenv("GEOSERVER_USER", "")
 ESGAME_GEOSERVER_PASSWORD <- Sys.getenv("GEOSERVER_PASSWORD", "")
 local({
+  if (ESGAME_PUBLISH$mode != "geoserver") {
+    # No REST API is contacted in the file modes, so there is nothing to authenticate to.
+    # Requiring a credential that will not be used would be a barrier with no subject.
+    log_info("publishing mode: {ESGAME_PUBLISH$mode} -> {ESGAME_PUBLISH$dir}")
+    return(invisible(NULL))
+  }
   missing <- c(if (!nzchar(ESGAME_GEOSERVER_USER)) "GEOSERVER_USER",
                if (!nzchar(ESGAME_GEOSERVER_PASSWORD)) "GEOSERVER_PASSWORD")
   if (length(missing)) {
@@ -175,7 +188,7 @@ local({
                 "round's coverages to GeoServer over its REST API and will not guess a credential ",
                 "for it; there is no default."))
   }
-  log_info("publishing to GeoServer as {ESGAME_GEOSERVER_USER}")
+  log_info("publishing mode: geoserver, as {ESGAME_GEOSERVER_USER}")
 })
 
 
@@ -445,6 +458,10 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   # to the wrong host into an ATTEMPT rather than an obvious failure.
   gs_user <- ESGAME_GEOSERVER_USER
   gs_pwd  <- ESGAME_GEOSERVER_PASSWORD
+  # Only in geoserver mode: the file modes contact nothing and need no workspace.
+  gsman <- NULL
+  ws_name <- paste0("esgame_game", game_id, "_round", round_id)
+  if (ESGAME_PUBLISH$mode == "geoserver") {
   gsman <-GSManager$new(
     url = gs_url, #baseUrl of the Geoserver
     user = gs_user, pwd = gs_pwd,
@@ -452,9 +469,9 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   )
   
   #create GeoServer workspace for given game and round
-  ws_name <- paste0("esgame_game",game_id, "_round",round_id)
   deleted <- gsman$deleteWorkspace(ws_name, recurse = TRUE)
   created <- gsman$createWorkspace(ws_name, paste0("https://esgame.unige.ch/", ws_name))
+  }
   
   ### raster upload
   #DELETED CODE
@@ -480,6 +497,11 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   #CHANGED CODE --> loop over calculated rasters which contains all the informations
   for (i in 1:length(calculated_rasters)) {
   short_name <- substring(calculated_rasters[[i]]['name'], 1, nchar(calculated_rasters[[i]]['name'])-4)
+  if (ESGAME_PUBLISH$mode != "geoserver") {
+    # The file already exists — writeRaster() put it in `directory` above. Publishing it is a copy
+    # and a URL, not a second rendering.
+    raster_url <- esgame_publish_file(ESGAME_PUBLISH, calculated_rasters[[i]][["name"]], directory)
+  } else {
   log_info("Attempting upload of {short_name} from {calculated_rasters[[i]]['path']}")
   uploaded <- gsman$uploadGeoTIFF(
     ws = ws_name, cs = short_name,
@@ -521,6 +543,7 @@ calculate<-function(req, geoserver_url, game_id, round_id,score_PD,map_AG) {
   raster_url <- paste0(gs_public , "/wcs?service=WCS&version=2.0.0&request=GetCoverage" ,
                            "&coverageId=" , ws_name , ":" , short_name ,
                            "&format=image%2Fgeotiff" )
+  }
   
   calculated_rasters[[i]]['url'] = raster_url
   log_info("Constructed URL for  {short_name}: from {raster_url}")
