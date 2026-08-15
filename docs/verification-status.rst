@@ -1459,6 +1459,37 @@ Should the published rasters move to the same fixed scale as the scores?
                              pre-stretch min/max per indicator per round and print those,
                              or label the ramp "low - high (this round)".
 
+   **Rendered, 2026-08-15, and the pictures move the question.** ``tools/R/render-ramps.R``
+   colours a real HH consequence map under all three ramps using the app's own arithmetic —
+   ``ratio = 1 - (value - min) / (max - min)`` from ``TiffService.arrayToImage`` and
+   ``colour = start * ratio + end * (1 - ratio)`` from ``Gradient.mix``, on the blue
+   ``eff3ff -> 08519c`` stops — so the only thing differing between outputs is how ``ratio`` is
+   derived. Two things showed up that the percentages above could not:
+
+   *The log ramp is a real, visible improvement for mid and high allocations.* Side by side,
+   round-relative and fixed-linear are nearly indistinguishable for half-and-half and
+   all-agropark, while the log render is markedly darker and separates patches the other two
+   flatten.
+
+   *And it cannot fix the gentle allocation, because that map is not faint — it is empty.*
+
+   .. code-block:: text
+
+      HH receptor cells on the map: 21,105
+      mostly-nature    1,377 survive the floor   ( 7%)   values 1.07 - 6.07
+      half-and-half   13,886                     (66%)   values 1.08 - 60.65
+      all-agropark    17,195                     (81%)   values 1.13 - 78.85
+
+   ``esgame_indicator()`` drops every cell under ``ESGAME_FLOOR`` = 1, and for a cautious
+   allocation that is 93% of the receptor mask. No colour ramp renders a cell that is not there,
+   and the rendered mostly-nature map is white under **all three** options — including the
+   round-relative one that ships, which the numbers predicted would be legible because it stretches
+   to its own range. It stretches 1,377 cells.
+
+   So the ramp choice is real and E still looks like the best of the three, but "a cautious
+   player's map is unreadable" is a separate defect with a separate cause, and picking a ramp will
+   not close it. The floor is the thing to look at for that one.
+
    **D is cheap and independent of the rest**, and worth separating out: whichever scale the raster
    ends up on, a legend that prints a fixed-looking ``0 … 100`` over a round-relative stretch is
    wrong on its own terms. A, B and C are the real question, and it is a question about what a
