@@ -1,4 +1,9 @@
-<div class="backdrop" [ngClass]="{'--open': isOpen}">
+<!--
+  Click anywhere to dismiss, not only the ✕. The backdrop covers the viewport and the content sits
+  inside it, so one handler here catches both — a click on the text bubbles up to the same close.
+  The ✕ keeps its own handler: it is what tells a player the panel is dismissable at all.
+-->
+<div class="backdrop" [ngClass]="{'--open': isOpen}" (click)="onClose()">
 	<div class="content">
 		<div class="header">
 			<h2>{{ 'Instructions' | translate }}</h2>
