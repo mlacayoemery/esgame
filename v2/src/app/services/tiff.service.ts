@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { fromBlob, fromUrl } from 'geotiff';
 import { Observable, from, mergeMap, of } from 'rxjs';
-import gradients, { CustomColors, DefaultGradients, Gradient } from '../shared/helpers/gradients';
+import gradients, { colorToRgb, CustomColors, DefaultGradients, Gradient } from '../shared/helpers/gradients';
 import { GameBoard } from '../shared/models/game-board';
 import { GameBoardType } from '../shared/models/game-board-type';
 import { Legend } from '../shared/models/legend';
@@ -36,15 +36,30 @@ export class TiffService {
 		);
 	}
 
-	getSvgGameBoard(id: string, url: string, gameBoardType: GameBoardType, defaultGradient: DefaultGradients, overlay: GameBoard, minValue: number, maxValue: number) {
-		return this.getTiffSvgDataUrl(url, minValue, maxValue, gradients.get(defaultGradient)!).pipe(
+	getSvgGameBoard(id: string, url: string, gameBoardType: GameBoardType, defaultGradient: DefaultGradients, overlay: GameBoard, minValue: number, maxValue: number, paletted = false) {
+		return this.getTiffSvgDataUrl(url, minValue, maxValue, gradients.get(defaultGradient)!, undefined, paletted).pipe(
 			mergeMap(data => {
 				let gradient: Gradient | undefined, legend: Legend, fields: Field[];
         gradient = gradients.get(defaultGradient!);
+				// PALETTED boards are labelled the way a grid board is, because they ARE a grid
+				// board's data: a handful of distinct values, one palette colour each. The ramp
+				// below describes a continuous stretch, which such a raster does not have — and
+				// isRoundRelative is false for the same reason the grid path sets it false: these
+				// values come from the dataset unchanged, so the numbers mean what they say.
+				if (paletted) {
+					const distinct = this.distinctValues(data.numRaster, data.nodata);
+					legend = {
+						elements: distinct.map((value, i) => ({ forValue: value, color: gradient!.colors[i] })),
+						isNegative: gameBoardType == GameBoardType.ConsequenceMap,
+						isGradient: false,
+						isRoundRelative: false
+					};
+				} else {
 				// isRoundRelative on consequence maps ONLY. Those are the rasters calculator.r
 				// stretches to each round's own min/max; a suitability map is dataset data whose
 				// values are what they say they are.
 				legend = { elements: [{ forValue: minValue, color: gradient!.calculateColor(1) }, { forValue: maxValue, color: gradient!.calculateColor(0) }], stops: gradient!.rampColors(), isNegative: gameBoardType == GameBoardType.ConsequenceMap, isGradient: true, isRoundRelative: gameBoardType == GameBoardType.ConsequenceMap };
+				}
 				fields = overlay.fields.map((field) => {
 					return {
 						...field,
@@ -85,8 +100,8 @@ export class TiffService {
 		return from(this.tiffToArray(url));
 	}
 
-	public getTiffSvgDataUrl(url: string, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors) {
-		return from(this.prepareDataUrl(url, minValue, maxValue, gradient, colors));
+	public getTiffSvgDataUrl(url: string, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors, paletted = false) {
+		return from(this.prepareDataUrl(url, minValue, maxValue, gradient, colors, paletted));
 	}
 
 	public getTiffSvgData(url: string) {
@@ -138,7 +153,17 @@ export class TiffService {
 		return blob;
 	}
 
-	private async prepareDataUrl(url: string, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors) {
+	/**
+	 * The raster's distinct values, ascending, without its nodata.
+	 *
+	 * Shared by the paletted image and the paletted legend so the two cannot disagree about which
+	 * colour a value gets — they index the same list.
+	 */
+	private distinctValues(data: number[], noData: number): number[] {
+		return Array.from(new Set(data.filter(v => v != noData))).sort((a, b) => a - b);
+	}
+
+	private async prepareDataUrl(url: string, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors, paletted = false) {
 		const tmp = await this.fetchRaster(url);
 		const tiff = await fromBlob(tmp);
 		const image = await tiff.getImage();
@@ -148,7 +173,7 @@ export class TiffService {
 		const height = image.getHeight();
 		const nodata = image.getGDALNoData()!;
 
-		const dataUrl = await this.arrayToImage(numRaster, width, nodata, minValue, maxValue, gradient, colors);
+		const dataUrl = await this.arrayToImage(numRaster, width, nodata, minValue, maxValue, gradient, colors, paletted);
 		return { width, height, dataUrl, nodata, numRaster };
 	}
 
@@ -190,10 +215,26 @@ export class TiffService {
 		return Array.from(raster.map(c => Number.parseFloat(c.toString())));
 	}
 
-	private async arrayToImage(data: number[], columns: number, noData: number, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors): Promise<string> {
+	private async arrayToImage(data: number[], columns: number, noData: number, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors, paletted = false): Promise<string> {
 		const height = data.length / columns;
 		const tmpArray: number[] = [];
-		if (gradient) {
+		if (gradient && paletted) {
+			// One palette colour per distinct value, exactly as getGridGameBoard does, and for the
+			// same reason: these rasters hold a handful of classes, not a continuous surface.
+			// Stretching them across minValue..maxValue is not merely a different look, it is wrong
+			// — the agriculture suitability raster runs to 375 against a declared maximum of 100, so
+			// every value above 100 clipped to the same extreme colour and most of the map came out
+			// one flat shade.
+			const distinct = this.distinctValues(data, noData);
+			const index = new Map(distinct.map((value, i) => [value, i]));
+			data.forEach(value => {
+				if (value == noData) {
+					tmpArray.push(255, 255, 255, 0);
+				} else {
+					tmpArray.push(...colorToRgb(gradient.colors[index.get(value) ?? 0]));
+				}
+			});
+		} else if (gradient) {
 			data.forEach(value => {
 				if (value == noData) {
 					tmpArray.push(255, 255, 255, 0);

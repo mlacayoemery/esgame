@@ -15,6 +15,9 @@
 	"minValue": 0,
 	"maxValue": 100,
 	"minSelected": 1,
+	"paletted": true,
+	"gridLineWidth": "0.1",
+	"highlightWidth": "0.3",
 	"defaultProductionType": "0",
 	"calcUrl": "",
 	"productionTypes": [

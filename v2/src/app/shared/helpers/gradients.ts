@@ -256,10 +256,21 @@ export class CustomColors {
 	 * than painting 235,236,202.
 	 */
 	colorToRgb(hex: string | undefined) {
-		const transparent = [255, 255, 255, 0];
-		const digits = expandHexColor(hex);
-		if (!digits) return transparent;
-		const pair = (i: number) => parseInt(digits.slice(i, i + 2), 16);
-		return [pair(0), pair(2), pair(4), digits.length === 8 ? pair(6) : 255];
+		return colorToRgb(hex);
 	}
+}
+
+/**
+ * The same parser, reachable without a CustomColors instance.
+ *
+ * Paletted SVG boards paint a Gradient's own palette entries into a canvas and need exactly this
+ * conversion. Duplicating it would mean two hex parsers with one set of hard-won rules between
+ * them — see the comment above for what the naive version painted.
+ */
+export function colorToRgb(hex: string | undefined) {
+	const transparent = [255, 255, 255, 0];
+	const digits = expandHexColor(hex);
+	if (!digits) return transparent;
+	const pair = (i: number) => parseInt(digits.slice(i, i + 2), 16);
+	return [pair(0), pair(2), pair(4), digits.length === 8 ? pair(6) : 255];
 }

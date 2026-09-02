@@ -13,26 +13,33 @@ svg {
 	position: relative;
 }
 
-// The legend, over the board's top-left corner. Anchored to :host, which is already
+// The legend, over the board's bottom-left corner. Anchored to :host, which is already
 // position: relative for the consequence overlay below.
 //
 // pointer-events: none because it sits on top of clickable fields — the zones under it must stay
 // placeable, which they were not while this was a foreignObject swallowing clicks.
 .legend-overlay {
 	position: absolute;
-	top: 2px;
+	// Bottom-left, which is the corner legend-board's own :host rule puts it in on a grid board
+	// (`bottom: -1px; left: -1px`). Both boards show the same legend, so they show it in the
+	// same place.
+	bottom: 2px;
 	left: 2px;
 	pointer-events: none;
 	z-index: 1;
 
-	// legend-board's own :host rule pins it to a corner with `position: absolute; left: -1px;
-	// bottom: -1px; width: 35%`, which is what grid-game-board wants — there it is a direct child
-	// of the board. Here the overlay already does the positioning, so let the component size to
-	// its own content instead of to 35% of this wrapper.
-	// A definite width, because the two end labels float to opposite ends of the ramp: at the
-	// content's own width they met in the middle and read as "0100".
-	width: 72px;
+	// A definite width, because what is inside is laid out against it: the gradient legend's two
+	// end labels float to opposite ends and met in the middle at the content's own width, reading
+	// as "0100", and a paletted legend puts a value under each swatch. 35% is the fraction the
+	// grid board's legend uses; the bounds keep it legible on a small board without letting it
+	// take over a large one.
+	width: 35%;
+	min-width: 72px;
+	max-width: 150px;
 
+	// legend-board's own :host rule pins it to a corner with `position: absolute`, which is what
+	// grid-game-board wants — there it is a direct child of the board. Here this overlay does the
+	// positioning, so the component just fills it.
 	tro-legend-board {
 		position: static;
 		width: 100%;

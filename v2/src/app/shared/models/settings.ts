@@ -41,6 +41,16 @@ export class Settings {
 	basicInstructionsImageUrl: string;
 	advancedInstructionsImageUrl: string;
 	visualOptions: VisualOptions = { ...DEFAULT_VISUAL_OPTIONS };
+	/**
+	 * Colour SVG boards from the raster's distinct values, one palette entry each, the way a grid
+	 * board is coloured — instead of stretching them across minValue..maxValue.
+	 *
+	 * For a board whose rasters hold a handful of classes rather than a continuous surface. Stated
+	 * by the dataset rather than guessed from the value count, because "few distinct values" is a
+	 * property of the data a deployment happens to ship, not a declaration of how it means to be
+	 * read.
+	 */
+	paletted?: boolean;
 	/** SVG-mode cell border (between zones). Optional; defaults to the built-in look when unset. */
 	gridLineColor?: string;
 	gridLineWidth?: string;
@@ -102,6 +112,7 @@ export class Settings {
 		this.basicInstructions = data.basicInstructions;
 		this.advancedInstructions = data.advancedInstructions;
 		this.calcUrl = data.calcUrl;
+		this.paletted = data.paletted;
 		this.gridLineColor = data.gridLineColor;
 		this.gridLineWidth = data.gridLineWidth;
 		this.highlightWidth = data.highlightWidth;
