@@ -13,7 +13,13 @@
 			[gameBoardId]="boardData!.id"
 			*ngFor="let field of fields" [attr.d]="field.path"></path>
 
-	<foreignObject x="1" y="1" width="20%" height="100px">
+	<!-- Height as a PROPORTION of the board, not 100 user units. "100px" inside a viewBox is 100
+	     board units, which is about 30% of the 468 x 335 Dutch board this was written against and
+	     three and a half times the height of a 28 x 29 one. On any small-raster board the legend
+	     covered the map, overflowed the frame, and read as a white panel with tick marks beside a
+	     grid that no longer looked aligned to anything. 30% of 335 is 100.5, so the board this was
+	     tuned on is unchanged. -->
+	<foreignObject x="1" y="1" width="20%" height="30%">
 		<tro-legend-board *ngIf="legend != undefined" [legendData]="legend" [isSmall]="hideLegend"></tro-legend-board>
 	</foreignObject>
 </svg>
