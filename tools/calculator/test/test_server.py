@@ -185,3 +185,94 @@ class TheCellFormAndValidationOverHttp(ServerTest):
         self.assertIn("cells", placement["properties"])
         self.assertEqual(placement["required"], ["type"])
         self.assertIn("validation", spec["components"]["schemas"]["ScoreRequest"]["properties"])
+
+
+class ItServesTheEsgameFrontend(ServerTest):
+    """POST /esgame — the route v2's dynamic mode posts to.
+
+    The frontend cannot be asked to adapt: it sends {allocation:[{id, lulc}]} and reads back a
+    score and a fetchable raster URL per consequence board, because that is what
+    tools/R/calculator.r returns. These pin this end of that contract, so dataAgDynamic.json can be
+    played against this model rather than only against the R one.
+    """
+
+    # Two disjoint sets of zones chosen for carrying real cost. Most of this board is zero, so an
+    # allocation picked by eye would let every assertion below pass against a model that had done
+    # nothing at all — which is the failure grid-calculator-agrees.spec.ts documents in this repo.
+    FARM = [151, 152, 138, 150]
+    RANCH = [121, 136, 101, 115]
+
+    def a_round(self, **over):
+        body = {"allocation": [{"id": z, "lulc": 10} for z in self.FARM]
+                             + [{"id": z, "lulc": 20} for z in self.RANCH],
+                "round": 2, "score": 9725, "game_id": "test"}
+        body.update(over)
+        return body
+
+    def test_a_round_scores_every_consequence_board(self):
+        status, body, _ = self.json_request("/esgame", self.a_round())
+        self.assertEqual(status, 200, body)
+        got = [r["id"] for r in body["results"]]
+        # Exactly the consequence ids in v2/src/assets/dataAgDynamic.json. A missing one is not a
+        # cosmetic gap: prepareNextLevel looks each board's id up in the response and assigns the
+        # url it finds, so an absent id becomes urlToData undefined and the level fails to build.
+        self.assertEqual(got, ["4", "5", "6", "7", "8", "9", "10", "11"])
+
+    def test_the_scores_are_real_numbers_on_a_0_100_scale(self):
+        _, body, _ = self.json_request("/esgame", self.a_round())
+        scores = [r["score"] for r in body["results"]]
+        for s in scores:
+            self.assertIsInstance(s, int)
+            self.assertGreaterEqual(s, 0)
+            self.assertLessEqual(s, 100)
+        # And they are not all zero, which is what this would report if the allocation never
+        # reached the model — a 200 full of zeroes being the shape that looks like a working round.
+        self.assertTrue(any(s > 0 for s in scores), scores)
+
+    def test_moving_the_allocation_moves_the_scores(self):
+        """The scores depend on WHERE things went, not merely on how many there were."""
+        _, hot, _ = self.json_request("/esgame", self.a_round())
+        cold = self.a_round(allocation=[{"id": z, "lulc": 10} for z in (1, 2, 15, 16)])
+        _, mild, _ = self.json_request("/esgame", cold)
+        self.assertNotEqual([r["score"] for r in hot["results"]],
+                            [r["score"] for r in mild["results"]])
+
+    def test_urls_point_at_the_browser_facing_asset_base(self):
+        _, body, _ = self.json_request("/esgame", self.a_round())
+        for r in body["results"]:
+            self.assertTrue(r["url"].startswith(server.ASSET_BASE + "/assets/images/"), r["url"])
+            self.assertTrue(r["url"].endswith(".tif"), r["url"])
+
+    def test_unallocated_land_is_ignored_not_refused(self):
+        """The frontend posts EVERY field each round, allocated or not."""
+        body = self.a_round()
+        body["allocation"] += [{"id": z, "lulc": 0} for z in range(1, 30)]
+        status, got, _ = self.json_request("/esgame", body)
+        self.assertEqual(status, 200, got)
+        self.assertTrue(any(r["score"] > 0 for r in got["results"]))
+
+    def test_an_empty_round_is_refused(self):
+        status, body, _ = self.json_request("/esgame", {"allocation": []})
+        self.assertEqual(status, 400)
+        self.assertIn("empty", body["error"])
+
+    def test_a_zone_off_the_board_is_named(self):
+        # Zone 0 is the drawing raster's nodata — the unpaired 29th row. A board posting it means
+        # the raster and the adapter's geometry have drifted, which is worth saying out loud.
+        status, body, _ = self.json_request("/esgame", {"allocation": [{"id": 0, "lulc": 10}]})
+        self.assertEqual(status, 400)
+        self.assertIn("not on this board", body["error"])
+
+    def test_the_same_cells_cannot_be_claimed_twice(self):
+        both = [{"id": 151, "lulc": 10}, {"id": 151, "lulc": 20}]
+        status, body, _ = self.json_request("/esgame", {"allocation": both})
+        self.assertEqual(status, 400)
+        self.assertIn("cannot be counted twice", body["error"])
+
+    def test_a_zone_covers_the_static_game_s_2x2_footprint(self):
+        import esgame
+        cells = esgame.cells_of_zone(1)
+        self.assertEqual(sorted((c["x"], c["y"]) for c in cells),
+                         [(1, 1), (1, 2), (2, 1), (2, 2)])
+        # Zone ids run along rows: zone 15 begins the second band of 14.
+        self.assertEqual(sorted((c["x"], c["y"]) for c in esgame.cells_of_zone(15))[0], (1, 3))
