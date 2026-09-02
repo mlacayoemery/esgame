@@ -18,11 +18,14 @@ round changes which cells you occupy, not the surface. So the correct raster to 
 one the frontend already ships, and there is nothing to publish.
 """
 
-# Zone geometry, matching v2/src/assets/images/esgame_ag_zones.tif exactly. If either side of this
-# changes the other must too: the ids in that raster ARE the ids the browser posts back.
-ZONE = 2                 # a zone is 2 x 2 cells, the static game's elementSize
-ZONES_ACROSS = 14        # 28 columns / 2
-MAX_ZONES_PER_TYPE = 4   # dataAgDynamic.json's maxElements, and the grid game's
+# Board geometry, matching v2/src/assets/images/esgame_ag_zones.tif exactly. That raster holds one
+# zone per CELL, numbered by row-major index, because those are the ids the frontend does its
+# placement arithmetic in (GameService.getAssociatedFields walks `id + j * columns`). If either
+# side of this changes the other must too.
+COLS = 28
+ROWS = 29
+PLACEMENT = 2            # a piece is 2 x 2 cells: dataAgDynamic.json's elementSize, and the pack's
+MAX_PIECES_PER_TYPE = 4  # dataAgDynamic.json's maxElements, and the grid game's
 
 # lulc as the frontend sends it (dataAgDynamic.json productionTypes) -> this pack's type ids.
 # Anything else -- including the dataset's defaultProductionType "0" -- means "nothing here" and
@@ -49,20 +52,22 @@ class BadRound(Exception):
     """The request is not a round this can score. Carries the message the caller should send."""
 
 
-def cells_of_zone(zone_id):
-    """The four 1-based (x, y) cells a zone covers.
+def anchor_of(zone_id):
+    """The 1-based (x, y) cell a zone id names.
 
-    Inverse of the raster's own formula, `(y // 2) * 14 + (x // 2) + 1` over 0-based pixels, with
-    the +1 undone here and the model's 1-based coordinates applied.
+    Inverse of the raster's own numbering, `y * COLS + x` over 0-based pixels.
     """
-    b = zone_id - 1
-    x0 = (b % ZONES_ACROSS) * ZONE + 1
-    y0 = (b // ZONES_ACROSS) * ZONE + 1
-    return [{"x": x0 + dx, "y": y0 + dy} for dy in range(ZONE) for dx in range(ZONE)]
+    return (zone_id % COLS) + 1, (zone_id // COLS) + 1
 
 
 def placements(allocation):
-    """The frontend's allocation as model placements, one piece per allocated zone."""
+    """The frontend's allocation as model placements, one piece per allocated field.
+
+    ANCHORS, not cells. The frontend posts one entry per placed piece carrying that piece's
+    top-left cell (`o.fields[0].id` in GameService.goToNextLevel), and expanding an anchor by
+    placementSize is the model's own 2013 form — so the expansion happens in the model rather than
+    being reimplemented here, where it could disagree about what a 2 x 2 piece covers.
+    """
     out = []
     for entry in allocation:
         if not isinstance(entry, dict):
@@ -73,25 +78,32 @@ def placements(allocation):
         try:
             zone = int(entry.get("id"))
         except (TypeError, ValueError):
-            raise BadRound(f'an allocated zone needs an integer "id"; got {entry.get("id")!r}')
-        if not 1 <= zone <= ZONES_ACROSS * ZONES_ACROSS:
-            # Zone 0 is the raster's nodata -- the unpaired 29th row, which is not placeable. It
-            # is named rather than silently dropped, because a board posting it means the drawing
-            # raster and this table have drifted apart.
-            raise BadRound(f"zone {zone} is not on this board (1..{ZONES_ACROSS * ZONES_ACROSS})")
-        out.append({"type": kind, "cells": cells_of_zone(zone)})
+            raise BadRound(f'an allocated field needs an integer "id"; got {entry.get("id")!r}')
+        if not 0 <= zone < COLS * ROWS:
+            raise BadRound(f"field {zone} is not on this {COLS} x {ROWS} board")
+        x, y = anchor_of(zone)
+        # The frontend slides a piece that would leave the board (getAssociatedFields), so an
+        # anchor arriving here should already fit. Refusing rather than clamping: a piece that
+        # does not fit means the two sides disagree about the board, and quietly moving it would
+        # score a round the player did not play.
+        if x + PLACEMENT - 1 > COLS or y + PLACEMENT - 1 > ROWS:
+            raise BadRound(
+                f"a {PLACEMENT} x {PLACEMENT} piece anchored at ({x}, {y}) runs off a "
+                f"{COLS} x {ROWS} board")
+        out.append({"type": kind, "x": x, "y": y})
     return out
 
 
 def worst_case(pack):
     """The largest cost each consequence map can carry, used to put scores on a 0-100 scale.
 
-    Derived from the model rather than chosen: a type may hold MAX_ZONES_PER_TYPE zones of ZONE x
-    ZONE cells, so the worst it can do to one map is to sit on that map's highest-valued cells.
+    Derived from the model rather than chosen: a type may hold MAX_PIECES_PER_TYPE pieces of
+    PLACEMENT x PLACEMENT cells, so the worst it can do to one map is to sit on that map's
+    highest-valued cells.
     Fixed for the pack, so a score means the same thing in every round -- which is the property
     esgame's own bounds.json exists to give the R calculator (see tools/R/derive-bounds.R).
     """
-    budget = MAX_ZONES_PER_TYPE * ZONE * ZONE
+    budget = MAX_PIECES_PER_TYPE * PLACEMENT * PLACEMENT
     bounds = {}
     for _, _, map_name, _, _ in MAPS:
         flat = sorted((v for row in pack["maps"][map_name]["grid"] for v in row), reverse=True)

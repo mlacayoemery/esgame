@@ -27,7 +27,9 @@ async function dismissHelp(page: Page) {
 	} catch {
 		return;
 	}
-	await page.locator('tro-help .backdrop.--open .icon-close').first().click({ force: true });
+	// Clicking the PANEL, not the ✕ — the dialog closes on a click anywhere on it, and dismissing
+	// it the way a player most likely will is also what keeps that behaviour covered.
+	await page.locator('tro-help .backdrop.--open .content').first().click({ force: true });
 	await expect(backdrop).toHaveCount(0, { timeout: 15_000 });
 }
 
@@ -102,11 +104,17 @@ test.describe('round 2 on the running stack', () => {
 		await page.goto('/dynamic-game');
 		await expect(page.locator('tro-svg-game-board').first()).toBeVisible();
 
-		const fields = page.locator('tro-svg-game-board.main-board path[troSvgField]');
+		// EDITABLE fields only. A board can carry a field that is not placeable — one whose value is
+		// the raster's nodata — and it has no geometry at all, so clicking it fails with "element is
+		// outside of the viewport" rather than anything that names the cause. A player clicks land
+		// they can build on; so does this.
+		const fields = page.locator('tro-svg-game-board.main-board path[troSvgField].--is-editable');
 		await expect.poll(() => fields.count(), { timeout: 120_000 }).toBeGreaterThan(40);
 
 		await clickPastHelp(page, page.locator('tro-production-type-button').first());
-		for (let i = 0; i < 12; i++) await fields.nth(i * 3).click({ force: true });
+		// Spaced so the pieces cannot overlap each other: a piece covers elementSize^2 cells and
+		// the board refuses a placement that reuses one.
+		for (let i = 0; i < 12; i++) await fields.nth(i * 5).click({ force: true });
 
 		await clickPastHelp(page, page.locator('button.btn-next'));
 

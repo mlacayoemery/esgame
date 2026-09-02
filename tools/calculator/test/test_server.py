@@ -196,11 +196,13 @@ class ItServesTheEsgameFrontend(ServerTest):
     played against this model rather than only against the R one.
     """
 
-    # Two disjoint sets of zones chosen for carrying real cost. Most of this board is zero, so an
-    # allocation picked by eye would let every assertion below pass against a model that had done
-    # nothing at all — which is the failure grid-calculator-agrees.spec.ts documents in this repo.
-    FARM = [151, 152, 138, 150]
-    RANCH = [121, 136, 101, 115]
+    # ANCHOR cells, not lattice zones: a piece is a 2 x 2 block whose top-left cell the frontend
+    # posts, and it may be anchored anywhere. Chosen greedily for cost AND mutual disjointness —
+    # the highest-scoring anchors are adjacent and overlap, which validation rightly refuses, and
+    # most of this board is zero, so an allocation picked by eye would let every assertion below
+    # pass against a model that had done nothing at all.
+    FARM = [552, 554, 424, 550]
+    RANCH = [498, 464, 606, 215]
 
     def a_round(self, **over):
         body = {"allocation": [{"id": z, "lulc": 10} for z in self.FARM]
@@ -232,7 +234,9 @@ class ItServesTheEsgameFrontend(ServerTest):
     def test_moving_the_allocation_moves_the_scores(self):
         """The scores depend on WHERE things went, not merely on how many there were."""
         _, hot, _ = self.json_request("/esgame", self.a_round())
-        cold = self.a_round(allocation=[{"id": z, "lulc": 10} for z in (1, 2, 15, 16)])
+        # Anchors four columns apart, so the 2 x 2 pieces do not overlap each other — adjacent
+        # ids would, now that an id is a cell rather than a lattice slot.
+        cold = self.a_round(allocation=[{"id": z, "lulc": 10} for z in (0, 4, 8, 12)])
         _, mild, _ = self.json_request("/esgame", cold)
         self.assertNotEqual([r["score"] for r in hot["results"]],
                             [r["score"] for r in mild["results"]])
@@ -256,23 +260,42 @@ class ItServesTheEsgameFrontend(ServerTest):
         self.assertEqual(status, 400)
         self.assertIn("empty", body["error"])
 
-    def test_a_zone_off_the_board_is_named(self):
-        # Zone 0 is the drawing raster's nodata — the unpaired 29th row. A board posting it means
-        # the raster and the adapter's geometry have drifted, which is worth saying out loud.
-        status, body, _ = self.json_request("/esgame", {"allocation": [{"id": 0, "lulc": 10}]})
+    def test_a_field_off_the_board_is_named(self):
+        status, body, _ = self.json_request("/esgame", {"allocation": [{"id": 812, "lulc": 10}]})
         self.assertEqual(status, 400)
-        self.assertIn("not on this board", body["error"])
+        self.assertIn("not on this", body["error"])
+
+    def test_a_piece_that_would_run_off_the_board_is_refused(self):
+        # The frontend slides such a piece back on (getAssociatedFields), so one arriving here
+        # means the two sides disagree about the board. Refused rather than quietly moved.
+        last_column = 27          # x = 28, so a 2 x 2 piece needs column 29
+        status, body, _ = self.json_request("/esgame", {"allocation": [{"id": last_column, "lulc": 10}]})
+        self.assertEqual(status, 400)
+        self.assertIn("runs off", body["error"])
 
     def test_the_same_cells_cannot_be_claimed_twice(self):
-        both = [{"id": 151, "lulc": 10}, {"id": 151, "lulc": 20}]
+        both = [{"id": 552, "lulc": 10}, {"id": 552, "lulc": 20}]
         status, body, _ = self.json_request("/esgame", {"allocation": both})
         self.assertEqual(status, 400)
         self.assertIn("cannot be counted twice", body["error"])
 
-    def test_a_zone_covers_the_static_game_s_2x2_footprint(self):
+    def test_field_ids_are_the_raster_index_the_frontend_places_in(self):
         import esgame
-        cells = esgame.cells_of_zone(1)
-        self.assertEqual(sorted((c["x"], c["y"]) for c in cells),
-                         [(1, 1), (1, 2), (2, 1), (2, 2)])
-        # Zone ids run along rows: zone 15 begins the second band of 14.
-        self.assertEqual(sorted((c["x"], c["y"]) for c in esgame.cells_of_zone(15))[0], (1, 3))
+        # id 0 is the top-left cell, ids run along rows, and a row is COLS wide. This is the id
+        # space GameService.getAssociatedFields does `id + j * columns` in, which is what lets a
+        # piece be anchored on ANY cell rather than snapped to a 2 x 2 lattice.
+        self.assertEqual(esgame.anchor_of(0), (1, 1))
+        self.assertEqual(esgame.anchor_of(1), (2, 1))
+        self.assertEqual(esgame.anchor_of(esgame.COLS), (1, 2))
+        self.assertEqual(esgame.anchor_of(esgame.COLS + 1), (2, 2))
+
+    def test_a_piece_may_be_anchored_one_cell_over(self):
+        """Placement has single-cell granularity, as the grid game's does."""
+        near = self.a_round(allocation=[{"id": 552, "lulc": 10}])
+        over = self.a_round(allocation=[{"id": 553, "lulc": 10}])
+        _, a, _ = self.json_request("/esgame", near)
+        _, b, _ = self.json_request("/esgame", over)
+        # Shifting by ONE cell is a different allocation, and must score differently. If the board
+        # still snapped to a 2 x 2 lattice these two would round to the same piece.
+        self.assertNotEqual([r["score"] for r in a["results"]],
+                            [r["score"] for r in b["results"]])

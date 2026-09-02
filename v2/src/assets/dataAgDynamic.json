@@ -7,15 +7,15 @@
 	},
 	"mapMode": "svg",
 	"imageMode": false,
-	"elementSize": 1,
+	"elementSize": 2,
 	"highlightColor": "#00E0FF",
 	"infiniteLevels": false,
 	"gameBoardColumns": 28,
 	"gameBoardRows": 29,
 	"minValue": 0,
 	"maxValue": 100,
-	"minSelected": 1,
 	"paletted": true,
+	"gridLineColor": "black",
 	"gridLineWidth": "0.1",
 	"highlightWidth": "0.3",
 	"defaultProductionType": "0",
@@ -29,7 +29,7 @@
 				"nl": null,
 				"pt": null
 			},
-			"fieldColor": "#2d6a4f",
+			"fieldColor": "#2d6a4f80",
 			"urlToIcon": "./assets/images/corn.png",
 			"maxElements": 4
 		},
@@ -41,7 +41,7 @@
 				"nl": null,
 				"pt": null
 			},
-			"fieldColor": "#ff8000",
+			"fieldColor": "#ff800080",
 			"urlToIcon": "./assets/images/cow.png",
 			"maxElements": 4
 		}

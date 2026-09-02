@@ -47,7 +47,7 @@ export class TiffService {
 				// isRoundRelative is false for the same reason the grid path sets it false: these
 				// values come from the dataset unchanged, so the numbers mean what they say.
 				if (paletted) {
-					const distinct = this.distinctValues(data.numRaster, data.nodata);
+					const distinct = this.distinctValues(data.numRaster);
 					legend = {
 						elements: distinct.map((value, i) => ({ forValue: value, color: gradient!.colors[i] })),
 						isNegative: gameBoardType == GameBoardType.ConsequenceMap,
@@ -154,13 +154,18 @@ export class TiffService {
 	}
 
 	/**
-	 * The raster's distinct values, ascending, without its nodata.
+	 * The raster's distinct values, ascending — INCLUDING its nodata.
+	 *
+	 * Deliberately the same expression getGridGameBoard uses, because the whole point of a paletted
+	 * SVG board is that it draws what the grid board draws. Excluding nodata shifted every class
+	 * one palette entry: these rasters declare nodata 0 and hold [0, 75, 150, 225, 300, 375], so
+	 * the grid board gives 75 colors[1] and the SVG board was giving it colors[0].
 	 *
 	 * Shared by the paletted image and the paletted legend so the two cannot disagree about which
 	 * colour a value gets — they index the same list.
 	 */
-	private distinctValues(data: number[], noData: number): number[] {
-		return Array.from(new Set(data.filter(v => v != noData))).sort((a, b) => a - b);
+	private distinctValues(data: number[]): number[] {
+		return Array.from(new Set(data)).sort((a, b) => a - b);
 	}
 
 	private async prepareDataUrl(url: string, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors, paletted = false) {
@@ -225,14 +230,13 @@ export class TiffService {
 			// — the agriculture suitability raster runs to 375 against a declared maximum of 100, so
 			// every value above 100 clipped to the same extreme colour and most of the map came out
 			// one flat shade.
-			const distinct = this.distinctValues(data, noData);
+			// No nodata hole. The grid board paints a nodata cell its palette colour like any other
+			// — that tan is the agriculture board's background, and skipping it here left the same
+			// map with a white surround where the static one has land.
+			const distinct = this.distinctValues(data);
 			const index = new Map(distinct.map((value, i) => [value, i]));
 			data.forEach(value => {
-				if (value == noData) {
-					tmpArray.push(255, 255, 255, 0);
-				} else {
-					tmpArray.push(...colorToRgb(gradient.colors[index.get(value) ?? 0]));
-				}
+				tmpArray.push(...colorToRgb(gradient.colors[index.get(value) ?? 0]));
 			});
 		} else if (gradient) {
 			data.forEach(value => {
