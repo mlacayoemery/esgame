@@ -13,6 +13,32 @@ svg {
 	position: relative;
 }
 
+// The legend, over the board's top-left corner. Anchored to :host, which is already
+// position: relative for the consequence overlay below.
+//
+// pointer-events: none because it sits on top of clickable fields — the zones under it must stay
+// placeable, which they were not while this was a foreignObject swallowing clicks.
+.legend-overlay {
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	pointer-events: none;
+	z-index: 1;
+
+	// legend-board's own :host rule pins it to a corner with `position: absolute; left: -1px;
+	// bottom: -1px; width: 35%`, which is what grid-game-board wants — there it is a direct child
+	// of the board. Here the overlay already does the positioning, so let the component size to
+	// its own content instead of to 35% of this wrapper.
+	// A definite width, because the two end labels float to opposite ends of the ramp: at the
+	// content's own width they met in the middle and read as "0100".
+	width: 72px;
+
+	tro-legend-board {
+		position: static;
+		width: 100%;
+	}
+}
+
 // Consequence-map overlay, shown only when visualOptions.consequenceFieldOpacity is enabled.
 .consequences {
 	position: absolute;

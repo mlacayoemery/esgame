@@ -13,15 +13,24 @@
 			[gameBoardId]="boardData!.id"
 			*ngFor="let field of fields" [attr.d]="field.path"></path>
 
-	<!-- Height as a PROPORTION of the board, not 100 user units. "100px" inside a viewBox is 100
-	     board units, which is about 30% of the 468 x 335 Dutch board this was written against and
-	     three and a half times the height of a 28 x 29 one. On any small-raster board the legend
-	     covered the map, overflowed the frame, and read as a white panel with tick marks beside a
-	     grid that no longer looked aligned to anything. 30% of 335 is 100.5, so the board this was
-	     tuned on is unchanged. -->
-	<foreignObject x="1" y="1" width="20%" height="30%">
-		<tro-legend-board *ngIf="legend != undefined" [legendData]="legend" [isSmall]="hideLegend"></tro-legend-board>
-	</foreignObject>
 </svg>
+
+<!--
+  THE LEGEND IS NOT IN THE SVG, and that is the point. It used to live in a
+  <foreignObject x="1" y="1" width="20%" height="100px"> inside the viewBox, where one CSS pixel
+  is one BOARD UNIT — so legend-board.component.scss's 20px colour ramp, 5px padding and 12px
+  labels were 20, 5 and 12 units of the map. On the 468 x 335 board that reads as a small ramp.
+  On a 28 x 29 board the ramp alone is two thirds of the map height, and `background: white`
+  painted it as a slab over the top-left corner. Measured: 66 x 355 screen px of legend inside a
+  foreignObject 103 px tall, magnified 17x relative to the Dutch board (11.82 px per unit against
+  0.70).
+
+  The legend's size should depend on the screen, not on the raster's resolution. As an ordinary
+  absolutely-positioned sibling it lays out in real CSS pixels and is identical on every board —
+  which is what grid-game-board.component.html has always done with the same component.
+-->
+<div class="legend-overlay" *ngIf="legend != undefined">
+	<tro-legend-board [legendData]="legend" [isSmall]="hideLegend"></tro-legend-board>
+</div>
 <div class="consequences" *ngIf="consequenceFieldOpacity && mapType == consequenceType"
 	[ngStyle]="{'background-image': background }"></div>
