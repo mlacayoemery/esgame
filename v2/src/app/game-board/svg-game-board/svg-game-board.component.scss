@@ -46,6 +46,16 @@ svg {
 	}
 }
 
+// Nearest-neighbour for classified rasters: one image pixel per board cell, stretched without
+// inventing intermediate colours. See the `paletted` field on the component for why this is not
+// applied to every board.
+:host(.is-paletted) {
+	svg,
+	.consequences {
+		image-rendering: pixelated;
+	}
+}
+
 // Consequence-map overlay, shown only when visualOptions.consequenceFieldOpacity is enabled.
 .consequences {
 	position: absolute;
