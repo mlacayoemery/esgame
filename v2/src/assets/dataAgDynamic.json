@@ -26,7 +26,7 @@
 				"nl": null,
 				"pt": null
 			},
-			"fieldColor": "#FFF",
+			"fieldColor": "#2d6a4f",
 			"urlToIcon": "./assets/images/corn.png",
 			"maxElements": 4
 		},
@@ -38,7 +38,7 @@
 				"nl": null,
 				"pt": null
 			},
-			"fieldColor": "#FFF",
+			"fieldColor": "#ff8000",
 			"urlToIcon": "./assets/images/cow.png",
 			"maxElements": 4
 		}

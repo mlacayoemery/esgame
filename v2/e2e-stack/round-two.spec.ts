@@ -114,7 +114,14 @@ test.describe('round 2 on the running stack', () => {
 		// round has actually been scored — a 404 or a NaN leaves it absent.
 		const chart = page.locator('tro-spider-chart svg');
 		await expect(chart).toBeVisible({ timeout: 300_000 });
-		await expect(page.locator('tro-spider-chart .spider-chart__dot')).toHaveCount(5);
+
+		// One dot per consequence board, counted from the dataset this deployment actually serves
+		// rather than written down here. Five is the Dutch model's number; the agriculture board
+		// has eight. A literal would have made this spec a test of which game was deployed.
+		const dataset = await (await page.request.get(`${baseURL}/${config.dynamicDataUrl}`)).json();
+		const boards = dataset.maps.filter((m: any) => m.gameBoardType === 'Consequence').length;
+		expect(boards, 'a dynamic dataset must define consequence boards').toBeGreaterThan(0);
+		await expect(page.locator('tro-spider-chart .spider-chart__dot')).toHaveCount(boards);
 
 		expect(dialogs, `the dynamic game showed a popup: ${JSON.stringify(dialogs)}`).toEqual([]);
 		expect(failed, `requests failed outright: ${failed.slice(0, 3).join(' | ')}`).toEqual([]);
