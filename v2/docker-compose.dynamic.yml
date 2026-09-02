@@ -9,7 +9,27 @@ services:
   esgame-core:
     environment:
       # The browser reaches the calculator via the published host port (it POSTs client-side).
-      CALC_URL: "http://localhost:${ESGAME_CALC_PORT:-8000}"
+      #
+      # THE PATH IS PART OF THE VALUE. calcUrl is the endpoint the app POSTs to, not the origin it
+      # lives at — game.service.ts passes it to HttpClient.post verbatim and appends nothing. The R
+      # calculator serves `#* @post /esgame` (tools/R/calculator.r), so a bare origin here is a 404.
+      #
+      # That 404 is invisible in both logs, which is why it survived: the POST goes to :8000 so the
+      # frontend's nginx never sees it, and it is rejected before entering the plumber handler so
+      # the calculator logs nothing either. Measured 2026-09-02 — round 2 in a browser gave
+      # "Something went wrong, please try again later" with no trace on either side.
+      #
+      # examples/esgame-dynamic is NOT a counter-example: its FastAPI calculator serves `@app.post("/")`,
+      # so a bare origin is the correct endpoint THERE. Each stack states its own calculator's path.
+      CALC_URL: "http://localhost:${ESGAME_CALC_PORT:-8000}/esgame"
+      # "/" serves the dynamic game, which is the only game this stack's containers are for.
+      #
+      # Without this the stack came up serving the CLIENT-SIDE grid game with a calculator
+      # configured — calcUrl and defaultMode are independent keys in config.json, and setting only
+      # the first leaves the second at the image default of "static". docs/static-vs-dynamic.rst
+      # states the invariant this broke: "Static: calcUrl is empty". docker-compose.rect.yml always
+      # set this; the stack it overlays did not, so it was the overlay holding the base together.
+      DEFAULT_MODE: "dynamic"
 
   esgame-calculator:
     build:

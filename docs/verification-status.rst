@@ -52,9 +52,16 @@ Verified working
    * - Path
      - How it was checked
    * - Static / grid game
-     - 416 unit tests, 26 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
+     - 421 unit tests, 26 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
        SEO 100. The board renders 2,436 fields; the e2e suite asserts that rather than
        just asserting the component mounted.
+   * - A deployment's own configuration
+     - ``v2/e2e-stack`` (5 specs), run against a live compose stack by
+       ``make esgame-dynamic-verify`` and by the ``v2-stack`` job in
+       ``example-stack.yml``. Unlike ``v2/e2e`` it configures nothing: it reads the
+       ``config.json`` the stack serves and plays a real round 2 in a browser on it.
+       This is the only layer in which a wrong ``CALC_URL`` can fail — every other
+       suite supplies its own configuration and a stub that answers any URL.
    * - No external runtime deps
      - Every route loaded with all non-localhost origins blocked: no request is even
        attempted. Enforced by ``resource-summary:third-party:size <= 0``.
