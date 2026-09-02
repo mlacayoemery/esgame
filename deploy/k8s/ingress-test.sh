@@ -106,8 +106,49 @@ calc_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
   --resolve "${calc_host}:${calc_port}:127.0.0.1" \
   "http://${calc_host}:${calc_port}${calc_path}" -X POST \
   -H 'Content-Type: application/json' -d '{"allocation":[]}' 2>/dev/null || true)
-# Any HTTP response proves something is listening and routing there; 000 means it is not.
-check "CALC_URL is reachable as written"    "[ -n '${calc_code}' ] && [ '${calc_code}' != 000 ]"
+# 000 means nothing is listening or routing there. 404 means something IS, but not at the path the
+# served config names — which is a configuration defect and was NOT caught here: this check used to
+# accept "any HTTP response", so a calcUrl pointing at a route the calculator does not serve passed
+# it. The compose stack shipped exactly that (CALC_URL with no /esgame against a calculator serving
+# `#* @post /esgame`), and every round in a browser 404'd while this file stayed green.
+#
+# An EMPTY allocation is deliberate here: the calculator refuses it with 400 ("Refusing the round:
+# 'allocation' is empty"), which is a perfectly good answer for this question. This check asks
+# whether the ROUTE exists, and 400 proves the request reached the handler. Scoring is the next
+# check's job, because it needs geodata that not every overlay ships.
+check "CALC_URL names a route the calculator serves (${calc_code})" \
+  "[ -n '${calc_code}' ] && [ '${calc_code}' != 000 ] && [ '${calc_code}' != 404 ]"
+
+# ...and then a real round, because a route that answers is still not a round that scores.
+#
+# GATED ON THE GEODATA, and the gate is a fact read from the pod rather than an assumption about
+# the overlay. The base ships an emptyDir at /app/data with nothing filling it: `local-registry`
+# copies the repo's 111 KB raster in, `published` does not, and a real deployment mounts its own
+# (places uses a PVC and an init container). Where there is no base raster the calculator returns
+# 500 for every allocation, and failing this check on that would report a missing DATASET as a
+# broken INGRESS — sending the next person to the wrong file entirely.
+raster=$("${K[@]}" get cm esgame-config -o jsonpath='{.data.ESGAME_BASE_RASTER}' 2>/dev/null || true)
+has_raster=$("${K[@]}" exec deploy/esgame-calculation -- \
+  sh -c "[ -s /app/data/${raster:-nonexistent} ] && echo yes || echo no" 2>/dev/null | tr -d '\r' || true)
+echo "     base raster ${raster:-<unset>} present in the pod: ${has_raster:-unknown}"
+
+if [ "${has_raster}" = yes ]; then
+  round_code=$(curl -s -o /tmp/esgame-round.json -w '%{http_code}' --max-time 900 \
+    --resolve "${calc_host}:${calc_port}:127.0.0.1" \
+    "http://${calc_host}:${calc_port}${calc_path}" -X POST \
+    -H 'Content-Type: application/json' \
+    --data @../../tools/R/golden/allocation.json 2>/dev/null || true)
+  echo "     golden allocation through the ingress -> ${round_code}"
+  check "a real round scores through the ingress" "[ '${round_code}' = 200 ]"
+  # Scored, and scored with numbers. A 200 carrying no results is the shape a stubbed or
+  # half-configured backend returns, and it would otherwise pass the line above.
+  check "the scored round carries indicator scores" \
+    "python3 -c \"import json;d=json.load(open('/tmp/esgame-round.json'));r=[x for x in d.get('results',[]) if x.get('id')!='-1'];raise SystemExit(0 if len(r)>=5 else 1)\""
+else
+  # Not a check: nothing is incremented and nothing can pass, the same convention as the
+  # controller-warmup poll above. Saying so out loud beats a silently skipped assertion.
+  echo "     (no base raster in this overlay, so no round is attempted — the route check above still applies)"
+fi
 
 echo "==> a wrong Host must NOT be served by our app"
 # If this returns the app, the Ingress is matching everything and host routing is not working.

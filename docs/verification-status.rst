@@ -189,6 +189,16 @@ Verified working
        it, so it no longer passes on that (18 checks, verified failing under the mutation
        and under an absent config).
 
+       That post accepted **any** HTTP response, which left the same hole one notch
+       narrower: it caught a missing port, and a ``404`` — a URL naming a route the
+       calculator does not serve — passed it. The compose stack shipped exactly that
+       (``CALC_URL`` without ``/esgame`` against a calculator serving ``#* @post /esgame``)
+       and every round in a browser failed while this file stayed green. It now rejects
+       ``404`` as well as ``000``, and then scores the golden allocation through the
+       ingress. The round is gated on the base raster actually being in the pod, read from
+       the pod rather than assumed: ``local-registry`` copies one in, ``published`` ships
+       none, and failing there would report a missing dataset as a broken ingress.
+
        A second spec plays **two** rounds. :file:`v2/e2e/round-trip.spec.ts` already covered
        this, but against an intercepted calculator whose two responses were query-string
        variants of one another; here they are two coverages GeoServer really published, and
