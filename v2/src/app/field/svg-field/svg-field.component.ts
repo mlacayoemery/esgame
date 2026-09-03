@@ -35,6 +35,20 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 		this.gameService.settingsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(o => {
 			this.highlightColor = o.highlightColor;
 			this.imageMode = o.imageMode ?? false;
+			// A paletted board is the grid board drawn as SVG, and the grid board's cell border is
+			// `outline: 1px solid black` — ONE SCREEN PIXEL, whatever the board's size. An SVG
+			// stroke is in board units, so the same nominal width renders differently on every
+			// board and at every zoom: measured 0.05 units x 17.24 px/unit = 0.86 px here against
+			// the grid board's flat 1 px. non-scaling-stroke takes the stroke out of the user
+			// coordinate system so the width means screen pixels, as a CSS outline does.
+			//
+			// Scoped to paletted boards. The Dutch board's strokes are tuned in board units at its
+			// own scale and changing what they mean would resize every line on it.
+			// Set only when asked for, like the three above: the spec pins that a settings object
+			// omitting these leaves the stylesheet's own defaults in place.
+			if (o.paletted) {
+				this.renderer.setStyle(this.elementRef.nativeElement, 'vector-effect', 'non-scaling-stroke');
+			}
 			// Optional per-deployment cell-border (grid line) styling; CSS falls back to the default.
 			if (o.gridLineColor) this.renderer.setStyle(this.elementRef.nativeElement, '--cell-stroke', o.gridLineColor, RendererStyleFlags2.DashCase);
 			if (o.gridLineWidth) this.renderer.setStyle(this.elementRef.nativeElement, '--cell-stroke-width', o.gridLineWidth, RendererStyleFlags2.DashCase);

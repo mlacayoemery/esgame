@@ -16,8 +16,8 @@
 	"maxValue": 100,
 	"paletted": true,
 	"gridLineColor": "black",
-	"gridLineWidth": "0.05",
-	"highlightWidth": "0.3",
+	"gridLineWidth": "1",
+	"highlightWidth": "1",
 	"defaultProductionType": "0",
 	"calcUrl": "",
 	"productionTypes": [
