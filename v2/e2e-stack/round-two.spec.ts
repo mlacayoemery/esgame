@@ -123,13 +123,20 @@ test.describe('round 2 on the running stack', () => {
 		const chart = page.locator('tro-spider-chart svg');
 		await expect(chart).toBeVisible({ timeout: 300_000 });
 
-		// One dot per consequence board, counted from the dataset this deployment actually serves
-		// rather than written down here. Five is the Dutch model's number; the agriculture board
-		// has eight. A literal would have made this spec a test of which game was deployed.
+		// One dot per AXIS, counted from the dataset this deployment serves rather than written
+		// down here — a literal would make this a test of which game was deployed.
+		//
+		// A client-scored board draws the score board's own rows, which group by map NAME: arable
+		// and livestock each have a Carbon raster and they share one axis. So the count is the
+		// distinct names across the suitability and consequence maps — six for the agriculture
+		// board. Anything else draws the calculator's per-map indicator scores, one dot each.
 		const dataset = await (await page.request.get(`${baseURL}/${config.dynamicDataUrl}`)).json();
-		const boards = dataset.maps.filter((m: any) => m.gameBoardType === 'Consequence').length;
-		expect(boards, 'a dynamic dataset must define consequence boards').toBeGreaterThan(0);
-		await expect(page.locator('tro-spider-chart .spider-chart__dot')).toHaveCount(boards);
+		const scored = (t: string) => dataset.maps.filter((m: any) => m.gameBoardType === t);
+		const axes = dataset.clientScored
+			? new Set([...scored('Suitability'), ...scored('Consequence')].map((m: any) => m.name?.en)).size
+			: scored('Consequence').length;
+		expect(axes, 'a dynamic dataset must define boards for the chart').toBeGreaterThan(0);
+		await expect(page.locator('tro-spider-chart .spider-chart__dot')).toHaveCount(axes);
 
 		expect(dialogs, `the dynamic game showed a popup: ${JSON.stringify(dialogs)}`).toEqual([]);
 		expect(failed, `requests failed outright: ${failed.slice(0, 3).join(' | ')}`).toEqual([]);

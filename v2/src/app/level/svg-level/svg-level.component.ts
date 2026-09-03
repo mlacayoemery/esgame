@@ -7,6 +7,7 @@ import { GameBoardType } from 'src/app/shared/models/game-board-type';
 import { GameBoardClickMode } from 'src/app/shared/models/game-board';
 import { ConfigService } from 'src/app/services/config.service';
 import { ScoreService } from 'src/app/services/score.service';
+import { TranslateService } from '@ngx-translate/core';
 
 
 /** Four pieces of 2 x 2 — the most any one production type can hold. See dataAgDynamic.json. */
@@ -39,18 +40,31 @@ export class SvgLevelComponent extends LevelBaseComponent {
 		this.gameService.selectedFieldsObs,
 		this.gameService.settingsObs,
 	]).pipe(map(([level, fields, settings]) => {
-		if (!level?.indicatorScores?.length && !settings?.clientScored) return [];
-		if (!settings?.clientScored) return level!.indicatorScores;
+		if (!settings?.clientScored) return level?.indicatorScores ?? [];
 
-		const entries = this.scoreService.createEmptyScoreEntry(level, [GameBoardType.ConsequenceMap]);
+		// Suitability AND consequence, grouped by the map's translated name exactly as
+		// ScoreBoardComponent.groupedScores does — so the chart's axes ARE the score board's rows.
+		// Carbon is one axis, not two, even though arable and livestock each have a carbon map.
+		const entries = this.scoreService.createEmptyScoreEntry(level);
 		if (!entries.length) return [];
 		this.scoreService.calculateScore(entries, fields);
-		return entries.map(entry => {
-			const board = level!.gameBoards.find(b => b.id == entry.id);
-			const legend = board?.legend?.elements;
-			const ceiling = legend?.length ? PIECE_CELLS * legend[legend.length - 1].forValue : 0;
-			return { id: entry.id, score: ceiling ? (100 * Math.abs(entry.score)) / ceiling : 0 };
+
+		const groups = new Map<string, { id: string, score: number, ceiling: number }>();
+		entries.forEach(entry => {
+			const name = this.translateService.instant('map_name_' + entry.id) as string;
+			const legend = level!.gameBoards.find(b => b.id == entry.id)?.legend?.elements;
+			const top = legend?.length ? legend[legend.length - 1].forValue : 0;
+			const group = groups.get(name) ?? { id: entry.id, score: 0, ceiling: 0 };
+			group.score += Math.abs(entry.score);
+			// The worst ONE of the maps behind this axis, not their sum: sixteen cells cannot be
+			// both arable and livestock at once, so the reachable worst is sixteen at the higher
+			// rate. Carbon is 16 x 125 = 2000, not 16 x 125 + 16 x 100.
+			group.ceiling = Math.max(group.ceiling, PIECE_CELLS * top);
+			groups.set(name, group);
 		});
+
+		return Array.from(groups.values())
+			.map(g => ({ id: g.id, score: g.ceiling ? (100 * g.score) / g.ceiling : 0 }));
 	}));
 	settings = this.gameService.settingsObs;
 	imageExpand = false
@@ -83,7 +97,7 @@ export class SvgLevelComponent extends LevelBaseComponent {
 		}
 	}));
 
-	constructor(gameService: GameService, configService: ConfigService, private scoreService: ScoreService) {
+	constructor(gameService: GameService, configService: ConfigService, private scoreService: ScoreService, private translateService: TranslateService) {
 		super(gameService);
 		configService.getGameData('dynamic').subscribe({
 			next: data => {
