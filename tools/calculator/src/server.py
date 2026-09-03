@@ -35,12 +35,17 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 from model import Refused, score  # noqa: E402
 from openapi import openapi  # noqa: E402
+import esgame  # noqa: E402
 
 HERE = pathlib.Path(__file__).resolve().parent
 PORT = int(os.environ.get("PORT", "8000"))
 PACK_PATH = pathlib.Path(os.environ.get("PACK", HERE.parent / "data" / "tradeoff-ag.json")).resolve()
 ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "*")
 MAX_BODY = 1_000_000
+# Where the BROWSER can fetch the consequence rasters, i.e. the frontend's own origin. This is a
+# browser-facing URL like CALC_URL and GEOSERVER_PUBLIC_URL, so it must be reachable from the
+# player's machine -- a compose service name would return 200 here and fail in every browser.
+ASSET_BASE = os.environ.get("ESGAME_ASSET_BASE", "http://localhost:81").rstrip("/")
 
 
 def load_pack(path):
@@ -94,6 +99,7 @@ def load_pack(path):
 
 
 PACK = load_pack(PACK_PATH)
+ESGAME_BOUNDS = esgame.worst_case(PACK)
 SPEC = openapi(PACK)
 # The pack without its grids — 8,120 numbers nobody wants in a summary.
 PACK_SUMMARY = {**PACK, "maps": {k: {"description": v.get("description")}
@@ -180,7 +186,52 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"status": "ok", "pack": PACK["id"]})
         self._send(404, {"error": f"no route for GET {path}; see /openapi.json"})
 
+    def _body(self):
+        """Read and parse a JSON request body, or send the error and return None."""
+        length = int(self.headers.get("Content-Length") or 0)
+        if length > MAX_BODY:
+            self._send(413, {"error": "request body is too large"})
+            return None
+        try:
+            return json.loads(self.rfile.read(length) or b"{}")
+        except json.JSONDecodeError as cause:
+            self._send(400, {"error": f"the request body is not valid JSON: {cause}"})
+            return None
+
+    def _esgame_round(self):
+        """Score a round for the esgame frontend's dynamic mode.
+
+        The route is /esgame because that is what tools/R/calculator.r serves. Both calculators
+        answering the same path means a deployment retargets by changing CALC_URL's host and
+        nothing else -- and the path is part of that value, which is the thing that was got wrong
+        once already (v2/docker-compose.dynamic.yml, #254).
+        """
+        body = self._body()
+        if body is None:
+            return
+        if not isinstance(body, dict) or not isinstance(body.get("allocation"), list):
+            return self._send(400, {"error": 'the round needs an "allocation" array of {id, lulc}'})
+        if not body["allocation"]:
+            # The same refusal the R calculator gives, and for the same reason: an empty round
+            # scores zero everywhere and looks exactly like a working one.
+            return self._send(400, {"error": "Refusing the round: 'allocation' is empty."})
+
+        game_id = str(body.get("game_id") or "game")
+        rnd = body.get("round", 1)
+        try:
+            pieces = esgame.placements(body["allocation"])
+            scored = score(PACK, pieces, [], True)
+        except esgame.BadRound as cause:
+            return self._send(400, {"error": str(cause)})
+        except Refused as cause:
+            return self._send(400, {"error": str(cause)})
+
+        return self._send(200, {"results": esgame.results(
+            PACK, scored, ESGAME_BOUNDS, game_id, rnd, ASSET_BASE)})
+
     def do_POST(self):
+        if self._path == "/esgame":
+            return self._esgame_round()
         if self._path != "/score":
             return self._send(404, {"error": f"no route for POST {self._path}; see /openapi.json"})
 

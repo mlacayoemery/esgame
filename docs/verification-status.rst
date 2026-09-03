@@ -1898,7 +1898,7 @@ A second shape, found 2026-08-07 — *the check was sound and could not run*
 
    .. code-block:: text
 
-      The documented test count is current   compares "416 unit tests" against the suite
+      The documented test count is current   compares "421 unit tests" against the suite
       The documented e2e count is current    compares "26 Playwright e2e" against the suite
 
    — while being filtered to ``v2/**``. Both are live: changing the claim to 384 and re-running

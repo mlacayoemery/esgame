@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, QueryList, Renderer2, ViewChildren } from '@angular/core';
+import { HostBinding, AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, QueryList, Renderer2, ViewChildren } from '@angular/core';
 import { GameBoardBaseComponent } from '../game-board-base.component';
 import { SvgFieldComponent } from 'src/app/field/svg-field/svg-field.component';
 import { GameService } from 'src/app/services/game.service';
@@ -21,12 +21,26 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	mapType: GameBoardType = GameBoardType.DrawingMap;
 	/** From settings.visualOptions; gates the consequence-map opacity + overlay. Default off. */
 	consequenceFieldOpacity = false;
+	/**
+	 * From settings.paletted. Draws the raster with nearest-neighbour scaling.
+	 *
+	 * A paletted board's raster is CLASSIFIED: one pixel per board cell, holding one of a handful
+	 * of class values. Smoothing it invents colours that are not in the palette and blurs the cell
+	 * boundaries the grid lines are drawn on, which is why the same map looked crisp on the static
+	 * board and soft here — 28 x 29 pixels stretched to ~490 with interpolation.
+	 *
+	 * Deliberately NOT applied to every board. The Dutch model's consequence rasters are a
+	 * continuous surface at 468 x 335, where interpolation is the correct way to scale and
+	 * pixelating would be a downgrade.
+	 */
+	@HostBinding('class.is-paletted') paletted = false;
 	private _showHideListeners: (() => void)[] = [];
 
 	constructor(gameService: GameService, renderer: Renderer2, elementRef: ElementRef, cdRef: ChangeDetectorRef) {
 		super(gameService, renderer, elementRef, cdRef);
 		this.gameService.settingsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(s => {
 			this.consequenceFieldOpacity = s?.visualOptions?.consequenceFieldOpacity ?? false;
+			this.paletted = s?.paletted ?? false;
 			this.cdRef.markForCheck();
 		});
 		this.gameService.highlightFieldObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(fieldNumbers => {

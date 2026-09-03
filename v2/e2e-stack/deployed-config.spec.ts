@@ -1,6 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 // What the deployment SERVES, checked against what it has to be true for the game to work.
 //
@@ -21,32 +19,36 @@ test.describe('the deployed configuration', () => {
 	// lives at — game.service.ts hands it to HttpClient.post and appends nothing.
 	//
 	// The reason this is asserted by POSTING rather than by matching the string against a known
-	// path: the two calculators in this repository serve different routes on purpose (the R one
-	// /esgame, the FastAPI example "/"), so there is no single correct suffix to compare against.
-	// What is common to both is that the URL in config.json has to accept a round. That is the
-	// property, so that is what is tested.
-	test('the calcUrl it serves actually accepts a round', async ({ request, baseURL }) => {
+	// path: the calculators in this repository serve different routes on purpose (tools/R and
+	// tools/calculator serve /esgame, the FastAPI example serves "/"), so there is no single
+	// correct suffix to compare against. What is common to all of them is that the URL in
+	// config.json must reach a handler. That is the property, so that is what is tested.
+	test('the calcUrl it serves names a route the calculator answers', async ({ request, baseURL }) => {
 		const config = await servedConfig(request, baseURL!);
 		test.skip(!config.calcUrl, 'client-side-only deployment: no backend to check');
 
-		// The golden allocation, so this is a round the calculator has to do real work for —
-		// an empty one is refused structurally and would pass this test against a 400.
-		const allocation = JSON.parse(
-			readFileSync(join(__dirname, '..', '..', 'tools', 'R', 'golden', 'allocation.json'), 'utf8'));
+		// An EMPTY allocation, on purpose, and this deliberately does NOT assert 200.
+		//
+		// What is under test is the URL, not the model: does calcUrl name a path this calculator
+		// serves? Both calculators in this repository refuse an empty round with 400 -- "Refusing
+		// the round: 'allocation' is empty." -- and that 400 is proof the request reached a
+		// handler. A 404 is proof it did not.
+		//
+		// It cannot post a REAL allocation, because a valid one is specific to the board the
+		// deployment serves: hexagon ids for the Dutch model, zone ids 1..196 for the agriculture
+		// one. Hardcoding either would make this spec pass only against that stack -- so scoring a
+		// real round is round-two.spec.ts's job, through the UI, which is board-agnostic by
+		// construction.
 		const res = await request.post(config.calcUrl, {
-			data: allocation,
+			data: { allocation: [], round: 1, score: 0, game_id: 'e2e-stack' },
 			headers: { 'Content-Type': 'application/json' },
-			timeout: 400_000,
+			timeout: 120_000,
 		});
 
-		// 404 is the specific failure this exists for, so say so rather than letting a bare
-		// status mismatch send the next person looking at the calculator instead of the config.
-		expect(res.status(), `POST ${config.calcUrl} answered ${res.status()}. ` +
-			`404 here means calcUrl names a path the calculator does not serve — the configuration ` +
-			`is wrong, not the calculator.`).toBe(200);
-
-		const body = await res.json();
-		expect(Array.isArray(body.results), 'a scored round returns a results array').toBe(true);
+		expect(res.status(), `POST ${config.calcUrl} answered 404. calcUrl names a path the ` +
+			`calculator does not serve -- the configuration is wrong, not the calculator.`).not.toBe(404);
+		expect(res.status(), `POST ${config.calcUrl} answered ${res.status()}; nothing is routing there.`)
+			.toBeLessThan(500);
 	});
 
 	// DEFECT 2: the stack set CALC_URL but not DEFAULT_MODE, so it served the CLIENT-SIDE grid

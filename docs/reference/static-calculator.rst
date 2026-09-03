@@ -231,13 +231,15 @@ Running it
 Route                   What it is
 ======================  =============================================================
 ``POST /score``         Score one allocation
+``POST /esgame``        Score a round for the frontend's dynamic mode (see below)
 ``GET /pack``           The board and model in use, without the grids
 ``GET /health``         Liveness
 ``GET /openapi.json``   The description, generated from the loaded pack
 ``GET /docs``           A page rendering that description
 ======================  =============================================================
 
-``PORT``, ``PACK`` and ``ALLOWED_ORIGIN`` are the only environment variables.
+``PORT``, ``PACK``, ``ALLOWED_ORIGIN`` and ``ESGAME_ASSET_BASE`` are the only environment
+variables.
 
 The spec is built from the pack at startup rather than written beside it, so the production types,
 the indicators and the board size in it cannot disagree with what is being scored. The example in
@@ -247,3 +249,36 @@ The service refuses to start on a pack that is missing, unparseable, or whose gr
 shape it claims — checked at startup, not on the first request. A calculator that comes up without a
 usable board passes every health check and fails every round, which is the exact state the dynamic
 compose stack was in until 2026-08-14.
+
+
+Serving the frontend's dynamic mode
+-----------------------------------
+
+``POST /esgame`` is the same model behind the frontend's *other* contract. SVG/dynamic mode POSTs
+``{allocation: [{id, lulc}], round, score, game_id}`` and expects, per consequence board, a score
+and a raster URL it can fetch — the shape :file:`tools/R/calculator.r` returns. Nothing else
+answered that shape, which is why the only dynamic game was the Dutch/PLACES landscape model and
+the agriculture game had no dynamic counterpart. :file:`v2/src/assets/dataAgDynamic.json` is that
+counterpart, and this route is what scores it.
+
+The route is ``/esgame`` because that is what the R calculator serves. Two calculators answering the
+same path is what lets a deployment switch between them by changing ``CALC_URL``'s host alone — and
+the path is part of that value, since the app posts to it verbatim (:doc:`../static-vs-dynamic`).
+
+It adds no scoring. ``id`` is a cell index in the drawing raster and ``lulc`` names a production
+type; the piece's **anchor** is handed to the model in its own 2013 form and expanded by
+``placementSize``, so the two never disagree about what a 2 × 2 piece covers. ``model.score`` also
+reports ``by_map``, the per-consequence-map breakdown: an indicator sums the same cost over every
+production type that causes it, so the aggregate cannot say which activity incurred it, and both
+boards draw those separately.
+
+Scores are costs on 0–100, normalised against a bound derived from the model itself — the most a
+type's four 2 × 2 pieces could do to that map. Fixed for the pack, so a score means the same thing
+in every round; the same property :file:`tools/R/derive-bounds.R` gives the R calculator.
+
+The raster URLs point at the frontend's own consequence maps, under ``ESGAME_ASSET_BASE``. That is
+correct here rather than a shortcut: in this game the cost surfaces are **fixed**. What a farm costs
+in carbon on a cell does not depend on what anyone placed — the round changes which cells you
+occupy, not the surface — so there is nothing to publish and no GeoServer in the stack.
+``ESGAME_ASSET_BASE`` is browser-facing like ``CALC_URL``, so a compose service name would answer
+from inside the network and fail in every browser.

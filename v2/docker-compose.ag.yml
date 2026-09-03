@@ -1,0 +1,47 @@
+# Overlay for the 'esgame-ag-dynamic' stack: the AGRICULTURE game in dynamic mode.
+#
+#   docker compose -p esgame-ag-dynamic -f docker-compose.yml -f docker-compose.ag.yml up -d
+#
+# (the repo-root Makefile's esgame-ag-* targets do this.)
+#
+# HOW THIS DIFFERS FROM docker-compose.dynamic.yml, which is the other dynamic stack. That one
+# serves the Dutch/PLACES landscape model: six production types, five indicators, 468 x 335
+# rasters, scored by the R calculator and published through GeoServer. This one serves the SAME
+# GAME the static stack does -- Arable land and Livestock, four costs, the 28 x 29 rasters -- and
+# differs from static only in where the scoring comes from and how the board units are defined.
+# That was the point of building it: the two stacks were previously two unrelated games sharing a
+# title one exclamation mark apart.
+#
+# NO GEOSERVER, and its absence is a design consequence rather than an omission. The R calculator
+# computes a new consequence surface every round and so has something to publish. Here the cost
+# surfaces are FIXED -- what a farm costs in carbon on a cell does not depend on what anyone
+# placed -- so the calculator hands back the rasters the frontend already ships, and there is no
+# coverage store in the loop at all.
+services:
+  esgame-core:
+    environment:
+      # The board: the SVG agriculture dataset rather than the Dutch one in assets/data.json.
+      DYNAMIC_DATA_URL: "assets/dataAgDynamic.json"
+      # "/" serves the dynamic game. Stated here, not inherited: setting CALC_URL without this is
+      # what made the OTHER dynamic stack serve the client-side grid game against a backend it
+      # never called (#254).
+      DEFAULT_MODE: "dynamic"
+      # The path is part of the value -- the app posts to this URL verbatim and appends nothing.
+      # This calculator serves /esgame because the R one does; that is what lets a deployment
+      # switch between them by changing the host alone.
+      CALC_URL: "http://localhost:${ESGAME_CALC_PORT:-8000}/esgame"
+
+  esgame-calculator:
+    build:
+      context: ../tools/calculator
+    image: local/esgame-static-calculator
+    ports:
+      - "${ESGAME_CALC_PORT:-8000}:8000"
+    environment:
+      # Where the BROWSER fetches the consequence rasters: the frontend's own published origin.
+      # Browser-facing like CALC_URL, so a compose service name would be wrong here in the way
+      # GEOSERVER_PUBLIC_URL is wrong when set to a service name -- it would answer from inside
+      # the network and fail in every browser.
+      ESGAME_ASSET_BASE: "http://localhost:${ESGAME_FRONTEND_PORT:-81}"
+    # Reads its pack at startup and allocates only per request, so it needs nothing writable.
+    read_only: true

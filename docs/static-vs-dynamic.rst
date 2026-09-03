@@ -29,6 +29,17 @@ roughly constant.
    (``SvgLevelComponent``); it is **not** a different game, it is the same
    allocation problem played through the dynamic pipeline.
 
+.. important::
+
+   There is a **third** form, and it is the one to reach for when the question is
+   "the same game, scored by a backend": :file:`v2/src/assets/dataAgDynamic.json`,
+   run by ``make esgame-ag-up``. See `The faithful dynamic board`_ below.
+
+   Do not confuse either of these with :file:`v2/src/assets/data.json`, which is a
+   **different game** — the six-production-type Dutch/PLACES landscape model on a
+   468 × 335 raster, scored by :file:`tools/R/calculator.r`. It shares a title with
+   the agriculture game and nothing else, which has misled people before.
+
 
 At a glance
 -----------
@@ -150,9 +161,10 @@ This is the defining difference.
 
    ``calcUrl`` is the **endpoint** the browser POSTs to, not the origin the
    calculator runs on. The app passes it to ``HttpClient.post`` unchanged and
-   appends no path of its own, and it cannot: the two calculators in this repository
-   serve different routes on purpose — ``tools/R/calculator.r`` serves ``/esgame``,
-   the FastAPI example serves ``/``. So a deployment backed by the R calculator must
+   appends no path of its own, and it cannot: the calculators in this repository serve
+   different routes on purpose — ``tools/R/calculator.r`` and ``tools/calculator``
+   both serve ``/esgame``, the FastAPI example serves ``/``. So a deployment backed by
+   either ``/esgame`` calculator must
    set ``CALC_URL`` to ``https://…/esgame``; a value ending at the hostname returns
    404 on every round.
 
@@ -221,3 +233,59 @@ When to use which
   specialize, swapping the toy FastAPI calculator for a full R/InVEST engine and the
   example rasters for real geodata. See :doc:`architecture` and
   :doc:`guides/deployer`.
+
+
+The faithful dynamic board
+--------------------------
+
+:file:`v2/src/assets/dataAgDynamic.json` is the agriculture game in SVG mode, scored
+by :doc:`reference/static-calculator` — the same model the grid game is checked
+against. ``make esgame-ag-up``; no GeoServer, because this game's cost surfaces are
+fixed and there is nothing to publish.
+
+It differs from the dynamic example, which is a self-contained demo answered by a
+FastAPI stand-in, in being *faithful* rather than merely similar:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 24 38 38
+
+   * - Aspect
+     - Dynamic example
+     - ``dataAgDynamic.json``
+   * - Scored by
+     - a stand-in FastAPI calculator
+     - ``tools/calculator``, the static game's own model
+   * - Consequence map ids
+     - ``110``–``113``, ``120``–``123``
+     - ``4``–``11``, **the static dataset's ids**
+   * - ``elementSize`` / ``maxElements``
+     - ``1`` / ``700``
+     - ``2`` / ``4`` — the grid game's piece and budget
+   * - Drawing raster
+     - its own zones
+     - one zone per **cell**, numbered by raster index
+   * - Colouring
+     - stretched over ``minValue``–``maxValue``
+     - ``paletted``: one palette entry per class, as the grid board does
+
+The drawing raster matters more than it looks. Numbering a zone by its row-major
+raster index puts the board in the id space ``GameService.getAssociatedFields`` does
+its ``id + j * columns`` arithmetic in, so a piece may be anchored on **any** cell and
+slides back on at the edges — the grid game's placement exactly, rather than snapping
+to a lattice of 2 × 2 zones.
+
+``paletted`` is a dataset flag rather than a guess. These rasters hold a handful of
+classes and run to 375 against a declared maximum of 100, so stretching them clipped
+every value above 100 to one colour; the grid board never had this because it ignores
+``minValue``/``maxValue`` and gives each distinct value a palette entry. The flag also
+switches the raster to nearest-neighbour scaling, since interpolating classified data
+invents colours the legend does not list.
+
+.. warning::
+
+   Cell index 0 — the top-left — has no outline and cannot be built on.
+   ``tiffToSvgPaths`` treats ``0`` as its structural sentinel, and making it a real
+   zone hangs the tracer outright (812 groups in 11 ms against an infinite loop,
+   measured). That cell is ``0`` in both suitability rasters, so it is land that
+   scores nothing, but the gap is real.

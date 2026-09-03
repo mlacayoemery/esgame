@@ -333,7 +333,7 @@ export class GameService {
 		}
 	}
 
-	getSvg = (m: any, overlay: GameBoard, settings: Settings) => this.tiffService.getSvgGameBoard(m.id, m.urlToData, m.gameBoardType, m.gradient, overlay, settings.minValue, settings.maxValue);
+	getSvg = (m: any, overlay: GameBoard, settings: Settings) => this.tiffService.getSvgGameBoard(m.id, m.urlToData, m.gameBoardType, m.gradient, overlay, settings.minValue, settings.maxValue, settings.paletted ?? false);
 
 	initialiseSVGMode() {
 		let level = new Level();

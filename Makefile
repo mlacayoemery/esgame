@@ -1,12 +1,19 @@
-# Local deployment of esgame as two Docker Compose stacks:
+# Local deployment of esgame as Docker Compose stacks:
 #
-#   esgame          the static frontend only (client-side grid / Configuration 2) -
-#                   exactly what https://<owner>.github.io/esgame/ hosts.
-#   esgame-dynamic  that frontend plus the R calculator + GeoServer (dynamic mode;
-#                   the additional containers places needs).
+#   esgame             the static frontend only (client-side grid / Configuration 2) -
+#                      exactly what https://<owner>.github.io/esgame/ hosts.
+#   esgame-ag-dynamic  the SAME game, scored by a backend instead of in the browser and
+#                      played on SVG zones instead of grid blocks. tools/calculator, no
+#                      GeoServer -- this game's cost surfaces are fixed, so there is
+#                      nothing to publish.
+#   esgame-dynamic     a DIFFERENT game: the Dutch/PLACES landscape model, six production
+#                      types and five indicators, scored by the R calculator and published
+#                      through GeoServer (the additional containers places needs).
 #
 #   make esgame-up             build + start the static 'esgame' stack   (frontend :81)
 #   make esgame-down           stop + remove the 'esgame' stack
+#   make esgame-ag-up          build + start 'esgame-ag-dynamic'         (:81, :8000)
+#   make esgame-ag-down        stop + remove the 'esgame-ag-dynamic' stack
 #   make esgame-dynamic-up     build + start 'esgame-dynamic'            (:81, :8000, :8080)
 #   make esgame-dynamic-verify play a real round 2 in a browser against the running stack
 #   make esgame-dynamic-down   stop + remove the 'esgame-dynamic' stack
@@ -22,11 +29,13 @@
 
 COMPOSE_STATIC  := docker compose -p esgame -f v2/docker-compose.yml
 COMPOSE_DYNAMIC := docker compose -p esgame-dynamic -f v2/docker-compose.yml -f v2/docker-compose.dynamic.yml
+COMPOSE_AG      := docker compose -p esgame-ag-dynamic -f v2/docker-compose.yml -f v2/docker-compose.ag.yml
 COMPOSE_EXAMPLE := docker compose -p esgame-dynamic-example -f examples/esgame-dynamic/docker-compose.yml
 COMPOSE_PYGEOAPI := docker compose -p esgame-dynamic-pygeoapi -f examples/esgame-dynamic/docker-compose.pygeoapi.yml
 
 .PHONY: esgame-build esgame-up esgame-down \
         esgame-dynamic-build esgame-dynamic-up esgame-dynamic-down esgame-dynamic-verify \
+        esgame-ag-build esgame-ag-up esgame-ag-down \
         esgame-dynamic-example-build esgame-dynamic-example-up esgame-dynamic-example-down \
         esgame-dynamic-pygeoapi-build esgame-dynamic-pygeoapi-up esgame-dynamic-pygeoapi-down
 
@@ -76,6 +85,29 @@ esgame-dynamic-verify:
 ## Stop and remove the 'esgame-dynamic' stack.
 esgame-dynamic-down:
 	$(COMPOSE_DYNAMIC) down
+
+# ---- the AGRICULTURE game in dynamic mode ----
+#
+# The same game the static stack serves, differing only in where the scoring comes from and how the
+# board units are defined: SVG zones scored by tools/calculator instead of grid blocks scored in
+# the browser. esgame-dynamic beside it is a DIFFERENT GAME -- the Dutch/PLACES landscape model --
+# which is why both exist.
+
+## Build the esgame-ag-dynamic images (frontend + the static game's calculator).
+esgame-ag-build:
+	$(COMPOSE_AG) build
+
+## Build the images, then start the 'esgame-ag-dynamic' stack in the background.
+esgame-ag-up: esgame-ag-build
+	$(COMPOSE_AG) up -d
+	@echo ""
+	@echo "esgame-ag-dynamic stack up (the agriculture game, scored by a backend):"
+	@echo "  frontend    http://localhost:$(or $(ESGAME_FRONTEND_PORT),81)/"
+	@echo "  calculator  http://localhost:$(or $(ESGAME_CALC_PORT),8000)/"
+
+## Stop and remove the 'esgame-ag-dynamic' stack.
+esgame-ag-down:
+	$(COMPOSE_AG) down
 
 # ---- self-contained dynamic EXAMPLE (esgame's own data, simple calculator, seeded geoserver) ----
 # Builds the esgame base locally so it runs without pulling the (private) ghcr image.

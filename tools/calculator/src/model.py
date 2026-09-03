@@ -219,13 +219,22 @@ def score(pack, allocation, set_asides=(), validation=True):
         positive += v
 
     indicators = {}
+    # Per consequence MAP, not just per indicator. An indicator sums the same cost across every
+    # production type that causes it — carbon is pts_agcarb + pts_pscarb — so the aggregate cannot
+    # say which activity incurred it. The grid game draws those as separate boards and so does the
+    # SVG one (dataAgDynamic.json), which is why the breakdown is reported rather than recomputed
+    # by the caller: it has to come from the same resolved cells, after validation has dropped
+    # overlaps, or it would not add up to the indicator beside it.
+    by_map = {}
     negative = 0
     for indicator in pack["indicators"]:
         v = 0
         for t in pack["productionTypes"]:
             for map_name in t["consequences"]:
                 if map_name in indicator["maps"]:
-                    v += total(map_name, cells_by_type[t["id"]])
+                    one = total(map_name, cells_by_type[t["id"]])
+                    by_map[map_name] = one
+                    v += one
         indicators[indicator["id"]] = v
         negative += v
 
@@ -235,5 +244,6 @@ def score(pack, allocation, set_asides=(), validation=True):
         "negative": negative,
         "production": production,
         "indicators": indicators,
+        "by_map": by_map,
         "cells": {k: len(v) for k, v in cells_by_type.items()},
     }

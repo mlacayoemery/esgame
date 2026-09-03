@@ -185,3 +185,117 @@ class TheCellFormAndValidationOverHttp(ServerTest):
         self.assertIn("cells", placement["properties"])
         self.assertEqual(placement["required"], ["type"])
         self.assertIn("validation", spec["components"]["schemas"]["ScoreRequest"]["properties"])
+
+
+class ItServesTheEsgameFrontend(ServerTest):
+    """POST /esgame — the route v2's dynamic mode posts to.
+
+    The frontend cannot be asked to adapt: it sends {allocation:[{id, lulc}]} and reads back a
+    score and a fetchable raster URL per consequence board, because that is what
+    tools/R/calculator.r returns. These pin this end of that contract, so dataAgDynamic.json can be
+    played against this model rather than only against the R one.
+    """
+
+    # ANCHOR cells, not lattice zones: a piece is a 2 x 2 block whose top-left cell the frontend
+    # posts, and it may be anchored anywhere. Chosen greedily for cost AND mutual disjointness —
+    # the highest-scoring anchors are adjacent and overlap, which validation rightly refuses, and
+    # most of this board is zero, so an allocation picked by eye would let every assertion below
+    # pass against a model that had done nothing at all.
+    FARM = [552, 554, 424, 550]
+    RANCH = [498, 464, 606, 215]
+
+    def a_round(self, **over):
+        body = {"allocation": [{"id": z, "lulc": 10} for z in self.FARM]
+                             + [{"id": z, "lulc": 20} for z in self.RANCH],
+                "round": 2, "score": 9725, "game_id": "test"}
+        body.update(over)
+        return body
+
+    def test_a_round_scores_every_consequence_board(self):
+        status, body, _ = self.json_request("/esgame", self.a_round())
+        self.assertEqual(status, 200, body)
+        got = [r["id"] for r in body["results"]]
+        # Exactly the consequence ids in v2/src/assets/dataAgDynamic.json. A missing one is not a
+        # cosmetic gap: prepareNextLevel looks each board's id up in the response and assigns the
+        # url it finds, so an absent id becomes urlToData undefined and the level fails to build.
+        self.assertEqual(got, ["4", "5", "6", "7", "8", "9", "10", "11"])
+
+    def test_the_scores_are_real_numbers_on_a_0_100_scale(self):
+        _, body, _ = self.json_request("/esgame", self.a_round())
+        scores = [r["score"] for r in body["results"]]
+        for s in scores:
+            self.assertIsInstance(s, int)
+            self.assertGreaterEqual(s, 0)
+            self.assertLessEqual(s, 100)
+        # And they are not all zero, which is what this would report if the allocation never
+        # reached the model — a 200 full of zeroes being the shape that looks like a working round.
+        self.assertTrue(any(s > 0 for s in scores), scores)
+
+    def test_moving_the_allocation_moves_the_scores(self):
+        """The scores depend on WHERE things went, not merely on how many there were."""
+        _, hot, _ = self.json_request("/esgame", self.a_round())
+        # Anchors four columns apart, so the 2 x 2 pieces do not overlap each other — adjacent
+        # ids would, now that an id is a cell rather than a lattice slot.
+        cold = self.a_round(allocation=[{"id": z, "lulc": 10} for z in (0, 4, 8, 12)])
+        _, mild, _ = self.json_request("/esgame", cold)
+        self.assertNotEqual([r["score"] for r in hot["results"]],
+                            [r["score"] for r in mild["results"]])
+
+    def test_urls_point_at_the_browser_facing_asset_base(self):
+        _, body, _ = self.json_request("/esgame", self.a_round())
+        for r in body["results"]:
+            self.assertTrue(r["url"].startswith(server.ASSET_BASE + "/assets/images/"), r["url"])
+            self.assertTrue(r["url"].endswith(".tif"), r["url"])
+
+    def test_unallocated_land_is_ignored_not_refused(self):
+        """The frontend posts EVERY field each round, allocated or not."""
+        body = self.a_round()
+        body["allocation"] += [{"id": z, "lulc": 0} for z in range(1, 30)]
+        status, got, _ = self.json_request("/esgame", body)
+        self.assertEqual(status, 200, got)
+        self.assertTrue(any(r["score"] > 0 for r in got["results"]))
+
+    def test_an_empty_round_is_refused(self):
+        status, body, _ = self.json_request("/esgame", {"allocation": []})
+        self.assertEqual(status, 400)
+        self.assertIn("empty", body["error"])
+
+    def test_a_field_off_the_board_is_named(self):
+        status, body, _ = self.json_request("/esgame", {"allocation": [{"id": 812, "lulc": 10}]})
+        self.assertEqual(status, 400)
+        self.assertIn("not on this", body["error"])
+
+    def test_a_piece_that_would_run_off_the_board_is_refused(self):
+        # The frontend slides such a piece back on (getAssociatedFields), so one arriving here
+        # means the two sides disagree about the board. Refused rather than quietly moved.
+        last_column = 27          # x = 28, so a 2 x 2 piece needs column 29
+        status, body, _ = self.json_request("/esgame", {"allocation": [{"id": last_column, "lulc": 10}]})
+        self.assertEqual(status, 400)
+        self.assertIn("runs off", body["error"])
+
+    def test_the_same_cells_cannot_be_claimed_twice(self):
+        both = [{"id": 552, "lulc": 10}, {"id": 552, "lulc": 20}]
+        status, body, _ = self.json_request("/esgame", {"allocation": both})
+        self.assertEqual(status, 400)
+        self.assertIn("cannot be counted twice", body["error"])
+
+    def test_field_ids_are_the_raster_index_the_frontend_places_in(self):
+        import esgame
+        # id 0 is the top-left cell, ids run along rows, and a row is COLS wide. This is the id
+        # space GameService.getAssociatedFields does `id + j * columns` in, which is what lets a
+        # piece be anchored on ANY cell rather than snapped to a 2 x 2 lattice.
+        self.assertEqual(esgame.anchor_of(0), (1, 1))
+        self.assertEqual(esgame.anchor_of(1), (2, 1))
+        self.assertEqual(esgame.anchor_of(esgame.COLS), (1, 2))
+        self.assertEqual(esgame.anchor_of(esgame.COLS + 1), (2, 2))
+
+    def test_a_piece_may_be_anchored_one_cell_over(self):
+        """Placement has single-cell granularity, as the grid game's does."""
+        near = self.a_round(allocation=[{"id": 552, "lulc": 10}])
+        over = self.a_round(allocation=[{"id": 553, "lulc": 10}])
+        _, a, _ = self.json_request("/esgame", near)
+        _, b, _ = self.json_request("/esgame", over)
+        # Shifting by ONE cell is a different allocation, and must score differently. If the board
+        # still snapped to a 2 x 2 lattice these two would round to the same piece.
+        self.assertNotEqual([r["score"] for r in a["results"]],
+                            [r["score"] for r in b["results"]])

@@ -36,11 +36,19 @@ at a time):
 | `make` target | Stack |
 |---|---|
 | `esgame-up` | Static frontend only — exactly what GitHub Pages hosts |
-| `esgame-dynamic-up` | Frontend + R/Plumber calculator + GeoServer (what [places](deploy/k8s/) deploys) |
+| `esgame-ag-up` | The **same game**, scored by a backend: SVG zones + [tools/calculator](tools/calculator/). No GeoServer |
+| `esgame-dynamic-up` | A **different game** — the Dutch/PLACES landscape model: R/Plumber calculator + GeoServer (what [places](deploy/k8s/) deploys) |
 | `esgame-dynamic-example-up` | Self-contained playable dynamic example: FastAPI calculator + seeded GeoServer ([examples/esgame-dynamic/](examples/esgame-dynamic/)) |
 | `esgame-dynamic-pygeoapi-up` | The same example with read-only [pygeoapi](examples/esgame-dynamic/pygeoapi/) in place of GeoServer |
 
 Each target has a matching `-down`; see the [Makefile](Makefile) for ports and notes.
+`esgame-dynamic-verify` plays a real round 2 in a browser against whichever stack is up
+([v2/e2e-stack/](v2/e2e-stack/)).
+
+Note the two dynamic stacks are not two configurations of one game. `esgame-ag-up` is the
+agriculture game the static stack serves, differing only in where the scoring comes from and how the
+board units are defined; `esgame-dynamic-up` is the six-production-type Dutch landscape model on a
+different raster entirely. See [static vs. dynamic](https://mlacayoemery.github.io/esgame/docs/static-vs-dynamic.html).
 
 ## Repository layout
 
