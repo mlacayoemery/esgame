@@ -51,6 +51,9 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	 * asking for per-piece images is a board whose pieces are cells.
 	 */
 	pieceImages: { href: string, x: number, y: number, size: number }[] = [];
+	/** One outline per piece, around its footprint. Empty on the board being played and on the
+	 *  consequence maps, where the icon alone marks it. */
+	pieceOutlines: { x: number, y: number, size: number, colour: string }[] = [];
 	/**
 	 * How this board outlines a placed cell — see SvgFieldComponent.assignedOutline.
 	 *
@@ -58,10 +61,7 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	 * beside it have no grid of their own, so a placed piece showed as a faint tint and was
 	 * effectively invisible on the maps that say what it cost.
 	 */
-	get assignedOutline(): 'none' | 'black' | 'type' {
-		if (this.clickMode == GameBoardClickMode.Field) return 'none';
-		return this._boardData?.gameBoardType == GameBoardType.ConsequenceMap ? 'type' : 'black';
-	}
+
 	private _showHideListeners: (() => void)[] = [];
 
 	constructor(gameService: GameService, renderer: Renderer2, elementRef: ElementRef, cdRef: ChangeDetectorRef) {
@@ -136,13 +136,22 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 			this.pieceImages = [];
 			return;
 		}
-		this.pieceImages = (this._selectedFields ?? []).flatMap(piece => {
+		// Outlined only on the suitability maps: the board being played has its own grid, and the
+		// consequence maps are marked by the icon alone.
+		const outlined = this.clickMode != GameBoardClickMode.Field
+			&& this._boardData?.gameBoardType != GameBoardType.ConsequenceMap;
+
+		const pieces = (this._selectedFields ?? []).flatMap(piece => {
 			const icon = piece.productionType?.image;
 			// The anchor is the piece's top-left cell, which is its lowest id — ids run along rows.
 			const anchor = Math.min(...piece.fields.map((f: any) => f.id));
 			if (!icon || !Number.isFinite(anchor)) return [];
 			return [{ href: icon, x: anchor % width, y: Math.floor(anchor / width), size: this.elementSize }];
 		});
+		this.pieceImages = pieces;
+		this.pieceOutlines = outlined
+			? pieces.map(p => ({ x: p.x, y: p.y, size: p.size, colour: 'black' }))
+			: [];
 		this.cdRef.markForCheck();
 	}
 

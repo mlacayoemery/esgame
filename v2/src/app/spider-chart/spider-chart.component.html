@@ -3,8 +3,9 @@
   numbers a sighted player reads off the axes. The PNG this replaced had no alt text at all.
 -->
 <svg *ngIf="!isEmpty"
+	 #chart
 	 class="spider-chart"
-	 [attr.viewBox]="'0 0 ' + viewWidth + ' ' + viewHeight"
+	 [attr.viewBox]="viewBox"
 	 role="img"
 	 [attr.aria-label]="summary"
 	 preserveAspectRatio="xMidYMid meet">
@@ -20,8 +21,10 @@
 		  [attr.x1]="cx" [attr.y1]="cy"
 		  [attr.x2]="spoke(i).x" [attr.y2]="spoke(i).y" />
 
-	<!-- The scores themselves. -->
-	<polygon class="spider-chart__area" [attr.points]="scorePoints" />
+	<!-- The scores themselves: the outline only, coloured segment by segment. -->
+	<line *ngFor="let seg of segments"
+		  [attr.class]="seg.positive ? 'spider-chart__edge --positive' : 'spider-chart__edge --negative'"
+		  [attr.x1]="seg.x1" [attr.y1]="seg.y1" [attr.x2]="seg.x2" [attr.y2]="seg.y2" />
 
 	<circle *ngFor="let entry of entries; index as i; trackBy: trackById"
 			class="spider-chart__dot"
@@ -34,7 +37,8 @@
 		  [attr.text-anchor]="labelAnchor(i)"
 		  aria-hidden="true">
 		<tspan>{{ label(i) }}</tspan>
-		<tspan class="spider-chart__label-score"
+		<tspan [attr.class]="isPositive(i) ? 'spider-chart__label-score --positive'
+									      : 'spider-chart__label-score --negative'"
 			   [attr.x]="labelAt(i).x" dy="1.1em">{{ displayScore(i) }}</tspan>
 	</text>
 </svg>

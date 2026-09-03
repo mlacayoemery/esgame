@@ -17,6 +17,7 @@
 	"paletted": true,
 	"clientScored": true,
 	"autoOpenInstructions": false,
+	"editablePreviousRounds": true,
 	"gridLineColor": "black",
 	"gridLineWidth": "1",
 	"highlightWidth": "1",

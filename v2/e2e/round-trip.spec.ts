@@ -46,7 +46,7 @@ test.describe('dynamic game round trip', () => {
 		await expect(page.locator('tro-spider-chart .spider-chart__dot')).toHaveCount(5);
 		await expect(page.locator('.expandable img')).toHaveCount(0);
 		// The numbers on the chart are the ones the calculator returned.
-		await expect(chart).toHaveAttribute('aria-label', /66 of 100/);
+		await expect(chart).toHaveAttribute('aria-label', /66%/);
 
 		// The payload is the shape the R calculator parses into a reclassify matrix.
 		expect(posted).toHaveLength(1);

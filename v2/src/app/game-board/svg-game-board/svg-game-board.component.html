@@ -8,10 +8,9 @@
 	</defs>
 		<path troSvgField [field]="field"
 			[clickable]="clickMode == GameBoardClickMode.Field && field.editable  && !readOnly"
-			[showStroke]="clickMode == GameBoardClickMode.Field || this._boardData.gameBoardType == consequenceType"
+			[showStroke]="clickMode == GameBoardClickMode.Field"
 			[hasOpacity]="consequenceFieldOpacity && this._boardData.gameBoardType == consequenceType"
 			[gameBoardId]="boardData!.id"
-			[assignedOutline]="assignedOutline"
 			*ngFor="let field of fields" [attr.d]="field.path"></path>
 
 	<!--
@@ -27,6 +26,15 @@
 	<image *ngFor="let piece of pieceImages" [attr.href]="piece.href"
 		[attr.x]="piece.x" [attr.y]="piece.y" [attr.width]="piece.size" [attr.height]="piece.size"
 		preserveAspectRatio="none" style="pointer-events: none"></image>
+
+	<!--
+	  One outline per PIECE, around its whole footprint. Stroking each cell instead drew the grid
+	  inside the piece, on maps that carry no grid of their own — so a 2 x 2 piece read as four.
+	-->
+	<rect *ngFor="let piece of pieceOutlines" [attr.x]="piece.x" [attr.y]="piece.y"
+		[attr.width]="piece.size" [attr.height]="piece.size" fill="none"
+		[attr.stroke]="piece.colour" stroke-width="1" vector-effect="non-scaling-stroke"
+		style="pointer-events: none"></rect>
 </svg>
 
 <!--

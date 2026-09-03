@@ -69,6 +69,14 @@ export class Settings {
 	 * has always done — the grid level never did, so a board meant to match it wants this off.
 	 */
 	autoOpenInstructions?: boolean;
+	/**
+	 * Let a round that has been submitted go on being edited.
+	 *
+	 * Defaults to false, which is what advancing has always done — the previous level is frozen.
+	 * A board that wants a player to go back and try a different first round sets this; the rounds
+	 * keep their own allocations either way, so changing one does not move the other's numbers.
+	 */
+	editablePreviousRounds?: boolean;
 	/** SVG-mode cell border (between zones). Optional; defaults to the built-in look when unset. */
 	gridLineColor?: string;
 	gridLineWidth?: string;
@@ -133,6 +141,7 @@ export class Settings {
 		this.paletted = data.paletted;
 		this.clientScored = data.clientScored;
 		this.autoOpenInstructions = data.autoOpenInstructions;
+		this.editablePreviousRounds = data.editablePreviousRounds;
 		this.gridLineColor = data.gridLineColor;
 		this.gridLineWidth = data.gridLineWidth;
 		this.highlightWidth = data.highlightWidth;

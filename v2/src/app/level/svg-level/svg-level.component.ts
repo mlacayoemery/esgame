@@ -49,12 +49,15 @@ export class SvgLevelComponent extends LevelBaseComponent {
 		if (!entries.length) return [];
 		this.scoreService.calculateScore(entries, fields);
 
-		const groups = new Map<string, { id: string, score: number, ceiling: number }>();
+		const groups = new Map<string, { id: string, score: number, ceiling: number, positive: boolean }>();
 		entries.forEach(entry => {
 			const name = this.translateService.instant('map_name_' + entry.id) as string;
-			const legend = level!.gameBoards.find(b => b.id == entry.id)?.legend?.elements;
+			const board = level!.gameBoards.find(b => b.id == entry.id);
+			const legend = board?.legend?.elements;
 			const top = legend?.length ? legend[legend.length - 1].forValue : 0;
-			const group = groups.get(name) ?? { id: entry.id, score: 0, ceiling: 0 };
+			const group = groups.get(name) ?? { id: entry.id, score: 0, ceiling: 0,
+				// A production map is what the round GAINS; a consequence map is what it costs.
+				positive: board?.gameBoardType == GameBoardType.SuitabilityMap };
 			group.score += Math.abs(entry.score);
 			// The worst ONE of the maps behind this axis, not their sum: sixteen cells cannot be
 			// both arable and livestock at once, so the reachable worst is sixteen at the higher
@@ -64,7 +67,7 @@ export class SvgLevelComponent extends LevelBaseComponent {
 		});
 
 		return Array.from(groups.values())
-			.map(g => ({ id: g.id, score: g.ceiling ? (100 * g.score) / g.ceiling : 0 }));
+			.map(g => ({ id: g.id, score: g.ceiling ? (100 * g.score) / g.ceiling : 0, positive: g.positive }));
 	}));
 	settings = this.gameService.settingsObs;
 	imageExpand = false

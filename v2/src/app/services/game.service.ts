@@ -251,10 +251,16 @@ export class GameService {
 		level.showConsequenceMaps = true;
 		this.levels.push(level);
 
-		this.currentLevel.value!.isReadOnly = true;
-		this.currentLevel.value!.selectedFields = this.selectedFields.value.map(o => {
-			return Object.assign({}, o);
-		});
+		this.currentLevel.value!.isReadOnly = !settings.editablePreviousRounds;
+		// A DEEP copy of what this round held. Object.assign({}, o) copied the SelectedField and
+		// left `fields` and `scores` pointing at the same arrays, so the round just finished and
+		// the round about to start shared them: moving a piece in one rewrote the other's numbers,
+		// which is only invisible while an earlier round cannot be edited at all.
+		this.currentLevel.value!.selectedFields = this.selectedFields.value.map(o =>
+			Object.assign(Object.create(Object.getPrototypeOf(o)), o, {
+				fields: o.fields.map(f => ({ ...f })),
+				scores: o.scores.map(sc => ({ ...sc })),
+			}));
 
 		if (this.settings.value.mode == 'GRID') {
 			const maps = settings.maps.filter(

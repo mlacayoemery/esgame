@@ -1,9 +1,14 @@
+@use 'variables' as *;
+
 // A custom element is `display: inline` by default, so without this the host box collapses and
 // the chart is clipped to a couple of text-line heights. Caught by screenshotting it: every DOM
 // assertion passed against the clipped render, because all the nodes were present and "visible".
 :host {
 	display: block;
 	width: 100%;
+	// So `max-height: 100%` below has something definite to resolve against when a caller gives
+	// this a height. Where the caller does not, 100% resolves to auto and nothing changes.
+	height: 100%;
 }
 
 // The chart scales with its container rather than being a fixed 394x394 raster, which is the
@@ -13,6 +18,10 @@
 	display: block;
 	width: 100%;
 	height: auto;
+	// The svg is cropped to its own content, so its aspect follows the labels: two axes crop to a
+	// narrow upright sliver and at width:100% that came out 1258 px tall. Capped, preserveAspectRatio
+	// letterboxes it into whatever height the container allows instead of dictating one.
+	max-height: 100%;
 }
 
 .spider-chart__ring {
@@ -28,12 +37,17 @@
 
 // $color-primary is #0B5ED7 (5.84:1 against white) — see docs/verification-status. Written out
 // rather than imported so this component carries no build-order dependency on the theme file.
-.spider-chart__area {
-	fill: rgba(11, 94, 215, 0.28);
-	stroke: #0b5ed7;
+.spider-chart__edge {
+	// The outline only — no fill, and no radial edges: both crossed the rings and spokes behind
+	// them and the shape reads perfectly well from the connecting segments alone.
+	fill: none;
 	stroke-width: 1.5;
-	stroke-linejoin: round;
+	stroke-linecap: round;
+
+	&.--positive { stroke: $color-positive; }
+	&.--negative { stroke: $color-negative; }
 }
+
 
 .spider-chart__dot {
 	fill: #0b5ed7;
@@ -47,4 +61,9 @@
 .spider-chart__label-score {
 	font-weight: 700;
 	fill: #0b5ed7;
+
+	// The score board's own two colours, so a number on an axis reads the same way as the number
+	// in the row beside it: what the round gains against what it costs.
+	&.--positive { fill: $color-positive; }
+	&.--negative { fill: $color-negative; }
 }

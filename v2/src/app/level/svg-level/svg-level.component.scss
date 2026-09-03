@@ -19,6 +19,36 @@
 		margin-top: 15px;
 	}
 
+	// The chart takes its height from the score board beside it, and never the other way round.
+	//
+	// Absolutely positioned for exactly that reason: the svg is cropped to its own content, and
+	// with only two axes — round one, before any consequence map exists — that content is a narrow
+	// upright sliver, so at width:100% it rendered 1223 px tall and dragged the row with it.
+	// Out of flow it fills the height the score board sets and cannot drive it.
+	.score-board-wrapper {
+		align-items: stretch;
+	}
+
+	.chart-beside-scores {
+		position: relative;
+		// The same top margin .score-board carries, so the two line up rather than the chart
+		// starting 15 px above the numbers it belongs to.
+		margin-top: 15px;
+		// No min-height: align-items: stretch above already fills the row, and `min-height: 100%`
+		// resolved to the WHOLE row on top of that margin, growing the row by 15 px and leaving
+		// the chart taller than the score board it is supposed to match. Measured 205 against 190.
+
+		tro-spider-chart {
+			position: absolute;
+			inset: 0;
+		}
+
+		svg {
+			width: 100%;
+			height: 100%;
+		}
+	}
+
 	.expandable {
 		position: relative;
 		margin-top: 15px;

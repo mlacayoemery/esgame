@@ -94,8 +94,8 @@ describe('SpiderChartComponent', () => {
 
 		expect(dist(component, over)).toBeCloseTo(component.radius, 5);
 		expect(dist(component, under)).toBeCloseTo(0, 5);
-		expect(component.displayScore(0)).toBe(100);
-		expect(component.displayScore(1)).toBe(0);
+		expect(component.displayScore(0)).toBe('100%');
+		expect(component.displayScore(1)).toBe('0%');
 	});
 
 	it('shows a NaN score as 0 rather than dropping the axis', () => {
@@ -105,7 +105,7 @@ describe('SpiderChartComponent', () => {
 
 		expect(pts(component.scorePoints).length).toBe(2);
 		expect(dist(component, pts(component.scorePoints)[0])).toBeCloseTo(0, 5);
-		expect(component.displayScore(0)).toBe(0);
+		expect(component.displayScore(0)).toBe('0%');
 	});
 
 	it('labels the axes from the map_name_<id> translations', () => {
@@ -125,8 +125,8 @@ describe('SpiderChartComponent', () => {
 		expect(svg.getAttribute('role')).toBe('img');
 		// Every indicator and its number, so the chart is not a blank to a screen reader the way
 		// the PNG was.
-		expect(svg.getAttribute('aria-label')).toContain('Human health: 65 of 100');
-		expect(svg.getAttribute('aria-label')).toContain('Recreational value: 68 of 100');
+		expect(svg.getAttribute('aria-label')).toContain('Human health: 65%');
+		expect(svg.getAttribute('aria-label')).toContain('Recreational value: 68%');
 	});
 
 	it('anchors labels so the left-hand ones do not run over the chart', () => {
