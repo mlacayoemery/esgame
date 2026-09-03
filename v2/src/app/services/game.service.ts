@@ -321,8 +321,23 @@ export class GameService {
 
 					level.gameBoards.push(...gameBoards);
 					level.showConsequenceMaps = true;
-					this.productionTypes.value.forEach(c =>
-						c.consequenceMaps = [...gameBoards.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap)]);
+					// Per the DATASET's own cross-reference, as the grid path does. This gave every
+					// production type every consequence map, which is why the agriculture board
+					// showed eight maps where the grid board shows four: dataGridExample.json and
+					// dataAgDynamic.json both name one production type per map (ids 4-7 arable,
+					// 8-11 livestock), and the grid path honours that through attachConsequenceMap
+					// while this ignored it.
+					//
+					// A production type the data never names keeps every map. That is what this
+					// line did for all of them, and assets/data.json depends on it: its five
+					// consequence maps name production types 10-40, so Agropark and Extra Nature
+					// are in no map's list and would otherwise be left with an empty panel.
+					const consequenceBoards = gameBoards.filter(o => o.gameBoardType == GameBoardType.ConsequenceMap);
+					this.productionTypes.value.forEach(pt => { pt.consequenceMaps = []; });
+					consequenceBoards.forEach(o => this.attachConsequenceMap(o));
+					this.productionTypes.value.forEach(pt => {
+						if (!pt.consequenceMaps.length) pt.consequenceMaps = [...consequenceBoards];
+					});
 
 					this.selectedFields.value.forEach(o => o.updateScore());
 
