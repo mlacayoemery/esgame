@@ -51,6 +51,17 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	 * asking for per-piece images is a board whose pieces are cells.
 	 */
 	pieceImages: { href: string, x: number, y: number, size: number }[] = [];
+	/**
+	 * How this board outlines a placed cell — see SvgFieldComponent.assignedOutline.
+	 *
+	 * The playable board needs nothing: the piece is drawn there as its production icon. The maps
+	 * beside it have no grid of their own, so a placed piece showed as a faint tint and was
+	 * effectively invisible on the maps that say what it cost.
+	 */
+	get assignedOutline(): 'none' | 'black' | 'type' {
+		if (this.clickMode == GameBoardClickMode.Field) return 'none';
+		return this._boardData?.gameBoardType == GameBoardType.ConsequenceMap ? 'type' : 'black';
+	}
 	private _showHideListeners: (() => void)[] = [];
 
 	constructor(gameService: GameService, renderer: Renderer2, elementRef: ElementRef, cdRef: ChangeDetectorRef) {

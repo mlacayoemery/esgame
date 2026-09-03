@@ -11,6 +11,7 @@
 			[showStroke]="this._boardData.gameBoardType != consequenceType && clickMode == GameBoardClickMode.Field"
 			[hasOpacity]="consequenceFieldOpacity && this._boardData.gameBoardType == consequenceType"
 			[gameBoardId]="boardData!.id"
+			[assignedOutline]="assignedOutline"
 			*ngFor="let field of fields" [attr.d]="field.path"></path>
 
 	<!--

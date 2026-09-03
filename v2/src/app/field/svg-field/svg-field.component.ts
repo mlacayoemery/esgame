@@ -20,11 +20,26 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 	}
 	@HostBinding('style.fill') fillColor: string;
 	@HostBinding('style.stroke') stroke: string;
+	@HostBinding('style.stroke-width') strokeWidth: string;
 	highlightColor: string;
 
 	@HostBinding('class.show-stroke') @Input() showStroke: boolean = true;
 
 	@Input() gameBoardId = '';
+
+	/**
+	 * How a PLACED cell is outlined on this board.
+	 *
+	 * The board the player builds on shows a piece as its production icon, so it needs nothing
+	 * here. The maps beside it carry no grid of their own, and without an outline a placed piece
+	 * was only a faint tint on them — so where the piece landed was effectively invisible on the
+	 * very maps that say what it cost.
+	 *
+	 *   'black' — the suitability maps, where the outline reads against any class colour.
+	 *   'type'  — the consequence maps, outlined in the darkest swatch of the piece's OWN
+	 *             production type, so one map shows arable and livestock apart at a glance.
+	 */
+	@Input() assignedOutline: 'none' | 'black' | 'type' = 'none';
 
 	/** When true, placed fields are rendered semi-transparent (used for consequence maps). */
 	@Input() hasOpacity = false;
@@ -82,8 +97,31 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 		return `#${hex.slice(0, 6)}7D`;
 	}
 
+	/** The darkest entry of a production type's own legend — the last, since a legend runs light to dark. */
+	private darkestOf(productionType: ProductionType): string | undefined {
+		const elements = productionType?.suitabilityMap?.legend?.elements;
+		return elements?.length ? elements[elements.length - 1].color : undefined;
+	}
+
+	/** Outline a placed cell on a map that has no grid of its own. */
+	private setAssignedOutline(productionType: ProductionType | null) {
+		if (!productionType || this.assignedOutline === 'none') {
+			this.stroke = '';
+			this.strokeWidth = '';
+			return;
+		}
+		const colour = this.assignedOutline === 'black' ? 'black' : this.darkestOf(productionType);
+		if (!colour) return;                 // a legend that has not loaded yet: leave the default
+		this.stroke = colour;
+		// Stated here because these boards set showStroke false, so the stylesheet gives them no
+		// width at all — and 1px to match the playable board's border rather than invent a second
+		// weight.
+		this.strokeWidth = '1px';
+	}
+
 	setColor(productionType: ProductionType | null = null) {
 		if (!this._field) return;
+		this.setAssignedOutline(productionType);
 		// imageMode boards show the piece as its production ICON, drawn over the cell by the board
 		// (SvgGameBoardComponent.pieceImages) exactly as the grid board does. The fill stays
 		// transparent so the map underneath still reads — a solid one hid the very land the player
