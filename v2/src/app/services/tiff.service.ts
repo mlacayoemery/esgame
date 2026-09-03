@@ -36,8 +36,8 @@ export class TiffService {
 		);
 	}
 
-	getSvgGameBoard(id: string, url: string, gameBoardType: GameBoardType, defaultGradient: DefaultGradients, overlay: GameBoard, minValue: number, maxValue: number, paletted = false) {
-		return this.getTiffSvgDataUrl(url, minValue, maxValue, gradients.get(defaultGradient)!, undefined, paletted).pipe(
+	getSvgGameBoard(id: string, url: string, gameBoardType: GameBoardType, defaultGradient: DefaultGradients, overlay: GameBoard, minValue: number, maxValue: number, paletted = false, values?: number[]) {
+		return this.getTiffSvgDataUrl(url, minValue, maxValue, gradients.get(defaultGradient)!, undefined, paletted, values).pipe(
 			mergeMap(data => {
 				let gradient: Gradient | undefined, legend: Legend, fields: Field[];
         gradient = gradients.get(defaultGradient!);
@@ -47,7 +47,7 @@ export class TiffService {
 				// isRoundRelative is false for the same reason the grid path sets it false: these
 				// values come from the dataset unchanged, so the numbers mean what they say.
 				if (paletted) {
-					const distinct = this.distinctValues(data.numRaster);
+					const distinct = values ?? this.distinctValues(data.numRaster);
 					legend = {
 						elements: distinct.map((value, i) => ({ forValue: value, color: gradient!.colors[i] })),
 						isNegative: gameBoardType == GameBoardType.ConsequenceMap,
@@ -100,8 +100,8 @@ export class TiffService {
 		return from(this.tiffToArray(url));
 	}
 
-	public getTiffSvgDataUrl(url: string, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors, paletted = false) {
-		return from(this.prepareDataUrl(url, minValue, maxValue, gradient, colors, paletted));
+	public getTiffSvgDataUrl(url: string, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors, paletted = false, values?: number[]) {
+		return from(this.prepareDataUrl(url, minValue, maxValue, gradient, colors, paletted, values));
 	}
 
 	public getTiffSvgData(url: string) {
@@ -168,7 +168,7 @@ export class TiffService {
 		return Array.from(new Set(data)).sort((a, b) => a - b);
 	}
 
-	private async prepareDataUrl(url: string, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors, paletted = false) {
+	private async prepareDataUrl(url: string, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors, paletted = false, values?: number[]) {
 		const tmp = await this.fetchRaster(url);
 		const tiff = await fromBlob(tmp);
 		const image = await tiff.getImage();
@@ -178,7 +178,7 @@ export class TiffService {
 		const height = image.getHeight();
 		const nodata = image.getGDALNoData()!;
 
-		const dataUrl = await this.arrayToImage(numRaster, width, nodata, minValue, maxValue, gradient, colors, paletted);
+		const dataUrl = await this.arrayToImage(numRaster, width, nodata, minValue, maxValue, gradient, colors, paletted, values);
 		return { width, height, dataUrl, nodata, numRaster };
 	}
 
@@ -225,7 +225,7 @@ export class TiffService {
 		return Array.from(raster.map(c => Number.parseFloat(c.toString())));
 	}
 
-	private async arrayToImage(data: number[], columns: number, noData: number, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors, paletted = false): Promise<string> {
+	private async arrayToImage(data: number[], columns: number, noData: number, minValue: number, maxValue: number, gradient?: Gradient, colors?: CustomColors, paletted = false, values?: number[]): Promise<string> {
 		const height = data.length / columns;
 		const tmpArray: number[] = [];
 		if (gradient && paletted) {
@@ -238,7 +238,9 @@ export class TiffService {
 			// No nodata hole. The grid board paints a nodata cell its palette colour like any other
 			// — that tan is the agriculture board's background, and skipping it here left the same
 			// map with a white surround where the static one has land.
-			const distinct = this.distinctValues(data);
+			// A declared scale, when the dataset gives one: maps that mean the same thing should be
+			// coloured and labelled alike even where one of them never reaches the top class.
+			const distinct = values ?? this.distinctValues(data);
 			const index = new Map(distinct.map((value, i) => [value, i]));
 			data.forEach(value => {
 				tmpArray.push(...colorToRgb(gradient.colors[index.get(value) ?? 0]));

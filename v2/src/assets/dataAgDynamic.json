@@ -122,7 +122,15 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ag_carbon.tif",
-			"customColorId": ""
+			"customColorId": "",
+			"values": [
+				0,
+				25,
+				50,
+				75,
+				100,
+				125
+			]
 		},
 		{
 			"id": "5",
@@ -138,7 +146,15 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ag_habitat.tif",
-			"customColorId": ""
+			"customColorId": "",
+			"values": [
+				0,
+				25,
+				50,
+				75,
+				100,
+				125
+			]
 		},
 		{
 			"id": "6",
@@ -154,7 +170,15 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ag_water.tif",
-			"customColorId": ""
+			"customColorId": "",
+			"values": [
+				0,
+				25,
+				50,
+				75,
+				100,
+				125
+			]
 		},
 		{
 			"id": "7",
@@ -170,7 +194,15 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ag_hunt.tif",
-			"customColorId": ""
+			"customColorId": "",
+			"values": [
+				0,
+				25,
+				50,
+				75,
+				100,
+				125
+			]
 		},
 		{
 			"id": "8",
@@ -186,7 +218,15 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ranch_carbon.tif",
-			"customColorId": ""
+			"customColorId": "",
+			"values": [
+				0,
+				25,
+				50,
+				75,
+				100,
+				125
+			]
 		},
 		{
 			"id": "9",
@@ -202,7 +242,15 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ranch_habitat.tif",
-			"customColorId": ""
+			"customColorId": "",
+			"values": [
+				0,
+				25,
+				50,
+				75,
+				100,
+				125
+			]
 		},
 		{
 			"id": "10",
@@ -218,7 +266,15 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ranch_water.tif",
-			"customColorId": ""
+			"customColorId": "",
+			"values": [
+				0,
+				25,
+				50,
+				75,
+				100,
+				125
+			]
 		},
 		{
 			"id": "11",
@@ -234,7 +290,15 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ranch_hunt.tif",
-			"customColorId": ""
+			"customColorId": "",
+			"values": [
+				0,
+				25,
+				50,
+				75,
+				100,
+				125
+			]
 		}
 	],
 	"customColors": [

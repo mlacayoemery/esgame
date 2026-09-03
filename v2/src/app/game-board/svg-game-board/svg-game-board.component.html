@@ -8,7 +8,7 @@
 	</defs>
 		<path troSvgField [field]="field"
 			[clickable]="clickMode == GameBoardClickMode.Field && field.editable  && !readOnly"
-			[showStroke]="this._boardData.gameBoardType != consequenceType && clickMode == GameBoardClickMode.Field"
+			[showStroke]="clickMode == GameBoardClickMode.Field || this._boardData.gameBoardType == consequenceType"
 			[hasOpacity]="consequenceFieldOpacity && this._boardData.gameBoardType == consequenceType"
 			[gameBoardId]="boardData!.id"
 			[assignedOutline]="assignedOutline"

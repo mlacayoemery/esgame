@@ -36,7 +36,7 @@ export class Settings {
 	mode: 'GRID' | 'SVG';
 	infiniteLevels: boolean;
 	productionTypes: { id: number, name: LanguageString, fieldColor: string, urlToIcon: string, maxElements: number }[] = [];
-	maps: { id: string, name: LanguageString, gradient: DefaultGradients, customColorId: string, gameBoardType: GameBoardType, productionTypes: number[], urlToData: string }[] = [];
+	maps: { id: string, name: LanguageString, gradient: DefaultGradients, customColorId: string, gameBoardType: GameBoardType, productionTypes: number[], urlToData: string, values?: number[] }[] = [];
 	customColors: { id: string, colors: { number: number, color: string }[] }[];
 	basicInstructionsImageUrl: string;
 	advancedInstructionsImageUrl: string;
@@ -131,7 +131,7 @@ export class Settings {
 		this.gridLineWidth = data.gridLineWidth;
 		this.highlightWidth = data.highlightWidth;
 		this.productionTypes = data.productionTypes.map((o: any) => ({ id: Number.parseInt(o.id), name: o.name, fieldColor: o.fieldColor, urlToIcon: o.urlToIcon, maxElements: o.maxElements }));
-		this.maps = data.maps.map((o: any) => ({ id: o.id, name: o.name, gradient: convertGradient(o.gradient), customColorId: o.customColorId, gameBoardType: convertGameBoardType(o.gameBoardType), productionTypes: o.productionTypes.map((p: any) => Number.parseInt(p)), urlToData: o.urlToData }));
+		this.maps = data.maps.map((o: any) => ({ id: o.id, name: o.name, gradient: convertGradient(o.gradient), customColorId: o.customColorId, gameBoardType: convertGameBoardType(o.gameBoardType), productionTypes: o.productionTypes.map((p: any) => Number.parseInt(p)), urlToData: o.urlToData, values: o.values }));
 		this.customColors = data.customColors;
 		this.basicInstructionsImageUrl = data.basicInstructionsImageUrl;
 		this.advancedInstructionsImageUrl = data.advancedInstructionsImageUrl;
