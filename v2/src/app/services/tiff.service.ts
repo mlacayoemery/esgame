@@ -201,7 +201,12 @@ export class TiffService {
 		const image = await tiff.getImage();
 		const raster = await image.readRasters({ interleave: true });
 		const numRaster = Array.from(raster.map(c => Number.parseFloat(c.toString())));
-		const paths = tiffToSvgPaths(numRaster, { width: image.getWidth(), height: undefined, scale: 1 });
+		// The raster says which value means "no zone". Without this the helper assumed 0, so a board
+		// numbered by raster index lost its cell 0 entirely: no path, no outline, not placeable.
+		const paths = tiffToSvgPaths(numRaster, {
+			width: image.getWidth(), height: undefined, scale: 1,
+			undefinedValue: image.getGDALNoData() ?? 0,
+		});
 		let pathArray: { id: number, path: string, startPos: number }[] = [];
 		paths.forEach((val, key) => {
 			pathArray.push({

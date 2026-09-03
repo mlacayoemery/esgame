@@ -6,7 +6,7 @@
 		"pt": null
 	},
 	"mapMode": "svg",
-	"imageMode": false,
+	"imageMode": true,
 	"elementSize": 2,
 	"highlightColor": "#00E0FF",
 	"infiniteLevels": false,
@@ -16,7 +16,7 @@
 	"maxValue": 100,
 	"paletted": true,
 	"gridLineColor": "black",
-	"gridLineWidth": "0.1",
+	"gridLineWidth": "0.05",
 	"highlightWidth": "0.3",
 	"defaultProductionType": "0",
 	"calcUrl": "",

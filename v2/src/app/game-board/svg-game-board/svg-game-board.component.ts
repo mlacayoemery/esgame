@@ -34,6 +34,23 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	 * pixelating would be a downgrade.
 	 */
 	@HostBinding('class.is-paletted') paletted = false;
+	/** From settings.imageMode: draw each placed piece's production icon, as the grid board does. */
+	imageMode = false;
+	/** settings.elementSize — a piece is this many cells square. */
+	elementSize = 1;
+	/**
+	 * One entry per placed piece: the production icon, positioned at the piece's top-left cell.
+	 *
+	 * The grid board renders `<img [src]="field.productionType?.image">` sized to the whole piece
+	 * (grid-field.component.html), and this is the SVG board's equivalent — one image per PIECE,
+	 * not one per cell, which a fill pattern could not do: a pattern tiles against the user
+	 * coordinate system, so a piece anchored on an odd cell would show the icon sliced.
+	 *
+	 * The position is derived from the field id as a raster index, which holds only for a board
+	 * numbered that way. That is not a hidden assumption: `imageMode` gates this, and a board
+	 * asking for per-piece images is a board whose pieces are cells.
+	 */
+	pieceImages: { href: string, x: number, y: number, size: number }[] = [];
 	private _showHideListeners: (() => void)[] = [];
 
 	constructor(gameService: GameService, renderer: Renderer2, elementRef: ElementRef, cdRef: ChangeDetectorRef) {
@@ -41,6 +58,8 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 		this.gameService.settingsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(s => {
 			this.consequenceFieldOpacity = s?.visualOptions?.consequenceFieldOpacity ?? false;
 			this.paletted = s?.paletted ?? false;
+			this.imageMode = s?.imageMode ?? false;
+			this.elementSize = s?.elementSize ?? 1;
 			this.cdRef.markForCheck();
 		});
 		this.gameService.highlightFieldObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(fieldNumbers => {
@@ -88,12 +107,30 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	ngAfterViewInit() {
 		this.gameService.selectedFieldsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(fields => {
 			this._selectedFields = fields;
+			this.updatePieceImages();
 			setTimeout(() => this.drawSelectedFields());
 		});
 
 		this.svgFieldComponents.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(_ => {
 			setTimeout(() => this.drawSelectedFields());
 		});
+	}
+
+	/** Recompute the per-piece icons. Cheap: one entry per placed piece, a handful in this game. */
+	private updatePieceImages() {
+		const width = this._boardData?.width ?? 0;
+		if (!this.imageMode || !width || this.clickMode != GameBoardClickMode.Field || this.readOnly) {
+			this.pieceImages = [];
+			return;
+		}
+		this.pieceImages = (this._selectedFields ?? []).flatMap(piece => {
+			const icon = piece.productionType?.image;
+			// The anchor is the piece's top-left cell, which is its lowest id — ids run along rows.
+			const anchor = Math.min(...piece.fields.map((f: any) => f.id));
+			if (!icon || !Number.isFinite(anchor)) return [];
+			return [{ href: icon, x: anchor % width, y: Math.floor(anchor / width), size: this.elementSize }];
+		});
+		this.cdRef.markForCheck();
 	}
 
 	protected drawSelectedFields() {

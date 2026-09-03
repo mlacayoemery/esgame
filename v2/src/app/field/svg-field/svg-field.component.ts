@@ -28,10 +28,13 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 
 	/** When true, placed fields are rendered semi-transparent (used for consequence maps). */
 	@Input() hasOpacity = false;
+	/** From settings.imageMode: the piece is drawn as its production icon, so the fill stays clear. */
+	private imageMode = false;
 
 	ngOnInit(): void {
 		this.gameService.settingsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(o => {
 			this.highlightColor = o.highlightColor;
+			this.imageMode = o.imageMode ?? false;
 			// Optional per-deployment cell-border (grid line) styling; CSS falls back to the default.
 			if (o.gridLineColor) this.renderer.setStyle(this.elementRef.nativeElement, '--cell-stroke', o.gridLineColor, RendererStyleFlags2.DashCase);
 			if (o.gridLineWidth) this.renderer.setStyle(this.elementRef.nativeElement, '--cell-stroke-width', o.gridLineWidth, RendererStyleFlags2.DashCase);
@@ -67,7 +70,13 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 
 	setColor(productionType: ProductionType | null = null) {
 		if (!this._field) return;
-		if (productionType && this.clickable) {
+		// imageMode boards show the piece as its production ICON, drawn over the cell by the board
+		// (SvgGameBoardComponent.pieceImages) exactly as the grid board does. The fill stays
+		// transparent so the map underneath still reads — a solid one hid the very land the player
+		// is choosing between.
+		if (productionType && this.clickable && this.imageMode) {
+			this.fillColor = "";
+		} else if (productionType && this.clickable) {
 			this.fillColor = this.hasOpacity
 				? this.withConsequenceAlpha(productionType.fieldColor)
 				: productionType.fieldColor;

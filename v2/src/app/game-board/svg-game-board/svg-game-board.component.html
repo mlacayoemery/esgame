@@ -13,6 +13,19 @@
 			[gameBoardId]="boardData!.id"
 			*ngFor="let field of fields" [attr.d]="field.path"></path>
 
+	<!--
+	  One icon per placed PIECE, at its top-left cell, sized to the piece — the SVG equivalent of
+	  the grid board's `<img>` (grid-field.component.html). After the paths so it draws on top of
+	  them, and pointer-events none so the cell underneath stays clickable: a player must be able
+	  to click a placed piece to remove it.
+
+	  preserveAspectRatio="none" because the grid board's <img> is given BOTH a width and a height
+	  (`calc(200% - 1px)` each), which stretches it to the piece. "meet" would letterbox a
+	  non-square icon inside the piece instead, which is visibly not the same board.
+	-->
+	<image *ngFor="let piece of pieceImages" [attr.href]="piece.href"
+		[attr.x]="piece.x" [attr.y]="piece.y" [attr.width]="piece.size" [attr.height]="piece.size"
+		preserveAspectRatio="none" style="pointer-events: none"></image>
 </svg>
 
 <!--
