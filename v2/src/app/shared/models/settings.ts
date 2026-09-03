@@ -64,6 +64,11 @@ export class Settings {
 	 * for the Dutch model, where calculator.r solves a distance-decay field over the landscape.
 	 */
 	clientScored?: boolean;
+	/**
+	 * Open the instructions by itself on levels 1 and 2. Defaults to true, which is what SVG mode
+	 * has always done — the grid level never did, so a board meant to match it wants this off.
+	 */
+	autoOpenInstructions?: boolean;
 	/** SVG-mode cell border (between zones). Optional; defaults to the built-in look when unset. */
 	gridLineColor?: string;
 	gridLineWidth?: string;
@@ -127,6 +132,7 @@ export class Settings {
 		this.calcUrl = data.calcUrl;
 		this.paletted = data.paletted;
 		this.clientScored = data.clientScored;
+		this.autoOpenInstructions = data.autoOpenInstructions;
 		this.gridLineColor = data.gridLineColor;
 		this.gridLineWidth = data.gridLineWidth;
 		this.highlightWidth = data.highlightWidth;

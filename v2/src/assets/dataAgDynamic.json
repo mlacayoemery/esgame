@@ -16,6 +16,7 @@
 	"maxValue": 100,
 	"paletted": true,
 	"clientScored": true,
+	"autoOpenInstructions": false,
 	"gridLineColor": "black",
 	"gridLineWidth": "1",
 	"highlightWidth": "1",

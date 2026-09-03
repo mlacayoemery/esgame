@@ -74,6 +74,8 @@ export class SvgLevelComponent extends LevelBaseComponent {
 	/** From settings.visualOptions; default off so esgame's look is unchanged. */
 	highlightFocusedBoard = false;
 	@HostBinding('class.neutral-scores') neutralScoreColors = false;
+	/** From settings.autoOpenInstructions; true unless the dataset turns it off. */
+	autoOpenInstructions = true;
 	/**
 	 * Which level the instructions have already been auto-opened for.
 	 *
@@ -91,7 +93,8 @@ export class SvgLevelComponent extends LevelBaseComponent {
 		// null and emits level 1 a few seconds later, when the board's GeoTIFFs finish decoding —
 		// so opening on the null emission too meant the dialog appeared before the board, and then
 		// appeared AGAIN, on top of whatever the player had just clicked.
-		if (o && o.levelNumber <= 2 && !this.readOnly && this.helpShownForLevel !== o.levelNumber) {
+		if (o && o.levelNumber <= 2 && !this.readOnly && this.autoOpenInstructions
+			&& this.helpShownForLevel !== o.levelNumber) {
 			this.helpShownForLevel = o.levelNumber;
 			this.openHelp();
 		}
@@ -116,6 +119,7 @@ export class SvgLevelComponent extends LevelBaseComponent {
 			this.minSelected = o?.minSelected ?? 0;
 			this.highlightFocusedBoard = o?.visualOptions?.highlightFocusedBoard ?? false;
 			this.neutralScoreColors = o?.visualOptions?.neutralScoreColors ?? false;
+			this.autoOpenInstructions = o?.autoOpenInstructions ?? true;
 		});
 	}
 
