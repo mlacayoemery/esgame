@@ -29,7 +29,7 @@
 				"nl": null,
 				"pt": null
 			},
-			"fieldColor": "#2d6a4f80",
+			"fieldColor": "#2d6a4f",
 			"urlToIcon": "./assets/images/corn.png",
 			"maxElements": 4
 		},
@@ -41,7 +41,7 @@
 				"nl": null,
 				"pt": null
 			},
-			"fieldColor": "#ff800080",
+			"fieldColor": "#ff8000",
 			"urlToIcon": "./assets/images/cow.png",
 			"maxElements": 4
 		}
@@ -264,5 +264,8 @@
 		"pt": null
 	},
 	"basicInstructionsImageUrl": "",
-	"advanccedInstructionsImageUrl": ""
+	"advanccedInstructionsImageUrl": "",
+	"visualOptions": {
+		"neutralScoreColors": true
+	}
 }
