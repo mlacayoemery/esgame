@@ -38,6 +38,8 @@ export class GameService {
 	highlightFieldObs = this.highlightFields.asObservable();
 	currentLevelObs = this.currentLevel.asObservable();
 	settingsObs = this.settings.asObservable();
+	/** The settings as they stand, for a template that needs them without an async pipe. */
+	get settingsValue() { return this.settings.value; }
 	productionTypesObs = this.productionTypes.asObservable();
 	selectedProductionTypeObs = this.selectedProductionType.asObservable();
 	selectedFieldsObs = this.selectedFields.asObservable().pipe(

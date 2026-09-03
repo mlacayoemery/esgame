@@ -18,3 +18,31 @@ table {
 		}
 	}
 }
+// Side by side, one per conversion. Wraps rather than overflowing on a narrow panel.
+.score-columns {
+	display: flex;
+	gap: 1.5rem;
+	align-items: flex-start;
+	// Never wrap. The columns are a side-by-side comparison of two conversions; stacked they are
+	// just the old single table with a gap in it.
+	flex-wrap: nowrap;
+
+	table {
+		flex: 1 1 0;
+		min-width: 0;
+	}
+
+	// "Arable land" wrapped to two lines in a narrow column, which pushed its whole table down and
+	// left the two conversions' first rows on different baselines. They are the columns' headings
+	// in all but name and belong side by side.
+	td:first-of-type {
+		white-space: nowrap;
+	}
+}
+
+// The percentage column. Set in the sheet's own type at the sheet's own size — it is the same
+// score on a different scale, not an annotation. Its width is fixed so several tables line up.
+.--percent {
+	width: 52px;
+	padding-left: 8px;
+}

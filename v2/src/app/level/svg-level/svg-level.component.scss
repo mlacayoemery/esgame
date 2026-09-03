@@ -17,6 +17,13 @@
 	.score-board {
 		grid-column: 1 / 2;
 		margin-top: 15px;
+
+		// With no chart beside it the sheet gets the whole row. Its two conversion columns need
+		// the width to stand side by side: confined to half of it they wrapped onto separate
+		// lines, which is the one arrangement the two-column layout exists to avoid.
+		&.--full-width {
+			grid-column: 1 / -1;
+		}
 	}
 
 	// The chart takes its height from the score board beside it, and never the other way round.

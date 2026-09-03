@@ -18,9 +18,10 @@
 	"clientScored": true,
 	"autoOpenInstructions": false,
 	"editablePreviousRounds": true,
+	"scoreByConversion": true,
 	"gridLineColor": "black",
 	"gridLineWidth": "1",
-	"highlightWidth": "1",
+	"highlightWidth": "2",
 	"defaultProductionType": "0",
 	"calcUrl": "",
 	"productionTypes": [
@@ -124,15 +125,7 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ag_carbon.tif",
-			"customColorId": "",
-			"values": [
-				0,
-				25,
-				50,
-				75,
-				100,
-				125
-			]
+			"customColorId": ""
 		},
 		{
 			"id": "5",
@@ -148,15 +141,7 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ag_habitat.tif",
-			"customColorId": "",
-			"values": [
-				0,
-				25,
-				50,
-				75,
-				100,
-				125
-			]
+			"customColorId": ""
 		},
 		{
 			"id": "6",
@@ -172,15 +157,7 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ag_water.tif",
-			"customColorId": "",
-			"values": [
-				0,
-				25,
-				50,
-				75,
-				100,
-				125
-			]
+			"customColorId": ""
 		},
 		{
 			"id": "7",
@@ -196,15 +173,7 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ag_hunt.tif",
-			"customColorId": "",
-			"values": [
-				0,
-				25,
-				50,
-				75,
-				100,
-				125
-			]
+			"customColorId": ""
 		},
 		{
 			"id": "8",
@@ -220,15 +189,7 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ranch_carbon.tif",
-			"customColorId": "",
-			"values": [
-				0,
-				25,
-				50,
-				75,
-				100,
-				125
-			]
+			"customColorId": ""
 		},
 		{
 			"id": "9",
@@ -244,15 +205,7 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ranch_habitat.tif",
-			"customColorId": "",
-			"values": [
-				0,
-				25,
-				50,
-				75,
-				100,
-				125
-			]
+			"customColorId": ""
 		},
 		{
 			"id": "10",
@@ -268,15 +221,7 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ranch_water.tif",
-			"customColorId": "",
-			"values": [
-				0,
-				25,
-				50,
-				75,
-				100,
-				125
-			]
+			"customColorId": ""
 		},
 		{
 			"id": "11",
@@ -292,15 +237,7 @@
 			],
 			"gameBoardType": "Consequence",
 			"urlToData": "./assets/images/esgame_img_ranch_hunt.tif",
-			"customColorId": "",
-			"values": [
-				0,
-				25,
-				50,
-				75,
-				100,
-				125
-			]
+			"customColorId": ""
 		}
 	],
 	"customColors": [

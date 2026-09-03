@@ -8,6 +8,15 @@ export class ScoreEntry {
 	score: number;
 }
 
+/**
+ * The cells one production type can cover: four pieces of 2 x 2. See dataAgDynamic.json.
+ *
+ * The denominator of every percentage the game shows — a map's worst reachable total is this
+ * many cells at its highest value. Shared so the score sheet and anything drawing the same
+ * numbers cannot disagree about the scale.
+ */
+export const PIECE_CELLS = 16;
+
 @Injectable({
 	providedIn: 'root'
 })

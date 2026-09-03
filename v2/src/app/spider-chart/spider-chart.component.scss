@@ -50,7 +50,9 @@
 
 
 .spider-chart__dot {
-	fill: #0b5ed7;
+	// Black rather than the blue left over from the single-colour fill: the segments now carry the
+	// meaning through colour, and a third hue on the vertices only competed with them.
+	fill: $color-black;
 }
 
 .spider-chart__label {

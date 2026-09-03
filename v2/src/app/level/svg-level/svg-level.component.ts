@@ -6,12 +6,10 @@ import { combineLatest, map, tap } from 'rxjs';
 import { GameBoardType } from 'src/app/shared/models/game-board-type';
 import { GameBoardClickMode } from 'src/app/shared/models/game-board';
 import { ConfigService } from 'src/app/services/config.service';
-import { ScoreService } from 'src/app/services/score.service';
+import { PIECE_CELLS, ScoreService } from 'src/app/services/score.service';
 import { TranslateService } from '@ngx-translate/core';
 
 
-/** Four pieces of 2 x 2 — the most any one production type can hold. See dataAgDynamic.json. */
-const PIECE_CELLS = 16;
 
 @Component({
     selector: 'tro-svg-level',
@@ -70,6 +68,14 @@ export class SvgLevelComponent extends LevelBaseComponent {
 			.map(g => ({ id: g.id, score: g.ceiling ? (100 * g.score) / g.ceiling : 0, positive: g.positive }));
 	}));
 	settings = this.gameService.settingsObs;
+	/**
+	 * Whether to draw the chart at all.
+	 *
+	 * Hidden where the score sheet carries the same percentages in its own rows: the chart existed
+	 * to put every map on one 0-100 scale, and a percentage beside each score does that in the
+	 * place the player is already reading. Kept for the Dutch model, whose sheet has no such column.
+	 */
+	showChart = this.gameService.settingsObs.pipe(map(s => !s?.scoreByConversion));
 	imageExpand = false
 	minSelected = 0;
 	currentlySelectedPercentage: string;

@@ -282,10 +282,10 @@ every value above 100 to one colour; the grid board never had this because it ig
 switches the raster to nearest-neighbour scaling, since interpolating classified data
 invents colours the legend does not list.
 
-.. warning::
-
-   Cell index 0 — the top-left — has no outline and cannot be built on.
-   ``tiffToSvgPaths`` treats ``0`` as its structural sentinel, and making it a real
-   zone hangs the tracer outright (812 groups in 11 ms against an infinite loop,
-   measured). That cell is ``0`` in both suitability rasters, so it is land that
-   scores nothing, but the gap is real.
+Cell index 0 — the top-left — is a normal zone with an outline, like any other. It was
+not always: ``tiffToSvgPaths`` hard-coded ``0`` as its structural sentinel, so the cell
+numbered 0 had no path, no outline and could not be built on. The fix was to let the
+caller name the sentinel (``undefinedValue``, from the raster's own ``GDAL_NODATA``)
+**and** to fill the tracer's border with that same value. Changing only the first hangs
+the tracer outright — 812 groups in 11 ms against a run that never returns, measured —
+because the border it walks is then made of what it is looking for.

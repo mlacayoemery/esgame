@@ -30,11 +30,13 @@
 				*ngIf="(settings | async)?.infiniteLevels || (level | async)?.levelNumber == 1" translate>Next
 				Level</button>
 
-			<tro-score-board *ngIf="!((level | async)?.scores)" class="score-board"></tro-score-board>
-			<tro-score-board *ngIf="(level | async)?.scores" isStatic [scores]="(level | async)!.scores" class="score-board"></tro-score-board>
+			<tro-score-board *ngIf="!((level | async)?.scores)" class="score-board"
+				[class.--full-width]="!(showChart | async)"></tro-score-board>
+			<tro-score-board *ngIf="(level | async)?.scores" isStatic [scores]="(level | async)!.scores" class="score-board"
+				[class.--full-width]="!(showChart | async)"></tro-score-board>
 			<!-- Beside the scores, at the size it is drawn. It used to open into a larger panel;
 			     with the chart cropped to its own content there is nothing more to reveal. -->
-			<div *ngIf="(chartEntries | async)?.length" class="chart-beside-scores">
+			<div *ngIf="(showChart | async) && (chartEntries | async)?.length" class="chart-beside-scores">
 				<tro-spider-chart [entries]="chartEntries | async"></tro-spider-chart>
 			</div>
 		</div>

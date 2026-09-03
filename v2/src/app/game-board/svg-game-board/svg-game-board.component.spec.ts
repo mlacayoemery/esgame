@@ -224,3 +224,83 @@ describe('SvgGameBoardComponent settings', () => {
 		expect(c.consequenceFieldOpacity).toBe(false);
 	});
 });
+
+describe('SvgGameBoardComponent hover outline', () => {
+	// The hover target used to be a stroke on each of its cells, which drew the grid back INSIDE
+	// the target: a 2 x 2 block read as four squares with a cross through it, on boards that draw
+	// no grid of their own. It is one rectangle around the whole block now.
+	it('outlines the whole target once instead of stroking each of its cells', () => {
+		const { c, g } = build();
+		const f = fakeFieldComponents([11, 12, 21, 22]);
+		c.svgFieldComponents = f.queryList;
+		g.settings.next({ imageMode: true, elementSize: 2, highlightColor: '#00E0FF' });
+		c.boardData = board(GameBoardType.SuitabilityMap);
+
+		// A 2 x 2 block on a 10-wide board: columns 1-2 of rows 1-2.
+		g.highlight.next([11, 12, 21, 22].map(id => ({ id, side: '--all-sides' })));
+
+		expect(c.highlightOutline).toEqual({ x: 1, y: 1, size: 2, colour: '#00E0FF' });
+		expect(f.log, 'no cell was stroked individually').toEqual([]);
+	});
+
+	it('measures the block rather than assuming elementSize, so an edge target is not overdrawn', () => {
+		const { c, g } = build();
+		c.svgFieldComponents = fakeFieldComponents([9, 19]).queryList;
+		g.settings.next({ imageMode: true, elementSize: 2, highlightColor: '#fff' });
+		c.boardData = board(GameBoardType.SuitabilityMap);
+
+		// Column 9 is the last on a 10-wide board: the target is clipped to one column.
+		g.highlight.next([{ id: 9, side: '--all-sides' }, { id: 19, side: '--all-sides' }]);
+
+		expect(c.highlightOutline).toEqual({ x: 9, y: 0, size: 2, colour: '#fff' });
+	});
+
+	// The Dutch model's zones are irregular polygons; a bounding rectangle is the wrong shape for
+	// them, so that board keeps the per-cell stroke it has always used.
+	it('keeps the per-cell stroke where a piece is not a block of cells', () => {
+		const { c, g } = build();
+		const f = fakeFieldComponents([1, 2]);
+		c.svgFieldComponents = f.queryList;
+		g.settings.next({ imageMode: false });
+		c.boardData = board(GameBoardType.SuitabilityMap);
+
+		g.highlight.next([{ id: 1, side: '--top' }, { id: 2, side: '--bottom' }]);
+
+		expect(c.highlightOutline).toBeNull();
+		expect(f.log).toEqual(['highlight:1:--top', 'highlight:2:--bottom']);
+	});
+
+	it('clears the outline when the pointer leaves the board', () => {
+		const { c, g } = build();
+		c.svgFieldComponents = fakeFieldComponents([11]).queryList;
+		g.settings.next({ imageMode: true, elementSize: 1, highlightColor: '#fff' });
+		c.boardData = board(GameBoardType.SuitabilityMap);
+
+		g.highlight.next([{ id: 11, side: '--all-sides' }]);
+		expect(c.highlightOutline).not.toBeNull();
+
+		g.highlight.next([]);
+		expect(c.highlightOutline).toBeNull();
+	});
+});
+
+describe('SvgGameBoardComponent piece icons', () => {
+	// corn.png and cow.png carry a 6 px black frame inside a 447 px image. Drawn at the piece
+	// footprint it lands on exactly the edge the outline rect strokes, and nearest-neighbour
+	// sampling keeps it on a large board and drops it on a small one — measured as four dark rows
+	// along one piece's top edge and one along another's, on the same board. The icon is drawn
+	// oversized inside a clipping viewport so that frame falls outside it.
+	it('draws the icon large enough to push its own frame outside the piece', () => {
+		const { c } = build();
+
+		const { offset, size } = c.iconViewBox;
+
+		// The visible window is the unit square, so the drawn icon must cover it and start before
+		// it: 6/447 of the artwork is cropped away on every side.
+		expect(size).toBeGreaterThan(1);
+		expect(offset).toBeLessThan(0);
+		expect(offset + size).toBeCloseTo(1 - offset, 10);
+		// The cropped-away band is exactly the frame: 6 of the icon's 447 px.
+		expect(-offset / size).toBeCloseTo(6 / 447, 10);
+	});
+});

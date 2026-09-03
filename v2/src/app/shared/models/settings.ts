@@ -77,6 +77,15 @@ export class Settings {
 	 * keep their own allocations either way, so changing one does not move the other's numbers.
 	 */
 	editablePreviousRounds?: boolean;
+	/**
+	 * Lay the score sheet out as one column per production type — what that conversion gains,
+	 * then what it costs — instead of one row per map name.
+	 *
+	 * Opt-in, because the alternative is not merely a different look: grouping by name SUMS the
+	 * maps that share one, which is the only sensible reading where a consequence map belongs to
+	 * several production types at once, as assets/data.json's do.
+	 */
+	scoreByConversion?: boolean;
 	/** SVG-mode cell border (between zones). Optional; defaults to the built-in look when unset. */
 	gridLineColor?: string;
 	gridLineWidth?: string;
@@ -142,6 +151,7 @@ export class Settings {
 		this.clientScored = data.clientScored;
 		this.autoOpenInstructions = data.autoOpenInstructions;
 		this.editablePreviousRounds = data.editablePreviousRounds;
+		this.scoreByConversion = data.scoreByConversion;
 		this.gridLineColor = data.gridLineColor;
 		this.gridLineWidth = data.gridLineWidth;
 		this.highlightWidth = data.highlightWidth;
