@@ -199,9 +199,41 @@ jobs:
 
           got=$(curl -s "http://127.0.0.1:${ESGAME_FRONTEND_PORT}/assets/config.json" \
                   | python3 -c 'import sys,json; print(json.load(sys.stdin).get("calcUrl",""))')
-          want="http://localhost:${ESGAME_CALC_PORT}"
+          want="http://localhost:${ESGAME_CALC_PORT}/esgame"
           echo "calcUrl served: ${got}   expected: ${want}"
           [ "$got" = "$want" ] || { echo "::error::CALC_URL did not reach the served config"; exit 1; }
+
+      - name: The calcUrl it serves is one the calculator will actually answer
+        # THE CHECK ABOVE IS NOT THIS CHECK, and the difference is the whole reason this step
+        # exists. That one compares the served calcUrl against the compose variable it was
+        # injected from — the configuration against itself. It passes for any value, including a
+        # wrong one, so long as substitution worked.
+        #
+        # It did exactly that. CALC_URL was "http://localhost:8000" while tools/R/calculator.r
+        # serves `#* @post /esgame`, so every round in a browser 404'd, and this job stayed green
+        # because the string it compared matched the string it came from. Reported 2026-09-02 as
+        # "I tried to go to round 2 and I get a popup saying that something went wrong."
+        #
+        # So: POST to the URL THE BROWSER WOULD USE, read out of the served config rather than
+        # rebuilt here, and require it to score. A 404 fails this and nothing else catches it.
+        run: |
+          set -euo pipefail
+          calc=$(curl -s "http://127.0.0.1:${ESGAME_FRONTEND_PORT}/assets/config.json" \
+                   | python3 -c 'import sys,json; print(json.load(sys.stdin).get("calcUrl",""))')
+          [ -n "$calc" ] || { echo "::error::the served config has no calcUrl"; exit 1; }
+          echo "POSTing the golden allocation to the SERVED calcUrl: ${calc}"
+          code=$(curl -s -o served.json -w '%{http_code}' --max-time 900 \
+            -X POST "$calc" -H 'Content-Type: application/json' \
+            --data @tools/R/golden/allocation.json || true)
+          echo "-> ${code}"
+          if [ "$code" = 404 ]; then
+            echo "::error::calcUrl \"${calc}\" is a path the calculator does not serve."
+            echo "::error::The configuration is wrong, not the calculator. It needs the route (/esgame)."
+            exit 1
+          fi
+          [ "$code" = 200 ] || {
+            echo "::error::the browser's calcUrl answered ${code}"; head -c 400 served.json || true; exit 1; }
+          echo "the configured calcUrl scores a round"
 
       - name: The calculator is the calculator, not merely something listening
         # Plumber binds ~12s after the container starts, so this polls. An unrouted path gives 404
@@ -276,6 +308,42 @@ jobs:
           uid=$(docker compose -p esgame-v2 exec -T esgame-geoserver id -u | tr -d '\r')
           echo "uid: ${uid}"
           [ "${uid}" != 0 ] || { echo "::error::GeoServer is running as root"; exit 1; }
+
+      - uses: actions/setup-node@v7
+        with:
+          # Same Node as build-test; the Angular CLI rejects anything older.
+          node-version: 26.5.0
+          cache: npm
+          cache-dependency-path: v2/package-lock.json
+
+      - name: Round 2 in a browser, against this stack
+        # Everything above this point talks to the calculator with curl, which is the right way to
+        # test the calculator and cannot test the GAME: it never loads the app, so it cannot see
+        # the app choosing a mode, reading a config, or deciding whether to call a backend at all.
+        #
+        # The reported failure lived exactly there. The static game POSTed to the calculator
+        # because goToNextLevel branched on calcUrl instead of mode, and the round died on a 404
+        # it had no reason to make. curl could not have found that; a browser finds it immediately.
+        #
+        # v2/e2e-stack configures NOTHING — unlike v2/e2e, which supplies its own config.json and
+        # answers the calculator itself. It reads what this stack serves and plays a real round on
+        # it, which is the only arrangement in which a wrong deployment config can fail a test.
+        working-directory: v2
+        env:
+          # Derived from the job's port, not repeated: a second literal here would drift from the
+          # stack it is meant to be talking to and the suite would test a 404 page.
+          ESGAME_STACK_URL: http://127.0.0.1:${{ env.ESGAME_FRONTEND_PORT }}
+        run: |
+          npm ci
+          npx playwright test --config e2e-stack/playwright.stack.config.ts
+
+      - name: Upload the browser report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-stack-report
+          path: v2/playwright-report/
+          retention-days: 7
 
       - name: What the stack looked like if any of that failed
         if: failure()

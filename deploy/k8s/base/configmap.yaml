@@ -7,7 +7,16 @@ data:
   # externally reachable calculation ingress host — NOT the in-cluster service name. Injected into
   # the frontend's assets/config.json at container start by the image entrypoint (no rebuild).
   # Set to "" to ship a client-side-only (grid) deployment with no backend.
-  CALC_URL: "https://change-me-esgame-calculation.example.com"
+  #
+  # INCLUDE THE PATH. This is the endpoint the browser POSTs to, not the host the calculator runs
+  # on: the app passes it to HttpClient.post unchanged. The calculation image serves `/esgame`
+  # (tools/R/calculator.r), so a value ending at the hostname 404s on every round — and does it
+  # silently, because the rejection never reaches the handler that writes the log.
+  #
+  # A downstream overlay (places) inherits this value's SHAPE as well as its content. Both
+  # ingress-test.sh and golden-test.sh post to "${BASE}/esgame" directly and so never exercised
+  # what the frontend was configured with, which is how a bare origin survived here.
+  CALC_URL: "https://change-me-esgame-calculation.example.com/esgame"
 
   # In-cluster GeoServer URL used by the calculation backend (server-to-server) to publish
   # coverages over the REST API.

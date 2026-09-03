@@ -106,7 +106,22 @@ export class GameService {
 	goToNextLevel() {
 		let currentHighest = this.levels[this.levels.length - 1];
 		if (currentHighest == this.currentLevel.value) {
-			if (this.settings.value.calcUrl) {
+			// MODE FIRST, then calcUrl. This used to branch on calcUrl alone, which made the
+			// backend the mode switch — and the docs say the opposite: "Static: calcUrl is empty,
+			// so GameService.goToNextLevel never makes a request" (docs/static-vs-dynamic.rst).
+			//
+			// Nothing enforced that emptiness. config.json carries calcUrl and defaultMode as
+			// INDEPENDENT keys, and docker-entrypoint.sh injects them independently, so a stack
+			// that sets CALC_URL without DEFAULT_MODE serves the client-side grid game wired to a
+			// calculator. v2/docker-compose.dynamic.yml did exactly that.
+			//
+			// The POST is not merely unnecessary in GRID mode, it is unused: the GRID branch of
+			// prepareNextLevel builds its boards from the local rasters and never reads the
+			// CalculationResult. So the only thing the round gained from the backend was a way to
+			// fail — measured against the esgame-dynamic stack on 2026-09-02, round 2 POSTed to
+			// the calculator, got 404, and showed "Something went wrong, please try again later"
+			// on a game that had every number it needed in the browser already.
+			if (this.settings.value.mode == 'SVG' && this.settings.value.calcUrl) {
 				this.loading(true);
 				let inputData = {} as { allocation: { id: number, lulc: number }[], round: number, score: number, game_id: string};
 				const allFields = [...this.selectedFields.value, ...this.notSelectedFields.value];

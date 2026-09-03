@@ -63,7 +63,7 @@ At a glance
      - ``1``
    * - ``calcUrl``
      - ``""`` (none — scored in the browser)
-     - ``http://localhost:8000`` (the FastAPI calculator)
+     - ``http://localhost:8000`` (the FastAPI calculator, which serves ``/``)
    * - ``defaultMode``
      - ``static``
      - ``dynamic``
@@ -132,15 +132,36 @@ Scoring: client-side vs. a backend
 
 This is the defining difference.
 
-* Static: ``calcUrl`` is empty, so ``GameService.goToNextLevel`` never makes a
-  network call — it scores the allocation locally with ``ScoreService`` and renders
-  the next level immediately. The game is fully offline.
+* Static: ``GameService.goToNextLevel`` never makes a network call — it scores the
+  allocation locally with ``ScoreService`` and renders the next level immediately.
+  The game is fully offline. This follows from the **mode**, not from ``calcUrl``
+  happening to be empty: the grid branch of ``prepareNextLevel`` never reads a
+  ``CalculationResult``, so a static deployment that also sets ``calcUrl`` still
+  scores in the browser and makes no request. It used to branch the other way round,
+  which made a configured backend able to break a game that did not need it.
 * Dynamic: ``calcUrl`` points at the calculator, so on each level submit the
   frontend ``POST``\ s the allocation
   ``{ allocation: [{id, lulc}], round, score, game_id }`` and consumes the returned
   ``CalculationResult`` (per consequence map: a ``score`` and a GeoServer WCS
   ``url``). The consequence rasters are then fetched from GeoServer and decoded by
   ``TiffService``. The exact request/response shapes are in :doc:`data-flow`.
+
+.. important::
+
+   ``calcUrl`` is the **endpoint** the browser POSTs to, not the origin the
+   calculator runs on. The app passes it to ``HttpClient.post`` unchanged and
+   appends no path of its own, and it cannot: the two calculators in this repository
+   serve different routes on purpose — ``tools/R/calculator.r`` serves ``/esgame``,
+   the FastAPI example serves ``/``. So a deployment backed by the R calculator must
+   set ``CALC_URL`` to ``https://…/esgame``; a value ending at the hostname returns
+   404 on every round.
+
+   That 404 is quiet. It goes to the calculator's port, so the frontend's access log
+   never sees it, and it is rejected before reaching the handler, so the calculator's
+   log does not record it either. The player gets only "Something went wrong, please
+   try again later". ``v2/e2e-stack`` exists to catch this: it POSTs to the
+   ``calcUrl`` the deployment actually serves, rather than comparing that value with
+   the variable it was injected from.
 
 The ``minSelected: 1`` gate in the dynamic example also means a level cannot be
 submitted with nothing allocated, whereas the static config sets no minimum.

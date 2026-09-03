@@ -8,6 +8,7 @@
 #   make esgame-up             build + start the static 'esgame' stack   (frontend :81)
 #   make esgame-down           stop + remove the 'esgame' stack
 #   make esgame-dynamic-up     build + start 'esgame-dynamic'            (:81, :8000, :8080)
+#   make esgame-dynamic-verify play a real round 2 in a browser against the running stack
 #   make esgame-dynamic-down   stop + remove the 'esgame-dynamic' stack
 #   make esgame-dynamic-example-up    self-contained dynamic EXAMPLE (esgame's own data + simple
 #                                     FastAPI calculator + seeded GeoServer) - playable end to end
@@ -25,7 +26,7 @@ COMPOSE_EXAMPLE := docker compose -p esgame-dynamic-example -f examples/esgame-d
 COMPOSE_PYGEOAPI := docker compose -p esgame-dynamic-pygeoapi -f examples/esgame-dynamic/docker-compose.pygeoapi.yml
 
 .PHONY: esgame-build esgame-up esgame-down \
-        esgame-dynamic-build esgame-dynamic-up esgame-dynamic-down \
+        esgame-dynamic-build esgame-dynamic-up esgame-dynamic-down esgame-dynamic-verify \
         esgame-dynamic-example-build esgame-dynamic-example-up esgame-dynamic-example-down \
         esgame-dynamic-pygeoapi-build esgame-dynamic-pygeoapi-up esgame-dynamic-pygeoapi-down
 
@@ -59,6 +60,18 @@ esgame-dynamic-up: esgame-dynamic-build
 	@echo "  frontend    http://localhost:$(or $(ESGAME_FRONTEND_PORT),81)/"
 	@echo "  calculator  http://localhost:$(or $(ESGAME_CALC_PORT),8000)/"
 	@echo "  geoserver   http://localhost:$(or $(ESGAME_GEOSERVER_PORT),8080)/geoserver"
+
+## Play a real round 2 in a browser against the running 'esgame-dynamic' stack.
+#
+# The gap this fills: v2/e2e supplies its own config.json and answers the calculator itself, so it
+# tests the APP and can never test a DEPLOYMENT — a stub answers whatever URL the app posts to.
+# v2/e2e-stack configures nothing and reads what the stack serves, which is the only arrangement
+# in which a wrong CALC_URL, or a mode that calls a backend it should not, can fail a test.
+#
+# Needs the stack up (`make esgame-dynamic-up`) and Google Chrome on the host.
+esgame-dynamic-verify:
+	cd v2 && ESGAME_STACK_URL="http://localhost:$(or $(ESGAME_FRONTEND_PORT),81)" \
+		npx playwright test --config e2e-stack/playwright.stack.config.ts
 
 ## Stop and remove the 'esgame-dynamic' stack.
 esgame-dynamic-down:

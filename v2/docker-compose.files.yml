@@ -24,7 +24,9 @@ services:
   esgame-core:
     environment:
       # The browser reaches the calculator via the published host port (it POSTs client-side).
-      CALC_URL: "http://localhost:${ESGAME_CALC_PORT:-8000}"
+      # The `/esgame` path is the calculator's route, not decoration — see the note in
+      # docker-compose.dynamic.yml. A bare origin here is a 404 on every round.
+      CALC_URL: "http://localhost:${ESGAME_CALC_PORT:-8000}/esgame"
     volumes:
       # The same directory the calculator writes into, served as /rounds by the frontend's nginx.
       # Read-only here: nginx has no business writing to it, and the calculator is the only writer.
