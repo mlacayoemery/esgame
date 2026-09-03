@@ -32,8 +32,8 @@
 
 			<tro-score-board *ngIf="!((level | async)?.scores)" class="score-board"></tro-score-board>
 			<tro-score-board *ngIf="(level | async)?.scores" isStatic [scores]="(level | async)!.scores" class="score-board"></tro-score-board>
-			<div *ngIf="(level | async)?.indicatorScores?.length" [ngClass]="imageExpand ? 'expanded' : ''" class="expandable">
-				<tro-spider-chart [entries]="(level | async)!.indicatorScores"></tro-spider-chart>
+			<div *ngIf="(chartEntries | async)?.length" [ngClass]="imageExpand ? 'expanded' : ''" class="expandable">
+				<tro-spider-chart [entries]="chartEntries | async"></tro-spider-chart>
 				<button mat-mini-fab color="primary" (click)="switchExpand()" aria-label="expand/collapse">
 					<mat-icon *ngIf="!imageExpand">open_in_full</mat-icon>
 					<mat-icon *ngIf="imageExpand">close_fullscreen</mat-icon>

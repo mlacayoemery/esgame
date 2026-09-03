@@ -51,6 +51,19 @@ export class Settings {
 	 * read.
 	 */
 	paletted?: boolean;
+	/**
+	 * Score the round in the BROWSER, so the numbers move as pieces are placed.
+	 *
+	 * The board already carries what this needs: every field on a consequence board holds that
+	 * cell's value, and SelectedField.updateScore records it per map — the same arithmetic the
+	 * grid game is scored by. Without this the score board and the chart are drawn from the
+	 * calculator's reply and therefore only change when a round is submitted.
+	 *
+	 * Opt-in per dataset, because it is only correct where the browser can reproduce the model.
+	 * It can for the agriculture game, whose consequence rasters ARE the cost surfaces. It cannot
+	 * for the Dutch model, where calculator.r solves a distance-decay field over the landscape.
+	 */
+	clientScored?: boolean;
 	/** SVG-mode cell border (between zones). Optional; defaults to the built-in look when unset. */
 	gridLineColor?: string;
 	gridLineWidth?: string;
@@ -113,6 +126,7 @@ export class Settings {
 		this.advancedInstructions = data.advancedInstructions;
 		this.calcUrl = data.calcUrl;
 		this.paletted = data.paletted;
+		this.clientScored = data.clientScored;
 		this.gridLineColor = data.gridLineColor;
 		this.gridLineWidth = data.gridLineWidth;
 		this.highlightWidth = data.highlightWidth;

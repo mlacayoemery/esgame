@@ -289,7 +289,13 @@ export class GameService {
 			if (calculationResult) {
 				consequences.forEach(m => m.urlToData = calculationResult.results.find(c => c.id == m.id)?.url!);
 				calculationResult.results.forEach(c => c.score = isNaN(c.score) ? 0 : c.score);
-				level.scores = [{ id: "all", score: previousScore!} , ...calculationResult.results.filter(c => c.id != "-1").map(c => ({ score: -((c.score ?? 0)*100), id: c.id } as ScoreEntry))];
+				// A client-scored board leaves level.scores unset ON PURPOSE. The score board falls
+				// back to its live mode — the one the grid game uses, recomputing from
+				// selectedFields on every click — and a fixed set of numbers from the round that
+				// was submitted would freeze it again.
+				if (!settings.clientScored) {
+					level.scores = [{ id: "all", score: previousScore!} , ...calculationResult.results.filter(c => c.id != "-1").map(c => ({ score: -((c.score ?? 0)*100), id: c.id } as ScoreEntry))];
+				}
 			}
 
 			// The spider chart is drawn from these five numbers rather than fetched as a PNG.
@@ -301,7 +307,7 @@ export class GameService {
 			// `id != "-1"` is kept when filtering, deliberately. A calculator that still sends the
 			// old plot result must not have it drawn as a sixth axis with a nonsense label; this
 			// frontend has to work against a backend that has not been redeployed yet.
-			if (calculationResult) {
+			if (calculationResult && !settings.clientScored) {
 				level.indicatorScores = calculationResult.results
 					.filter(c => c.id != "-1")
 					.map(c => ({ id: c.id, score: c.score ?? 0 }));

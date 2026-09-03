@@ -2,11 +2,15 @@ import { Component, HostBinding } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LevelBaseComponent } from '../level-base.component';
 import { GameService } from 'src/app/services/game.service';
-import { map, tap } from 'rxjs';
+import { combineLatest, map, tap } from 'rxjs';
 import { GameBoardType } from 'src/app/shared/models/game-board-type';
 import { GameBoardClickMode } from 'src/app/shared/models/game-board';
 import { ConfigService } from 'src/app/services/config.service';
+import { ScoreService } from 'src/app/services/score.service';
 
+
+/** Four pieces of 2 x 2 — the most any one production type can hold. See dataAgDynamic.json. */
+const PIECE_CELLS = 16;
 
 @Component({
     selector: 'tro-svg-level',
@@ -16,6 +20,38 @@ import { ConfigService } from 'src/app/services/config.service';
 })
 export class SvgLevelComponent extends LevelBaseComponent {
 	overlayBoard = this.gameService.currentLevelObs.pipe(map(o => o?.gameBoards), map(o => o?.find(p => p.gameBoardType == GameBoardType.DrawingMap)));
+
+	/**
+	 * The chart's axes, recomputed whenever a piece moves.
+	 *
+	 * A client-scored board sums each consequence map in the browser — the same numbers the score
+	 * board shows, from the same SelectedField.updateScore values — so the chart tracks the board
+	 * instead of the last round submitted. Anything else keeps the calculator's own scores.
+	 *
+	 * As a PERCENTAGE of what that map could hold: sixteen cells (four 2x2 pieces) times the map's
+	 * own highest value, read from its legend rather than written down here. The chart draws on a
+	 * 0-100 axis, so every map is on the same scale and 100 means a board that could not be worse.
+	 *
+	 * Absolute value because SelectedField.updateScore records a consequence as a cost, negated.
+	 */
+	chartEntries = combineLatest([
+		this.gameService.currentLevelObs,
+		this.gameService.selectedFieldsObs,
+		this.gameService.settingsObs,
+	]).pipe(map(([level, fields, settings]) => {
+		if (!level?.indicatorScores?.length && !settings?.clientScored) return [];
+		if (!settings?.clientScored) return level!.indicatorScores;
+
+		const entries = this.scoreService.createEmptyScoreEntry(level, [GameBoardType.ConsequenceMap]);
+		if (!entries.length) return [];
+		this.scoreService.calculateScore(entries, fields);
+		return entries.map(entry => {
+			const board = level!.gameBoards.find(b => b.id == entry.id);
+			const legend = board?.legend?.elements;
+			const ceiling = legend?.length ? PIECE_CELLS * legend[legend.length - 1].forValue : 0;
+			return { id: entry.id, score: ceiling ? (100 * Math.abs(entry.score)) / ceiling : 0 };
+		});
+	}));
 	settings = this.gameService.settingsObs;
 	imageExpand = false
 	minSelected = 0;
@@ -47,7 +83,7 @@ export class SvgLevelComponent extends LevelBaseComponent {
 		}
 	}));
 
-	constructor(gameService: GameService, configService: ConfigService) {
+	constructor(gameService: GameService, configService: ConfigService, private scoreService: ScoreService) {
 		super(gameService);
 		configService.getGameData('dynamic').subscribe({
 			next: data => {
