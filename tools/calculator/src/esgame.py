@@ -97,17 +97,18 @@ def placements(allocation):
 def worst_case(pack):
     """The largest cost each consequence map can carry, used to put scores on a 0-100 scale.
 
-    Derived from the model rather than chosen: a type may hold MAX_PIECES_PER_TYPE pieces of
-    PLACEMENT x PLACEMENT cells, so the worst it can do to one map is to sit on that map's
-    highest-valued cells.
+    Sixteen cells — MAX_PIECES_PER_TYPE pieces of PLACEMENT x PLACEMENT — times the map's own
+    highest value. A flat ceiling rather than the sum of the sixteen highest cells: it is the same
+    arithmetic on every map, so the axes of the chart are comparable, and it is reachable only by
+    a board where all sixteen cells hold the maximum.
     Fixed for the pack, so a score means the same thing in every round -- which is the property
     esgame's own bounds.json exists to give the R calculator (see tools/R/derive-bounds.R).
     """
-    budget = MAX_PIECES_PER_TYPE * PLACEMENT * PLACEMENT
+    cells = MAX_PIECES_PER_TYPE * PLACEMENT * PLACEMENT
     bounds = {}
     for _, _, map_name, _, _ in MAPS:
-        flat = sorted((v for row in pack["maps"][map_name]["grid"] for v in row), reverse=True)
-        bounds[map_name] = sum(flat[:budget])
+        top = max(v for row in pack["maps"][map_name]["grid"] for v in row)
+        bounds[map_name] = cells * top
     return bounds
 
 

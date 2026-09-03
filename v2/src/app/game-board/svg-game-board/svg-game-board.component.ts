@@ -130,7 +130,9 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	/** Recompute the per-piece icons. Cheap: one entry per placed piece, a handful in this game. */
 	private updatePieceImages() {
 		const width = this._boardData?.width ?? 0;
-		if (!this.imageMode || !width || this.clickMode != GameBoardClickMode.Field || this.readOnly) {
+		// Every board, not only the playable one: the maps beside it are where a player reads what a
+		// piece cost, and the piece itself is the clearest marker of where that cost was incurred.
+		if (!this.imageMode || !width) {
 			this.pieceImages = [];
 			return;
 		}

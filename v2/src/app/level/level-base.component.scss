@@ -82,6 +82,25 @@
 	top: 0;
 }
 
+// The suitability maps are the reference a player checks WHILE deciding where to build, so they
+// stay in view instead of scrolling away behind the consequence maps down the right.
+//
+// max-height is what makes the sticking actually happen, and it is not obvious: a sticky element
+// taller than its scrollport has nowhere to hold, so it rides up with the content. The scroller
+// here is tro-svg-level itself and this panel is a flex item in it with no height bound, so it
+// simply scrolled away — measured, and measured again with the bound in place, which is the only
+// variant of four that held. overflow-y so a panel taller than the viewport scrolls inside itself
+// rather than being clipped.
+//
+// The centre panel above declares the same `position: sticky` and does NOT stick, for this same
+// reason. Left as it is: it has been that way throughout and changing it moves the board.
+.panel.left-panel {
+	position: sticky;
+	top: 0;
+	max-height: 100%;
+	overflow-y: auto;
+}
+
 .production-type-buttons {
 	display: flex;
 	gap: 15px;
