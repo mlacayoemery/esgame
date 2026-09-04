@@ -86,6 +86,14 @@ export class Settings {
 	 * several production types at once, as assets/data.json's do.
 	 */
 	scoreByConversion?: boolean;
+	/**
+	 * Where the recorded best board for each round lives, relative to the app.
+	 *
+	 * Optional, and the button that loads it is hidden when unset — an answer is only meaningful
+	 * for the dataset it was computed against, and there is no way to check that from here.
+	 * See tools/optimizer/optimize.py, which writes it.
+	 */
+	optimalSolutionUrl?: string;
 	/** SVG-mode cell border (between zones). Optional; defaults to the built-in look when unset. */
 	gridLineColor?: string;
 	gridLineWidth?: string;
@@ -152,6 +160,7 @@ export class Settings {
 		this.autoOpenInstructions = data.autoOpenInstructions;
 		this.editablePreviousRounds = data.editablePreviousRounds;
 		this.scoreByConversion = data.scoreByConversion;
+		this.optimalSolutionUrl = data.optimalSolutionUrl;
 		this.gridLineColor = data.gridLineColor;
 		this.gridLineWidth = data.gridLineWidth;
 		this.highlightWidth = data.highlightWidth;

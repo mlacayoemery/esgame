@@ -99,5 +99,6 @@
   "custom color explanation": "The custom colours are only needed if there is a zone map which need a specific mapping of values in the tiff to certain colours. Otherwhise you can skip this step.",
   "low": "low",
   "high": "high",
-  "within this round only": "within this round only"
+  "within this round only": "within this round only",
+  "load optimal answer": "Load the best possible board for this round"
 }

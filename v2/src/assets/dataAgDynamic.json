@@ -19,6 +19,7 @@
 	"autoOpenInstructions": false,
 	"editablePreviousRounds": true,
 	"scoreByConversion": true,
+	"optimalSolutionUrl": "./assets/optimalAgDynamic.json",
 	"gridLineColor": "black",
 	"gridLineWidth": "1",
 	"highlightWidth": "2",

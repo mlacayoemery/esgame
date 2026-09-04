@@ -12,6 +12,7 @@ import { ScoreService, ScoreEntry } from './score.service';
 import { TranslateService } from '@ngx-translate/core';
 import { ApiService } from './api.service';
 import { CalculationResult } from '../shared/models/calculation-result';
+import { OptimalSolution } from '../shared/models/optimal-solution';
 import * as uuid from 'uuid';
 
 @Injectable({
@@ -95,6 +96,58 @@ export class GameService {
 			let selectedField = new SelectedField(fields, this.selectedProductionType.value);
 			this.selectedFields.next([...this.selectedFields.value, selectedField]);
 		}
+	}
+
+	/**
+	 * Replace the board with the best allocation recorded for the round being played.
+	 *
+	 * REPLACES rather than adds. There is one answer per round, and it is the whole board — adding
+	 * to what is already there would exceed maxElements, be rejected piece by piece, and leave a
+	 * mixture of the player's board and the optimiser's that is neither.
+	 *
+	 * The pieces are anchors, so they go through getAssociatedFields exactly as a click does: the
+	 * clamping at the board edge, the footprint, and the per-side flags all come from the one place
+	 * that knows them. Nothing here checks the answer fits — tools/optimizer/test_optimize.py does,
+	 * against the dataset's own gameBoardColumns, gameBoardRows, elementSize and maxElements.
+	 *
+	 * Silent when the round has no recorded answer. Round three of an infinite-levels game is a
+	 * question the optimiser was never asked, and inventing an empty board for it would read as
+	 * "the best you can do is nothing".
+	 */
+	loadOptimalSolution() {
+		const url = this.settings.value?.optimalSolutionUrl;
+		const level = this.currentLevel.value;
+		if (!url || !level) { return; }
+
+		this.apiService.getRequest(url).subscribe({
+			next: response => {
+				const round = (response as OptimalSolution)?.rounds?.[String(level.levelNumber)];
+				if (!round) {
+					console.warn(`${url} records no answer for round ${level.levelNumber}.`);
+					return;
+				}
+				const fields = round.pieces.flatMap(piece => {
+					// Compared as strings on purpose. ProductionType.id is typed number and the
+					// dataset writes these ids as strings ("10"), which is also how the answer
+					// file records them; the rest of the service gets away with `==` only because
+					// both sides are untyped there.
+					const productionType = this.productionTypes.value
+						.find(t => String(t.id) === String(piece.productionType));
+					if (!productionType) {
+						console.error(
+							`The recorded answer places production type "${piece.productionType}", ` +
+							`which this game does not define. Known ids: ` +
+							`[${this.productionTypes.value.map(t => t.id).join(', ') || 'none'}].`);
+						return [];
+					}
+					return [new SelectedField(this.getAssociatedFields(piece.id), productionType)];
+				});
+				this.selectedFields.next(fields);
+			},
+			// A missing or malformed answer must not take the game down: the button is a study aid,
+			// and the round is still playable by hand without it.
+			error: err => console.error(`Could not load the optimal answer from ${url}:`, err),
+		});
 	}
 
 	deselectField(id: number) {

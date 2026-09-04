@@ -8,7 +8,23 @@
 	<header>
 		<i></i>
 		<h1>{{ 'title' | translate }}</h1>
-		<span class="icon-help-circle" (click)="openHelp()"></span>
+		<div class="header-icons">
+			<!--
+			  Loads the best board tools/optimizer/optimize.py found for this round. Hidden unless
+			  the dataset names an answer file: an optimum belongs to the board it was computed on,
+			  and a game with different rasters would be handed someone else's.
+			-->
+			<button type="button" class="icon-optimal" *ngIf="hasOptimalSolution"
+				(click)="loadOptimalSolution()" [attr.aria-label]="'load optimal answer' | translate"
+				[title]="'load optimal answer' | translate">
+				<svg viewBox="0 0 24 24" aria-hidden="true">
+					<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+					<path d="M7.5 12.4l3 3 6-6.5" fill="none" stroke="currentColor" stroke-width="2"
+						stroke-linecap="round" stroke-linejoin="round"/>
+				</svg>
+			</button>
+			<span class="icon-help-circle" (click)="openHelp()"></span>
+		</div>
 	</header>
 	<p translate [translateParams]="{value: (level | async)?.levelNumber}">Level</p>
 	<div>
