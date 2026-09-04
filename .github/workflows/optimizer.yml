@@ -1,0 +1,66 @@
+name: The agriculture optimiser's answer is still the optimum
+
+# tools/optimizer/optimize.py searches for the best board the agriculture game can reach, for each
+# round, and v2/src/assets/optimalAgDynamic.json -- committed -- is what the checkmark button
+# loads. tools/optimizer/test_optimize.py already re-scores that file's pieces through the pinned
+# model and checks they are legal, but a test that reads the committed answer and checks it is
+# SELF-CONSISTENT cannot notice that a changed raster or dataset made some OTHER board better.
+# Only re-running the search can. tools/optimizer-check.sh does that: it re-derives the answer to a
+# temporary copy and diffs, so a stale file fails loudly here instead of quietly reaching a player.
+#
+# Path-filtered to what optimize.py actually reads, not tools/optimizer/** alone: the pack it
+# solves over (tools/calculator/data/tradeoff-ag.json, via model.py), the rasters that pack is
+# checked against (v2/src/assets/images/**), and the dataset that defines the board
+# (dataAgDynamic.json). Same reasoning as calculator.yml's own comment on why it watches
+# calc_files/** directly instead of trusting tools/calculator/** alone -- a change on the far side
+# of an import is still a change this depends on.
+#
+# calc_files/game.js itself is deliberately NOT in this filter. calculator.yml already fails any
+# pull request that changes a scored grid there without committing the regenerated
+# tools/calculator/data/tradeoff-ag.json in the same PR, so by the time a change reaches master the
+# committed pack -- which IS in this filter -- already reflects it.
+
+on:
+  pull_request:
+    paths:
+      - 'tools/optimizer/**'
+      - 'tools/calculator/src/**'
+      - 'tools/calculator/data/tradeoff-ag.json'
+      - 'v2/src/assets/images/**'
+      - 'v2/src/assets/dataAgDynamic.json'
+      - 'v2/src/assets/optimalAgDynamic.json'
+      - '.github/workflows/optimizer.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'tools/optimizer/**'
+      - 'tools/calculator/src/**'
+      - 'tools/calculator/data/tradeoff-ag.json'
+      - 'v2/src/assets/images/**'
+      - 'v2/src/assets/dataAgDynamic.json'
+      - 'v2/src/assets/optimalAgDynamic.json'
+      - '.github/workflows/optimizer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  answer-is-optimal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.14'
+
+      - name: Install Pillow
+        # Required, not best-effort: tools/optimizer-check.sh refuses to run without it rather
+        # than let the raster-comparison test silently skip the one check that is the premise of
+        # the whole tool. See tools/optimizer/requirements.txt.
+        run: pip install -r tools/optimizer/requirements.txt
+
+      - name: The committed answer is still what the optimiser produces
+        run: tools/optimizer-check.sh

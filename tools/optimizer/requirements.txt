@@ -1,0 +1,9 @@
+# tools/optimizer/test_optimize.py needs Pillow for exactly one check: that the calculator's pack
+# grids are byte-identical to the GeoTIFFs the frontend ships. That comparison is the premise of
+# the whole tool, so it is not optional -- tools/optimizer-check.sh refuses to run without Pillow
+# installed rather than let the test silently skip it.
+#
+# Unpinned, matching docs/requirements.txt: this never ships (no Dockerfile reads it), so there is
+# nothing to reproduce byte-for-byte, and Dependabot watches this range the same way it watches
+# that one -- see the pip / tools/optimizer entry in .github/dependabot.yml.
+Pillow

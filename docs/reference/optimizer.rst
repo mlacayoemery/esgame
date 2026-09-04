@@ -128,7 +128,37 @@ Running it
 change to the rasters, the board geometry, or ``maxElements``; the guards in
 :file:`test_optimize.py` fail if the shipped answer stops matching the dataset it claims.
 
-Pillow is needed only by the raster-comparison guard, which skips itself when it is absent.
+Re-running the search, in CI and by hand
+----------------------------------------
+
+:file:`test_optimize.py` checks that the shipped answer is *consistent*: its claimed scores
+re-derive through the model, both boards are legal, and the board's dimensions still match
+the dataset. None of that says the pieces are *optimal*. A raster change that leaves those
+eight pieces scoring exactly what they scored, while making some other board better, passes
+every test in the file — and the button goes on loading a board that is no longer the
+answer.
+
+Only running the search again can notice that, which is what
+:file:`tools/optimizer-check.sh` does:
+
+.. code-block:: console
+
+   $ tools/optimizer-check.sh
+
+It runs the tests, re-derives the answer over a saved copy of the asset, and diffs. A stale
+file fails with the diff and with the one command that fixes it. The copy goes back on any
+exit, an interrupt part-way through the write included, so running it never leaves the
+working tree dirty.
+
+:file:`.github/workflows/optimizer.yml` runs that script, path-filtered to what
+:file:`optimize.py` reads rather than to :file:`tools/optimizer` alone — the model pack, the
+rasters that pack is checked against, and the dataset that defines the board. A change on
+the far side of an import is still a change the answer depends on.
+
+Pillow is optional for a bare ``unittest`` run, where the raster-comparison guard skips
+itself when it is absent, and required here: :file:`tools/optimizer-check.sh` refuses to
+start without it, because a run that skips that guard is green while checking nothing.
+:file:`tools/optimizer/requirements.txt` is what CI installs.
 
 
 The answer, and the button
