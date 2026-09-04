@@ -9,7 +9,7 @@ time precisely because nothing had ever run them, and the failures were silent �
 that logged ``done`` having registered nothing, an e2e suite passing against a board that
 never rendered, a schema check reporting 10/10 valid on manifests the API server rejected.
 
-Last updated: **2026-08-14**.
+Last updated: **2026-09-05**.
 
 .. note::
 
@@ -55,6 +55,13 @@ Verified working
      - 421 unit tests, 26 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
        SEO 100. The board renders 2,436 fields; the e2e suite asserts that rather than
        just asserting the component mounted.
+   * - The agriculture game's shipped optimum
+     - :file:`v2/src/assets/optimalAgDynamic.json` is re-derived and diffed by
+       :file:`tools/optimizer-check.sh`, gated by :file:`.github/workflows/optimizer.yml`.
+       Confirmed able to fail on a board that is legal, self-consistent and **sub-optimal** —
+       the case all eight of the optimiser's own tests pass; see "the checks were audited for
+       vacuity". The browser agrees independently: loading the answer scores 9775 in round one
+       and 5175 in round two through the frontend's own scoring path.
    * - A deployment's own configuration
      - ``v2/e2e-stack`` (5 specs), run against a live compose stack by
        ``make esgame-dynamic-verify`` and by the ``v2-stack`` job in
@@ -1970,6 +1977,49 @@ A second shape, found 2026-08-07 — *the check was sound and could not run*
    that :file:`docs/index.rst` does not contain, so it changed nothing and "passed". The runner
    now diffs the file and prints whether the mutation actually applied, which is the same lesson
    as the rest of this section applied to the tests rather than to the code.
+
+A third shape, found 2026-09-05 — *every test passed, and none of them tested the claim*
+   The first shape was a check that could not fail, the second a check that could not run. This
+   one runs, fails on real breakage, and is still not evidence for what the file it guards
+   claims.
+
+   :file:`v2/src/assets/optimalAgDynamic.json` is what the agriculture game's checkmark button
+   loads, and it claims to be **the best board the round can reach**. The eight tests in
+   :file:`tools/optimizer/test_optimize.py` check that its claimed scores re-derive through the
+   model, that both boards are legal, that the board dimensions still match the dataset, and
+   that round one's optimum is worth less than round two's once the costs appear. Every one of
+   those is a statement about the file being *consistent*. Optimality is a statement about every
+   board that is **not** in the file, and nothing that reads only this file can make it.
+
+   Demonstrated rather than argued. Moving one ranch piece from (17, 23) to (16, 23) and writing
+   the score that board really earns — 5175 down to 5075 — gives a file that is legal,
+   correctly scored, internally consistent, and not the optimum. **All eight tests pass on it.**
+   So a raster change that left those eight pieces scoring what they scored while making some
+   other board better would ship a button that loads the wrong answer, green the whole way.
+
+   Only re-running the search can tell. :file:`tools/optimizer-check.sh` re-derives the answer
+   over a saved copy of the asset and diffs it, and :file:`.github/workflows/optimizer.yml` runs
+   that on every path :file:`tools/optimizer/optimize.py` reads — the model pack it solves over,
+   the rasters that pack is checked against, and the dataset that defines the board.
+
+   Confirmed able to fail, by mutation:
+
+   .. code-block:: text
+
+      sub-optimal but consistent    8 tests pass, the re-derivation catches it   exit 1
+      a piece moved, score left     the tests fail first, nothing is re-derived  exit 1
+      Pillow hidden (import fails)  refuses to start rather than skip the        exit 2
+                                    pack-matches-the-rasters comparison
+      unmutated                     passes in 0.5s, working tree clean after     exit 0
+
+   The Pillow row is the vacuity lesson in its original form: that comparison is the premise of
+   the whole tool, and a run without Pillow skips it and reports success. Requiring the library
+   is what stops "green" from meaning "checked nothing".
+
+   **The lesson generalises to every generated file that is committed.** Tests over it can only
+   check the output against itself; the one check of *this is what the generator produces* is
+   running the generator. ``calculator.yml`` already does exactly that, one layer down, for
+   :file:`tools/calculator/data/tradeoff-ag.json` — the pack the optimiser then solves over.
 
 
 Not verified
