@@ -282,6 +282,67 @@ every value above 100 to one colour; the grid board never had this because it ig
 switches the raster to nearest-neighbour scaling, since interpolating classified data
 invents colours the legend does not list.
 
+A paletted board colours a value by its **index** in the list of classes, not by the
+value itself, and that is a sharper edge than it sounds. Every gradient here is six
+colours: ``colors[0]`` is ``#d2b188``, the tan a grid map gives its first distinct value,
+and the remaining five are the ramp. So the number of classes decides which ramp entry
+each value lands on, and two boards drawn from the same raster disagree the moment they
+count classes differently.
+
+That is exactly how the consequence maps came to be drawn in colours the static game
+never shows. Every consequence map was given a declared scale,
+``values: [0, 25, 50, 75, 100, 125]``, so that each legend would list a 125 class. The
+declared scale has six entries; the livestock rasters hold five; so on those boards every
+value moved one step along the gradient and all four maps came out wrong. Removing it
+restores agreement byte for byte — measured, e.g. Carbon as
+``#F8F27D``/``#F7D068``/``#F6A825``/``#AE5322`` on both stacks.
+
+The 125 was not imagined, though. The rasters are asymmetric by design:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Raster
+     - Classes
+   * - :file:`images/esgame_img_ag.tif` (arable suitability)
+     - ``0, 75, 150, 225, 300, 375``
+   * - :file:`images/esgame_img_ranch.tif` (livestock suitability)
+     - ``0, 50, 100, 150, 200, 250``
+   * - :file:`images/esgame_img_ag_*.tif` (arable consequences)
+     - ``0, 25, 50, 75, 100, 125``
+   * - :file:`images/esgame_img_ranch_*.tif` (livestock consequences)
+     - ``0, 25, 50, 75, 100``
+
+Arable both yields more and costs more, and only its consequence maps reach 125. Reading
+each raster's own classes shows the right legend for whichever conversion is selected —
+five swatches under arable, four under livestock — which a single declared scale could
+not do for both. :file:`v2/src/app/shared/ag-dynamic-matches-static.spec.ts` pins this:
+it names the offending map whenever the two datasets disagree about anything that decides
+a colour, including a declared scale on one and not the other.
+
+A related consequence of the same asymmetry, since it reads as a bug and is not: the
+livestock Hunt map is nearly empty. :file:`images/esgame_img_ranch_hunt.tif` holds
+``0`` in 674 of its 812 cells, so 138 cells carry a cost; the arable one carries 378.
+The static game draws exactly the same sparse map — checked by extracting all 812 cells
+from every board on both stacks and diffing them, which agreed everywhere except the two
+cells under the pieces.
+
+The score sheet
+~~~~~~~~~~~~~~~
+
+``scoreByConversion`` lays the sheet out as one column per production type — what that
+conversion gains, then what it costs — instead of one row per map name. It is opt-in
+because the alternative is not merely a different look: grouping by name **sums** the maps
+that share one. That is the only sensible reading where a consequence map belongs to
+several production types at once, as :file:`data.json`'s do, and the wrong one here, where
+it left a single Carbon row that could not say which conversion incurred it.
+
+Each row also states its score as a share of what that map could hold: ``PIECE_CELLS``
+(sixteen — four 2 × 2 pieces) times the map's own top class, read from its legend rather
+than written down. That is what the spider chart was for, so a dataset laying the sheet out
+this way draws no chart; the numbers sit in the place the player is already reading.
+
 Cell index 0 — the top-left — is a normal zone with an outline, like any other. It was
 not always: ``tiffToSvgPaths`` hard-coded ``0`` as its structural sentinel, so the cell
 numbered 0 had no path, no outline and could not be built on. The fix was to let the
