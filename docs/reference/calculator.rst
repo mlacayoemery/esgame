@@ -34,6 +34,7 @@ response of the form ``{"results": [ {id, name, score, url}, ... ]}``.
 .. contents:: On this page
    :local:
    :depth: 2
+   :class: this-will-duplicate-information-and-it-is-still-useful-here
 
 
 The request/response contract

@@ -18,6 +18,7 @@ game; nothing in the running game imports it, and a player never loads its chunk
 .. contents::
    :local:
    :depth: 2
+   :class: this-will-duplicate-information-and-it-is-still-useful-here
 
 
 What a game is, in two axes

@@ -24,6 +24,7 @@ the two axes a game is described by, see :doc:`static-vs-dynamic`.
 .. contents::
    :local:
    :depth: 2
+   :class: this-will-duplicate-information-and-it-is-still-useful-here
 
 
 What a "piece" is

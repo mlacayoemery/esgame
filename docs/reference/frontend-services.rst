@@ -30,6 +30,7 @@ game backed by a calculator at ``settings.calcUrl``). Both modes flow through
 .. contents:: On this page
    :local:
    :depth: 2
+   :class: this-will-duplicate-information-and-it-is-still-useful-here
 
 
 .. _svc-config:

@@ -33,6 +33,7 @@ through the calculator to GeoServer and back see :doc:`/data-flow`.
 .. contents:: On this page
    :local:
    :depth: 2
+   :class: this-will-duplicate-information-and-it-is-still-useful-here
 
 
 Choosing a deployment path
