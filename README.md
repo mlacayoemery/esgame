@@ -56,6 +56,7 @@ different raster entirely. See [static vs. dynamic](https://mlacayoemery.github.
 |---|---|
 | [v2/](v2/) | The Angular app (the current game), its Dockerfile and compose files |
 | [docs/](docs/) | Sphinx documentation, published to [`/esgame/docs/`](https://mlacayoemery.github.io/esgame/docs/) |
+| [examples/](examples/) | The two games this repository ships, named for the two characteristics that describe one — data type and unit selection ([examples/README.md](examples/README.md)) |
 | [examples/esgame-dynamic/](examples/esgame-dynamic/) | Self-contained dynamic-mode example stack (FastAPI calculator + GeoServer or pygeoapi) |
 | [deploy/k8s/](deploy/k8s/) | Kustomize base for deploying the full dynamic stack to Kubernetes |
 | [tools/R/](tools/R/) | The R/Plumber calculation backend used by the dynamic stack |
