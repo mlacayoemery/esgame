@@ -6,7 +6,7 @@
 #
 # `make esgame-dynamic-example-up` from the repo root does the whole thing. Directly:
 #
-#   docker build -t local/esgame-core:latest v2          # ESGAME_IMAGE must already exist
+#   docker build -f v2/Dockerfile -t local/esgame-core:latest .          # ESGAME_IMAGE must already exist
 #   ESGAME_IMAGE=local/esgame-core:latest docker compose -p esgame-dynamic-example up -d --build
 #
 # Or omit ESGAME_IMAGE to build against the published ghcr.io/mlacayoemery/esgame:master.

@@ -192,7 +192,7 @@ class ItServesTheEsgameFrontend(ServerTest):
 
     The frontend cannot be asked to adapt: it sends {allocation:[{id, lulc}]} and reads back a
     score and a fetchable raster URL per consequence board, because that is what
-    tools/R/calculator.r returns. These pin this end of that contract, so dataAgDynamic.json can be
+    tools/R/calculator.r returns. These pin this end of that contract, so dataDynamicGridRect.json can be
     played against this model rather than only against the R one.
     """
 
@@ -215,7 +215,7 @@ class ItServesTheEsgameFrontend(ServerTest):
         status, body, _ = self.json_request("/esgame", self.a_round())
         self.assertEqual(status, 200, body)
         got = [r["id"] for r in body["results"]]
-        # Exactly the consequence ids in v2/src/assets/dataAgDynamic.json. A missing one is not a
+        # Exactly the consequence ids in examples/dataDynamicGridRect.json. A missing one is not a
         # cosmetic gap: prepareNextLevel looks each board's id up in the response and assigns the
         # url it finds, so an absent id becomes urlToData undefined and the level fails to build.
         self.assertEqual(got, ["4", "5", "6", "7", "8", "9", "10", "11"])

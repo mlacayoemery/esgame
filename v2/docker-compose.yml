@@ -8,7 +8,9 @@ name: esgame
 services:
   esgame-core:
     build:
-      context: .
+      # The repository root, not v2/: the image copies the games from examples/.
+      context: ..
+      dockerfile: v2/Dockerfile
     image: local/esgame-core
     container_name: esgame-core
     ports:

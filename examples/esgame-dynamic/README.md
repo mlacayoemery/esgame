@@ -77,7 +77,7 @@ as a GeoTIFF at `…/collections/<name>/coverage?f=GTiff` — the drop-in equiva
 make esgame-dynamic-pygeoapi-up      # http://localhost:81/  (calculator :8000, pygeoapi :5005)
 make esgame-dynamic-pygeoapi-down
 # or directly (ESGAME_IMAGE must already exist locally — the make target builds it):
-docker build -t local/esgame-core:latest v2
+docker build -f v2/Dockerfile -t local/esgame-core:latest .
 ESGAME_IMAGE=local/esgame-core:latest \
   docker compose -p esgame-dynamic-pygeoapi -f docker-compose.pygeoapi.yml up -d --build
 

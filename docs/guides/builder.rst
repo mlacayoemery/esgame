@@ -72,6 +72,29 @@ The scripts in :file:`v2/package.json`:
    * - ``e2e``
      - ``ng build && playwright test``
      - Build, then run the Playwright end-to-end suite.
+   * - ``sync:examples``
+     - ``node scripts/sync-examples.mjs``
+     - Copies :file:`examples/*.json` -- the shipped games -- into :file:`v2/src/assets`, which
+       is where the app fetches them from at run time. The copies are gitignored;
+       :file:`examples` holds the only edited version.
+   * - ``prestart`` / ``prebuild`` / ``prewatch`` / ``pretest`` / ``pree2e``
+     - ``npm run sync:examples``
+     - npm runs these before the script they prefix, so anything that serves, builds or tests the
+       app has the games first. It refuses to run on an empty source rather than building an app
+       with no datasets in it.
+
+.. note::
+
+   **The frontend image builds from the repository root**, not from :file:`v2`:
+
+   .. code-block:: console
+
+      $ docker build -f v2/Dockerfile -t esgame-frontend .
+
+   The games it serves are authored in :file:`examples`, and a build context of :file:`v2` cannot
+   reach above itself -- it would produce an image that builds cleanly and serves a board that
+   404s. The root :file:`.dockerignore` excludes everything and adds back the two directories the
+   build reads, so the context stays small.
 
 Build configurations
 ---------------------
@@ -253,7 +276,7 @@ The shipped :file:`v2/src/assets/config.json` defaults are:
 .. code-block:: json
 
    {
-     "staticDataUrl": "assets/dataGridExample.json",
+     "staticDataUrl": "assets/dataStaticGridRect.json",
      "dynamicDataUrl": "assets/data.json",
      "calcUrl": "",
      "defaultMode": "static"
@@ -272,7 +295,7 @@ Directly:
 
 .. code-block:: console
 
-   $ docker build -t esgame-frontend v2
+   $ docker build -f v2/Dockerfile -t esgame-frontend .
 
 Or via the :file:`esgame/Makefile`, which drives the Compose stacks (the frontend
 publishes on host port ``81``):
@@ -386,7 +409,7 @@ This resolves to:
 
 .. code-block:: console
 
-   $ docker build -t local/esgame-core:latest v2
+   $ docker build -f v2/Dockerfile -t local/esgame-core:latest .
    $ ESGAME_IMAGE=local/esgame-core:latest \
        docker compose -p esgame-dynamic-example \
        -f examples/esgame-dynamic/docker-compose.yml build

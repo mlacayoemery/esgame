@@ -27,7 +27,7 @@ export interface AppConfig {
 }
 
 const DEFAULT_CONFIG: AppConfig = {
-	staticDataUrl: 'assets/dataGridExample.json',
+	staticDataUrl: 'assets/dataStaticGridRect.json',
 	dynamicDataUrl: 'assets/data.json',
 	defaultMode: 'static'
 };

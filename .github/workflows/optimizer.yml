@@ -1,7 +1,7 @@
 name: The agriculture optimiser's answer is still the optimum
 
 # tools/optimizer/optimize.py searches for the best board the agriculture game can reach, for each
-# round, and v2/src/assets/optimalAgDynamic.json -- committed -- is what the checkmark button
+# round, and examples/optimalDynamicGridRect.json -- committed -- is what the checkmark button
 # loads. tools/optimizer/test_optimize.py already re-scores that file's pieces through the pinned
 # model and checks they are legal, but a test that reads the committed answer and checks it is
 # SELF-CONSISTENT cannot notice that a changed raster or dataset made some OTHER board better.
@@ -11,7 +11,7 @@ name: The agriculture optimiser's answer is still the optimum
 # Path-filtered to what optimize.py actually reads, not tools/optimizer/** alone: the pack it
 # solves over (tools/calculator/data/tradeoff-ag.json, via model.py), the rasters that pack is
 # checked against (v2/src/assets/images/**), and the dataset that defines the board
-# (dataAgDynamic.json). Same reasoning as calculator.yml's own comment on why it watches
+# (dataDynamicGridRect.json). Same reasoning as calculator.yml's own comment on why it watches
 # calc_files/** directly instead of trusting tools/calculator/** alone -- a change on the far side
 # of an import is still a change this depends on.
 #
@@ -27,8 +27,8 @@ on:
       - 'tools/calculator/src/**'
       - 'tools/calculator/data/tradeoff-ag.json'
       - 'v2/src/assets/images/**'
-      - 'v2/src/assets/dataAgDynamic.json'
-      - 'v2/src/assets/optimalAgDynamic.json'
+      - 'examples/dataDynamicGridRect.json'
+      - 'examples/optimalDynamicGridRect.json'
       - '.github/workflows/optimizer.yml'
   push:
     branches: [master]
@@ -37,8 +37,8 @@ on:
       - 'tools/calculator/src/**'
       - 'tools/calculator/data/tradeoff-ag.json'
       - 'v2/src/assets/images/**'
-      - 'v2/src/assets/dataAgDynamic.json'
-      - 'v2/src/assets/optimalAgDynamic.json'
+      - 'examples/dataDynamicGridRect.json'
+      - 'examples/optimalDynamicGridRect.json'
       - '.github/workflows/optimizer.yml'
   workflow_dispatch:
 

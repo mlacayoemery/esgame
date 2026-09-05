@@ -168,7 +168,13 @@ export class Settings {
 		this.maps = data.maps.map((o: any) => ({ id: o.id, name: o.name, gradient: convertGradient(o.gradient), customColorId: o.customColorId, gameBoardType: convertGameBoardType(o.gameBoardType), productionTypes: o.productionTypes.map((p: any) => Number.parseInt(p)), urlToData: o.urlToData, values: o.values }));
 		this.customColors = data.customColors;
 		this.basicInstructionsImageUrl = data.basicInstructionsImageUrl;
-		this.advancedInstructionsImageUrl = data.advancedInstructionsImageUrl;
+		// EVERY dataset in and around this repository spells this key with two c's --
+		// `advanccedInstructionsImageUrl` -- including places', which cannot be edited from here.
+		// Reading only the correct spelling meant the key an author fills in is the one nothing
+		// reads, and the failure is silence: no image, no warning. Both are accepted, the correct
+		// spelling wins, and the configurator emits the correct one.
+		this.advancedInstructionsImageUrl =
+			data.advancedInstructionsImageUrl ?? data.advanccedInstructionsImageUrl;
 		this.minValue = data.minValue;
 		this.maxValue = data.maxValue;
 		this.minSelected = data.minSelected;

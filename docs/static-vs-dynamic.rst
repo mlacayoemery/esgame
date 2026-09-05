@@ -1,45 +1,80 @@
-Configuration 2: static grid versus the dynamic example
-=======================================================
+=========================================
+Static or dynamic, grid or SVG: two axes
+=========================================
 
 .. Where this document's section-local :file: paths resolve from; see
 .. docs/_checks/check-file-paths.py.
 .. file-base: v2/src/assets
-.. file-base: examples/esgame-dynamic/frontend/assets/images
+.. file-base: v2/src/assets/images
+.. file-base: examples
 
-esgame ships its flagship scenario, **Configuration 2 — "Tradeoff: Agriculture
-Edition"**, in two forms that are deliberately the *same game content shown two
-ways*. Comparing them is the clearest way to understand what the GRID/"static" and
-SVG/"dynamic" modes actually change, because everything *except* the mode is held
-roughly constant.
+A game in esgame is described by **two independent characteristics**, and conflating them is the
+single most reliable source of confusion in this repository:
 
-* **Static Configuration 2** — the client-side grid game published on GitHub Pages.
-  Game data: :file:`v2/src/assets/dataGridExample.json`; selected by
-  :file:`v2/src/assets/config.json` (``defaultMode: "static"``).
-* **The dynamic example** (``examples/esgame-dynamic``) — *the same scenario rebuilt
-  for SVG/dynamic mode* with a real backend. Game data:
-  :file:`examples/esgame-dynamic/frontend/data.json`; selected by that example's
-  mounted :file:`config.json` (``defaultMode: "dynamic"``). Its README states the
-  data.json is "built from the static grid data".
+**Type of data** — where the numbers for the next round come from.
+   *Static*: the browser has everything it needs. The rasters ship with the game and
+   ``ScoreService`` scores the allocation locally.
 
-.. note::
+   *Dynamic*: a calculator scores the round. The browser POSTs its allocation and gets back a
+   score per indicator and a URL per consequence raster, which become the next level's boards.
 
-   "Configuration 2" is the *Static maps* configuration on the start page — the
-   grid game (:doc:`reference/frontend-components` ``GridLevelComponent``). The
-   dynamic example takes that scenario's data and adapts it to the SVG game
-   (``SvgLevelComponent``); it is **not** a different game, it is the same
-   allocation problem played through the dynamic pipeline.
+**Unit selection** — what a player clicks.
+   *Raster grid*: a lattice of square cells generated from ``gameBoardColumns`` ×
+   ``gameBoardRows``. No geometry files; the board is implied by two numbers.
 
-.. important::
+   *Vector SVG*: polygons traced from a zone raster (the ``Drawing`` map) by
+   :file:`v2/src/app/shared/helpers/svg/tiffToSvgPaths.js`. One path per distinct raster value.
 
-   There is a **third** form, and it is the one to reach for when the question is
-   "the same game, scored by a backend": :file:`v2/src/assets/dataAgDynamic.json`,
-   run by ``make esgame-ag-up``. See `The faithful dynamic board`_ below.
+The two are orthogonal **as ideas**. They are not orthogonal **in this implementation**, and that
+is worth stating plainly rather than discovering:
 
-   Do not confuse either of these with :file:`v2/src/assets/data.json`, which is a
-   **different game** — the six-production-type Dutch/PLACES landscape model on a
-   468 × 335 raster, scored by :file:`tools/R/calculator.r`. It shares a title with
-   the agriculture game and nothing else, which has misled people before.
+.. list-table::
+   :header-rows: 1
+   :widths: 20 40 40
 
+   * -
+     - Raster grid units
+     - Vector SVG units
+   * - **Static data**
+     - :file:`dataStaticGridRect.json` — the shipped grid game, playable from a file with no
+       network at all.
+     - **Not reachable.** ``GameService.goToNextLevel`` refuses: an SVG game with no ``calcUrl``
+       alerts *"This game needs a calculation backend, and none is configured."*
+   * - **Dynamic data**
+     - **Not implemented.** The same function only POSTs when ``mode == 'SVG'``; the GRID branch
+       of ``prepareNextLevel`` builds its boards from local rasters and never reads a
+       ``CalculationResult``.
+     - :file:`dataDynamicGridRect.json` (this game), and :file:`v2/src/assets/data.json` /
+       :file:`v2/src/assets/dataRect.json` (the six-type Dutch model).
+
+**A vector-SVG unit is one zone.** ``elementSize`` greater than 1 groups cells by stepping
+through ``gameBoardColumns`` (``GameService.getAssociatedFields``), so it means something only
+where the zones are laid out as a rectangular grid -- which is what the *GridRect* in
+:file:`dataDynamicGridRect.json` records. That board is 812 zones, one per cell of 28 x 29,
+selected two-by-two so a piece matches the grid game's. A board of irregular zones, such as the
+465 hexagons of :file:`v2/src/assets/data.json`, must leave ``elementSize`` at 1, and nothing in
+the data would catch it if it did not.
+
+Both empty cells trace to one function, ``GameService.goToNextLevel``, and each was a deliberate
+fix rather than an oversight: the GRID branch stopped POSTing because a stack that set ``CALC_URL``
+without ``DEFAULT_MODE`` served the client-side grid game wired to a calculator, gaining nothing
+but a way to fail; the SVG branch started refusing because without a backend it fetched
+placeholder consequence URLs, they 404'd, and the player got a spinner that never cleared.
+
+So today **the mode is the axis**, and the names of the two shipped examples say so. What the
+names do *not* say is that the data type is settled by the **deployment**, not by the dataset:
+``calcUrl`` is a ``config.json`` key that :file:`v2/docker-entrypoint.sh` injects, so the same
+:file:`dataDynamicGridRect.json` is a backend game under ``make esgame-ag-up`` and an
+unadvanceable one on GitHub Pages, where ``calcUrl`` is ``""``.
+
+
+The two shipped examples
+========================
+
+Both are the **Agriculture Edition**: two production types over the same 28 × 29 landscape,
+weighing suitability against four ecosystem-service consequences. They are the same game
+content — a property pinned by :file:`v2/src/app/shared/dynamic-matches-static.spec.ts`, not
+merely intended — differing on both axes at once.
 
 At a glance
 -----------
@@ -49,51 +84,44 @@ At a glance
    :widths: 26 37 37
 
    * - Aspect
-     - Static Configuration 2
-     - Dynamic example
-   * - Game data file
-     - ``assets/dataGridExample.json``
-     - ``examples/esgame-dynamic/frontend/data.json``
-   * - ``mapMode``
-     - ``grid``
-     - ``svg``
-   * - Board size
+     - :file:`dataStaticGridRect.json`
+     - :file:`dataDynamicGridRect.json`
+   * - Data type
+     - static — scored in the browser, no backend
+     - dynamic — a calculator scores the round and returns the next level's rasters
+   * - Unit selection
+     - raster grid (``mapMode: grid``)
+     - vector SVG (``mapMode: svg``), zones traced from :file:`esgame_ag_zones.tif`
+   * - Board
      - 28 × 29
-     - 28 × 29 (identical)
+     - 28 × 29, one zone per cell (812)
    * - Production types
-     - ``10`` (arable), ``20`` (livestock)
-     - ``10`` (arable), ``20`` (livestock) — identical ids
+     - ``10`` (arable), ``20`` (livestock), ``maxElements`` 4 each
+     - identical — the ids match on purpose, so one calculator serves either board
    * - ``elementSize``
      - ``2``
-     - ``1``
-   * - ``maxElements`` (per type)
-     - ``4``
-     - ``700``
-   * - ``minSelected``
-     - *unset* (no gate)
-     - ``1``
-   * - ``calcUrl``
-     - ``""`` (none — scored in the browser)
-     - ``http://localhost:8000`` (the FastAPI calculator, which serves ``/``)
-   * - ``defaultMode``
-     - ``static``
-     - ``dynamic``
+     - ``2`` — the same 2 × 2 piece, which is why the SVG board is *GridRect*
    * - Maps
-     - 2 Suitability + 8 Consequence, rendered as grid cells with client-side
-       gradients (no image files)
-     - a ``Drawing`` zone map + a ``Background`` + 2 Suitability + 8 Consequence,
-       each a georeferenced GeoTIFF
-   * - Where rasters come from
-     - n/a — there are none
-     - GeoServer (WCS ``GetCoverage``), seeded from
-       :file:`examples/esgame-dynamic/geoserver/rasters`
-   * - Scoring
-     - client-side ``ScoreService`` (instant, offline)
-     - backend ``POST`` to ``calcUrl`` → ``CalculationResult``
+     - 2 Suitability + 8 Consequence (10)
+     - the same 10, plus a ``Drawing`` zone map and a ``Background`` (12)
+   * - Rasters
+     - the same GeoTIFFs under :file:`v2/src/assets/images`, drawn as grid cells
+     - the same GeoTIFFs, drawn as traced polygons
+   * - Live score
+     - always — the grid game has never done anything else
+     - ``clientScored: true``, so the numbers move as pieces are placed rather than only
+       when the round is submitted
+   * - Advancing a level
+     - local; ``prepareNextLevel`` builds the next board from the shipped rasters
+     - ``POST`` to ``calcUrl``; without one the game says so and stays put
+   * - Extras
+     - —
+     - ``paletted``, ``scoreByConversion``, ``editablePreviousRounds``,
+       ``autoOpenInstructions: false``, and an ``optimalSolutionUrl`` that puts the
+       optimiser's answer behind a checkmark
    * - Deployment
-     - static files on GitHub Pages (or any web server)
-     - ``docker compose``: frontend + calculator + GeoServer + one-shot seeder
-
+     - static files on GitHub Pages, or opened from disk
+     - ``make esgame-ag-up`` — the frontend plus :doc:`reference/static-calculator`
 
 What is the same
 ----------------
@@ -115,7 +143,7 @@ Map representation: cells vs. traced zones
 
 In GRID mode the board is a regular lattice of square cells. In SVG mode the
 playable units are **zones traced from a raster** (the ``Drawing`` map,
-:file:`example_zones.tif`): contiguous pixels of equal value become one polygon.
+:file:`esgame_ag_zones.tif`): contiguous pixels of equal value become one polygon.
 The static config therefore needs no image files at all — the grid is generated
 from ``gameBoardColumns`` × ``gameBoardRows`` — whereas the dynamic example ships a
 zone map, a background, and a suitability/consequence GeoTIFF per map. See
@@ -238,7 +266,7 @@ When to use which
 The faithful dynamic board
 --------------------------
 
-:file:`v2/src/assets/dataAgDynamic.json` is the agriculture game in SVG mode, scored
+:file:`examples/dataDynamicGridRect.json` is the agriculture game in SVG mode, scored
 by :doc:`reference/static-calculator` — the same model the grid game is checked
 against. ``make esgame-ag-up``; no GeoServer, because this game's cost surfaces are
 fixed and there is nothing to publish.
@@ -252,7 +280,7 @@ FastAPI stand-in, in being *faithful* rather than merely similar:
 
    * - Aspect
      - Dynamic example
-     - ``dataAgDynamic.json``
+     - ``dataDynamicGridRect.json``
    * - Scored by
      - a stand-in FastAPI calculator
      - ``tools/calculator``, the static game's own model
@@ -317,7 +345,7 @@ The 125 was not imagined, though. The rasters are asymmetric by design:
 Arable both yields more and costs more, and only its consequence maps reach 125. Reading
 each raster's own classes shows the right legend for whichever conversion is selected —
 five swatches under arable, four under livestock — which a single declared scale could
-not do for both. :file:`v2/src/app/shared/ag-dynamic-matches-static.spec.ts` pins this:
+not do for both. :file:`v2/src/app/shared/dynamic-matches-static.spec.ts` pins this:
 it names the offending map whenever the two datasets disagree about anything that decides
 a colour, including a declared scale on one and not the other.
 

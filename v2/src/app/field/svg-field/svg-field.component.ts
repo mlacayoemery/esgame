@@ -67,7 +67,7 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 	 * Measured, and both broken forms are in this repository's own data files:
 	 *
 	 *   #40916c   + 7D = #40916c7D     rgba(64, 145, 108, 0.49)   data.json
-	 *   #FFF      + 7D = #FFF7D        REJECTED                   dataGridExample.json
+	 *   #FFF      + 7D = #FFF7D        REJECTED                   dataStaticGridRect.json
 	 *   #b2b2b2c0 + 7D = #b2b2b2c07D   REJECTED                   data.json customColors
 	 *
 	 * So expand shorthand and replace any alpha already there, rather than appending to it.

@@ -390,8 +390,8 @@ export class GameService {
 					level.showConsequenceMaps = true;
 					// Per the DATASET's own cross-reference, as the grid path does. This gave every
 					// production type every consequence map, which is why the agriculture board
-					// showed eight maps where the grid board shows four: dataGridExample.json and
-					// dataAgDynamic.json both name one production type per map (ids 4-7 arable,
+					// showed eight maps where the grid board shows four: dataStaticGridRect.json and
+					// dataDynamicGridRect.json both name one production type per map (ids 4-7 arable,
 					// 8-11 livestock), and the grid path honours that through attachConsequenceMap
 					// while this ignored it.
 					//

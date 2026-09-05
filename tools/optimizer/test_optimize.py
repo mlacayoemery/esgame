@@ -32,7 +32,7 @@ class PackMatchesTheShippedRasters(unittest.TestCase):
     and every number it prints would still look reasonable.
     """
 
-    # pack grid -> the raster dataGridExample.json/dataAgDynamic.json point at
+    # pack grid -> the raster dataStaticGridRect.json/dataDynamicGridRect.json point at
     PAIRS = [
         ("pts_crop_ag", "esgame_img_ag.tif"),
         ("pts_past_ps", "esgame_img_ranch.tif"),
@@ -161,7 +161,7 @@ class TheShippedAnswer(unittest.TestCase):
                                      f"round {rnd}: {a} overlaps {b}")
 
     def test_the_board_matches_the_dataset_the_frontend_plays(self):
-        data = os.path.join(ROOT, "v2", "src", "assets", "dataAgDynamic.json")
+        data = os.path.join(ROOT, "examples", "dataDynamicGridRect.json")
         with open(data) as fh:
             dataset = json.load(fh)
         self.assertEqual(self.asset["board"]["columns"], dataset["gameBoardColumns"])

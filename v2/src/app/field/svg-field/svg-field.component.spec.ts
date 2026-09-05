@@ -275,7 +275,7 @@ describe('SvgFieldComponent consequence-map opacity', () => {
 		return c.fillColor;
 	};
 
-	// Every form that appears in src/assets/data.json or dataGridExample.json.
+	// Every form that appears in src/assets/data.json or dataStaticGridRect.json.
 	for (const fieldColor of ['#40916c', '#FFF', '#b2b2b2c0', '#f0f']) {
 		it(`produces a colour a browser accepts for ${fieldColor}`, () => {
 			const withAlpha = place(fieldColor, true);

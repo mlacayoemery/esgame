@@ -20,7 +20,7 @@ describe('ConfigService', () => {
 		await done;
 		expect(service.appConfig.calcUrl).toBe('http://x');
 		expect(service.appConfig.defaultMode).toBe('dynamic');
-		expect(service.appConfig.staticDataUrl).toBe('assets/dataGridExample.json'); // default kept
+		expect(service.appConfig.staticDataUrl).toBe('assets/dataStaticGridRect.json'); // default kept
 	});
 
 	it('falls back to defaults when config.json is absent', async () => {

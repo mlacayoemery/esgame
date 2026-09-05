@@ -27,7 +27,9 @@ Run `$ ng serve` for creating a development server. By default, the app is reach
 ### Run with docker
 **Build**
 ```
-$ docker build -t tradeoffv2 .
+# From this directory. The context is the repository root, one level up, because the
+# image copies the shipped games from examples/ as well as this project.
+$ docker build -f Dockerfile -t tradeoffv2 ..
 ```
 
 **Run**

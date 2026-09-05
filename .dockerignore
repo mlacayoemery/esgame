@@ -1,0 +1,15 @@
+# The frontend image builds from the REPOSITORY ROOT, not from v2/, because the games it serves
+# are authored in examples/ and v2/ cannot reach above itself in a build context. Everything is
+# excluded and the two directories the build reads are added back: a context that only grows when
+# someone re-includes something is how 14 MB quietly becomes 400 MB.
+*
+!v2
+!examples
+
+# ...minus what is either huge, generated, or meaningless inside an image.
+v2/node_modules
+v2/dist
+v2/.angular
+v2/test-results
+v2/playwright-report
+examples/esgame-dynamic

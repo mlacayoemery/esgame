@@ -1,8 +1,8 @@
-import dataGridExample from '../../assets/dataGridExample.json';
-import dataAgDynamic from '../../assets/dataAgDynamic.json';
+import staticGame from '../../../../examples/dataStaticGridRect.json';
+import dynamicGame from '../../../../examples/dataDynamicGridRect.json';
 
-// The two agriculture datasets are the SAME GAME. dataGridExample.json is played on grid blocks
-// and scored in the browser; dataAgDynamic.json is played on SVG zones. That is the whole of the
+// The two agriculture datasets are the SAME GAME. dataStaticGridRect.json is played on grid blocks
+// and scored in the browser; dataDynamicGridRect.json is played on SVG zones. That is the whole of the
 // intended difference — the maps behind them are the same rasters and must be drawn alike.
 //
 // This exists because they twice drifted apart in a way nobody could see from the JSON. Declaring
@@ -21,14 +21,14 @@ const byId = (maps: MapEntry[]): Record<string, MapEntry> =>
 /** The fields that decide what a map is drawn from and how it is coloured. */
 const COLOUR_FIELDS = ['urlToData', 'gradient', 'customColorId', 'gameBoardType', 'productionTypes'];
 
-describe('dataAgDynamic.json', () => {
-	const staticMaps = byId(dataGridExample.maps as MapEntry[]);
-	const dynamicMaps = byId(dataAgDynamic.maps as MapEntry[]);
+describe('dataDynamicGridRect.json', () => {
+	const staticMaps = byId(staticGame.maps as MapEntry[]);
+	const dynamicMaps = byId(dynamicGame.maps as MapEntry[]);
 
 	it('draws every one of the static game\'s maps from the same raster and gradient', () => {
 		Object.entries(staticMaps).forEach(([id, expected]) => {
 			const actual = dynamicMaps[id];
-			expect(actual, `no map ${id} in dataAgDynamic.json`).toBeDefined();
+			expect(actual, `no map ${id} in dataDynamicGridRect.json`).toBeDefined();
 			COLOUR_FIELDS.forEach(field => {
 				expect(JSON.stringify(actual[field]), `map ${id}.${field}`)
 					.toBe(JSON.stringify(expected[field]));
@@ -47,11 +47,11 @@ describe('dataAgDynamic.json', () => {
 	});
 
 	it('places the same piece on the same board', () => {
-		expect(dataAgDynamic.elementSize).toBe(dataGridExample.elementSize);
-		expect(dataAgDynamic.imageMode).toBe(dataGridExample.imageMode);
-		expect(dataAgDynamic.gameBoardColumns).toBe(dataGridExample.gameBoardColumns);
-		expect(dataAgDynamic.gameBoardRows).toBe(dataGridExample.gameBoardRows);
-		expect(dataAgDynamic.highlightColor).toBe(dataGridExample.highlightColor);
+		expect(dynamicGame.elementSize).toBe(staticGame.elementSize);
+		expect(dynamicGame.imageMode).toBe(staticGame.imageMode);
+		expect(dynamicGame.gameBoardColumns).toBe(staticGame.gameBoardColumns);
+		expect(dynamicGame.gameBoardRows).toBe(staticGame.gameBoardRows);
+		expect(dynamicGame.highlightColor).toBe(staticGame.highlightColor);
 	});
 
 	// Non-vacuity: the comparison above is only worth anything if there are maps to compare, and

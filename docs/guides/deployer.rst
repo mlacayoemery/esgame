@@ -80,7 +80,7 @@ starts) are:
      - Default
      - Meaning
    * - ``staticDataUrl``
-     - ``assets/dataGridExample.json``
+     - ``assets/dataStaticGridRect.json``
      - Grid-mode dataset URL.
    * - ``dynamicDataUrl``
      - ``assets/data.json``
@@ -238,7 +238,7 @@ The no-store config rule
 nginx (:file:`esgame/v2/nginx.conf`) serves the runtime config and game data
 with ``Cache-Control: no-store``::
 
-   location ~* /assets/(config|data|dataGridExample)\.json$ {
+   location ~* /assets/[^/]*\.json$ {
        add_header Cache-Control "no-store";
        try_files $uri =404;
    }
@@ -327,7 +327,7 @@ base image; it defaults to ``ghcr.io/mlacayoemery/esgame:master``):
 
 .. code-block:: console
 
-   $ docker build -t local/esgame-core:latest v2
+   $ docker build -f v2/Dockerfile -t local/esgame-core:latest .
    $ ESGAME_IMAGE=local/esgame-core:latest \
        docker compose -p esgame-dynamic-example up -d --build
 

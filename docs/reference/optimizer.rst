@@ -54,7 +54,7 @@ All read off the frontend rather than assumed:
    * - Rule
      - Where it comes from
    * - Board is 28 × 29 cells
-     - ``gameBoardColumns`` / ``gameBoardRows`` in :file:`v2/src/assets/dataAgDynamic.json`
+     - ``gameBoardColumns`` / ``gameBoardRows`` in :file:`examples/dataDynamicGridRect.json`
    * - A piece is 2 × 2
      - ``elementSize``
    * - Four pieces per production type
@@ -124,7 +124,7 @@ Running it
    $ python3 tools/optimizer/optimize.py --write    # ...and update the shipped answer
    $ python3 -m unittest discover -s tools/optimizer -p 'test_*.py'
 
-``--write`` regenerates :file:`v2/src/assets/optimalAgDynamic.json`. Re-run it after any
+``--write`` regenerates :file:`examples/optimalDynamicGridRect.json`. Re-run it after any
 change to the rasters, the board geometry, or ``maxElements``; the guards in
 :file:`test_optimize.py` fail if the shipped answer stops matching the dataset it claims.
 

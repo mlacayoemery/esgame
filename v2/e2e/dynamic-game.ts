@@ -45,7 +45,7 @@ async function useDynamicGameWithCalculator(
 		await route.fulfill({
 			contentType: 'application/json',
 			body: JSON.stringify({
-				staticDataUrl: 'assets/dataGridExample.json',
+				staticDataUrl: 'assets/dataStaticGridRect.json',
 				dynamicDataUrl: dataUrl,
 				calcUrl: CALC_URL,
 				defaultMode: 'dynamic'

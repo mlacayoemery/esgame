@@ -7,7 +7,6 @@ Architecture
 .. file-base: v2
 .. file-base: v2/src
 .. file-base: v2/src/assets
-.. file-base: examples/esgame-dynamic/frontend/assets
 
 **esgame** is the canonical implementation of the *Tradeoff / Ecosystem-Services*
 land-use allocation game: an Angular single-page application in which players
@@ -121,7 +120,7 @@ defaults if the file is absent (``catchError`` returns ``{}``). The shipped
 .. code-block:: json
 
    {
-       "staticDataUrl": "assets/dataGridExample.json",
+       "staticDataUrl": "assets/dataStaticGridRect.json",
        "dynamicDataUrl": "assets/data.json",
        "calcUrl": "",
        "defaultMode": "static"
@@ -137,7 +136,7 @@ The ``AppConfig`` interface defines these runtime fields:
      - Default
      - Meaning
    * - ``staticDataUrl``
-     - ``assets/dataGridExample.json``
+     - ``assets/dataStaticGridRect.json``
      - Game-settings JSON loaded for the **grid** mode.
    * - ``dynamicDataUrl``
      - ``assets/data.json``
@@ -207,7 +206,7 @@ nginx caching policy
 
    * - Match
      - ``Cache-Control`` / behavior
-   * - ``/assets/(config|data|dataGridExample).json``
+   * - ``/assets/[^/]*.json``
      - ``no-store`` — never cached, so mounted/injected overrides apply immediately.
    * - ``*.js *.css *.woff2? *.ttf *.eot``
      - ``public, max-age=31536000, immutable`` (content-hashed build assets).

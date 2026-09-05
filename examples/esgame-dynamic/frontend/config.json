@@ -1,6 +1,6 @@
 {
-	"staticDataUrl": "assets/dataGridExample.json",
-	"dynamicDataUrl": "assets/data.json",
+	"staticDataUrl": "assets/dataStaticGridRect.json",
+	"dynamicDataUrl": "assets/dataDynamicGridRect.json",
 	"calcUrl": "http://localhost:8000",
 	"defaultMode": "dynamic",
 	"gridLineColor": "#9e9e9e",
