@@ -5,7 +5,7 @@ import { CALC_URL, useDynamicGameWithCalculator, clickPastHelp, placeFields } fr
 //
 // perf/README.md named this as the gap: Lighthouse CI gates the BUILD (transfer bytes, which are
 // stable to the byte) but nothing watches what the app does after it loads, and the heavy client
-// op — decoding five GeoTIFFs into a 466-hexagon SVG board — happens entirely after the page has
+// op — decoding five GeoTIFFs into a 465-hexagon SVG board — happens entirely after the page has
 // finished loading, where Lighthouse is no longer looking.
 //
 // TWO KINDS OF ASSERTION HERE, and the difference is the whole design.
@@ -60,7 +60,7 @@ async function fieldsSettle(page: any, min: number, quietMs = 2_000, timeout = 1
 
 test.describe('client render performance', () => {
 	// Serial for the same reason round-trip.spec.ts is: each test decodes five GeoTIFFs on top of
-	// a 466-hexagon board, and running these concurrently crashes the browser rather than failing
+	// a 465-hexagon board, and running these concurrently crashes the browser rather than failing
 	// an assertion. Timings measured under concurrency would also mean nothing.
 	test.describe.configure({ mode: 'serial', timeout: 180_000 });
 
@@ -75,7 +75,7 @@ test.describe('client render performance', () => {
 		// The board is not "rendered" when the element appears — it is rendered when the hexagons
 		// are in the DOM. Waiting on the element alone would time the Angular bootstrap and call
 		// it a board render.
-		// 100 is a floor, not the geometry: a real board is 466 hexagons, and anything above
+		// 100 is a floor, not the geometry: a real board is 465 hexagons, and anything above
 		// 100 means rendering genuinely started rather than the page still being blank.
 		const firstBoard = await fieldsSettle(page, 100);
 		const firstBoardMs = firstBoard.at - t0;
@@ -108,7 +108,7 @@ test.describe('client render performance', () => {
 		console.log(`  coverage requests: ${coverageRequests.length}`);
 
 		// THE GATE. Five coverages came back; five were fetched. Re-fetching one is a wasted
-		// decode of a whole 466-hexagon board, and it is invisible in every other spec here.
+		// decode of a whole 465-hexagon board, and it is invisible in every other spec here.
 		const round1 = coverageRequests.filter(u => u.includes('round=1'));
 		expect(new Set(round1).size, `duplicate coverage fetches: ${round1.join(', ')}`)
 			.toBe(round1.length);

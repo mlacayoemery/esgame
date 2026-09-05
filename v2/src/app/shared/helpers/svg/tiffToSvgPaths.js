@@ -52,6 +52,13 @@ export default function tiffToSvgPaths(data, options = {}) {
     const edgeXCount = width * (height + 1);
 
     const uniqueValues = new Set(bitmask);
+    // "No zone" is not a zone. It is skipped by the trace below, so leaving it here produced a
+    // group that never gained an edge and an entry in the returned map whose path is the empty
+    // string -- a field with no geometry, which the board still renders as <path d=""> and a
+    // player cannot click. It only became visible once a raster whose nodata is not 0 passed its
+    // real nodata in: before that the value 0 was excluded here while the actual background was
+    // traced as an ordinary zone.
+    uniqueValues.delete(UNDEFINED_VALUE);
     const valueGroups = new Map();
 
     for(let uniqueValue of uniqueValues) {

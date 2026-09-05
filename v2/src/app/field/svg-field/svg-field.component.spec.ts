@@ -227,8 +227,8 @@ describe('SvgFieldComponent grid-line settings', () => {
 	});
 });
 
-// There are 466 of these on the default board, and the dynamic game builds a fresh set of
-// boards every round — so anything a field subscribes to without tearing down is leaked 466
+// There are 465 of these on the default board, and the dynamic game builds a fresh set of
+// boards every round — so anything a field subscribes to without tearing down is leaked 465
 // times per board per round, and each leaked subscription keeps the destroyed component and
 // its DOM element alive for the lifetime of the app.
 //

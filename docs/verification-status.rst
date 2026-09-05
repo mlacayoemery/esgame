@@ -656,6 +656,43 @@ The dependency audit — *closed 2026-08-09*
    delete a live exception line. ``npm audit`` reports its own failures as ``{"error": {...}}``,
    which the script now checks for before reading anything else.
 
+The board drew a hexagon that was not one — *fixed 2026-09-05*
+   :file:`v2/src/app/shared/helpers/svg/tiffToSvgPaths.js` emits one path per **distinct raster
+   value**, and ``writeRaster(NAflag = -9999)`` puts −9999 in every cell outside the board. The
+   helper assumed the value meaning "no zone" was 0, which :file:`v2/src/assets/images/New_hexagons.tif`
+   has none of, so the nodata region was traced as an ordinary zone: a 466th path on a raster
+   holding **465 units** — the number :file:`docs/boards.rst` and :file:`tools/R/make-base-raster.R`
+   both give. It was rendered and unplayable (``editable: path.id != data.nodata``), and it was
+   counted as a hexagon everywhere, including on this page.
+
+   It surfaced out of a fix to something else. The agriculture board numbers its zones from 0
+   with nodata 65535, so that assumption cost it cell 0 entirely; passing the raster's real
+   nodata fixed that board and broke this one, because the nodata value is *also* what the helper
+   fills its padding border with — deliberately, since the border is what stops an edge walk. The
+   nodata region then merged with the border, could not be traced at all, and the entry it left
+   behind was the empty string. The board rendered ``<path troSvgField d="">``: a field with no
+   geometry, which nothing can click.
+
+   **Found by three e2e specs rather than by reading.** ``round-trip``, ``render-timing`` and
+   ``rectangular-board`` failed with ``locator.click: Element is outside of the viewport``, the
+   locator resolving to ``<path d="">``. That it was the change and not the machine was
+   established the only way that answers it: master built in a separate worktree and the same
+   three specs run against the same browser, 11 passed.
+
+   The fix is one line — "no zone" is not a zone, so no group is made for it. Measured after,
+   from the rasters themselves:
+
+   .. code-block:: text
+
+      New_hexagons.tif     nodata -9999   465 zones   0 empty
+      esgame_ag_zones.tif  nodata 65535   812 zones   0 empty, and zone 0 present
+
+   Every board now draws exactly one path per unit. :file:`v2/e2e/rectangular-board.spec.ts`
+   asserted the old count as ``units + NODATA_PATH`` precisely so that a change which stopped
+   emitting the nodata path would fail with an arithmetic instead of a bare number. It did, and
+   that constant is now 0. The measurements above on this page that say "466 hexagons" were true
+   when they were written: they counted this path.
+
 
 Known incomplete
 ----------------

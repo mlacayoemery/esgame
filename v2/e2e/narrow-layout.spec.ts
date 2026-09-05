@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 
-// The board is 466 hexagons built for a workshop projector, and the level is three panels at
+// The board is 465 hexagons built for a workshop projector, and the level is three panels at
 // 25% / 50% / 25% of a row. That row needs about 620px. Below it, three of the six production
 // types were off-screen and Next Level with them.
 //
@@ -69,7 +69,7 @@ for (const { name, width, height } of WIDTHS) {
 
 // The grid game is the canonical one — it is what GitHub Pages serves — and it shares
 // level-base.component.scss with the SVG level, so it takes this layout whether or not anyone
-// aimed it there. Its board is a 28x29 grid rather than 466 hexagons, so it is a different shape
+// aimed it there. Its board is a 28x29 grid rather than 465 hexagons, so it is a different shape
 // at the same width and worth one pass of its own.
 test('the grid game fits on a phone too', async ({ page }) => {
 	await page.setViewportSize({ width: 390, height: 844 });
