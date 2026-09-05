@@ -134,7 +134,13 @@ test('a browser plays a round end to end against the cluster', async ({ page }) 
 
 	// The label a screen reader is given is built from those same scores, so an empty chart — a
 	// frame drawn with no entries — fails here instead of passing as a visible <svg>.
-	await expect(chart).toHaveAttribute('aria-label', /\d+ of 100/);
+	//
+	// "65%", not "65 of 100": cbad659 made the axes percentages, and the suffix already says so.
+	// The specs under e2e/ were updated with it and this one was not, because they gate a pull
+	// request and this file runs after an image publish — so it went red on the first cluster run
+	// after that merge. Same drift v2/e2e/dynamic-game.ts exists to prevent, in the pair it does
+	// not cover.
+	await expect(chart).toHaveAttribute('aria-label', /\d+%/);
 
 	// The browser built and sent its own allocation — nothing here constructed it.
 	expect(t.posts).toHaveLength(1);

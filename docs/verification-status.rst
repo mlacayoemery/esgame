@@ -216,6 +216,23 @@ Verified working
        accumulates rather than being overwritten. Verified by mutation: replaying round 1's
        response for round 2 (what a failed in-place swap of ``settings.maps`` looks like on
        the wire) fails the overlap assertion, naming all five reused coverages.
+
+       **The chart assertion drifted with the app, and the weekly job is where that showed.**
+       ``cbad659`` moved the chart's ``aria-label`` from "65 of 100" to "65%". The specs under
+       :file:`v2/e2e` were updated with it — they gate every pull request — and this file was
+       not, because it runs after an image publish rather than on a diff. It went red on the
+       first cluster run after that merge (2026-09-05), waiting 120s for a label the app no
+       longer writes. That is the drift :file:`v2/e2e/dynamic-game.ts` was written to stop,
+       happening in the pair it does not cover, and a path filter cannot fix it: the change that
+       breaks this spec is in the component, not in :file:`deploy/k8s`.
+
+       **And the old pattern accepted a round that scored nothing.** ``/\d+ of 100/`` matches
+       ``0 of 100``, and the label in that run reads ``0%`` on all five indicators. Whether zero
+       is right for the published overlay is a separate question — the committed raster shares
+       four ids of 465 with the board, which is recorded above — but this assertion has never
+       been able to tell a scored round from an unscored one, and with ``/\d+%/`` it still
+       cannot. Left as it is rather than tightened here, because making the weekly job red for a
+       data condition is a decision about the deployment, not about the test.
    * - Browser-facing GeoServer URL
      - The R calculators built their WCS URLs from ``GEOSERVER`` — the in-cluster
        Service name — so the browser got URLs it could not resolve while everything
