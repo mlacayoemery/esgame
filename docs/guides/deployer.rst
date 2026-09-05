@@ -163,6 +163,29 @@ which preserves the ``/esgame/`` project-site base segment while encoding the
 rest of the path. (This redirect is **unused under nginx/Docker**, where the
 nginx SPA fallback handles deep links instead — see Path 2.)
 
+.. warning::
+
+   **It swallows the documentation's 404s too, and shows the game instead.** Pages serves one
+   404 page for the whole site, and it cannot tell a mistyped documentation URL from an app deep
+   link. So ``/esgame/docs/no-such-page.html`` does not report "not found": the shim redirects to
+   ``/esgame/?/docs/no-such-page.html``, the SPA loads, and ``index.html``'s companion script
+   rewrites the address bar **back** to the URL that was asked for. The result is a page showing
+   the game under a documentation URL, which reads as a redirect rather than as the 404 it is.
+
+   Two consequences worth knowing before debugging one:
+
+   * **A page published moments ago behaves this way until the browser's copy expires.** Pages
+     sends ``cache-control: max-age=600`` on the 404, so a URL opened before its deploy finished
+     keeps showing the game for up to ten minutes. A hard reload, or one request with a
+     cache-busting query, settles it — as does waiting.
+   * **A genuine typo looks identical to that.** The way to tell them apart is to ask the server
+     rather than the browser: ``curl -sI <url>`` returns ``200`` and
+     ``content-type: text/html`` for a page that exists, whatever the tab is showing.
+
+   This is the cost of hosting the docs and the SPA on one Pages site, and it is accepted rather
+   than fixed: Pages uses the site-root ``404.html`` only, so a second 404 page under
+   :file:`docs` would never be served.
+
 One-time repository setup
 -------------------------
 
