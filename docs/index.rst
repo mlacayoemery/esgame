@@ -31,6 +31,8 @@ Start with the :doc:`architecture` overview, then the guide that matches your ro
    data-flow
    game-mechanics
    static-vs-dynamic
+   static-grid-game
+   dynamic-svg-game
    boards
    dependency-review
    verification-status
