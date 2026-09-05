@@ -41,9 +41,9 @@ is worth stating plainly rather than discovering:
      - **Not reachable.** ``GameService.goToNextLevel`` refuses: an SVG game with no ``calcUrl``
        alerts *"This game needs a calculation backend, and none is configured."*
    * - **Dynamic data**
-     - **Not implemented.** The same function only POSTs when ``mode == 'SVG'``; the GRID branch
-       of ``prepareNextLevel`` builds its boards from local rasters and never reads a
-       ``CalculationResult``.
+     - **Opt-in, since 2026-09-05.** A grid dataset that sets ``backendScored: true`` POSTs its
+       allocation like an SVG one and builds the next round's boards from the rasters that come
+       back. Without that key the game is client-side, whatever ``calcUrl`` says.
      - :file:`dataDynamicGridRect.json` (this game), and :file:`v2/src/assets/data.json` /
        :file:`v2/src/assets/dataRect.json` (the six-type Dutch model).
 
@@ -55,17 +55,33 @@ selected two-by-two so a piece matches the grid game's. A board of irregular zon
 465 hexagons of :file:`v2/src/assets/data.json`, must leave ``elementSize`` at 1, and nothing in
 the data would catch it if it did not.
 
-Both empty cells trace to one function, ``GameService.goToNextLevel``, and each was a deliberate
-fix rather than an oversight: the GRID branch stopped POSTing because a stack that set ``CALC_URL``
-without ``DEFAULT_MODE`` served the client-side grid game wired to a calculator, gaining nothing
-but a way to fail; the SVG branch started refusing because without a backend it fetched
-placeholder consequence URLs, they 404'd, and the player got a spinner that never cleared.
+Three of the four are reachable. The behaviour of each traces to one function,
+``GameService.goToNextLevel``, and the two refusals in it were deliberate: the GRID branch stopped
+POSTing because a stack that set ``CALC_URL`` without ``DEFAULT_MODE`` served the client-side grid
+game wired to a
+calculator, gaining nothing but a way to fail; the SVG branch started refusing because without a
+backend it fetched placeholder consequence URLs, they 404'd, and the player got a spinner that
+never cleared.
 
-So today **the mode is the axis**, and the names of the two shipped examples say so. What the
-names do *not* say is that the data type is settled by the **deployment**, not by the dataset:
-``calcUrl`` is a ``config.json`` key that :file:`v2/docker-entrypoint.sh` injects, so the same
-:file:`dataDynamicGridRect.json` is a backend game under ``make esgame-ag-up`` and an
-unadvanceable one on GitHub Pages, where ``calcUrl`` is ``""``.
+**How a grid game asks for a backend, and why it has to ask.** ``backendScored`` is a key of the
+DATASET, not of the deployment. That is the whole design: ``calcUrl`` and ``defaultMode`` are
+independent ``config.json`` keys that :file:`v2/docker-entrypoint.sh` injects independently, so
+"grid mode with a calculator configured" is a state one env var reaches by accident — and did, on
+2026-09-02. A game whose consequence rasters ship with it has nothing to gain from that request
+and a round to lose, so it has to say it wants one. Both halves are then true at once: the dataset
+declares it *can* be scored remotely, and the deployment supplies the calculator that does it.
+
+That deployment half still matters for SVG, and the names of the shipped examples do not say so:
+``calcUrl`` is injected per deployment, so the same :file:`dataDynamicGridRect.json` is a backend
+game under ``make esgame-ag-up`` and an unadvanceable one on GitHub Pages, where ``calcUrl`` is
+``""``.
+
+The remaining gap is **static data on vector-SVG units**. An SVG game has no consequence maps of
+its own to fall back on — its ``urlToData`` entries are placeholders the calculator overwrites —
+so "no backend" leaves nothing to draw. Closing that cell means an SVG dataset whose consequence
+rasters are real and shipped, which :file:`dataDynamicGridRect.json` nearly is: it carries real
+rasters and ``clientScored: true``, and what it still needs a backend for is the *next round's*
+maps rather than the numbers.
 
 
 The two shipped examples

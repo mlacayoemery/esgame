@@ -146,23 +146,31 @@ round's net is production minus costs — the same arithmetic
 Nothing is fetched, so the numbers move the moment a piece lands.
 
 
-It never calls a backend
-========================
+It calls a backend only if its dataset asks
+===========================================
 
-``GameService.goToNextLevel`` branches on the **mode first**, then ``calcUrl``:
+This game does not, and that is a property of :file:`dataStaticGridRect.json` rather than of grid
+mode. Since 2026-09-05 a raster-grid dataset may set ``backendScored: true``, and then it POSTs
+its allocation and builds the next round's boards from the rasters that come back, exactly as
+:doc:`dynamic-svg-game` does — the two axes of :doc:`static-vs-dynamic` are independent that far.
+
+What has not changed is that the presence of a ``calcUrl`` decides nothing on its own:
 
 .. code-block:: typescript
 
-   if (this.settings.value.mode == 'SVG' && this.settings.value.calcUrl) { ... }
-   else if (this.settings.value.mode == 'SVG') { /* refuses: no backend configured */ }
+   const scoredOnTheBackend =
+       !!settings.calcUrl && (settings.mode == 'SVG' || !!settings.backendScored);
+
+   if (scoredOnTheBackend) { /* POST, then build the next level from the reply */ }
+   else if (settings.mode == 'SVG') { /* refuses: no backend configured */ }
    else { this.prepareNextLevel(); }
 
-A grid game with a ``calcUrl`` configured does not post to it. That is deliberate: the GRID
-branch of ``prepareNextLevel`` builds the next board from the local rasters and never reads a
-``CalculationResult``, so the request could only add a way to fail — and did, on 2026-09-02, when
-a stack that set ``CALC_URL`` without ``DEFAULT_MODE`` served this game wired to a calculator,
-got a 404 on round two and showed *"Something went wrong"* on a game that had every number it
-needed in the browser already.
+A grid game with a ``calcUrl`` configured but no ``backendScored`` does not post to it. That is
+deliberate: this game's consequence rasters ship with it, so the request could only add a way to
+fail — and did, on 2026-09-02, when a stack that set ``CALC_URL`` without ``DEFAULT_MODE`` served
+this game wired to a calculator, got a 404 on round two and showed *"Something went wrong"* on a
+game that had every number it needed in the browser already. The opt-in is what makes that state
+unreachable by accident while still leaving the combination available to a dataset that wants it.
 
 
 Running it

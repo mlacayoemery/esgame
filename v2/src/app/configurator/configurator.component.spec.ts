@@ -37,9 +37,10 @@ describe('ConfiguratorComponent map mode', () => {
 	// WHAT THE MODE MAY DECIDE CHANGED ON 2026-09-05. It used to disable elementSize (forcing 1),
 	// imageMode and the board dimensions whenever mapMode was svg, which made the shipped SVG
 	// example -- a 28 x 29 board of 2 x 2 pieces -- impossible to author here. Unit selection and
-	// data type are two axes; only calcUrl and the scaling fields belong to the mode, because only
-	// they are conditioned on it at runtime (GameService.goToNextLevel POSTs when mode == 'SVG',
-	// and the GRID branch of prepareNextLevel never reads a CalculationResult).
+	// data type are two axes, and as of 2026-09-05 only the SVG scaling fields belong to the mode.
+	// calcUrl left that list when the grid game learned to be scored by a calculator: a dataset
+	// that sets `backendScored` POSTs its round whichever way its units are selected, so a
+	// calculator is authorable for both.
 	it('defaults to svg, with the grid-only fields disabled', () => {
 		const c = newComponent();
 
@@ -48,7 +49,7 @@ describe('ConfiguratorComponent map mode', () => {
 		expect(c.formGroup.get('elementSize')!.enabled).toBe(true);
 		expect(c.formGroup.get('gameBoardRows')!.enabled).toBe(true);
 		expect(c.formGroup.get('gameBoardColumns')!.enabled).toBe(true);
-		// svg scores through a backend, so calcUrl and the value range are live
+		// svg always scores through a backend; the value range is what is svg-only now
 		expect(c.formGroup.get('calcUrl')!.enabled).toBe(true);
 		expect(c.formGroup.get('minValue')!.enabled).toBe(true);
 		expect(c.formGroup.get('maxValue')!.enabled).toBe(true);
@@ -64,7 +65,9 @@ describe('ConfiguratorComponent map mode', () => {
 		expect(c.formGroup.get('gameBoardRows')!.enabled).toBe(true);
 		expect(c.formGroup.get('gameBoardColumns')!.enabled).toBe(true);
 		// grid scores client-side, so there is no backend and no configurable range
-		expect(c.formGroup.get('calcUrl')!.disabled).toBe(true);
+		// A grid game may name a calculator now -- it POSTs if its dataset sets backendScored.
+		expect(c.formGroup.get('calcUrl')!.enabled).toBe(true);
+		expect(c.formGroup.get('backendScored')!.enabled).toBe(true);
 		expect(c.formGroup.get('minSelected')!.disabled).toBe(true);
 		expect(c.formGroup.get('minSelected')!.value).toBe(0);
 		expect(c.formGroup.get('minValue')!.value).toBe(0);

@@ -65,6 +65,27 @@ export class Settings {
 	 */
 	clientScored?: boolean;
 	/**
+	 * Let a raster-grid game be scored by a calculator instead of by the browser.
+	 *
+	 * The two axes a game is described by -- type of data and unit selection -- are independent
+	 * (docs/static-vs-dynamic.rst), and this is what makes the grid half of that true. A grid game
+	 * that declares it POSTs its allocation like the SVG one and builds the next level from the
+	 * rasters that come back.
+	 *
+	 * OPT-IN BY THE DATASET, not by the presence of a calcUrl, and that is the whole design.
+	 * config.json carries calcUrl and defaultMode as independent keys and docker-entrypoint.sh
+	 * injects them independently, so "grid mode with a calculator configured" is a state a
+	 * deployment reaches by setting one env var and not the other -- v2/docker-compose.dynamic.yml
+	 * reached it, and the client-side game POSTed to a path the calculator does not serve and
+	 * showed "Something went wrong" on a round whose numbers were already in the browser. A game
+	 * whose consequence maps ship with it has nothing to gain from that request and a round to
+	 * lose, so it has to say it wants one.
+	 *
+	 * Ignored in SVG mode, where the backend is not optional: an SVG game has no consequence maps
+	 * of its own to fall back on.
+	 */
+	backendScored?: boolean;
+	/**
 	 * Open the instructions by itself on levels 1 and 2. Defaults to true, which is what SVG mode
 	 * has always done — the grid level never did, so a board meant to match it wants this off.
 	 */
@@ -157,6 +178,7 @@ export class Settings {
 		this.calcUrl = data.calcUrl;
 		this.paletted = data.paletted;
 		this.clientScored = data.clientScored;
+		this.backendScored = data.backendScored;
 		this.autoOpenInstructions = data.autoOpenInstructions;
 		this.editablePreviousRounds = data.editablePreviousRounds;
 		this.scoreByConversion = data.scoreByConversion;

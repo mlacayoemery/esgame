@@ -73,7 +73,7 @@ The form is a stepper. Every control below writes one key of the game JSON.
        ``imageMode``
      - See `What the mode decides`_.
    * - Board, continued
-     - ``clientScored``, ``paletted``, ``scoreByConversion``, ``autoOpenInstructions``,
+     - ``clientScored``, ``backendScored``, ``paletted``, ``scoreByConversion``, ``autoOpenInstructions``,
        ``editablePreviousRounds``, ``optimalSolutionUrl``, ``visualOptions`` (three flags)
      - Added 2026-09-05. Settings has read all of these for some time; none could be authored
        here, which is why the shipped SVG game could not be built with this tool.
@@ -97,10 +97,10 @@ The form is a stepper. Every control below writes one key of the game JSON.
 What the mode decides
 ---------------------
 
-Only ``calcUrl`` and the SVG scaling fields (``minSelected``, ``minValue``, ``maxValue``), and
-each because the *runtime* is conditioned on the mode: ``GameService.goToNextLevel`` POSTs only
-when ``mode == 'SVG'``, and the GRID branch of ``prepareNextLevel`` never reads a
-``CalculationResult``. A ``calcUrl`` on a grid game buys nothing but a way to fail.
+Only the SVG scaling fields — ``minSelected``, ``minValue``, ``maxValue`` — because only the SVG
+boards read them. ``calcUrl`` was on this list until the grid game learned to be scored by a
+calculator; it is authorable in either mode now, and what decides whether a grid round is POSTed
+is the dataset's own ``backendScored``.
 
 Everything else used to be decided by the mode too, and that was wrong — see `The gaps, and what
 was done about them`_.
@@ -162,10 +162,13 @@ The gaps, and what was done about them
      - Left out deliberately. ``ConfigService`` lets a deployment's ``config.json`` override all
        three, so they are theming a deployment owns rather than something the game states. The
        round-trip test names them as excluded rather than passing silently.
-   * - **A grid game with a backend cannot be authored**, because ``calcUrl`` is disabled in grid
-       mode.
-     - Not a builder gap: that cell of the taxonomy is not implemented in the app. The form is
-       right to refuse a field the runtime ignores. See :doc:`/static-vs-dynamic`.
+   * - **A grid game with a backend could not be authored**, because ``calcUrl`` was disabled in
+       grid mode. That was right while the runtime ignored the field, and wrong the moment it
+       stopped.
+     - Fixed on both sides. The app scores a raster-grid round on a calculator when the dataset
+       sets ``backendScored``, and the form offers that checkbox with ``calcUrl`` live in either
+       mode. What stays mode-bound is the SVG scaling — ``minSelected``, ``minValue``,
+       ``maxValue`` — which only the SVG boards read. See :doc:`/static-vs-dynamic`.
    * - **``gradientOverrides``** is read by ``Settings`` and has no control.
      - Open. It is a theming escape hatch no shipped dataset uses; the round-trip test would fail
        the day one does, which is the point at which it is worth building a UI for.
