@@ -90,6 +90,27 @@
 				</mat-form-field>
 				<mat-checkbox formControlName="infiniteLevels">{{ 'infinite-levels' | translate}}</mat-checkbox>
 				<mat-checkbox formControlName="imageMode">{{ 'Image Mode' | translate}}</mat-checkbox>
+				<!--
+				  How the game behaves, all read straight off the dataset by Settings. Without these
+				  a configuration authored here could not be either game this repository ships.
+				  gridLineColor, gridLineWidth and highlightWidth are absent on purpose: config.json
+				  overrides them per deployment, so they are not the game's to state.
+				-->
+				<mat-checkbox formControlName="clientScored">{{ 'score in the browser' | translate}}</mat-checkbox>
+				<mat-checkbox formControlName="paletted">{{ 'palette by class' | translate}}</mat-checkbox>
+				<mat-checkbox formControlName="scoreByConversion">{{ 'score sheet by conversion' | translate}}</mat-checkbox>
+				<mat-checkbox formControlName="autoOpenInstructions">{{ 'open instructions automatically' | translate}}</mat-checkbox>
+				<mat-checkbox formControlName="editablePreviousRounds">{{ 'previous rounds stay editable' | translate}}</mat-checkbox>
+				<mat-form-field>
+					<mat-label>{{ 'optimal solution url' | translate}}</mat-label>
+					<input type="text" matInput name="optimal-solution-url" formControlName="optimalSolutionUrl">
+					<mat-hint>{{ 'optimal solution hint' | translate }}</mat-hint>
+				</mat-form-field>
+				<ng-container formGroupName="visualOptions">
+					<mat-checkbox formControlName="consequenceFieldOpacity">{{ 'consequence field opacity' | translate}}</mat-checkbox>
+					<mat-checkbox formControlName="highlightFocusedBoard">{{ 'highlight focused board' | translate}}</mat-checkbox>
+					<mat-checkbox formControlName="neutralScoreColors">{{ 'neutral score colors' | translate}}</mat-checkbox>
+				</ng-container>
 				<div class="flex-column">
 					<label>{{ 'min-selected' | translate}}</label>
 					<mat-slider [displayWith]="formatLabel" discrete min="0" max="100" step="1" value="0">

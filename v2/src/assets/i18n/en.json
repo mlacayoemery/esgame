@@ -100,5 +100,15 @@
   "low": "low",
   "high": "high",
   "within this round only": "within this round only",
-  "load optimal answer": "Load the best possible board for this round"
+  "load optimal answer": "Load the best possible board for this round",
+  "score in the browser": "Score in the browser as pieces are placed",
+  "palette by class": "Colour boards by class rather than by a stretched range",
+  "score sheet by conversion": "One score-sheet column per conversion",
+  "open instructions automatically": "Open the instructions on levels 1 and 2",
+  "previous rounds stay editable": "A submitted round can still be edited",
+  "optimal solution url": "Optimal solution file",
+  "optimal solution hint": "Leave empty unless a computed best board ships with this game",
+  "consequence field opacity": "Semi-transparent fields on consequence maps",
+  "highlight focused board": "Outline the focused board",
+  "neutral score colors": "Neutral (black) map titles instead of green/red"
 }
