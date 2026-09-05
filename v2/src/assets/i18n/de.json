@@ -99,5 +99,6 @@
   "custom color explanation": "Die benutzerdefinierten Farben werden nur benötigt, wenn es eine Zonenkarte gibt, die eine bestimmte Zuordnung von Werten im Tiff zu bestimmten Farben erfordert. Andernfalls können Sie diesen Schritt überspringen.",
   "low": "niedrig",
   "high": "hoch",
-  "within this round only": "nur innerhalb dieser Runde"
+  "within this round only": "nur innerhalb dieser Runde",
+  "load optimal answer": "Das bestmögliche Spielfeld für diese Runde laden"
 }

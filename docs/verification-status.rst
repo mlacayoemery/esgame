@@ -9,7 +9,7 @@ time precisely because nothing had ever run them, and the failures were silent �
 that logged ``done`` having registered nothing, an e2e suite passing against a board that
 never rendered, a schema check reporting 10/10 valid on manifests the API server rejected.
 
-Last updated: **2026-08-14**.
+Last updated: **2026-09-05**.
 
 .. note::
 
@@ -52,9 +52,16 @@ Verified working
    * - Path
      - How it was checked
    * - Static / grid game
-     - 421 unit tests, 26 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
+     - 436 unit tests, 26 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
        SEO 100. The board renders 2,436 fields; the e2e suite asserts that rather than
        just asserting the component mounted.
+   * - The agriculture game's shipped optimum
+     - :file:`v2/src/assets/optimalAgDynamic.json` is re-derived and diffed by
+       :file:`tools/optimizer-check.sh`, gated by :file:`.github/workflows/optimizer.yml`.
+       Confirmed able to fail on a board that is legal, self-consistent and **sub-optimal** —
+       the case all eight of the optimiser's own tests pass; see "the checks were audited for
+       vacuity". The browser agrees independently: loading the answer scores 9775 in round one
+       and 5175 in round two through the frontend's own scoring path.
    * - A deployment's own configuration
      - ``v2/e2e-stack`` (5 specs), run against a live compose stack by
        ``make esgame-dynamic-verify`` and by the ``v2-stack`` job in
@@ -648,6 +655,43 @@ The dependency audit — *closed 2026-08-09*
    from "npm could not run", so the way a missing project surfaced was a confident instruction to
    delete a live exception line. ``npm audit`` reports its own failures as ``{"error": {...}}``,
    which the script now checks for before reading anything else.
+
+The board drew a hexagon that was not one — *fixed 2026-09-05*
+   :file:`v2/src/app/shared/helpers/svg/tiffToSvgPaths.js` emits one path per **distinct raster
+   value**, and ``writeRaster(NAflag = -9999)`` puts −9999 in every cell outside the board. The
+   helper assumed the value meaning "no zone" was 0, which :file:`v2/src/assets/images/New_hexagons.tif`
+   has none of, so the nodata region was traced as an ordinary zone: a 466th path on a raster
+   holding **465 units** — the number :file:`docs/boards.rst` and :file:`tools/R/make-base-raster.R`
+   both give. It was rendered and unplayable (``editable: path.id != data.nodata``), and it was
+   counted as a hexagon everywhere, including on this page.
+
+   It surfaced out of a fix to something else. The agriculture board numbers its zones from 0
+   with nodata 65535, so that assumption cost it cell 0 entirely; passing the raster's real
+   nodata fixed that board and broke this one, because the nodata value is *also* what the helper
+   fills its padding border with — deliberately, since the border is what stops an edge walk. The
+   nodata region then merged with the border, could not be traced at all, and the entry it left
+   behind was the empty string. The board rendered ``<path troSvgField d="">``: a field with no
+   geometry, which nothing can click.
+
+   **Found by three e2e specs rather than by reading.** ``round-trip``, ``render-timing`` and
+   ``rectangular-board`` failed with ``locator.click: Element is outside of the viewport``, the
+   locator resolving to ``<path d="">``. That it was the change and not the machine was
+   established the only way that answers it: master built in a separate worktree and the same
+   three specs run against the same browser, 11 passed.
+
+   The fix is one line — "no zone" is not a zone, so no group is made for it. Measured after,
+   from the rasters themselves:
+
+   .. code-block:: text
+
+      New_hexagons.tif     nodata -9999   465 zones   0 empty
+      esgame_ag_zones.tif  nodata 65535   812 zones   0 empty, and zone 0 present
+
+   Every board now draws exactly one path per unit. :file:`v2/e2e/rectangular-board.spec.ts`
+   asserted the old count as ``units + NODATA_PATH`` precisely so that a change which stopped
+   emitting the nodata path would fail with an arithmetic instead of a bare number. It did, and
+   that constant is now 0. The measurements above on this page that say "466 hexagons" were true
+   when they were written: they counted this path.
 
 
 Known incomplete
@@ -1970,6 +2014,49 @@ A second shape, found 2026-08-07 — *the check was sound and could not run*
    that :file:`docs/index.rst` does not contain, so it changed nothing and "passed". The runner
    now diffs the file and prints whether the mutation actually applied, which is the same lesson
    as the rest of this section applied to the tests rather than to the code.
+
+A third shape, found 2026-09-05 — *every test passed, and none of them tested the claim*
+   The first shape was a check that could not fail, the second a check that could not run. This
+   one runs, fails on real breakage, and is still not evidence for what the file it guards
+   claims.
+
+   :file:`v2/src/assets/optimalAgDynamic.json` is what the agriculture game's checkmark button
+   loads, and it claims to be **the best board the round can reach**. The eight tests in
+   :file:`tools/optimizer/test_optimize.py` check that its claimed scores re-derive through the
+   model, that both boards are legal, that the board dimensions still match the dataset, and
+   that round one's optimum is worth less than round two's once the costs appear. Every one of
+   those is a statement about the file being *consistent*. Optimality is a statement about every
+   board that is **not** in the file, and nothing that reads only this file can make it.
+
+   Demonstrated rather than argued. Moving one ranch piece from (17, 23) to (16, 23) and writing
+   the score that board really earns — 5175 down to 5075 — gives a file that is legal,
+   correctly scored, internally consistent, and not the optimum. **All eight tests pass on it.**
+   So a raster change that left those eight pieces scoring what they scored while making some
+   other board better would ship a button that loads the wrong answer, green the whole way.
+
+   Only re-running the search can tell. :file:`tools/optimizer-check.sh` re-derives the answer
+   over a saved copy of the asset and diffs it, and :file:`.github/workflows/optimizer.yml` runs
+   that on every path :file:`tools/optimizer/optimize.py` reads — the model pack it solves over,
+   the rasters that pack is checked against, and the dataset that defines the board.
+
+   Confirmed able to fail, by mutation:
+
+   .. code-block:: text
+
+      sub-optimal but consistent    8 tests pass, the re-derivation catches it   exit 1
+      a piece moved, score left     the tests fail first, nothing is re-derived  exit 1
+      Pillow hidden (import fails)  refuses to start rather than skip the        exit 2
+                                    pack-matches-the-rasters comparison
+      unmutated                     passes in 0.5s, working tree clean after     exit 0
+
+   The Pillow row is the vacuity lesson in its original form: that comparison is the premise of
+   the whole tool, and a run without Pillow skips it and reports success. Requiring the library
+   is what stops "green" from meaning "checked nothing".
+
+   **The lesson generalises to every generated file that is committed.** Tests over it can only
+   check the output against itself; the one check of *this is what the generator produces* is
+   running the generator. ``calculator.yml`` already does exactly that, one layer down, for
+   :file:`tools/calculator/data/tradeoff-ag.json` — the pack the optimiser then solves over.
 
 
 Not verified

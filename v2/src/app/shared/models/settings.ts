@@ -36,7 +36,7 @@ export class Settings {
 	mode: 'GRID' | 'SVG';
 	infiniteLevels: boolean;
 	productionTypes: { id: number, name: LanguageString, fieldColor: string, urlToIcon: string, maxElements: number }[] = [];
-	maps: { id: string, name: LanguageString, gradient: DefaultGradients, customColorId: string, gameBoardType: GameBoardType, productionTypes: number[], urlToData: string }[] = [];
+	maps: { id: string, name: LanguageString, gradient: DefaultGradients, customColorId: string, gameBoardType: GameBoardType, productionTypes: number[], urlToData: string, values?: number[] }[] = [];
 	customColors: { id: string, colors: { number: number, color: string }[] }[];
 	basicInstructionsImageUrl: string;
 	advancedInstructionsImageUrl: string;
@@ -51,6 +51,49 @@ export class Settings {
 	 * read.
 	 */
 	paletted?: boolean;
+	/**
+	 * Score the round in the BROWSER, so the numbers move as pieces are placed.
+	 *
+	 * The board already carries what this needs: every field on a consequence board holds that
+	 * cell's value, and SelectedField.updateScore records it per map — the same arithmetic the
+	 * grid game is scored by. Without this the score board and the chart are drawn from the
+	 * calculator's reply and therefore only change when a round is submitted.
+	 *
+	 * Opt-in per dataset, because it is only correct where the browser can reproduce the model.
+	 * It can for the agriculture game, whose consequence rasters ARE the cost surfaces. It cannot
+	 * for the Dutch model, where calculator.r solves a distance-decay field over the landscape.
+	 */
+	clientScored?: boolean;
+	/**
+	 * Open the instructions by itself on levels 1 and 2. Defaults to true, which is what SVG mode
+	 * has always done — the grid level never did, so a board meant to match it wants this off.
+	 */
+	autoOpenInstructions?: boolean;
+	/**
+	 * Let a round that has been submitted go on being edited.
+	 *
+	 * Defaults to false, which is what advancing has always done — the previous level is frozen.
+	 * A board that wants a player to go back and try a different first round sets this; the rounds
+	 * keep their own allocations either way, so changing one does not move the other's numbers.
+	 */
+	editablePreviousRounds?: boolean;
+	/**
+	 * Lay the score sheet out as one column per production type — what that conversion gains,
+	 * then what it costs — instead of one row per map name.
+	 *
+	 * Opt-in, because the alternative is not merely a different look: grouping by name SUMS the
+	 * maps that share one, which is the only sensible reading where a consequence map belongs to
+	 * several production types at once, as assets/data.json's do.
+	 */
+	scoreByConversion?: boolean;
+	/**
+	 * Where the recorded best board for each round lives, relative to the app.
+	 *
+	 * Optional, and the button that loads it is hidden when unset — an answer is only meaningful
+	 * for the dataset it was computed against, and there is no way to check that from here.
+	 * See tools/optimizer/optimize.py, which writes it.
+	 */
+	optimalSolutionUrl?: string;
 	/** SVG-mode cell border (between zones). Optional; defaults to the built-in look when unset. */
 	gridLineColor?: string;
 	gridLineWidth?: string;
@@ -113,11 +156,16 @@ export class Settings {
 		this.advancedInstructions = data.advancedInstructions;
 		this.calcUrl = data.calcUrl;
 		this.paletted = data.paletted;
+		this.clientScored = data.clientScored;
+		this.autoOpenInstructions = data.autoOpenInstructions;
+		this.editablePreviousRounds = data.editablePreviousRounds;
+		this.scoreByConversion = data.scoreByConversion;
+		this.optimalSolutionUrl = data.optimalSolutionUrl;
 		this.gridLineColor = data.gridLineColor;
 		this.gridLineWidth = data.gridLineWidth;
 		this.highlightWidth = data.highlightWidth;
 		this.productionTypes = data.productionTypes.map((o: any) => ({ id: Number.parseInt(o.id), name: o.name, fieldColor: o.fieldColor, urlToIcon: o.urlToIcon, maxElements: o.maxElements }));
-		this.maps = data.maps.map((o: any) => ({ id: o.id, name: o.name, gradient: convertGradient(o.gradient), customColorId: o.customColorId, gameBoardType: convertGameBoardType(o.gameBoardType), productionTypes: o.productionTypes.map((p: any) => Number.parseInt(p)), urlToData: o.urlToData }));
+		this.maps = data.maps.map((o: any) => ({ id: o.id, name: o.name, gradient: convertGradient(o.gradient), customColorId: o.customColorId, gameBoardType: convertGameBoardType(o.gameBoardType), productionTypes: o.productionTypes.map((p: any) => Number.parseInt(p)), urlToData: o.urlToData, values: o.values }));
 		this.customColors = data.customColors;
 		this.basicInstructionsImageUrl = data.basicInstructionsImageUrl;
 		this.advancedInstructionsImageUrl = data.advancedInstructionsImageUrl;

@@ -99,5 +99,6 @@
   "Custom Color Pattern": "Padrão de cores personalizado",
   "Color Set": "Conjunto de cores",
   "Color": "Cor",
-  "remove-color": "Remover"
+  "remove-color": "Remover",
+  "load optimal answer": "Carregar o melhor tabuleiro possível para esta rodada"
 }

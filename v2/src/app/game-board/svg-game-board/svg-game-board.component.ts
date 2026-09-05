@@ -34,6 +34,61 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	 * pixelating would be a downgrade.
 	 */
 	@HostBinding('class.is-paletted') paletted = false;
+	/** From settings.imageMode: draw each placed piece's production icon, as the grid board does. */
+	imageMode = false;
+	/** settings.elementSize — a piece is this many cells square. */
+	elementSize = 1;
+	/**
+	 * One entry per placed piece: the production icon, positioned at the piece's top-left cell.
+	 *
+	 * The grid board renders `<img [src]="field.productionType?.image">` sized to the whole piece
+	 * (grid-field.component.html), and this is the SVG board's equivalent — one image per PIECE,
+	 * not one per cell, which a fill pattern could not do: a pattern tiles against the user
+	 * coordinate system, so a piece anchored on an odd cell would show the icon sliced.
+	 *
+	 * The position is derived from the field id as a raster index, which holds only for a board
+	 * numbered that way. That is not a hidden assumption: `imageMode` gates this, and a board
+	 * asking for per-piece images is a board whose pieces are cells.
+	 */
+	pieceImages: { href: string, x: number, y: number, size: number }[] = [];
+	/**
+	 * The fraction of each icon taken up by its own black frame, per side.
+	 *
+	 * corn.png and cow.png are 447 px square with a 6 px opaque black border baked into the
+	 * artwork. Drawn at the piece footprint that border lands on exactly the edge pieceOutlines
+	 * strokes — and because a paletted board samples nearest-neighbour, it SURVIVES on a large
+	 * board and is DROPPED on a small one. Measured on the 660 px main board: one piece showed
+	 * four dark rows along its top edge, another showed one.
+	 *
+	 * So the icon is drawn slightly oversized inside a clipping viewport, which puts the frame
+	 * just outside it. The outline rect is then the only thing drawing a piece's border, and it
+	 * is the same weight on every piece and every map.
+	 */
+	private static readonly ICON_FRAME = 6 / 447;
+	/**
+	 * The hover highlight, as ONE outline around the target footprint rather than a stroke on each
+	 * of its cells — which drew a cross through the middle of every 2 x 2 target.
+	 *
+	 * imageMode gates it for the same reason it gates pieceImages: a footprint rectangle is only
+	 * the right shape where a piece IS a square block of cells. The Dutch model's zones are
+	 * irregular polygons, and there the per-cell stroke is still what outlines them.
+	 */
+	highlightOutline: { x: number, y: number, size: number, colour: string } | null = null;
+	/** settings.highlightWidth — the hover outline's stroke width. Thicker than a piece's own. */
+	highlightWidth = '2';
+	/** settings.highlightColor — the hover outline's colour. */
+	private highlightColour = '#00E0FF';
+	/** One outline per piece, around its footprint. Empty on the board being played and on the
+	 *  consequence maps, where the icon alone marks it. */
+	pieceOutlines: { x: number, y: number, size: number, colour: string }[] = [];
+	/**
+	 * How this board outlines a placed cell — see SvgFieldComponent.assignedOutline.
+	 *
+	 * The playable board needs nothing: the piece is drawn there as its production icon. The maps
+	 * beside it have no grid of their own, so a placed piece showed as a faint tint and was
+	 * effectively invisible on the maps that say what it cost.
+	 */
+
 	private _showHideListeners: (() => void)[] = [];
 
 	constructor(gameService: GameService, renderer: Renderer2, elementRef: ElementRef, cdRef: ChangeDetectorRef) {
@@ -41,16 +96,25 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 		this.gameService.settingsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(s => {
 			this.consequenceFieldOpacity = s?.visualOptions?.consequenceFieldOpacity ?? false;
 			this.paletted = s?.paletted ?? false;
+			this.imageMode = s?.imageMode ?? false;
+			this.elementSize = s?.elementSize ?? 1;
+			this.highlightWidth = s?.highlightWidth ?? '2';
+			this.highlightColour = s?.highlightColor ?? '#00E0FF';
 			this.cdRef.markForCheck();
 		});
 		this.gameService.highlightFieldObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(fieldNumbers => {
 			this._highlightedFields.forEach(o => this.svgFieldComponents?.find(s => s.field.id == o.id)?.removeHighlight());
 			this._highlightedFields = fieldNumbers;
 
+			this.highlightOutline = null;
 			if (fieldNumbers.length > 0) {
-				fieldNumbers.forEach(fieldNumber => {
-					this.svgFieldComponents.find(s => s.field.id == fieldNumber.id)?.highlight(fieldNumber.side);
-				});
+				if (this.imageMode) {
+					this.highlightOutline = this.footprint(fieldNumbers.map(o => o.id), this.highlightColour);
+				} else {
+					fieldNumbers.forEach(fieldNumber => {
+						this.svgFieldComponents.find(s => s.field.id == fieldNumber.id)?.highlight(fieldNumber.side);
+					});
+				}
 			}
 			this.cdRef.markForCheck();
 		});
@@ -62,6 +126,13 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 				// setTimeout(() => fields.forEach(field => this.svgFieldComponents.find(o => o.field.id == field.fields[0].id)?.removeMissingHighlight()), 3000);
 			}
 		});
+	}
+
+	/** The oversized draw box that crops an icon's own frame away — see ICON_FRAME. */
+	get iconViewBox() {
+		const f = SvgGameBoardComponent.ICON_FRAME;
+		const size = 1 / (1 - 2 * f);
+		return { offset: -size * f, size };
 	}
 
 	displayPatterns = 'inline';
@@ -88,12 +159,59 @@ export class SvgGameBoardComponent extends GameBoardBaseComponent implements Aft
 	ngAfterViewInit() {
 		this.gameService.selectedFieldsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(fields => {
 			this._selectedFields = fields;
+			this.updatePieceImages();
 			setTimeout(() => this.drawSelectedFields());
 		});
 
 		this.svgFieldComponents.changes.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(_ => {
 			setTimeout(() => this.drawSelectedFields());
 		});
+	}
+
+	/** Recompute the per-piece icons. Cheap: one entry per placed piece, a handful in this game. */
+	private updatePieceImages() {
+		const width = this._boardData?.width ?? 0;
+		// Every board, not only the playable one: the maps beside it are where a player reads what a
+		// piece cost, and the piece itself is the clearest marker of where that cost was incurred.
+		if (!this.imageMode || !width) {
+			this.pieceImages = [];
+			// Cleared together with the icons. They are set together below, and a board that stops
+			// drawing pieces must not keep their outlines.
+			this.pieceOutlines = [];
+			return;
+		}
+
+		const pieces = (this._selectedFields ?? []).flatMap(piece => {
+			const icon = piece.productionType?.image;
+			// The anchor is the piece's top-left cell, which is its lowest id — ids run along rows.
+			const anchor = Math.min(...piece.fields.map((f: any) => f.id));
+			if (!icon || !Number.isFinite(anchor)) return [];
+			return [{ href: icon, x: anchor % width, y: Math.floor(anchor / width), size: this.elementSize }];
+		});
+		this.pieceImages = pieces;
+		// EVERY board. No board draws a cell grid any more, so this outline is the only thing
+		// saying where a piece sits — and on the consequence maps it was absent entirely, which
+		// read as a piece whose outline was partly missing.
+		this.pieceOutlines = pieces.map(p => ({ x: p.x, y: p.y, size: p.size, colour: 'black' }));
+		this.cdRef.markForCheck();
+	}
+
+	/**
+	 * The square block a set of cell ids occupies, as board coordinates.
+	 *
+	 * Derived from the ids as raster indices, the same way updatePieceImages derives a piece's
+	 * anchor, and correct for the same reason: only a board whose pieces ARE blocks of cells asks
+	 * for this. The extent is measured rather than assumed to be elementSize, so a target clipped
+	 * at the board edge outlines what it actually covers.
+	 */
+	private footprint(ids: number[], colour: string) {
+		const width = this._boardData?.width ?? 0;
+		if (!width || !ids.length) return null;
+		const columns = ids.map(id => id % width);
+		const rows = ids.map(id => Math.floor(id / width));
+		const x = Math.min(...columns);
+		const y = Math.min(...rows);
+		return { x, y, size: Math.max(Math.max(...columns) - x, Math.max(...rows) - y) + 1, colour };
 	}
 
 	protected drawSelectedFields() {

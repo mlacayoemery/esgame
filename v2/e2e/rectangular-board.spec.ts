@@ -25,17 +25,22 @@ import { useDynamicGameWithCalculator, clickPastHelp, placeFields } from './dyna
 const HEXAGONAL_UNITS = 465;
 const RECTANGULAR_UNITS = 529;
 
-// THE BOARD DRAWS ONE MORE PATH THAN IT HAS UNITS, and that is not an off-by-one here.
-// tiffToSvgPaths() emits one path per DISTINCT RASTER VALUE, and writeRaster(NAflag = -9999) puts
-// -9999 in every cell outside the board — so the nodata region is a value like any other and gets
-// a path. getSvgGameBoard() then builds a Field for it with `editable: path.id != data.nodata`,
-// i.e. it is rendered and cannot be played. Measured: 530 paths for 529 rectangular units, and the
-// same +1 is why round-trip.spec.ts calls the hexagonal board "466-hexagon".
+// THE BOARD DREW ONE MORE PATH THAN IT HAS UNITS, AND NO LONGER DOES. tiffToSvgPaths() emits one
+// path per DISTINCT RASTER VALUE, and writeRaster(NAflag = -9999) puts -9999 in every cell outside
+// the board — so the nodata region was a value like any other and got a path of its own, rendered
+// but unplayable (`editable: path.id != data.nodata`). Measured then: 530 paths for 529
+// rectangular units, and the same +1 is why the comments here used to call the hexagonal board
+// "466-hexagon" when its raster holds 465 units.
 //
-// Asserted as unit count + 1 rather than as a bare 530, so a future change that stops emitting the
-// nodata path fails here with an arithmetic that says what happened instead of a number that has
-// to be re-derived.
-const NODATA_PATH = 1;
+// It stopped being emitted once the helper was told which value means "no zone" instead of
+// assuming 0. That value is also what the padding border is filled with, so the nodata region
+// merges with the border and cannot be traced at all: the entry it produced was a path with no
+// geometry, a `<path d="">` that renders nothing and that a player cannot click. Three specs
+// failed on it, which is how it was found.
+//
+// The arithmetic stays rather than becoming a bare 529, so a change that brings the extra path
+// back fails here with a number that says what happened.
+const NODATA_PATH = 0;
 const pathsFor = (units: number) => units + NODATA_PATH;
 
 const fieldsOf = (page: any) => page.locator('tro-svg-game-board.main-board path[troSvgField]');

@@ -120,6 +120,17 @@ updates:
     commit-message:
       prefix: "chore(pip)"
 
+  # tools/optimizer/requirements.txt: Pillow, unpinned like docs/requirements.txt, and for the
+  # same reason -- it never ships, so there is nothing to reproduce byte-for-byte and the open
+  # range is deliberate. increase-if-necessary so a PR only opens when a release would fall
+  # outside the range, not on every Pillow tag.
+  - package-ecosystem: pip
+    directory: /tools/optimizer
+    schedule: { interval: weekly, day: monday }
+    versioning-strategy: increase-if-necessary
+    commit-message:
+      prefix: "chore(pip)"
+
   # npm is deliberately absent. The dev tree alone carries hundreds of packages and weekly version
   # PRs across an Angular toolchain would drown the signal this file exists to create; security
   # advisories there are covered by tools/audit.sh, which fails on anything unaccepted.

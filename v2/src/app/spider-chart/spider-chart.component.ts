@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { AfterViewChecked, ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 
-/** One axis of the chart: a consequence-map id, and its 0-100 score for this round. */
+/** One axis of the chart: a map id, its 0-100 score for this round, and which way it counts. */
 export interface SpiderChartEntry {
 	id: string;
 	score: number;
+	/** True for a map the player GAINS from — production. Consequence axes are costs. */
+	positive?: boolean;
 }
 
 /**
@@ -32,7 +34,8 @@ export interface SpiderChartEntry {
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	standalone: false
 })
-export class SpiderChartComponent {
+export class SpiderChartComponent implements AfterViewChecked {
+	@ViewChild('chart') private chart?: ElementRef<SVGSVGElement>;
 	/**
 	 * The viewBox is WIDER THAN TALL, and sized by the labels rather than by the circle.
 	 *
@@ -45,6 +48,16 @@ export class SpiderChartComponent {
 	 * cx - radius - labelGap - width, right is "Water availability" ending at
 	 * cx + radius + labelGap + width. Both fit with room to spare at these numbers.
 	 */
+	/**
+	 * The drawn extent, measured rather than assumed.
+	 *
+	 * viewWidth/viewHeight below are the space the chart is COMPOSED in, sized for the longest
+	 * label the Dutch model has. Anything shorter left a wide empty margin, which mattered once
+	 * this had to sit beside the score board rather than in a panel of its own. getBBox is the
+	 * only thing that knows how wide a rendered label actually is.
+	 */
+	viewBox = '0 0 320 230';
+
 	readonly viewWidth = 320;
 	readonly viewHeight = 230;
 	readonly cx = 160;
@@ -64,9 +77,28 @@ export class SpiderChartComponent {
 		return this._entries;
 	}
 
-	constructor(private translateService: TranslateService) {}
+	constructor(private translateService: TranslateService, private cdRef: ChangeDetectorRef) {}
 
 	/** Nothing to draw — the template omits the chart rather than rendering an empty frame. */
+	ngAfterViewChecked() {
+		const el = this.chart?.nativeElement;
+		// getBBox is a rendering concern and jsdom does not implement it, so the specs run against
+		// the composed viewBox below. Guarded rather than mocked: there is nothing to assert about
+		// a measurement the test environment cannot take.
+		if (!el || typeof el.getBBox !== 'function') return;
+		const box = el.getBBox();
+		if (!box.width || !box.height) return;
+		const pad = 3;
+		const next = `${(box.x - pad).toFixed(1)} ${(box.y - pad).toFixed(1)} `
+			+ `${(box.width + pad * 2).toFixed(1)} ${(box.height + pad * 2).toFixed(1)}`;
+		// getBBox is in user units and does not depend on the viewBox, so this settles in one pass
+		// rather than chasing itself.
+		if (next !== this.viewBox) {
+			this.viewBox = next;
+			this.cdRef.markForCheck();
+		}
+	}
+
 	get isEmpty(): boolean {
 		return this._entries.length === 0;
 	}
@@ -120,6 +152,28 @@ export class SpiderChartComponent {
 			.join(' ');
 	}
 
+	/**
+	 * The outline of this round's scores, one segment per pair of neighbouring axes.
+	 *
+	 * Segments rather than a filled polygon: a fill and the radial edges of a wedge both crossed
+	 * the rings and the spokes behind them, and the shape is readable from its outline alone. Each
+	 * segment carries the score board's own colour — gain where both of its ends are production
+	 * axes, cost otherwise.
+	 */
+	get segments(): { x1: number, y1: number, x2: number, y2: number, positive: boolean }[] {
+		const n = this._entries.length;
+		if (n < 2) return [];
+		return this._entries.map((_, i) => {
+			const j = (i + 1) % n;
+			const a = this.point(i, (this.radius * this.clamped(this._entries[i].score)) / 100);
+			const b = this.point(j, (this.radius * this.clamped(this._entries[j].score)) / 100);
+			return {
+				x1: +a.x.toFixed(2), y1: +a.y.toFixed(2), x2: +b.x.toFixed(2), y2: +b.y.toFixed(2),
+				positive: !!(this._entries[i].positive && this._entries[j].positive),
+			};
+		});
+	}
+
 	/** The outer end of the spoke for axis `i`. */
 	spoke(i: number): { x: number; y: number } {
 		return this.point(i, this.radius);
@@ -148,14 +202,23 @@ export class SpiderChartComponent {
 	}
 
 	/** The number shown beside each label. Rounded, because the calculator rounds too. */
-	displayScore(i: number): number {
-		return Math.round(this.clamped(this._entries[i].score));
+	displayScore(i: number): string {
+		// A percentage, and said so: every axis is a share of what that map could hold, and a bare
+		// number invited reading it as the score itself — which is in the hundreds beside it.
+		return `${Math.round(this.clamped(this._entries[i].score))}%`;
+	}
+
+	/** Whether an axis counts as gain, so its number can carry the score board's own colour. */
+	isPositive(i: number): boolean {
+		return !!this._entries[i].positive;
 	}
 
 	/** A one-line description of the chart, for anyone not looking at it. */
 	get summary(): string {
 		return this._entries
-			.map((_, i) => `${this.label(i)}: ${this.displayScore(i)} of 100`)
+			// "65%" rather than "65 of 100": the axes are percentages now and the suffix already
+			// says so, so the old wording read as "65% of 100".
+			.map((_, i) => `${this.label(i)}: ${this.displayScore(i)}`)
 			.join(', ');
 	}
 

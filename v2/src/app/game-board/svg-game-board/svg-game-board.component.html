@@ -8,11 +8,49 @@
 	</defs>
 		<path troSvgField [field]="field"
 			[clickable]="clickMode == GameBoardClickMode.Field && field.editable  && !readOnly"
-			[showStroke]="this._boardData.gameBoardType != consequenceType"
+			[showStroke]="false"
 			[hasOpacity]="consequenceFieldOpacity && this._boardData.gameBoardType == consequenceType"
 			[gameBoardId]="boardData!.id"
 			*ngFor="let field of fields" [attr.d]="field.path"></path>
 
+	<!--
+	  One icon per placed PIECE, at its top-left cell, sized to the piece — the SVG equivalent of
+	  the grid board's `<img>` (grid-field.component.html). After the paths so it draws on top of
+	  them, and pointer-events none so the cell underneath stays clickable: a player must be able
+	  to click a placed piece to remove it.
+
+	  preserveAspectRatio="none" because the grid board's <img> is given BOTH a width and a height
+	  (`calc(200% - 1px)` each), which stretches it to the piece. "meet" would letterbox a
+	  non-square icon inside the piece instead, which is visibly not the same board.
+	-->
+	<svg *ngFor="let piece of pieceImages"
+		[attr.x]="piece.x" [attr.y]="piece.y" [attr.width]="piece.size" [attr.height]="piece.size"
+		viewBox="0 0 1 1" preserveAspectRatio="none" style="pointer-events: none">
+		<image [attr.href]="piece.href"
+			[attr.x]="iconViewBox.offset" [attr.y]="iconViewBox.offset"
+			[attr.width]="iconViewBox.size" [attr.height]="iconViewBox.size"
+			preserveAspectRatio="none"></image>
+	</svg>
+
+	<!--
+	  One outline per PIECE, around its whole footprint. Stroking each cell instead drew the grid
+	  inside the piece, on maps that carry no grid of their own — so a 2 x 2 piece read as four.
+	-->
+	<rect *ngFor="let piece of pieceOutlines" [attr.x]="piece.x" [attr.y]="piece.y"
+		[attr.width]="piece.size" [attr.height]="piece.size" fill="none"
+		[attr.stroke]="piece.colour" stroke-width="1" vector-effect="non-scaling-stroke"
+		style="pointer-events: none"></rect>
+
+	<!--
+	  The hover target, outlined once around the whole footprint. Stroking each of its cells drew
+	  the grid back inside the target — a cross through every 2 x 2 block — on boards that draw no
+	  grid of their own. Thicker than a piece outline so the two read apart. Last, so it is never
+	  hidden under a piece it overlaps.
+	-->
+	<rect *ngIf="highlightOutline" [attr.x]="highlightOutline.x" [attr.y]="highlightOutline.y"
+		[attr.width]="highlightOutline.size" [attr.height]="highlightOutline.size" fill="none"
+		[attr.stroke]="highlightOutline.colour" [attr.stroke-width]="highlightWidth"
+		vector-effect="non-scaling-stroke" style="pointer-events: none"></rect>
 </svg>
 
 <!--

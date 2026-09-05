@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject, of } from 'rxjs';
 import { SvgLevelComponent } from './svg-level.component';
+import { ScoreService } from 'src/app/services/score.service';
 
 // SvgLevelComponent gates whether a round may be submitted at all (minSelected) and decides
 // when the instructions open. Both are game rules rather than presentation, and neither had
@@ -29,6 +30,11 @@ const setup = (opts: { minSelected?: number, percentage?: number } = {}) => {
 		initialiseSVGMode: () => { }
 	};
 	const configStub: any = { getGameData: () => of({}) };
+	// The real thing: it is a pure sum over the fields it is handed, with no dependencies of its
+	// own, so a stub here would only be a second implementation to keep in step.
+	const scoreStub: any = new ScoreService();
+	// Grouping keys off the translated map name; the identity is enough to group by id here.
+	const translateStub: any = { instant: (k: string) => k };
 
 	// nextLevel() reaches for a <dialog> by id when the board is too empty.
 	const dialog: any = { shown: 0, showModal() { this.shown += 1; } };
@@ -36,7 +42,7 @@ const setup = (opts: { minSelected?: number, percentage?: number } = {}) => {
 	document.getElementById = ((id: string) =>
 		id === 'svg-level-dialog' ? dialog : originalGetElementById.call(document, id)) as any;
 
-	const component = TestBed.runInInjectionContext(() => new SvgLevelComponent(gameStub, configStub));
+	const component = TestBed.runInInjectionContext(() => new SvgLevelComponent(gameStub, configStub, scoreStub, translateStub));
 	return {
 		component, level, settings, calls, dialog,
 		setPercentage: (p: number) => { percentage = p; },

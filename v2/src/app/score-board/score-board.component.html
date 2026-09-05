@@ -3,9 +3,28 @@
 		<th translate class="--left-align">Score</th>
 		<th class="--right-align">{{totalScore}}</th>
 	</tr>
+</table>
+
+<!--
+  One column per conversion: what it gains, then what it costs. Splitting the rows this way is
+  what lets Carbon appear under arable AND under livestock — summed into one row it could not say
+  which conversion incurred it.
+-->
+<table *ngIf="!byConversion">
 	<tr *ngFor="let s of groupedScores">
 		<td>{{s.name}}</td>
 		<td [ngClass]="s.score > 0 ? '--positive' : s.score < 0 ? '--negative' : ''" class="--right-align">{{s.score}}</td>
 	</tr>
-	
 </table>
+
+<div class="score-columns" *ngIf="byConversion">
+	<table *ngFor="let column of scoreColumns">
+		<tr *ngFor="let s of column.rows">
+			<td>{{s.name}}</td>
+			<td [ngClass]="s.score > 0 ? '--positive' : s.score < 0 ? '--negative' : ''" class="--right-align">{{s.score}}</td>
+			<!-- The share of what this map could hold, beside the score it qualifies. Carries the
+			     same colour as the number, being the same number on a different scale. -->
+			<td [ngClass]="s.score > 0 ? '--positive' : s.score < 0 ? '--negative' : ''" class="--right-align --percent">{{s.percent}}</td>
+		</tr>
+	</table>
+</div>

@@ -10,7 +10,23 @@
 	<header>
 		<p translate [translateParams]="{value: (level | async)?.levelNumber}" troLevelIndicator>Level</p>
 		<h1 translate>{{ 'title' | translate }}</h1>
-		<span class="icon-help-circle" (click)="openHelp()"></span>
+		<div class="header-icons">
+			<!--
+			  Loads the best board tools/optimizer/optimize.py found for this round. Hidden unless
+			  the dataset names an answer file: an optimum belongs to the board it was computed on,
+			  and a game with different rasters would be handed someone else's.
+			-->
+			<button type="button" class="icon-optimal" *ngIf="hasOptimalSolution"
+				(click)="loadOptimalSolution()" [attr.aria-label]="'load optimal answer' | translate"
+				[title]="'load optimal answer' | translate">
+				<svg viewBox="0 0 24 24" aria-hidden="true">
+					<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+					<path d="M7.5 12.4l3 3 6-6.5" fill="none" stroke="currentColor" stroke-width="2"
+						stroke-linecap="round" stroke-linejoin="round"/>
+				</svg>
+			</button>
+			<span class="icon-help-circle" (click)="openHelp()"></span>
+		</div>
 	</header>
 	<div>
 		<div class="production-type-buttons">
@@ -30,14 +46,14 @@
 				*ngIf="(settings | async)?.infiniteLevels || (level | async)?.levelNumber == 1" translate>Next
 				Level</button>
 
-			<tro-score-board *ngIf="!((level | async)?.scores)" class="score-board"></tro-score-board>
-			<tro-score-board *ngIf="(level | async)?.scores" isStatic [scores]="(level | async)!.scores" class="score-board"></tro-score-board>
-			<div *ngIf="(level | async)?.indicatorScores?.length" [ngClass]="imageExpand ? 'expanded' : ''" class="expandable">
-				<tro-spider-chart [entries]="(level | async)!.indicatorScores"></tro-spider-chart>
-				<button mat-mini-fab color="primary" (click)="switchExpand()" aria-label="expand/collapse">
-					<mat-icon *ngIf="!imageExpand">open_in_full</mat-icon>
-					<mat-icon *ngIf="imageExpand">close_fullscreen</mat-icon>
-				</button>
+			<tro-score-board *ngIf="!((level | async)?.scores)" class="score-board"
+				[class.--full-width]="!(showChart | async)"></tro-score-board>
+			<tro-score-board *ngIf="(level | async)?.scores" isStatic [scores]="(level | async)!.scores" class="score-board"
+				[class.--full-width]="!(showChart | async)"></tro-score-board>
+			<!-- Beside the scores, at the size it is drawn. It used to open into a larger panel;
+			     with the chart cropped to its own content there is nothing more to reveal. -->
+			<div *ngIf="(showChart | async) && (chartEntries | async)?.length" class="chart-beside-scores">
+				<tro-spider-chart [entries]="chartEntries | async"></tro-spider-chart>
 			</div>
 		</div>
 	</div>

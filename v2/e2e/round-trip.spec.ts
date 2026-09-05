@@ -17,11 +17,11 @@ import { calcResponse, useDynamicGameWithCalculator, dismissHelp, clickPastHelp,
 	from './dynamic-game';
 
 test.describe('dynamic game round trip', () => {
-	// Serial: each test loads a 466-hexagon board and decodes five GeoTIFFs, and running three
+	// Serial: each test loads a 465-hexagon board and decodes five GeoTIFFs, and running three
 	// of those concurrently crashed the browser ("Protocol error … session closed") rather than
 	// failing an assertion. The specs share no state; this is purely about resource use.
 	// 60s (the project default) is not enough for two rounds: each one decodes five GeoTIFFs on
-	// top of a 466-hexagon board, and the two-round test spends ~40s in legitimate waiting.
+	// top of a 465-hexagon board, and the two-round test spends ~40s in legitimate waiting.
 	test.describe.configure({ mode: 'serial', timeout: 180_000 });
 
 	test('submits an allocation and renders what comes back', async ({ page }) => {
@@ -46,7 +46,7 @@ test.describe('dynamic game round trip', () => {
 		await expect(page.locator('tro-spider-chart .spider-chart__dot')).toHaveCount(5);
 		await expect(page.locator('.expandable img')).toHaveCount(0);
 		// The numbers on the chart are the ones the calculator returned.
-		await expect(chart).toHaveAttribute('aria-label', /66 of 100/);
+		await expect(chart).toHaveAttribute('aria-label', /66%/);
 
 		// The payload is the shape the R calculator parses into a reclassify matrix.
 		expect(posted).toHaveLength(1);
@@ -152,7 +152,7 @@ test.describe('dynamic game round trip', () => {
 		// which the URL never did: a changed query string only proved a different file was asked
 		// for.
 		await expect(page.locator('tro-spider-chart svg'))
-			.toHaveAttribute('aria-label', /74 of 100/, { timeout: 60_000 });
+			.toHaveAttribute('aria-label', /74%/, { timeout: 60_000 });
 
 		expect(posted).toHaveLength(2);
 		expect(posted[1].round).not.toBe(posted[0].round);

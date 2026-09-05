@@ -51,4 +51,13 @@ export abstract class LevelBaseComponent {
 	openHelp() {
 		this.gameService.openHelp();
 	}
+
+	/** Whether this deployment has a recorded best board to offer. */
+	get hasOptimalSolution(): boolean {
+		return !!this.gameService.settingsValue?.optimalSolutionUrl;
+	}
+
+	loadOptimalSolution() {
+		this.gameService.loadOptimalSolution();
+	}
 }

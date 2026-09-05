@@ -12,6 +12,7 @@ import { ScoreService, ScoreEntry } from './score.service';
 import { TranslateService } from '@ngx-translate/core';
 import { ApiService } from './api.service';
 import { CalculationResult } from '../shared/models/calculation-result';
+import { OptimalSolution } from '../shared/models/optimal-solution';
 import * as uuid from 'uuid';
 
 @Injectable({
@@ -38,6 +39,8 @@ export class GameService {
 	highlightFieldObs = this.highlightFields.asObservable();
 	currentLevelObs = this.currentLevel.asObservable();
 	settingsObs = this.settings.asObservable();
+	/** The settings as they stand, for a template that needs them without an async pipe. */
+	get settingsValue() { return this.settings.value; }
 	productionTypesObs = this.productionTypes.asObservable();
 	selectedProductionTypeObs = this.selectedProductionType.asObservable();
 	selectedFieldsObs = this.selectedFields.asObservable().pipe(
@@ -93,6 +96,58 @@ export class GameService {
 			let selectedField = new SelectedField(fields, this.selectedProductionType.value);
 			this.selectedFields.next([...this.selectedFields.value, selectedField]);
 		}
+	}
+
+	/**
+	 * Replace the board with the best allocation recorded for the round being played.
+	 *
+	 * REPLACES rather than adds. There is one answer per round, and it is the whole board — adding
+	 * to what is already there would exceed maxElements, be rejected piece by piece, and leave a
+	 * mixture of the player's board and the optimiser's that is neither.
+	 *
+	 * The pieces are anchors, so they go through getAssociatedFields exactly as a click does: the
+	 * clamping at the board edge, the footprint, and the per-side flags all come from the one place
+	 * that knows them. Nothing here checks the answer fits — tools/optimizer/test_optimize.py does,
+	 * against the dataset's own gameBoardColumns, gameBoardRows, elementSize and maxElements.
+	 *
+	 * Silent when the round has no recorded answer. Round three of an infinite-levels game is a
+	 * question the optimiser was never asked, and inventing an empty board for it would read as
+	 * "the best you can do is nothing".
+	 */
+	loadOptimalSolution() {
+		const url = this.settings.value?.optimalSolutionUrl;
+		const level = this.currentLevel.value;
+		if (!url || !level) { return; }
+
+		this.apiService.getRequest(url).subscribe({
+			next: response => {
+				const round = (response as OptimalSolution)?.rounds?.[String(level.levelNumber)];
+				if (!round) {
+					console.warn(`${url} records no answer for round ${level.levelNumber}.`);
+					return;
+				}
+				const fields = round.pieces.flatMap(piece => {
+					// Compared as strings on purpose. ProductionType.id is typed number and the
+					// dataset writes these ids as strings ("10"), which is also how the answer
+					// file records them; the rest of the service gets away with `==` only because
+					// both sides are untyped there.
+					const productionType = this.productionTypes.value
+						.find(t => String(t.id) === String(piece.productionType));
+					if (!productionType) {
+						console.error(
+							`The recorded answer places production type "${piece.productionType}", ` +
+							`which this game does not define. Known ids: ` +
+							`[${this.productionTypes.value.map(t => t.id).join(', ') || 'none'}].`);
+						return [];
+					}
+					return [new SelectedField(this.getAssociatedFields(piece.id), productionType)];
+				});
+				this.selectedFields.next(fields);
+			},
+			// A missing or malformed answer must not take the game down: the button is a study aid,
+			// and the round is still playable by hand without it.
+			error: err => console.error(`Could not load the optimal answer from ${url}:`, err),
+		});
 	}
 
 	deselectField(id: number) {
@@ -251,10 +306,16 @@ export class GameService {
 		level.showConsequenceMaps = true;
 		this.levels.push(level);
 
-		this.currentLevel.value!.isReadOnly = true;
-		this.currentLevel.value!.selectedFields = this.selectedFields.value.map(o => {
-			return Object.assign({}, o);
-		});
+		this.currentLevel.value!.isReadOnly = !settings.editablePreviousRounds;
+		// A DEEP copy of what this round held. Object.assign({}, o) copied the SelectedField and
+		// left `fields` and `scores` pointing at the same arrays, so the round just finished and
+		// the round about to start shared them: moving a piece in one rewrote the other's numbers,
+		// which is only invisible while an earlier round cannot be edited at all.
+		this.currentLevel.value!.selectedFields = this.selectedFields.value.map(o =>
+			Object.assign(Object.create(Object.getPrototypeOf(o)), o, {
+				fields: o.fields.map(f => ({ ...f })),
+				scores: o.scores.map(sc => ({ ...sc })),
+			}));
 
 		if (this.settings.value.mode == 'GRID') {
 			const maps = settings.maps.filter(
@@ -289,7 +350,13 @@ export class GameService {
 			if (calculationResult) {
 				consequences.forEach(m => m.urlToData = calculationResult.results.find(c => c.id == m.id)?.url!);
 				calculationResult.results.forEach(c => c.score = isNaN(c.score) ? 0 : c.score);
-				level.scores = [{ id: "all", score: previousScore!} , ...calculationResult.results.filter(c => c.id != "-1").map(c => ({ score: -((c.score ?? 0)*100), id: c.id } as ScoreEntry))];
+				// A client-scored board leaves level.scores unset ON PURPOSE. The score board falls
+				// back to its live mode — the one the grid game uses, recomputing from
+				// selectedFields on every click — and a fixed set of numbers from the round that
+				// was submitted would freeze it again.
+				if (!settings.clientScored) {
+					level.scores = [{ id: "all", score: previousScore!} , ...calculationResult.results.filter(c => c.id != "-1").map(c => ({ score: -((c.score ?? 0)*100), id: c.id } as ScoreEntry))];
+				}
 			}
 
 			// The spider chart is drawn from these five numbers rather than fetched as a PNG.
@@ -301,7 +368,7 @@ export class GameService {
 			// `id != "-1"` is kept when filtering, deliberately. A calculator that still sends the
 			// old plot result must not have it drawn as a sixth axis with a nonsense label; this
 			// frontend has to work against a backend that has not been redeployed yet.
-			if (calculationResult) {
+			if (calculationResult && !settings.clientScored) {
 				level.indicatorScores = calculationResult.results
 					.filter(c => c.id != "-1")
 					.map(c => ({ id: c.id, score: c.score ?? 0 }));
@@ -321,8 +388,23 @@ export class GameService {
 
 					level.gameBoards.push(...gameBoards);
 					level.showConsequenceMaps = true;
-					this.productionTypes.value.forEach(c =>
-						c.consequenceMaps = [...gameBoards.filter(c => c.gameBoardType == GameBoardType.ConsequenceMap)]);
+					// Per the DATASET's own cross-reference, as the grid path does. This gave every
+					// production type every consequence map, which is why the agriculture board
+					// showed eight maps where the grid board shows four: dataGridExample.json and
+					// dataAgDynamic.json both name one production type per map (ids 4-7 arable,
+					// 8-11 livestock), and the grid path honours that through attachConsequenceMap
+					// while this ignored it.
+					//
+					// A production type the data never names keeps every map. That is what this
+					// line did for all of them, and assets/data.json depends on it: its five
+					// consequence maps name production types 10-40, so Agropark and Extra Nature
+					// are in no map's list and would otherwise be left with an empty panel.
+					const consequenceBoards = gameBoards.filter(o => o.gameBoardType == GameBoardType.ConsequenceMap);
+					this.productionTypes.value.forEach(pt => { pt.consequenceMaps = []; });
+					consequenceBoards.forEach(o => this.attachConsequenceMap(o));
+					this.productionTypes.value.forEach(pt => {
+						if (!pt.consequenceMaps.length) pt.consequenceMaps = [...consequenceBoards];
+					});
 
 					this.selectedFields.value.forEach(o => o.updateScore());
 
@@ -333,7 +415,7 @@ export class GameService {
 		}
 	}
 
-	getSvg = (m: any, overlay: GameBoard, settings: Settings) => this.tiffService.getSvgGameBoard(m.id, m.urlToData, m.gameBoardType, m.gradient, overlay, settings.minValue, settings.maxValue, settings.paletted ?? false);
+	getSvg = (m: any, overlay: GameBoard, settings: Settings) => this.tiffService.getSvgGameBoard(m.id, m.urlToData, m.gameBoardType, m.gradient, overlay, settings.minValue, settings.maxValue, settings.paletted ?? false, m.values);
 
 	initialiseSVGMode() {
 		let level = new Level();

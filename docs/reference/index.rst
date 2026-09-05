@@ -11,6 +11,7 @@ container in the system. Each page is grounded in the actual source.
    frontend-components
    calculator
    static-calculator
+   optimizer
    geoserver
    pygeoapi
    containers

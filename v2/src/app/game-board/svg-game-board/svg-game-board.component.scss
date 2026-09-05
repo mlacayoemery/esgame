@@ -13,16 +13,14 @@ svg {
 	position: relative;
 }
 
-// The legend, over the board's bottom-left corner. Anchored to :host, which is already
-// position: relative for the consequence overlay below.
+// The legend. Over the board's bottom-left corner by default, anchored to :host — which is already
+// position: relative for the consequence overlay below. A paletted board moves it BELOW the map
+// instead; see the :host(.is-paletted) block.
 //
 // pointer-events: none because it sits on top of clickable fields — the zones under it must stay
 // placeable, which they were not while this was a foreignObject swallowing clicks.
 .legend-overlay {
 	position: absolute;
-	// Bottom-left, which is the corner legend-board's own :host rule puts it in on a grid board
-	// (`bottom: -1px; left: -1px`). Both boards show the same legend, so they show it in the
-	// same place.
 	bottom: 2px;
 	left: 2px;
 	pointer-events: none;
@@ -53,6 +51,25 @@ svg {
 	svg,
 	.consequences {
 		image-rendering: pixelated;
+	}
+
+	// Every cell border the same width. The board is 17.24 px per cell — not an integer — so cell
+	// boundaries fall on fractional pixels and an antialiased 1 px stroke spreads over two of them
+	// for some lines and not others: measured 10 lines at 1 px and 8 at 2 px across a single row.
+	// crispEdges turns antialiasing off for the geometry, so every line snaps to whole pixels, the
+	// way the grid board's DOM outlines already do.
+	svg {
+		shape-rendering: crispEdges;
+	}
+
+	// The legend sits UNDER the map rather than on it. Stacking the host is what lets a normal
+	// block follow the svg; :host is otherwise a centring flex row.
+	flex-direction: column;
+	align-items: center;
+
+	.legend-overlay {
+		position: static;
+		margin-top: 2px;
 	}
 }
 

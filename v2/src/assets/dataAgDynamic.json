@@ -6,7 +6,7 @@
 		"pt": null
 	},
 	"mapMode": "svg",
-	"imageMode": false,
+	"imageMode": true,
 	"elementSize": 2,
 	"highlightColor": "#00E0FF",
 	"infiniteLevels": false,
@@ -15,9 +15,14 @@
 	"minValue": 0,
 	"maxValue": 100,
 	"paletted": true,
+	"clientScored": true,
+	"autoOpenInstructions": false,
+	"editablePreviousRounds": true,
+	"scoreByConversion": true,
+	"optimalSolutionUrl": "./assets/optimalAgDynamic.json",
 	"gridLineColor": "black",
-	"gridLineWidth": "0.1",
-	"highlightWidth": "0.3",
+	"gridLineWidth": "1",
+	"highlightWidth": "2",
 	"defaultProductionType": "0",
 	"calcUrl": "",
 	"productionTypes": [
@@ -29,7 +34,7 @@
 				"nl": null,
 				"pt": null
 			},
-			"fieldColor": "#2d6a4f80",
+			"fieldColor": "#2d6a4f",
 			"urlToIcon": "./assets/images/corn.png",
 			"maxElements": 4
 		},
@@ -41,7 +46,7 @@
 				"nl": null,
 				"pt": null
 			},
-			"fieldColor": "#ff800080",
+			"fieldColor": "#ff8000",
 			"urlToIcon": "./assets/images/cow.png",
 			"maxElements": 4
 		}
@@ -264,5 +269,8 @@
 		"pt": null
 	},
 	"basicInstructionsImageUrl": "",
-	"advanccedInstructionsImageUrl": ""
+	"advanccedInstructionsImageUrl": "",
+	"visualOptions": {
+		"neutralScoreColors": true
+	}
 }

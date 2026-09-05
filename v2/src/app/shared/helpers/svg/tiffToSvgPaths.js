@@ -2,7 +2,12 @@ export function toIndex(x, y, width) {
     return y * width + x;
 }
 export default function tiffToSvgPaths(data, options = {}) {
-    const UNDEFINED_VALUE = 0;
+    // The value meaning "no zone here". It is also what the padding border below is filled with,
+    // and the two MUST agree: the border is what stops an edge walk, so if real data shares its
+    // value that region merges with the border and the trace never terminates. Defaults to 0,
+    // which is what this always assumed — a raster whose nodata is something else can pass it and
+    // get its zone 0 back.
+    const UNDEFINED_VALUE = options.undefinedValue ?? 0;
     let _a, _b, _c, _d, _e, _f;
     let bitmask, width, height, scale = 1, offsetX = 0, offsetY = 0;
     if (options.width) {
@@ -33,7 +38,7 @@ export default function tiffToSvgPaths(data, options = {}) {
     // Naively copy into a new bitmask with a border of 1 to make sampling easier (no out of bounds checks)
     const newWidth = width + 2;
     const newHeight = height + 2;
-    const bm = Array(newWidth * newHeight).fill(0);
+    const bm = Array(newWidth * newHeight).fill(UNDEFINED_VALUE);
     // BM is just shifted over (1, 1) for the padding
     function BMXYToIndex(x, y) {
         return (y + 1) * newWidth + (x + 1);
@@ -47,6 +52,13 @@ export default function tiffToSvgPaths(data, options = {}) {
     const edgeXCount = width * (height + 1);
 
     const uniqueValues = new Set(bitmask);
+    // "No zone" is not a zone. It is skipped by the trace below, so leaving it here produced a
+    // group that never gained an edge and an entry in the returned map whose path is the empty
+    // string -- a field with no geometry, which the board still renders as <path d=""> and a
+    // player cannot click. It only became visible once a raster whose nodata is not 0 passed its
+    // real nodata in: before that the value 0 was excluded here while the actual background was
+    // traced as an ordinary zone.
+    uniqueValues.delete(UNDEFINED_VALUE);
     const valueGroups = new Map();
 
     for(let uniqueValue of uniqueValues) {

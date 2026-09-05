@@ -456,6 +456,37 @@ Whether a player may keep generating levels is governed by
 GRID example).
 
 
+What the two rounds are asking
+------------------------------
+
+Because level 1 is built from the suitability maps alone and ``prepareNextLevel`` is
+what adds the consequence boards, the two rounds pose **different optimisation
+problems** rather than the same one twice:
+
+* **Round 1** shows production only. A player optimising it is maximising income with
+  no view of what it costs.
+* **Round 2** scores the same kind of allocation net of each production type's
+  consequence maps.
+
+The best round-one board is therefore not the best round-two board, and the difference is
+measurable rather than rhetorical: on :file:`dataAgDynamic.json` the round-one optimum
+scores 9775 in production but only 4200 once the costs appear, against 5175 for the board
+that knew about them. See :doc:`reference/optimizer`, which computes both exactly.
+
+Loading the optimal answer
+--------------------------
+
+A dataset may name a recorded best board in ``Settings.optimalSolutionUrl``. When it does,
+a checkmark appears beside the help icon and ``GameService.loadOptimalSolution()``
+**replaces** the current allocation with the answer for the round being played — replaces,
+because adding to a board that is already full would be rejected piece by piece against
+``maxElements`` and leave a mixture of two boards.
+
+The recorded pieces are anchors, so they are expanded by the same
+``getAssociatedFields`` a click goes through: edge clamping and footprint are not
+re-derived. A round the file says nothing about leaves the board untouched.
+
+
 Scoring
 =======
 

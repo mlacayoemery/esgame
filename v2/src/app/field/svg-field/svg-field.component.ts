@@ -20,18 +20,37 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 	}
 	@HostBinding('style.fill') fillColor: string;
 	@HostBinding('style.stroke') stroke: string;
+	@HostBinding('style.stroke-width') strokeWidth: string;
 	highlightColor: string;
 
 	@HostBinding('class.show-stroke') @Input() showStroke: boolean = true;
 
 	@Input() gameBoardId = '';
 
+
 	/** When true, placed fields are rendered semi-transparent (used for consequence maps). */
 	@Input() hasOpacity = false;
+	/** From settings.imageMode: the piece is drawn as its production icon, so the fill stays clear. */
+	private imageMode = false;
 
 	ngOnInit(): void {
 		this.gameService.settingsObs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(o => {
 			this.highlightColor = o.highlightColor;
+			this.imageMode = o.imageMode ?? false;
+			// A paletted board is the grid board drawn as SVG, and the grid board's cell border is
+			// `outline: 1px solid black` — ONE SCREEN PIXEL, whatever the board's size. An SVG
+			// stroke is in board units, so the same nominal width renders differently on every
+			// board and at every zoom: measured 0.05 units x 17.24 px/unit = 0.86 px here against
+			// the grid board's flat 1 px. non-scaling-stroke takes the stroke out of the user
+			// coordinate system so the width means screen pixels, as a CSS outline does.
+			//
+			// Scoped to paletted boards. The Dutch board's strokes are tuned in board units at its
+			// own scale and changing what they mean would resize every line on it.
+			// Set only when asked for, like the three above: the spec pins that a settings object
+			// omitting these leaves the stylesheet's own defaults in place.
+			if (o.paletted) {
+				this.renderer.setStyle(this.elementRef.nativeElement, 'vector-effect', 'non-scaling-stroke');
+			}
 			// Optional per-deployment cell-border (grid line) styling; CSS falls back to the default.
 			if (o.gridLineColor) this.renderer.setStyle(this.elementRef.nativeElement, '--cell-stroke', o.gridLineColor, RendererStyleFlags2.DashCase);
 			if (o.gridLineWidth) this.renderer.setStyle(this.elementRef.nativeElement, '--cell-stroke-width', o.gridLineWidth, RendererStyleFlags2.DashCase);
@@ -67,7 +86,15 @@ export class SvgFieldComponent extends FieldBaseComponent implements OnInit {
 
 	setColor(productionType: ProductionType | null = null) {
 		if (!this._field) return;
-		if (productionType && this.clickable) {
+		// imageMode boards show the piece as its production ICON, drawn over the cell by the board
+		// (SvgGameBoardComponent.pieceImages) exactly as the grid board does. The fill stays
+		// transparent so the map underneath still reads — a solid one hid the very land the player
+		// is choosing between.
+		if (productionType && this.imageMode) {
+			// EVERY board, not only the clickable one. A secondary map fell through to the hatch
+			// pattern below and filled the piece on maps that are there to be read through.
+			this.fillColor = "";
+		} else if (productionType && this.clickable) {
 			this.fillColor = this.hasOpacity
 				? this.withConsequenceAlpha(productionType.fieldColor)
 				: productionType.fieldColor;

@@ -209,6 +209,15 @@ rule but means two builds a month apart are not the same build.
        pins nothing, changes nothing about what pip installs, and would churn on
        every release. What is left is the case worth seeing — a release this range
        can no longer accept.
+   * - :file:`tools/optimizer/requirements.txt` (``Pillow``)
+     - Unpinned for the same reason and watched the same way (*added 2026-09-05*,
+       ``increase-if-necessary``): nothing ships it — no Dockerfile reads it — so there is no
+       build to reproduce byte-for-byte, and the only event worth a pull request is a release
+       this range can no longer accept. Pillow is needed for one comparison, that the
+       calculator's pack grids are byte-identical to the GeoTIFFs the frontend ships, and
+       :file:`tools/optimizer-check.sh` treats it as **required** rather than optional: it
+       refuses to run without it rather than let that test skip itself and report a green run
+       that checked nothing.
 
 
 Runtime dependencies on external hosts
