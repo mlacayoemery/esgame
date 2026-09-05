@@ -2068,6 +2068,27 @@ A second shape, found 2026-08-07 — *the check was sound and could not run*
    now diffs the file and prints whether the mutation actually applied, which is the same lesson
    as the rest of this section applied to the tests rather than to the code.
 
+The opposite failure, found 2026-09-05 — *a check that fails for reasons other than the thing it tests*
+   Everything above is about checks that cannot fail. This one failed loudly and meant nothing,
+   which costs the same thing in the end: attention.
+
+   The three "adopted by a controller" checks in :file:`deploy/k8s/ingress-test.sh` read an
+   Ingress's ``status.loadBalancer`` address **once**, and they are the first thing the script does
+   after ``kind.sh deploy`` returns. Publishing that address is asynchronous, and ``kind.sh`` waits
+   only for the controller Deployment to report available. So on master all three failed — 18/21 —
+   while the very same run POSTed a round through that ingress and got 200 in 15 s with 5/5
+   coverages. In kind the data path is a host port mapped straight to the controller and never
+   reads the field, so an empty status meant *"not yet"*, not *"not routing"*. Re-running the
+   identical commit passed 21/21.
+
+   It now polls for up to 60 s, the same shape as the backend-pickup wait a few lines below it,
+   which was added for the same reason in August. Confirmed both ways against a stub ``kubectl``:
+   a status that arrives on the third read is adopted, and one that never arrives still fails.
+
+   **The cost of a spurious red is paid by every future red.** This job is unattended and weekly,
+   which is exactly where a check that cries wolf stops being read at all — and this page's whole
+   argument is that the checks nothing runs are the ones worth trusting least.
+
 A third shape, found 2026-09-05 — *every test passed, and none of them tested the claim*
    The first shape was a check that could not fail, the second a check that could not run. This
    one runs, fails on real breakage, and is still not evidence for what the file it guards

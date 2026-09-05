@@ -42,10 +42,31 @@ check() {
 echo "==> the controller is actually wired to our Ingresses"
 # An Ingress only gets a status.loadBalancer address once a controller has adopted it. Empty here
 # means the class did not match and nothing is routing, however healthy everything looks.
+#
+# WAITED FOR RATHER THAN READ ONCE, and for the same reason as the backend-pickup poll below.
+# Publishing that address is asynchronous: kind.sh waits for the controller Deployment to report
+# available, which is not the same as the controller having synced and written status back, and
+# this is the FIRST thing the script does after `kind.sh deploy` returns.
+#
+# Measured 2026-09-05. All three failed on master while the very same run then POSTed a round
+# through the ingress and got 200 in 15s, with 5/5 coverages: in kind the data path goes over a
+# host port mapped straight to the controller and does not read this field, so an empty status
+# meant "not yet", not "not routing". Re-running the identical commit passed 21/21.
+#
+# It still fails if no controller ever adopts the Ingress, which is the thing it exists to catch
+# — it just stops reporting that when the answer is only late. A check that cries wolf on an
+# unattended weekly job is one people learn to skip.
+adopted() {
+  for _ in $(seq 1 30); do
+    [ -n "$("${K[@]}" get ingress "$1" -o jsonpath='{.status.loadBalancer.ingress[*].ip}{.status.loadBalancer.ingress[*].hostname}' 2>/dev/null || true)" ] && return 0
+    sleep 2
+  done
+  return 1
+}
+
 for i in esgame-angular-ingress esgame-calculation-ingress esgame-geoserver-ingress; do
-  addr=$("${K[@]}" get ingress "$i" -o jsonpath='{.status.loadBalancer.ingress[*].ip}{.status.loadBalancer.ingress[*].hostname}' 2>/dev/null || true)
   cls=$("${K[@]}" get ingress "$i" -o jsonpath='{.spec.ingressClassName}' 2>/dev/null || true)
-  check "${i} adopted by a controller (class=${cls:-none})" "[ -n '${addr}' ]"
+  check "${i} adopted by a controller (class=${cls:-none})" "adopted ${i}"
 done
 
 echo "==> frontend through the ingress"
