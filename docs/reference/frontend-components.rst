@@ -27,6 +27,7 @@ Trivial pass-through getters/setters are omitted; behavior-bearing members are l
 .. contents:: On this page
    :local:
    :depth: 2
+   :class: this-will-duplicate-information-and-it-is-still-useful-here
 
 Levels
 ======

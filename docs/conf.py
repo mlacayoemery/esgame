@@ -32,6 +32,16 @@ html_theme = "furo"
 html_static_path = []
 html_title = "esgame documentation"
 
+# The game's own icon, so the docs are not the odd tab out -- and so the browser stops asking for
+# one that does not exist. Declaring no favicon does not mean "no request": Chrome falls back to
+# the ORIGIN root, https://mlacayoemery.github.io/favicon.ico, which is a user-site path this
+# project does not own and which 404s. That surfaced as "Failed to load resource: 404" in the
+# console of whichever docs page was opened first in a session -- once per origin, so it looked
+# like a defect in one page rather than a property of all of them.
+#
+# Sphinx copies this into _static itself, which is why html_static_path can stay empty.
+html_favicon = "../v2/src/favicon.ico"
+
 # MyST niceties
 myst_heading_anchors = 3
 

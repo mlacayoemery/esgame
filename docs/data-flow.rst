@@ -29,6 +29,7 @@ All client-side code paths referenced below live in
 .. contents:: On this page
    :local:
    :depth: 2
+   :class: this-will-duplicate-information-and-it-is-still-useful-here
 
 Overview
 ========

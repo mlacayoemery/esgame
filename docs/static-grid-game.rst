@@ -20,6 +20,7 @@ through the dynamic pipeline.
 .. contents::
    :local:
    :depth: 2
+   :class: this-will-duplicate-information-and-it-is-still-useful-here
 
 
 Where the data comes from

@@ -23,6 +23,7 @@ For an annotated, method-by-method tour of the Angular services, see
 .. contents:: On this page
    :local:
    :depth: 2
+   :class: this-will-duplicate-information-and-it-is-still-useful-here
 
 
 Repository layout
