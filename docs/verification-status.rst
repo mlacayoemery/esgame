@@ -52,7 +52,7 @@ Verified working
    * - Path
      - How it was checked
    * - Static / grid game
-     - 421 unit tests, 26 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
+     - 436 unit tests, 26 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
        SEO 100. The board renders 2,436 fields; the e2e suite asserts that rather than
        just asserting the component mounted.
    * - The agriculture game's shipped optimum
