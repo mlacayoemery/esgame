@@ -32,12 +32,15 @@ DC=(docker compose -f docker-compose.yml)
 
 # Logical name -> build context. The names match what deploy/k8s/base rewrites images TO, so an
 # overlay can repoint them by name; see ../k8s/README.md on why keying on the logical name fails.
-esgame_ctx()      { echo "${REPO}/v2"; }
+# The frontend image builds from the repository ROOT with -f v2/Dockerfile, because the
+# games it serves are authored in examples/. See the note in v2/Dockerfile.
+esgame_ctx()      { echo "${REPO}"; }
+esgame_file()     { echo "-f ${REPO}/v2/Dockerfile"; }
 calculation_ctx() { echo "${REPO}/tools/R"; }
 
 images() {
   # name:context, one per line. places entries only if the repo is there.
-  echo "esgame:$(esgame_ctx)"
+  echo "esgame:$(esgame_ctx):$(esgame_file)"
   echo "esgame-calculation:$(calculation_ctx)"
   if [ -n "${PLACES}" ] && [ -d "${PLACES}/calculation" ]; then
     echo "places-frontend:${PLACES}/frontend"
@@ -69,9 +72,10 @@ case "${1:-}" in
 
   push)
     wait_ready
-    while IFS=: read -r name ctx; do
+    while IFS=: read -r name ctx dockerfile; do
       echo "==> ${name}  (context ${ctx})"
-      docker build -q -t "${REG}/${name}:local" "${ctx}" >/dev/null
+      # ${dockerfile} is an unquoted "-f <path>" or empty, which is why it is not quoted here.
+      docker build -q ${dockerfile} -t "${REG}/${name}:local" "${ctx}" >/dev/null
       docker push -q "${REG}/${name}:local"
       echo "    pushed ${REG}/${name}:local  ($(docker images --format '{{.Size}}' "${REG}/${name}:local" | head -1))"
     done < <(images)

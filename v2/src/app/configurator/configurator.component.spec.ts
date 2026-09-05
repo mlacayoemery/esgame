@@ -2,6 +2,8 @@ import { ConfiguratorComponent } from './configurator.component';
 // Pulled in so the compiler has the component's NgModule scope; its template uses
 // routerLink, the translate pipe and Material directives that ConfiguratorModule supplies.
 import './configurator.module';
+import staticGame from '../../../../examples/dataStaticGridRect.json';
+import dynamicGame from '../../../../examples/dataDynamicGridRect.json';
 
 // The configurator builds the reactive form that produces a game configuration, and
 // imports one back from a file. It was the largest untested unit in the app, and a bug
@@ -31,13 +33,21 @@ describe('ConfiguratorComponent form scaffolding', () => {
 describe('ConfiguratorComponent map mode', () => {
 	// mapMode is wired to toggleMapMode through valueChanges, so setting the control is
 	// what a user does and is what these assert against.
+	//
+	// WHAT THE MODE MAY DECIDE CHANGED ON 2026-09-05. It used to disable elementSize (forcing 1),
+	// imageMode and the board dimensions whenever mapMode was svg, which made the shipped SVG
+	// example -- a 28 x 29 board of 2 x 2 pieces -- impossible to author here. Unit selection and
+	// data type are two axes; only calcUrl and the scaling fields belong to the mode, because only
+	// they are conditioned on it at runtime (GameService.goToNextLevel POSTs when mode == 'SVG',
+	// and the GRID branch of prepareNextLevel never reads a CalculationResult).
 	it('defaults to svg, with the grid-only fields disabled', () => {
 		const c = newComponent();
 
 		expect(c.formGroup.get('mapMode')!.value).toBe('svg');
-		expect(c.formGroup.get('elementSize')!.disabled).toBe(true);
-		expect(c.formGroup.get('gameBoardRows')!.disabled).toBe(true);
-		expect(c.formGroup.get('gameBoardColumns')!.disabled).toBe(true);
+		// The board is the board, whichever way its units are selected.
+		expect(c.formGroup.get('elementSize')!.enabled).toBe(true);
+		expect(c.formGroup.get('gameBoardRows')!.enabled).toBe(true);
+		expect(c.formGroup.get('gameBoardColumns')!.enabled).toBe(true);
 		// svg scores through a backend, so calcUrl and the value range are live
 		expect(c.formGroup.get('calcUrl')!.enabled).toBe(true);
 		expect(c.formGroup.get('minValue')!.enabled).toBe(true);
@@ -68,8 +78,7 @@ describe('ConfiguratorComponent map mode', () => {
 		c.formGroup.get('mapMode')!.setValue('grid');
 		c.formGroup.get('mapMode')!.setValue('svg');
 
-		expect(c.formGroup.get('elementSize')!.disabled).toBe(true);
-		expect(c.formGroup.get('elementSize')!.value).toBe(1);
+		expect(c.formGroup.get('elementSize')!.enabled).toBe(true);
 		expect(c.formGroup.get('calcUrl')!.enabled).toBe(true);
 		expect(c.formGroup.get('infiniteLevels')!.value).toBe(true);
 	});
@@ -272,5 +281,78 @@ describe('ConfiguratorComponent import of a file that is not a configuration', (
 		await importRaw(c, JSON.stringify({ maps: [], productionTypes: [], customColors: [] }));
 
 		expect(alerts).toEqual([]);
+	});
+});
+
+describe('the builder can express the games this repository ships', () => {
+	// THIS IS THE QUESTION "could each example be built with the game builder?" ASKED AS A TEST.
+	// Prose could answer it once; this answers it on every commit, which matters because the two
+	// drift in one direction only -- Settings gains a field, the dataset uses it, and the form
+	// silently cannot produce that game any more.
+	//
+	// It imports each shipped example and compares what the form would export back. Every key the
+	// FILE declares must survive: extra keys the form always emits (minSelected on a grid game,
+	// say) are a superset and harmless, because Settings reads what it recognises.
+	//
+	// All four languages are registered because the datasets carry all four, and a language with
+	// no control is dropped by patchValue.
+	const LANGUAGES = ['de', 'en', 'nl', 'pt'];
+
+	// Not gaps, and each is a decision recorded rather than a field forgotten:
+	//
+	//   advanccedInstructionsImageUrl  the misspelling every dataset carries. Settings accepts it
+	//                                  (settings.shipped-data.spec.ts) and the builder emits the
+	//                                  correct spelling, so a game authored here is the fixed one.
+	//   gridLineColor / gridLineWidth  deployment theming. config.json overrides all three per
+	//   highlightWidth                 deployment (ConfigService), so they are not the game's to
+	//                                  state and the form does not offer them.
+	/**
+	 * Does `exported` say everything `declared` says?
+	 *
+	 * Not deep equality, because a dataset may state an object PARTIALLY and mean the rest by
+	 * omission: dataDynamicGridRect.json writes `visualOptions: { neutralScoreColors: true }` and
+	 * Settings merges it over defaults that are all false. A form that emits the complete object
+	 * expresses the same game. Every key the file writes must still arrive with the same value,
+	 * so a control that is genuinely missing shows up as undefined and fails.
+	 */
+	const expresses = (exported: any, declared: any): boolean => {
+		if (declared !== null && typeof declared === 'object' && !Array.isArray(declared)) {
+			return exported !== null && typeof exported === 'object'
+				&& Object.keys(declared).every(k => expresses(exported[k], declared[k]));
+		}
+		return JSON.stringify(exported) === JSON.stringify(declared);
+	};
+
+	const NOT_THE_GAMES_TO_STATE = [
+		'advanccedInstructionsImageUrl', 'gridLineColor', 'gridLineWidth', 'highlightWidth',
+	];
+
+	for (const [name, game] of [
+		['dataStaticGridRect.json', staticGame],
+		['dataDynamicGridRect.json', dynamicGame],
+	] as [string, any][]) {
+		it(`${name} survives a round trip through the form`, () => {
+			const c = newComponent(LANGUAGES);
+
+			c.loadConfiguration(JSON.parse(JSON.stringify(game)));
+			const exported = c.formGroup.getRawValue();
+
+			const missing = Object.keys(game).filter(k => !NOT_THE_GAMES_TO_STATE.includes(k)
+				&& !expresses(exported[k], (game as any)[k]));
+			expect(missing, `the builder cannot express: ${missing.join(', ')}`).toEqual([]);
+		});
+	}
+
+	it('does not let the mode it declares overwrite what the file said', () => {
+		// The regression this guards: patching mapMode fires toggleMapMode mid-import, and the
+		// svg defaults then set infiniteLevels true over the false the file had just supplied.
+		// Whether it happened depended on key order in the JSON, which is the worst kind of bug.
+		const c = newComponent(LANGUAGES);
+
+		c.loadConfiguration(JSON.parse(JSON.stringify(dynamicGame)));
+
+		expect(c.formGroup.get('mapMode')!.value).toBe('svg');
+		expect(c.formGroup.get('infiniteLevels')!.value).toBe(false);
+		expect(c.formGroup.get('elementSize')!.value).toBe(2);
 	});
 });

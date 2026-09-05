@@ -21,7 +21,7 @@ services:
   esgame-core:
     environment:
       # The board: the SVG agriculture dataset rather than the Dutch one in assets/data.json.
-      DYNAMIC_DATA_URL: "assets/dataAgDynamic.json"
+      DYNAMIC_DATA_URL: "assets/dataDynamicGridRect.json"
       # "/" serves the dynamic game. Stated here, not inherited: setting CALC_URL without this is
       # what made the OTHER dynamic stack serve the client-side grid game against a backend it
       # never called (#254).

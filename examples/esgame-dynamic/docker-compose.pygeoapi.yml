@@ -11,7 +11,7 @@
 #
 # `make esgame-dynamic-pygeoapi-up` from the repo root does the whole thing. Directly:
 #
-#   docker build -t local/esgame-core:latest v2          # ESGAME_IMAGE must already exist
+#   docker build -f v2/Dockerfile -t local/esgame-core:latest .          # ESGAME_IMAGE must already exist
 #   ESGAME_IMAGE=local/esgame-core:latest \
 #     docker compose -p esgame-dynamic-pygeoapi -f docker-compose.pygeoapi.yml up -d --build
 #

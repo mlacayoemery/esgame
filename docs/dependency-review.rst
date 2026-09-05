@@ -227,7 +227,7 @@ Runtime dependencies on external hosts
 
 The app used to fetch Roboto and Material Icons from Google Fonts (declared in
 :file:`index.html`) and two production-type icons from ``raw.githubusercontent.com``
-(referenced by :file:`assets/dataGridExample.json`, the *default* dataset). The
+(referenced by :file:`examples/dataStaticGridRect.json`, the *default* dataset). The
 container image is described as self-contained, but could not render text or icons
 correctly without reaching the internet — a real problem on the offline and filtered
 school networks this game is played on.

@@ -164,7 +164,7 @@ Three location blocks set distinct caching policies, ordered from most to least 
    * - Path pattern
      - Header / expiry
      - Intent
-   * - ``/assets/(config|data|dataGridExample)\.json$``
+   * - ``/assets/[^/]*\.json$``
      - ``Cache-Control: no-store``
      - Runtime config & game data — never cached, so a mounted or entrypoint-injected override takes effect on the next page load with no rebuild.
    * - ``\.(js|css|woff2?|ttf|eot)$``
@@ -176,8 +176,8 @@ Three location blocks set distinct caching policies, ordered from most to least 
 
 The ``no-store`` rule is the linchpin of the run-time-config design: it guarantees that an
 override of :file:`assets/config.json` (a new ``calcUrl`` or dataset) is seen immediately
-rather than being served from a stale browser cache. The same applies to
-:file:`assets/data.json` and :file:`assets/dataGridExample.json`.
+rather than being served from a stale browser cache. The same applies to every other JSON directly
+under ``assets/``, the game datasets included; ``assets/i18n/*.json`` keeps its caching.
 
 SPA fallback
 ------------
@@ -272,7 +272,7 @@ serves the consequence rasters. Bring it up with:
 
 .. code-block:: console
 
-   $ docker build -t local/esgame-core:latest v2
+   $ docker build -f v2/Dockerfile -t local/esgame-core:latest .
    $ ESGAME_IMAGE=local/esgame-core:latest \
        docker compose -p esgame-dynamic-example up -d --build
 
@@ -331,7 +331,7 @@ sibling calculator:
 .. code-block:: json
 
    {
-     "staticDataUrl": "assets/dataGridExample.json",
+     "staticDataUrl": "assets/dataStaticGridRect.json",
      "dynamicDataUrl": "assets/data.json",
      "calcUrl": "http://localhost:8000",
      "defaultMode": "dynamic",

@@ -63,7 +63,7 @@ The interface (and the optional override semantics) is defined in the same file:
    * - ``staticDataUrl``
      - ``string``
      - URL (relative to ``<base href>``) of the grid / "static" game settings
-       JSON. Default ``'assets/dataGridExample.json'``.
+       JSON. Default ``'assets/dataStaticGridRect.json'``.
    * - ``dynamicDataUrl``
      - ``string``
      - URL (relative to ``<base href>``) of the SVG / "dynamic" game settings
@@ -90,7 +90,7 @@ The interface (and the optional override semantics) is defined in the same file:
      - SVG-mode hover-highlight border width (board units), e.g. ``"1"``.
 
 The module-level constant ``DEFAULT_CONFIG`` is
-``{ staticDataUrl: 'assets/dataGridExample.json', dynamicDataUrl: 'assets/data.json', defaultMode: 'static' }``.
+``{ staticDataUrl: 'assets/dataStaticGridRect.json', dynamicDataUrl: 'assets/data.json', defaultMode: 'static' }``.
 
 Methods and properties
 ----------------------

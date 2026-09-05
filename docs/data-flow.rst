@@ -78,7 +78,7 @@ rebuild required.
      - Meaning
    * - ``staticDataUrl``
      - ``string``
-     - ``assets/dataGridExample.json``
+     - ``assets/dataStaticGridRect.json``
      - URL (relative to ``<base href>``) of the GRID/"static" game-data JSON.
    * - ``dynamicDataUrl``
      - ``string``
@@ -115,7 +115,7 @@ Example :file:`assets/config.json` (the dynamic example,
 .. code-block:: json
 
    {
-       "staticDataUrl": "assets/dataGridExample.json",
+       "staticDataUrl": "assets/dataStaticGridRect.json",
        "dynamicDataUrl": "assets/data.json",
        "calcUrl": "http://localhost:8000",
        "defaultMode": "dynamic",
@@ -247,15 +247,16 @@ The raw object is then passed to ``new Settings(translate, data)`` →
    * - *(other / missing)*
      - ``SuitabilityMap`` (default)
 
-**Static vs dynamic game data.** Both modes share this schema; the difference is
-``mapMode`` and whether ``calcUrl`` / ``Consequence`` maps point at a backend. The
-dynamic example (:file:`examples/esgame-dynamic/frontend/data.json`) uses
-``"mapMode": "svg"``, ``"calcUrl": "http://localhost:8000"``, a 28×29 board
-(``gameBoardColumns: 28``, ``gameBoardRows: 29``), ``minValue: 0`` / ``maxValue: 375``,
-two production types ``id "10"`` (Arable land) and ``id "20"`` (Livestock) each with
-``maxElements: 700``, and ``defaultProductionType: "10"``. Its consequence-map ids
-(``110``–``113`` for arable, ``120``–``123`` for livestock) are exactly the ids the
-calculator returns in ``results[]``.
+**Static vs dynamic game data.** Both modes share this schema; what differs is the two axes of
+:doc:`static-vs-dynamic` -- ``mapMode`` (unit selection) and whether a ``calcUrl`` is configured
+(data type). The dynamic example (:file:`examples/dataDynamicGridRect.json`) uses
+``"mapMode": "svg"`` on the same 28 × 29 board as the static one
+(``gameBoardColumns: 28``, ``gameBoardRows: 29``, ``elementSize: 2``), ``minValue: 0`` /
+``maxValue: 100``, and the same two production types ``id "10"`` (Arable land) and ``id "20"``
+(Livestock) with ``maxElements: 4`` each. Its consequence-map ids (``4``–``7`` for arable,
+``8``–``11`` for livestock) are the **static game's** ids, and are exactly the ids a calculator
+must return in ``results[]`` -- which is what lets one calculator serve either board, and why
+:file:`examples/esgame-dynamic/calculator/app.py` keys its ``CONSEQUENCES`` on them.
 
 Abbreviated dynamic game data:
 
@@ -278,8 +279,8 @@ Abbreviated dynamic game data:
            { "id": "20", "fieldColor": "#ff9900", "maxElements": 700 }
        ],
        "maps": [
-           { "id": "1",   "gameBoardType": "Drawing",    "urlToData": "./assets/images/example_zones.tif" },
-           { "id": "999", "gameBoardType": "Background",  "urlToData": "./assets/images/example_background.tif" },
+           { "id": "1",   "gameBoardType": "Drawing",    "urlToData": "./assets/images/esgame_ag_zones.tif" },
+           { "id": "999", "gameBoardType": "Background",  "urlToData": "./assets/images/esgame_ag_background.tif" },
            { "id": "2",   "gameBoardType": "Suitability", "productionTypes": ["10"], "urlToData": "./assets/images/esgame_img_ag.tif" },
            { "id": "110", "gameBoardType": "Consequence", "productionTypes": ["10"], "urlToData": "./assets/images/esgame_img_ag_carbon.tif" }
        ]

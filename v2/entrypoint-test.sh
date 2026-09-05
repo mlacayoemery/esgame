@@ -25,7 +25,7 @@ check() {
   local cfg="${WORK}/config.json"
   cat > "${cfg}" <<'JSON'
 {
-	"staticDataUrl": "assets/dataGridExample.json",
+	"staticDataUrl": "assets/dataStaticGridRect.json",
 	"dynamicDataUrl": "assets/data.json",
 	"calcUrl": "",
 	"defaultMode": "static"

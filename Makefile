@@ -116,7 +116,7 @@ ESGAME_BASE := local/esgame-core:latest
 
 ## Build the esgame base + the example images (frontend overlay, calculator, seeder).
 esgame-dynamic-example-build:
-	docker build -t $(ESGAME_BASE) v2
+	docker build -f v2/Dockerfile -t $(ESGAME_BASE) .
 	ESGAME_IMAGE=$(ESGAME_BASE) $(COMPOSE_EXAMPLE) build
 
 ## Build + start the playable dynamic example in the background.
@@ -138,7 +138,7 @@ esgame-dynamic-example-down:
 
 ## Build the esgame base + the pygeoapi-variant images.
 esgame-dynamic-pygeoapi-build:
-	docker build -t $(ESGAME_BASE) v2
+	docker build -f v2/Dockerfile -t $(ESGAME_BASE) .
 	ESGAME_IMAGE=$(ESGAME_BASE) $(COMPOSE_PYGEOAPI) build
 
 ## Build + start the pygeoapi variant of the example in the background.

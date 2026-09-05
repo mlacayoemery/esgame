@@ -45,7 +45,7 @@
 #
 # THE LATTICE
 #
-# 28 columns x 29 rows, matching the static grid game's own board (dataGridExample.json is 28x29,
+# 28 columns x 29 rows, matching the static grid game's own board (dataStaticGridRect.json is 28x29,
 # of which 387 cells are empty — it too is an irregular shape inside a rectangle). The lattice
 # spans the farmland's bounding box, which is 459 x 331 cells, so a unit is 16.4 x 11.4 cells =
 # 1640 x 1140 m. Units are therefore wider than they are tall, and the SVG carries real

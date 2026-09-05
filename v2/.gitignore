@@ -46,3 +46,9 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Copied from examples/ by scripts/sync-examples.mjs before every build, serve, test and e2e
+# run. examples/ holds the edited version; these are output.
+/src/assets/dataStaticGridRect.json
+/src/assets/dataDynamicGridRect.json
+/src/assets/optimalDynamicGridRect.json

@@ -6,6 +6,7 @@ Game mechanics: pieces, counts, levels, and scoring
 .. docs/_checks/check-file-paths.py.
 .. file-base: v2/src/app/shared/models
 .. file-base: v2/src/assets
+.. file-base: examples
 
 This page documents, with reference-grade precision, how esgame represents a
 "piece" (a *production type* placed on a board field/zone), how the **number**
@@ -16,8 +17,9 @@ runtime modes.
 
 Every statement below is grounded in the Angular v2 source under
 :file:`esgame/v2/src/app` and in the two concrete configuration files
-:file:`esgame/examples/esgame-dynamic/frontend/data.json` (SVG / dynamic) and
-:file:`esgame/v2/src/assets/dataGridExample.json` (GRID / static).
+:file:`esgame/examples/dataDynamicGridRect.json` (SVG units, dynamic data) and
+:file:`esgame/examples/dataStaticGridRect.json` (raster-grid units, static data) --
+the two axes a game is described by, see :doc:`static-vs-dynamic`.
 
 .. contents::
    :local:
@@ -217,7 +219,7 @@ copied onto :class:`ProductionType` when boards are initialised
    * - Parameter (source field)
      - Meaning / role
      - GRID example
-       (``dataGridExample.json``)
+       (``dataStaticGridRect.json``)
      - SVG example
        (``data.json``)
    * - ``maxElements``
@@ -278,7 +280,7 @@ copied onto :class:`ProductionType` when boards are initialised
 
 .. note::
 
-   GRID config files such as :file:`dataGridExample.json` omit ``minSelected``,
+   GRID config files such as :file:`dataStaticGridRect.json` omit ``minSelected``,
    ``minValue``, ``maxValue`` and ``defaultProductionType``; ``mapData`` simply
    assigns ``undefined`` for the missing keys. Those parameters are meaningful
    only in SVG/dynamic mode.
@@ -469,7 +471,7 @@ problems** rather than the same one twice:
   consequence maps.
 
 The best round-one board is therefore not the best round-two board, and the difference is
-measurable rather than rhetorical: on :file:`dataAgDynamic.json` the round-one optimum
+measurable rather than rhetorical: on :file:`dataDynamicGridRect.json` the round-one optimum
 scores 9775 in production but only 4200 once the costs appear, against 5175 for the board
 that knew about them. See :doc:`reference/optimizer`, which computes both exactly.
 
@@ -541,7 +543,7 @@ When ``calcUrl`` is empty (GRID/static), all scoring happens in the browser via
   contributions are stored negative, the total is the **net** score, and it
   drops when Round 2 reveals consequence maps — matching the example's
   instruction text (reach ``9725`` in Round 1, ``4100`` net in Round 2 in
-  :file:`dataGridExample.json`).
+  :file:`dataStaticGridRect.json`).
 
 Dynamic (SVG) scoring — backend calculator
 ------------------------------------------

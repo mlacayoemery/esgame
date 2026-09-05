@@ -8,7 +8,13 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "e2e": "ng build && playwright test",
-    "lhci": "lhci autorun --config=lighthouserc.json"
+    "lhci": "lhci autorun --config=lighthouserc.json",
+    "sync:examples": "node scripts/sync-examples.mjs",
+    "prestart": "npm run sync:examples",
+    "prebuild": "npm run sync:examples",
+    "pretest": "npm run sync:examples",
+    "pree2e": "npm run sync:examples",
+    "prewatch": "npm run sync:examples"
   },
   "private": true,
   "dependencies": {

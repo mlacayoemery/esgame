@@ -6,7 +6,7 @@ import { dismissHelp, clickPastHelp } from './dynamic-game';
 
 // The grid game and tools/calculator must agree, in a browser, on the same allocation.
 //
-// They are the same game: dataGridExample.json is 28 x 29 with elementSize 2, and every raster it
+// They are the same game: dataStaticGridRect.json is 28 x 29 with elementSize 2, and every raster it
 // renders is bit-identical to the matrix the service scores with (docs/reference/static-calculator.rst).
 // So the service's VALIDATED mode — the default, the one a deployment would use — has an oracle
 // that is not my reading of the Angular code: the shipped game itself.
@@ -109,7 +109,7 @@ test.describe('the grid game and the static calculator agree', () => {
 		await expect.poll(() => fields.count(), { timeout: 60_000 }).toBe(PACK.rows * COLS);
 
 		const types = page.locator('tro-production-type-button');
-		// Arable land is declared first in dataGridExample.json, Livestock second.
+		// Arable land is declared first in dataStaticGridRect.json, Livestock second.
 		await clickPastHelp(page, types.nth(0));
 		for (const i of farmIndices) { await clickPastHelp(page, fields.nth(i)); }
 		await clickPastHelp(page, types.nth(1));

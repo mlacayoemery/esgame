@@ -27,12 +27,16 @@ RASTER_URL_TEMPLATE = os.environ.get(
     f"&coverageId={WORKSPACE}__{{coverage}}&format=image/tiff",
 )
 
-# consequence-map id (from data.json) -> (coverage name, per-service score factor)
+# consequence-map id (from examples/dataDynamicGridRect.json) -> (coverage name, score factor)
+#
+# These are the STATIC game's map ids, not a set of this example's own. Both shipped examples give
+# a Carbon cost the same id, which is what lets one calculator serve either board -- and it is why
+# this example stopped carrying a fork of the dataset with ids 110..123 of its own.
 CONSEQUENCES = {
-    "110": ("ag_carbon", 0.8), "111": ("ag_habitat", 1.0), "112": ("ag_water", 0.6), "113": ("ag_hunt", 0.4),
-    "120": ("ranch_carbon", 0.8), "121": ("ranch_habitat", 1.0), "122": ("ranch_water", 0.6), "123": ("ranch_hunt", 0.4),
+    "4": ("ag_carbon", 0.8), "5": ("ag_habitat", 1.0), "6": ("ag_water", 0.6), "7": ("ag_hunt", 0.4),
+    "8": ("ranch_carbon", 0.8), "9": ("ranch_habitat", 1.0), "10": ("ranch_water", 0.6), "11": ("ranch_hunt", 0.4),
 }
-AG_IDS = {"110", "111", "112", "113"}
+AG_IDS = {"4", "5", "6", "7"}
 
 app = FastAPI(title="esgame example calculator")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])

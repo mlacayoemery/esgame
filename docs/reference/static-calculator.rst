@@ -108,7 +108,7 @@ How it relates to the grid game v2 actually ships
 
 They are the same game, which was not obvious and is worth not re-deriving.
 
-``dataGridExample.json`` is 28 × 29 with ``elementSize: 2``, two production types (Arable land,
+``dataStaticGridRect.json`` is 28 × 29 with ``elementSize: 2``, two production types (Arable land,
 Livestock) and four consequence maps (Carbon, Habitat, Water, Hunt) — the same board, the same
 block size and the same four indicators as ``calc_files/game.js``. And the data is not merely
 similar. Every raster the grid game renders is **bit-identical** to the matrix this service scores
@@ -258,7 +258,7 @@ Serving the frontend's dynamic mode
 ``{allocation: [{id, lulc}], round, score, game_id}`` and expects, per consequence board, a score
 and a raster URL it can fetch — the shape :file:`tools/R/calculator.r` returns. Nothing else
 answered that shape, which is why the only dynamic game was the Dutch/PLACES landscape model and
-the agriculture game had no dynamic counterpart. :file:`v2/src/assets/dataAgDynamic.json` is that
+the agriculture game had no dynamic counterpart. :file:`examples/dataDynamicGridRect.json` is that
 counterpart, and this route is what scores it.
 
 The route is ``/esgame`` because that is what the R calculator serves. Two calculators answering the

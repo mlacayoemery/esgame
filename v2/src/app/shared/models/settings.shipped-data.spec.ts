@@ -1,6 +1,7 @@
 import { Settings } from './settings';
 import dataJson from '../../../assets/data.json';
-import dataGridExampleJson from '../../../assets/dataGridExample.json';
+import staticGameJson from '../../../../../examples/dataStaticGridRect.json';
+import dynamicGameJson from '../../../../../examples/dataDynamicGridRect.json';
 
 // The guards added on 2026-07-31 all report problems in a deployment's data file. Nothing loaded
 // THIS repository's own data files through them — so the first one to fire did so on a correct
@@ -21,7 +22,8 @@ const translateStub = (langs: string[] = ['en']): any => ({
 
 const dataFiles: [string, any][] = [
 	['data.json', dataJson],
-	['dataGridExample.json', dataGridExampleJson],
+	['dataStaticGridRect.json', staticGameJson],
+	['dataDynamicGridRect.json', dynamicGameJson],
 ];
 
 describe('the data files shipped in this repository', () => {
@@ -47,5 +49,24 @@ describe('the data files shipped in this repository', () => {
 				if (m.gradient) expect(s.maps[i].gradient).toBe(m.gradient);
 			});
 		});
+
+		it(`${name} has its advanced-instructions image read, however it is spelled`, () => {
+			// Every one of these files spells the key `advanccedInstructionsImageUrl`, and Settings
+			// read only `advancedInstructionsImageUrl` — so the field an author fills in was the
+			// one nothing looked at. Empty today in all of them, which is exactly why nobody
+			// noticed. This asserts the value ARRIVES rather than that it is non-empty, so it goes
+			// on holding when someone fills one in.
+			const raw = JSON.parse(JSON.stringify(data));
+			const declared = raw.advancedInstructionsImageUrl ?? raw.advanccedInstructionsImageUrl;
+			expect(new Settings(translateStub(), raw).advancedInstructionsImageUrl).toBe(declared);
+		});
 	}
+
+	it('prefers the correct spelling when a file carries both', () => {
+		const raw: any = JSON.parse(JSON.stringify(staticGameJson));
+		raw.advancedInstructionsImageUrl = 'assets/images/right.png';
+		raw.advanccedInstructionsImageUrl = 'assets/images/wrong.png';
+		expect(new Settings(translateStub(), raw).advancedInstructionsImageUrl)
+			.toBe('assets/images/right.png');
+	});
 });

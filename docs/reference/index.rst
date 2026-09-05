@@ -9,6 +9,7 @@ container in the system. Each page is grounded in the actual source.
 
    frontend-services
    frontend-components
+   game-builder
    calculator
    static-calculator
    optimizer

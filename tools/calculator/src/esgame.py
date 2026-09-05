@@ -5,7 +5,7 @@ score and a URL to a raster it can fetch and draw. That is the shape ``tools/R/c
 returns, and until now nothing else did — which is why the only dynamic game was the Dutch/PLACES
 landscape model, and the static agriculture game had no dynamic counterpart at all.
 
-This translates between the two, so ``v2/src/assets/dataAgDynamic.json`` can be played against the
+This translates between the two, so ``examples/dataDynamicGridRect.json`` can be played against the
 same model the grid game is scored by. It adds no scoring of its own: every number here comes out
 of ``model.score``, which is pinned against the 2013 original by ``extract/golden.test.mjs`` and
 against the browser by ``v2/e2e/grid-calculator-agrees.spec.ts``.
@@ -24,15 +24,15 @@ one the frontend already ships, and there is nothing to publish.
 # side of this changes the other must too.
 COLS = 28
 ROWS = 29
-PLACEMENT = 2            # a piece is 2 x 2 cells: dataAgDynamic.json's elementSize, and the pack's
-MAX_PIECES_PER_TYPE = 4  # dataAgDynamic.json's maxElements, and the grid game's
+PLACEMENT = 2            # a piece is 2 x 2 cells: dataDynamicGridRect.json's elementSize, and the pack's
+MAX_PIECES_PER_TYPE = 4  # dataDynamicGridRect.json's maxElements, and the grid game's
 
-# lulc as the frontend sends it (dataAgDynamic.json productionTypes) -> this pack's type ids.
+# lulc as the frontend sends it (dataDynamicGridRect.json productionTypes) -> this pack's type ids.
 # Anything else -- including the dataset's defaultProductionType "0" -- means "nothing here" and
 # is dropped rather than refused: the frontend posts EVERY field each round, allocated or not.
 LULC = {10: "farm", 20: "ranch"}
 
-# One row per consequence board in dataAgDynamic.json, whose ids are dataGridExample.json's ids:
+# One row per consequence board in dataDynamicGridRect.json, whose ids are dataStaticGridRect.json's ids:
 # the two datasets are the same game, so a Carbon cost is id 4 on both boards.
 #
 #   esgame id, short key, pack map, production type, the raster the frontend already ships

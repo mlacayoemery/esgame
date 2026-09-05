@@ -7,6 +7,7 @@ Developer Guide
 .. file-base: v2/src
 .. file-base: v2/src/app
 .. file-base: v2/src/assets
+.. file-base: examples
 
 This guide is for developers working on the **esgame** frontend — the Angular
 single-page application under :file:`esgame/v2`. It covers the repository layout,
@@ -43,7 +44,7 @@ backend calculators and GeoServer live alongside it as deployable examples.
      - Components, services, and shared models (see below).
    * - :file:`esgame/v2/src/assets`
      - Runtime-loaded data: :file:`config.json`, the two game-data files
-       (:file:`dataGridExample.json`, :file:`data.json`), :file:`i18n/`
+       (:file:`dataStaticGridRect.json`, :file:`data.json`), :file:`i18n/`
        translations, :file:`images/`, and :file:`fonts/`.
    * - :file:`esgame/examples/esgame-dynamic`
      - A self-contained, runnable **dynamic** stack: a thin frontend overlay, a
@@ -176,7 +177,8 @@ Install dependencies from the lockfile and start the dev server:
 ``npm start`` runs ``ng serve`` with the ``development`` configuration
 (``optimization: false``, ``sourceMap: true``). The app reads
 :file:`src/assets/config.json` at startup, so by default it launches the
-``static`` (GRID) game from :file:`assets/dataGridExample.json` — no backend is
+``static`` (GRID) game from :file:`examples/dataStaticGridRect.json`, which the build copies
+to ``assets/`` — no backend is
 needed for grid-mode development.
 
 Other scripts (from :file:`package.json`):
@@ -256,7 +258,7 @@ app boots with defaults:
      - Default
      - Meaning
    * - ``staticDataUrl``
-     - ``assets/dataGridExample.json``
+     - ``assets/dataStaticGridRect.json``
      - Game-data JSON for GRID / "static" mode.
    * - ``dynamicDataUrl``
      - ``assets/data.json``
@@ -285,7 +287,7 @@ The repository's default :file:`src/assets/config.json` is minimal:
 .. code-block:: json
 
    {
-     "staticDataUrl": "assets/dataGridExample.json",
+     "staticDataUrl": "assets/dataStaticGridRect.json",
      "dynamicDataUrl": "assets/data.json",
      "calcUrl": "",
      "defaultMode": "static"
@@ -395,7 +397,7 @@ Game-data JSON reference
 
 Both ``staticDataUrl`` and ``dynamicDataUrl`` point at a game-data JSON whose
 shape is consumed by ``Settings.mapData()``. Key top-level fields (see
-:file:`shared/models/settings.ts` and :file:`assets/dataGridExample.json`):
+:file:`shared/models/settings.ts` and :file:`examples/dataStaticGridRect.json`):
 
 .. list-table::
    :header-rows: 1
@@ -464,7 +466,8 @@ Adding a production type
 
 A *production type* is a land use the player allocates (e.g. arable land,
 livestock). To add one, edit the relevant game-data JSON
-(:file:`assets/dataGridExample.json` for grid, :file:`assets/data.json` for SVG):
+(:file:`examples/dataStaticGridRect.json` for the grid example,
+:file:`examples/dataDynamicGridRect.json` for the SVG one):
 
 #. Add an entry to ``productionTypes[]`` with a **unique** ``id`` (string, parsed
    to an integer), a per-language ``name``, a ``fieldColor``, an ``urlToIcon``

@@ -5,10 +5,17 @@ FROM node:26-alpine AS build
 WORKDIR /app
 
 # Install deps first for better layer caching (only re-runs when lockfile changes)
-COPY package.json package-lock.json ./
+COPY v2/package.json v2/package-lock.json ./
 RUN npm ci
 
-COPY . .
+COPY v2/ ./
+
+# THE BUILD CONTEXT IS THE REPOSITORY ROOT, not v2/. The two shipped example games are authored
+# in examples/ at the top of the repository, and an image built from a v2/ context could not see
+# them -- it would build cleanly and serve a game whose board 404s. scripts/sync-examples.mjs
+# (npm prebuild) copies them into src/assets; WORKDIR is /app, so ../examples is /examples, which
+# is where that script looks. Same mechanism as a local build, not a second one.
+COPY examples/*.json /examples/
 # Image serves from the domain root; a reverse proxy maps host/path -> this container.
 RUN npm run build -- --base-href / --configuration production
 
@@ -21,7 +28,7 @@ RUN npm run build -- --base-href / --configuration production
 FROM nginxinc/nginx-unprivileged:alpine
 
 # Tuned config: gzip, long-cache hashed assets, no-cache runtime config, SPA fallback
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY v2/nginx.conf /etc/nginx/conf.d/default.conf
 
 # --chown because the entrypoint below rewrites assets/config.json in place, as uid 101.
 # Without it the tree lands root-owned and the rewrite fails on a directory it cannot write —
@@ -30,7 +37,7 @@ COPY --from=build --chown=101:101 /app/dist/tradeoff-v2/ /usr/share/nginx/html
 
 # Injects runtime configuration (e.g. CALC_URL) into assets/config.json before nginx starts,
 # so one image serves any backend/dataset without a rebuild. Runs via nginx's /docker-entrypoint.d hook.
-COPY --chown=101:101 docker-entrypoint.sh /docker-entrypoint.d/40-esgame-config.sh
+COPY --chown=101:101 v2/docker-entrypoint.sh /docker-entrypoint.d/40-esgame-config.sh
 RUN chmod +x /docker-entrypoint.d/40-esgame-config.sh
 
 EXPOSE 8080

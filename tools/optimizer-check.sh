@@ -3,8 +3,8 @@
 #
 #   tools/optimizer-check.sh
 #
-# WHAT IS GENERATED HERE. v2/src/assets/optimalAgDynamic.json is written by
-# tools/optimizer/optimize.py --write and committed. dataAgDynamic.json points the checkmark button
+# WHAT IS GENERATED HERE. examples/optimalDynamicGridRect.json is written by
+# tools/optimizer/optimize.py --write and committed. dataDynamicGridRect.json points the checkmark button
 # at it, so it is what a player is shown when they ask what the best board is.
 #
 # WHAT test_optimize.py ALREADY CHECKS, AND WHAT IT CANNOT. It re-scores the shipped pieces through
@@ -26,7 +26,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-ASSET="v2/src/assets/optimalAgDynamic.json"
+ASSET="examples/optimalDynamicGridRect.json"
 [ -f "${ASSET}" ] || { echo "!! ${ASSET} is missing; nothing to check"; exit 2; }
 
 # Pillow is REQUIRED, not optional. test_optimize.py skips its raster comparison without it, and

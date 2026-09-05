@@ -42,7 +42,9 @@ jobs:
 
       - uses: docker/build-push-action@v7
         with:
-          context: v2
+          # The repository root, so the build can read examples/ as well as v2/.
+          context: .
+          file: v2/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

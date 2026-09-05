@@ -52,11 +52,11 @@ Verified working
    * - Path
      - How it was checked
    * - Static / grid game
-     - 436 unit tests, 26 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
+     - 445 unit tests, 26 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
        SEO 100. The board renders 2,436 fields; the e2e suite asserts that rather than
        just asserting the component mounted.
    * - The agriculture game's shipped optimum
-     - :file:`v2/src/assets/optimalAgDynamic.json` is re-derived and diffed by
+     - :file:`examples/optimalDynamicGridRect.json` is re-derived and diffed by
        :file:`tools/optimizer-check.sh`, gated by :file:`.github/workflows/optimizer.yml`.
        Confirmed able to fail on a board that is legal, self-consistent and **sub-optimal** —
        the case all eight of the optimiser's own tests pass; see "the checks were audited for
@@ -2073,7 +2073,7 @@ A third shape, found 2026-09-05 — *every test passed, and none of them tested 
    one runs, fails on real breakage, and is still not evidence for what the file it guards
    claims.
 
-   :file:`v2/src/assets/optimalAgDynamic.json` is what the agriculture game's checkmark button
+   :file:`examples/optimalDynamicGridRect.json` is what the agriculture game's checkmark button
    loads, and it claims to be **the best board the round can reach**. The eight tests in
    :file:`tools/optimizer/test_optimize.py` check that its claimed scores re-derive through the
    model, that both boards are legal, that the board dimensions still match the dataset, and

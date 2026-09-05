@@ -42,6 +42,22 @@ export class ConfiguratorComponent {
 			"basicInstructionsImageUrl": new FormControl(""),
 			"advancedInstructions": this.getLanguageControls(),
 			"advancedInstructionsImageUrl": new FormControl(""),
+			// Settings reads all of these off the dataset, and until 2026-09-05 none of them could
+			// be authored here -- so a game built with this tool could not be the game this
+			// repository ships. They are game properties, not deployment ones: gridLineColor,
+			// gridLineWidth and highlightWidth are deliberately absent because config.json
+			// overrides them per deployment (ConfigService.apply), which is where they belong.
+			"clientScored": new FormControl(false),
+			"paletted": new FormControl(false),
+			"scoreByConversion": new FormControl(false),
+			"autoOpenInstructions": new FormControl(true),
+			"editablePreviousRounds": new FormControl(false),
+			"optimalSolutionUrl": new FormControl(""),
+			"visualOptions": new FormGroup({
+				"consequenceFieldOpacity": new FormControl(false),
+				"highlightFocusedBoard": new FormControl(false),
+				"neutralScoreColors": new FormControl(false),
+			}),
 		});
 		this.toggleMapMode('svg');
 		this.formGroup.get('mapMode')!.valueChanges.subscribe((value) => {
@@ -186,54 +202,93 @@ export class ConfiguratorComponent {
 					alert("That file could not be read as a game configuration.");
 					return;
 				}
-				value.maps?.forEach((_: any) => {
-					this.addMap();
-				});
-				value.productionTypes?.forEach((_: any) => {
-					this.addProductionType();
-				});
-				value.customColors?.forEach((customColor: any) => {
-					this.addCustomColors(true);
-					customColor.colors?.forEach((color: any, index: number) => {
-						this.addColor(this.customColors.controls[this.customColors.controls.length - 1]);
-					});
-				});
-				this.formGroup.patchValue(value);
-
+				this.loadConfiguration(value);
 			};
 			reader.readAsText(file);
 		}
 	}
 
-	toggleMapMode(value: string) {
+	/**
+	 * Which fields the chosen unit selection actually uses.
+	 *
+	 * ONLY `calcUrl` AND THE SVG-ONLY SCALING FIELDS ARE TIED TO THE MODE, and each because the
+	 * app is: `GameService.goToNextLevel` POSTs only when `mode == 'SVG'`, and the GRID branch of
+	 * `prepareNextLevel` never reads a CalculationResult, so a `calcUrl` on a grid game buys
+	 * nothing but a way to fail.
+	 *
+	 * Everything else used to be tied to it too, and that was wrong. `elementSize` and the board
+	 * dimensions describe the BOARD, not how a unit is drawn: this tool forced `elementSize` to 1
+	 * and disabled the dimensions whenever mapMode was svg, which made the shipped SVG example --
+	 * a 28 x 29 board of 2 x 2 pieces -- impossible to author here. Unit selection and data type
+	 * are two axes (docs/static-vs-dynamic.rst); this form now conflates them only where the
+	 * runtime does.
+	 *
+	 * `elementSize` > 1 means the board is a rectangular grid of units, which is what
+	 * `GameService.getAssociatedFields` assumes when it steps by `gameBoardColumns`. An SVG board
+	 * whose zones are irregular -- the hexagons of assets/data.json -- must leave it at 1.
+	 */
+	setModeAvailability(value: string) {
+		const svgOnly = ['calcUrl', 'minSelected', 'minValue', 'maxValue'];
+		svgOnly.forEach(name => value == "svg"
+			? this.formGroup.get(name)!.enable()
+			: this.formGroup.get(name)!.disable());
+	}
+
+	/**
+	 * The values a fresh game of this kind starts from, applied when a PERSON changes the mode.
+	 *
+	 * Kept apart from availability so that importing a configuration cannot have its own values
+	 * overwritten by the defaults of the mode it declares -- which is order-dependent and was
+	 * silently losing imported fields.
+	 */
+	applyModeDefaults(value: string) {
 		if (value == "svg") {
-			this.formGroup.get('elementSize')!.disable();
-			this.formGroup.get('elementSize')!.setValue(1);
-			this.formGroup.get('imageMode')!.disable();
-			this.formGroup.get('imageMode')!.setValue(false);
-			this.formGroup.get('gameBoardRows')!.disable();
-			this.formGroup.get('gameBoardColumns')!.disable();
-			this.formGroup.get('calcUrl')!.enable();
-			this.formGroup.get('infiniteLevels')!.enable();
 			this.formGroup.get('infiniteLevels')!.setValue(true);
-			this.formGroup.get('minSelected')!.enable();
-			this.formGroup.get('minValue')!.enable();
-			this.formGroup.get('maxValue')!.enable();
 		} else {
-			this.formGroup.get('elementSize')!.enable();
-			this.formGroup.get('imageMode')!.enable();
-			this.formGroup.get('gameBoardRows')!.enable();
-			this.formGroup.get('gameBoardColumns')!.enable();
-			this.formGroup.get('calcUrl')!.disable();
-			this.formGroup.get('minSelected')!.disable();
 			this.formGroup.get('minSelected')!.setValue(0);
-			this.formGroup.get('minValue')!.disable();
 			this.formGroup.get('minValue')!.setValue(0);
-			this.formGroup.get('maxValue')!.disable();
 			this.formGroup.get('maxValue')!.setValue(100);
-			this.formGroup.get('infiniteLevels')!.disable();
 			this.formGroup.get('infiniteLevels')!.setValue(false);
 		}
+	}
+
+	/**
+	 * Fill the form from a parsed configuration.
+	 *
+	 * Split out of onFileSelected because the interesting half has nothing to do with files, and
+	 * because "can this tool express the games this repository ships?" is a question worth
+	 * answering with a test rather than by reading the form -- see the round-trip in
+	 * configurator.component.spec.ts.
+	 *
+	 * The rows come first: a FormArray with no entries silently drops the values patched into it,
+	 * which is why maps, production types and colour sets are added one per entry before
+	 * patchValue rather than after.
+	 *
+	 * Availability is re-applied AFTERWARDS and the mode's defaults deliberately are not. Patching
+	 * `mapMode` fires the valueChanges subscription mid-patch, so applying defaults there would
+	 * overwrite fields the file had already set -- infiniteLevels and elementSize both went that
+	 * way -- and whether it did depended on key order in the JSON.
+	 */
+	loadConfiguration(value: any) {
+		value.maps?.forEach((_: any) => {
+			this.addMap();
+		});
+		value.productionTypes?.forEach((_: any) => {
+			this.addProductionType();
+		});
+		value.customColors?.forEach((customColor: any) => {
+			this.addCustomColors(true);
+			customColor.colors?.forEach(() => {
+				this.addColor(this.customColors.controls[this.customColors.controls.length - 1]);
+			});
+		});
+		this.formGroup.patchValue(value);
+		this.setModeAvailability(this.formGroup.get('mapMode')!.value);
+	}
+
+	toggleMapMode(value: string) {
+		this.setModeAvailability(value);
+		this.applyModeDefaults(value);
 	}
 
 	formatLabel(value: number | undefined) {
