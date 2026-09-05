@@ -55,6 +55,19 @@ Verified working
      - 450 unit tests, 28 Playwright e2e, Lighthouse a11y 100 / best-practices 100 /
        SEO 100. The board renders 2,436 fields; the e2e suite asserts that rather than
        just asserting the component mounted.
+   * - A raster-grid game scored by a calculator
+     - The combination that did not exist before 2026-09-05, checked in a browser rather than
+       against a stub: :file:`v2/e2e/grid-backend-scored.spec.ts` places pieces in the grid game,
+       submits, and asserts the round was POSTed as ``{id, lulc}`` pairs **and** that round 2
+       fetched the rasters the calculator answered with — the query string is what separates them
+       from the ones that ship. Its second test is the guard that matters: the same deployment,
+       the same ``calcUrl``, the shipped file untouched, and nothing posted. The opt-in
+       (``backendScored``) is injected at the network edge rather than committed, because
+       :file:`examples/dataStaticGridRect.json` *is* the static example and giving it a backend
+       here would make it something else. Five unit tests in
+       :file:`v2/src/app/services/game.service.mode-branch.spec.ts` pin the branching, including
+       that a third round replaces the previous one's consequence boards instead of accumulating
+       them.
    * - The agriculture game's shipped optimum
      - :file:`examples/optimalDynamicGridRect.json` is re-derived and diffed by
        :file:`tools/optimizer-check.sh`, gated by :file:`.github/workflows/optimizer.yml`.
