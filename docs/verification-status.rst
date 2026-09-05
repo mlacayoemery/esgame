@@ -1677,8 +1677,36 @@ Should the published rasters move to the same fixed scale as the scores?
    wrong on its own terms. A, B and C are the real question, and it is a question about what a
    player should be able to compare — which is a teaching decision, not a correctness one.
 
-   **If nobody decides:** the split stays, and it is documented here and in
-   :doc:`reference/calculator` rather than being folded knowledge.
+   **DECIDED 2026-08-15: keep the split.** The rasters stay round-relative and the scores stay on
+   fixed bounds. Two of the four options were settled by measurement rather than preference — the
+   floor came out (above), which is what actually made a cautious allocation's map readable, and
+   the palette half was fixed where it really lived, in the frontend. The remaining question is
+   only reachable by changing what the calculator publishes.
+
+   The shape a future change would take is recorded beside the stretch in :file:`tools/R/calculator.r`
+   and under :doc:`reference/calculator`: an optional ``ESGAME_SCALE``, defaulting to the present
+   behaviour, with a ``raw`` mode that would let the client scale. It is a decision about
+   **consumers** — every published coverage would carry different numbers, and WCS clients and
+   places' own calculation read them — and it wants the five inline ``*_norm`` blocks unified with
+   ``model.R`` first.
+
+Should the grid game be scored by the static calculator, or keep scoring itself?
+   *Opened 2026-08-15.* :file:`tools/calculator` reproduces the 2013 game's model over HTTP, and
+   :file:`v2/e2e/grid-calculator-agrees.spec.ts` shows it agrees with the shipped grid game on the
+   same allocation — six numbers and the total, read off the score board in a browser. But the
+   game still scores itself: nothing in production calls the service.
+
+   **Two coherent answers.** Leave it: the grid game stays offline-capable, needs no backend, and
+   the service is a second implementation that CI keeps honest — which is worth having on its own,
+   since it is what pins the model against ``calc_files/game.js``. Or wire it up: the game gains a
+   backend it has never had, and the rule that a round is scored in one place rather than two.
+
+   **What it costs to settle.** Wiring it means the grid game needs a ``calcUrl`` and a deployment
+   that runs the service; today the static game is a page you can open from a file. That is the
+   trade, and it is a teaching-and-deployment question rather than a technical one.
+
+   **If nobody decides:** the two stay in step because the browser oracle compares them, and the
+   service stays a checked second opinion rather than a dependency.
 
 .. _how-many-calculation-replicas:
 
@@ -1770,6 +1798,14 @@ How many calculation replicas should a workshop run?
    change for every overlay built on this base, which is why it is written down here rather than
    applied. ``limits`` is not worth touching either way: limits do not affect scheduling, 1.25
    would fit the peak and buy nothing, and 1 would hurt.
+
+   **DECIDED 2026-08-15: the base stays at 500m and the production overlay reserves a core.**
+   places' ``deploy/k8s/patch-calculation.yaml`` (in the places repository) sets ``requests.cpu: "1"``; nothing downstream
+   of this base changes. The mechanism and the reasoning are in
+   :doc:`guides/deployer`, under "Sizing the calculation backend", because that is where an overlay
+   author meets the question — and it says which half of the argument generalises: the
+   single-threaded *ceiling* does, since it is the same Plumber; the measured *utilisation* is
+   esgame's and a different model may sit well below it.
 
    **The uneven per-pod load was chance, not load balancing — hypothesis tested and rejected.**
    The suspect was connection reuse: each k6 VU holds one connection and ingress-nginx pins it to
@@ -2086,6 +2122,21 @@ gap. Read beside a page this long, that implied nearly everything here is gated.
 strongest checks on this page are the ones **no workflow runs**, and re-deriving which is which
 took ten minutes, so it is written down.
 
+**The model is implemented twice**, and that is a gap in the code rather than in the testing.
+:file:`tools/R/model.R` has ``esgame_indicator()`` and ``esgame_airconctot()``;
+:file:`tools/R/calculator.r` has its own inline copies — the receptor mask five times, and the
+concentration field as ``airconc10..50``. ``derive-bounds.R`` and the R tests go through
+``model.R``; a real round goes through ``calculator.r``.
+
+They agree today. They did not on 2026-08-15: removing the exposure floor from ``model.R`` moved
+the bounds while the five inline blocks went on applying it, and the golden allocation came back at
+``HH 80`` — a round scored *with* a floor against bounds derived *without* one. Arithmetically
+consistent, and meaningless. It was caught because the number did not match an independent
+calculation, not by any check here.
+
+Unifying them is the obvious fix and has not been done. Anything that changes the model — the
+scaling flag above included — should do it first.
+
 **What CI does not run** — established by grepping the workflows for each, not from memory:
 
 .. list-table::
@@ -2095,9 +2146,12 @@ took ten minutes, so it is written down.
    * - Not gated
      - What that means
    * - :file:`v2/e2e-cluster`, :file:`deploy/k8s/ingress-test.sh`, :file:`deploy/k8s/kind.sh`
-     - **Weekly since 2026-08-06**, not on pull requests — see
-       :file:`.github/workflows/cluster.yml`. All three ran only by hand before that, which made
-       the most convincing evidence on this page the least often executed.
+     - **No longer weekly-only, since 2026-08-15.** They run after an image is *published* from
+       master (``workflow_run``, so the run tests the new image rather than the previous one), on
+       pull requests that touch ``deploy/k8s/**``, and still on the Monday schedule for changes
+       that happen outside this repository. Not a blanket PR gate: both images roll on ``:master``,
+       so on a PR touching ``v2`` or ``tools/R`` the images pulled would not contain the change.
+       All three ran only by hand before 2026-08-06.
 
        Scheduled rather than gating, on purpose. It stands up kind, installs ingress-nginx and
        pulls a 2.6 GB image; both images roll on ``:master``, so what it tests is master's images
