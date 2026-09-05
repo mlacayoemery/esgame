@@ -176,7 +176,12 @@ export class GameService {
 			// fail — measured against the esgame-dynamic stack on 2026-09-02, round 2 POSTed to
 			// the calculator, got 404, and showed "Something went wrong, please try again later"
 			// on a game that had every number it needed in the browser already.
-			if (this.settings.value.mode == 'SVG' && this.settings.value.calcUrl) {
+			// A grid game scores on the backend only if its DATASET asks to (`backendScored`).
+			// Presence of a calcUrl is not enough and never was: see Settings.backendScored for
+			// the deployment that reached "grid mode with a calculator configured" by accident.
+			const settings = this.settings.value;
+			const scoredOnTheBackend = !!settings.calcUrl && (settings.mode == 'SVG' || !!settings.backendScored);
+			if (scoredOnTheBackend) {
 				this.loading(true);
 				let inputData = {} as { allocation: { id: number, lulc: number }[], round: number, score: number, game_id: string};
 				const allFields = [...this.selectedFields.value, ...this.notSelectedFields.value];
@@ -201,7 +206,7 @@ export class GameService {
 						this.loading(false);
 					}
 				});
-			} else if (this.settings.value.mode == 'SVG') {
+			} else if (settings.mode == 'SVG') {
 				// The dynamic game has no consequence maps of its own — they come back from the
 				// calculator, and the urlToData in data.json are placeholders it overwrites.
 				// Without a calcUrl there is nothing to compute and nothing to show, but this
@@ -297,6 +302,40 @@ export class GameService {
 		}
 	}
 
+	/**
+	 * Point the consequence maps at the rasters the calculator returned, and record its scores.
+	 *
+	 * Shared by BOTH unit selections. It began as part of the SVG branch, and a grid game that is
+	 * backend-scored needs exactly the same three things done -- so it is one method rather than
+	 * two that drift, which is the shape the duplicated e2e assertions taught this repository.
+	 *
+	 * The spider chart is drawn from these numbers rather than fetched as a PNG. The calculator
+	 * used to return a sixth result with id "-1" -- a chart it had rendered to its own pod's disk
+	 * -- and the level took its URL. That is gone: the chart is a pure function of the scores, so
+	 * there is nothing to serve and the calculation deployment can be scaled. `id != "-1"` is kept
+	 * when filtering, deliberately, because this frontend has to work against a backend that has
+	 * not been redeployed yet: a calculator still sending the old plot result must not have it
+	 * drawn as a sixth axis with a nonsense label.
+	 */
+	private applyCalculationResult(level: Level, settings: Settings, calculationResult: CalculationResult,
+		previousScore: number | undefined) {
+		settings.maps
+			.filter(m => m.gameBoardType == GameBoardType.ConsequenceMap)
+			.forEach(m => m.urlToData = calculationResult.results.find(c => c.id == m.id)?.url!);
+		calculationResult.results.forEach(c => c.score = isNaN(c.score) ? 0 : c.score);
+
+		// A client-scored board leaves level.scores unset ON PURPOSE. The score board falls back
+		// to its live mode — the one the grid game uses, recomputing from selectedFields on every
+		// click — and a fixed set of numbers from the round that was submitted would freeze it
+		// again.
+		if (settings.clientScored) return;
+
+		const scored = calculationResult.results.filter(c => c.id != "-1");
+		level.scores = [{ id: "all", score: previousScore! },
+			...scored.map(c => ({ score: -((c.score ?? 0) * 100), id: c.id } as ScoreEntry))];
+		level.indicatorScores = scored.map(c => ({ id: c.id, score: c.score ?? 0 }));
+	}
+
 	prepareNextLevel(calculationResult: CalculationResult | undefined = undefined, previousScore: number | undefined = undefined) {
 		this.loading();
 		const level = new Level();
@@ -318,15 +357,36 @@ export class GameService {
 			}));
 
 		if (this.settings.value.mode == 'GRID') {
+			// A GRID GAME CAN BE SCORED BY A CALCULATOR TOO. Whether it is depends on whether a
+			// result arrived, which goToNextLevel decides from `backendScored`. The two paths
+			// differ in where the next round's consequence rasters come from and therefore in
+			// which boards survive:
+			//
+			//   static   they ship with the game, so the previous level's boards are kept and only
+			//            the maps it does not already show are built. Round 2 REVEALS them.
+			//   dynamic  they are this round's output, so the previous consequence boards are
+			//            dropped and every one is rebuilt from the returned URL. Round 3 must not
+			//            go on showing round 2's rasters, which is the bug the SVG branch already
+			//            had to fix by filtering them out.
+			const scoredOnTheBackend = !!calculationResult;
+			if (calculationResult) {
+				this.applyCalculationResult(level, settings, calculationResult, previousScore);
+			}
+
 			const maps = settings.maps.filter(
 				m => m.gameBoardType == GameBoardType.ConsequenceMap &&
-					!previousLevel.gameBoards.map(o => o.id).includes(m.id));
+					(scoredOnTheBackend || !previousLevel.gameBoards.map(o => o.id).includes(m.id)));
 
-			level.gameBoards.push(...previousLevel.gameBoards);
+			level.gameBoards.push(...(scoredOnTheBackend
+				? previousLevel.gameBoards.filter(o => o.gameBoardType != GameBoardType.ConsequenceMap)
+				: previousLevel.gameBoards));
 
 
 			combineLatest(maps.map(m => this.getGridGameBoard(m))).subscribe((gameBoards) => {
 				level.gameBoards.push(...gameBoards);
+				// Rebuilt boards replace the old ones on the production types as well, or a type
+				// accumulates one Carbon map per round played.
+				if (scoredOnTheBackend) this.productionTypes.value.forEach(pt => { pt.consequenceMaps = []; });
 				// Same two lookups, and the same lie, as the level-navigation path — both ids
 				// come out of the deployment's data.json and neither is checked. This one runs
 				// while BUILDING the level, inside a subscribe, so an unresolved id aborts the
@@ -348,15 +408,7 @@ export class GameService {
 				m => m.gameBoardType == GameBoardType.ConsequenceMap);
 
 			if (calculationResult) {
-				consequences.forEach(m => m.urlToData = calculationResult.results.find(c => c.id == m.id)?.url!);
-				calculationResult.results.forEach(c => c.score = isNaN(c.score) ? 0 : c.score);
-				// A client-scored board leaves level.scores unset ON PURPOSE. The score board falls
-				// back to its live mode — the one the grid game uses, recomputing from
-				// selectedFields on every click — and a fixed set of numbers from the round that
-				// was submitted would freeze it again.
-				if (!settings.clientScored) {
-					level.scores = [{ id: "all", score: previousScore!} , ...calculationResult.results.filter(c => c.id != "-1").map(c => ({ score: -((c.score ?? 0)*100), id: c.id } as ScoreEntry))];
-				}
+				this.applyCalculationResult(level, settings, calculationResult, previousScore);
 			}
 
 			// The spider chart is drawn from these five numbers rather than fetched as a PNG.
@@ -368,12 +420,6 @@ export class GameService {
 			// `id != "-1"` is kept when filtering, deliberately. A calculator that still sends the
 			// old plot result must not have it drawn as a sixth axis with a nonsense label; this
 			// frontend has to work against a backend that has not been redeployed yet.
-			if (calculationResult && !settings.clientScored) {
-				level.indicatorScores = calculationResult.results
-					.filter(c => c.id != "-1")
-					.map(c => ({ id: c.id, score: c.score ?? 0 }));
-			}
-
 			level.gameBoards.push(...previousLevel.gameBoards.filter(c => c.gameBoardType != GameBoardType.ConsequenceMap));
 
 			let customColors = this.customColors.find(o => o.id == backgroundMap.customColorId)!;

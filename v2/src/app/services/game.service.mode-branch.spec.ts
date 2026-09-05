@@ -156,3 +156,119 @@ describe('which mode calls the calculation backend', () => {
 		expect(alerts).toEqual(['This game needs a calculation backend, and none is configured.']);
 	});
 });
+
+// ---------------------------------------------------------------------------------------------
+// The other half of the axis: a GRID game that IS scored by a calculator.
+//
+// Unit selection and type of data are independent characteristics (docs/static-vs-dynamic.rst),
+// and until 2026-09-05 the grid + dynamic combination did not exist -- goToNextLevel POSTed only
+// in SVG mode, and the GRID branch of prepareNextLevel never read a CalculationResult. These pin
+// the new behaviour AND the reason it is opt-in: the tests above must keep passing unchanged, so
+// a dataset that says nothing still cannot be turned into a backend game by a stray env var.
+
+const gridDynamicData = {
+	...gridData,
+	// The dataset asks for it. Without this line the game is the one the tests above describe.
+	backendScored: true,
+};
+
+/** Answers with the id of THIS dataset's consequence map, as a real calculator must. */
+const makeMatchingApiStub = (score = 0.5) => {
+	const posts: { url: string, body: any }[] = [];
+	return {
+		posts,
+		stub: {
+			postRequest: (url: string, body: any) => {
+				posts.push({ url, body });
+				return of({ results: [{ name: 'carbon.tif', id: '4', score, url: 'http://gs/wcs?c=carbon_round2' }] });
+			}
+		} as any
+	};
+};
+
+describe('a raster-grid game scored by a calculator', () => {
+	beforeEach(() => { vi.spyOn(window, 'alert').mockImplementation(() => { }); });
+
+	it('POSTs when the dataset asks for it', () => {
+		const api = makeMatchingApiStub();
+		const service = new GameService(tiffStub, scoreStub, translateStub, api.stub);
+		service.loadSettings(JSON.parse(JSON.stringify(gridDynamicData)));
+		service.initialiseGridMode();
+
+		service.goToNextLevel();
+
+		expect(api.posts.length, 'backendScored is what asks for the round to be scored').toBe(1);
+		expect(api.posts[0].url).toBe('http://calculator.example/esgame');
+		expect(Array.isArray(api.posts[0].body.allocation)).toBe(true);
+		expect(api.posts[0].body.round).toBe(1);
+	});
+
+	it('builds round 2 from the raster the calculator returned, not from the one that shipped', () => {
+		const api = makeMatchingApiStub();
+		const service = new GameService(tiffStub, scoreStub, translateStub, api.stub);
+		service.loadSettings(JSON.parse(JSON.stringify(gridDynamicData)));
+		service.initialiseGridMode();
+
+		let level: any = null;
+		service.currentLevelObs.subscribe(l => level = l);
+		service.goToNextLevel();
+
+		const consequence = level.gameBoards.find((b: any) => b.gameBoardType == GameBoardType.ConsequenceMap);
+		expect(consequence, 'round 2 shows the consequence map').toBeTruthy();
+		expect(consequence.urlToData,
+			'the whole point of a dynamic round: this raster is the round\'s output')
+			.toBe('http://gs/wcs?c=carbon_round2');
+	});
+
+	it('records the calculator\'s scores for the score board and the chart', () => {
+		const api = makeMatchingApiStub(0.5);
+		const service = new GameService(tiffStub, scoreStub, translateStub, api.stub);
+		service.loadSettings(JSON.parse(JSON.stringify(gridDynamicData)));
+		service.initialiseGridMode();
+
+		let level: any = null;
+		service.currentLevelObs.subscribe(l => level = l);
+		service.goToNextLevel();
+
+		expect(level.indicatorScores).toEqual([{ id: '4', score: 0.5 }]);
+		// Same convention as the SVG path, because it is the same method: costs are negative and
+		// scaled by 100, with the round's own production total under the id "all".
+		expect(level.scores.find((s: any) => s.id == '4').score).toBe(-50);
+		expect(level.scores.some((s: any) => s.id == 'all')).toBe(true);
+	});
+
+	it('replaces the previous round\'s consequence boards rather than accumulating them', () => {
+		// The bug the SVG branch already had to fix. A third round that kept round 2's boards
+		// would show two Carbon maps, one of them stale, and the stale one would still be on the
+		// production type.
+		const api = makeMatchingApiStub();
+		const service = new GameService(tiffStub, scoreStub, translateStub, api.stub);
+		service.loadSettings(JSON.parse(JSON.stringify(gridDynamicData)));
+		service.initialiseGridMode();
+
+		let level: any = null;
+		service.currentLevelObs.subscribe(l => level = l);
+		service.goToNextLevel();
+		service.goToNextLevel();
+
+		expect(level.levelNumber).toBe(3);
+		const consequences = level.gameBoards.filter((b: any) => b.gameBoardType == GameBoardType.ConsequenceMap);
+		expect(consequences.length, 'one Carbon board, this round\'s').toBe(1);
+	});
+
+	it('leaves the score board live when the game scores itself as well', () => {
+		// clientScored means the browser is already recomputing from selectedFields on every
+		// click; freezing level.scores to the submitted round would stop that.
+		const api = makeMatchingApiStub();
+		const service = new GameService(tiffStub, scoreStub, translateStub, api.stub);
+		service.loadSettings(JSON.parse(JSON.stringify({ ...gridDynamicData, clientScored: true })));
+		service.initialiseGridMode();
+
+		let level: any = null;
+		service.currentLevelObs.subscribe(l => level = l);
+		service.goToNextLevel();
+
+		expect(api.posts.length, 'the maps still come from the calculator').toBe(1);
+		expect(level.scores, 'but the numbers stay the browser\'s').toBeUndefined();
+	});
+});

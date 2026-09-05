@@ -33,7 +33,9 @@ export class ConfiguratorComponent {
 			"infiniteLevels": new FormControl(false),
 			"gameBoardColumns": new FormControl(28),
 			"gameBoardRows": new FormControl(29),
-			"calcUrl": new FormControl({ value: "", disabled: true }),
+			// Live from the start: it used to be constructed disabled and enabled only by the svg
+			// branch of the mode toggle, which is the same weld seen from the other end.
+			"calcUrl": new FormControl(""),
 			"productionTypes": new FormArray([]),
 			"defaultProductionType": new FormControl(""),
 			"maps": new FormArray([]),
@@ -48,6 +50,9 @@ export class ConfiguratorComponent {
 			// gridLineWidth and highlightWidth are deliberately absent because config.json
 			// overrides them per deployment (ConfigService.apply), which is where they belong.
 			"clientScored": new FormControl(false),
+			// A grid game scored by a calculator: the other half of the data-type axis, and the
+			// reason calcUrl is no longer disabled in grid mode below.
+			"backendScored": new FormControl(false),
 			"paletted": new FormControl(false),
 			"scoreByConversion": new FormControl(false),
 			"autoOpenInstructions": new FormControl(true),
@@ -228,7 +233,11 @@ export class ConfiguratorComponent {
 	 * whose zones are irregular -- the hexagons of assets/data.json -- must leave it at 1.
 	 */
 	setModeAvailability(value: string) {
-		const svgOnly = ['calcUrl', 'minSelected', 'minValue', 'maxValue'];
+		// calcUrl was here until 2026-09-05, disabled in grid mode because the runtime ignored it.
+		// It does not any more: a grid game whose dataset sets `backendScored` POSTs its round and
+		// builds the next level from what comes back, so a calculator is authorable for either
+		// unit selection. What stays mode-bound is the SVG scaling, which only the SVG boards read.
+		const svgOnly = ['minSelected', 'minValue', 'maxValue'];
 		svgOnly.forEach(name => value == "svg"
 			? this.formGroup.get(name)!.enable()
 			: this.formGroup.get(name)!.disable());

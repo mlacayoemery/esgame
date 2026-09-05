@@ -110,5 +110,6 @@
   "optimal solution hint": "Leave empty unless a computed best board ships with this game",
   "consequence field opacity": "Semi-transparent fields on consequence maps",
   "highlight focused board": "Outline the focused board",
-  "neutral score colors": "Neutral (black) map titles instead of green/red"
+  "neutral score colors": "Neutral (black) map titles instead of green/red",
+  "score on the backend": "Send the round to a calculator (raster-grid games; SVG always does)"
 }
