@@ -19,7 +19,7 @@
 # lockfile to drift, no wheel to audit and nothing for Dependabot to raise. The base image is still
 # watched — see .github/dependabot.yml, which tools/dependabot-coverage.sh requires to name every
 # directory holding a Dockerfile.
-FROM python:3.14-alpine
+FROM python:3.15-alpine
 
 # Unbuffered, or the startup lines and every request log sit in a pipe buffer and a container that
 # is running looks like a container that hung. Measured on the R calculator, which needed the same.
